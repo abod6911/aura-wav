@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && node scripts/ensureJunction.js",
+    "build": "tsc -b && vite build && node scripts/buildSw.js && node scripts/ensureJunction.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },

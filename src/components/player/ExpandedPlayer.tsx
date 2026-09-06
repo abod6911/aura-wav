@@ -112,30 +112,30 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
     onClose?.();
   };
 
+  const lyrics = currentTrack?.syncedLyrics || [];
+  const activeLyricIndex = getActiveLyricIndex(lyrics, currentTime);
+
+  // Auto-scroll active lyric in Expanded Player inline view
+  useEffect(() => {
+    if (effectiveOpen && activeTab === 'lyrics' && inlineActiveLineRef.current) {
+      inlineActiveLineRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [effectiveOpen, activeTab, activeLyricIndex]);
+
   if (!effectiveOpen || !currentTrack) return null;
 
   const isFav = favorites.includes(currentTrack.id);
   const isAutoMixing =
     automixEnabled && duration > 15 && duration - currentTime <= automixDuration;
 
-  const lyrics = currentTrack.syncedLyrics || [];
-  const activeLyricIndex = getActiveLyricIndex(lyrics, currentTime);
-
   const cycleRate = () => {
     const rates = [0.75, 1.0, 1.25, 1.5];
     const nextIdx = (rates.indexOf(playbackRate) + 1) % rates.length;
     setPlaybackRate(rates[nextIdx]);
   };
-
-  // Auto-scroll active lyric in Expanded Player inline view
-  useEffect(() => {
-    if (activeTab === 'lyrics' && inlineActiveLineRef.current) {
-      inlineActiveLineRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, [activeTab, activeLyricIndex]);
 
   return (
     <AnimatePresence>
@@ -152,7 +152,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             handleClose();
           }
         }}
-        className="fixed inset-0 z-50 bg-[#07070b] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-none"
+        className="fixed inset-0 z-50 bg-[#07070b] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y"
       >
         {/* Apple Music Drag Handle Pill */}
         <div
@@ -162,14 +162,14 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
         {/* Dynamic Atmospheric Blurred Radial Mesh */}
         <div
-          className="absolute inset-0 -z-10 opacity-35 filter blur-[120px] scale-150 transition-all duration-1000 pointer-events-none"
+          className="absolute inset-0 -z-10 opacity-25 filter blur-3xl scale-110 transition-all duration-1000 pointer-events-none"
           style={{
             backgroundImage: currentTrack.artworkUrl ? `url(${currentTrack.artworkUrl})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#07070b]/60 via-[#07070b]/90 to-[#07070b] pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#07070b]/70 via-[#07070b]/92 to-[#07070b] pointer-events-none" />
 
         {/* 1. Top Header Bar */}
         <div className="flex items-center justify-between pt-1 flex-shrink-0">

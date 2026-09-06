@@ -336,7 +336,11 @@ export class DJAudioEngine {
   }
 
   public async playTrack(track: Track): Promise<void> {
-    await this.initContext();
+    try {
+      await this.initContext();
+    } catch (err) {
+      console.warn('AudioContext init notice:', err);
+    }
     this.isCrossfading = false;
 
     const active = this.getActive();
@@ -348,8 +352,10 @@ export class DJAudioEngine {
     this.prepareTrackInChannel(active, track);
 
     if (active.gain && this.ctx) {
-      active.gain.gain.cancelScheduledValues(this.ctx.currentTime);
-      active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      try {
+        active.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      } catch {}
     }
 
     try {

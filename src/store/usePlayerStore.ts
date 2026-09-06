@@ -465,9 +465,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const state = get();
 
       let playableTrack = track;
-      // 1. If no in-memory file/blob, check if audioUrl is available
-      // 2. If no audioUrl, try retrieving audio blob from IndexedDB
-      if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
+      // 1. Check in-memory file/blob
+      // 2. ALWAYS retrieve saved audio blob from IndexedDB if not in memory (works 100% offline!)
+      if (!playableTrack.file && !playableTrack.blob) {
         try {
           const db = await getDB();
           const item = await db.get('audioBlobs', track.id);
@@ -497,6 +497,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }
 
+      // 4. If offline and no local file/blob saved, warn user clearly
+      if (typeof navigator !== 'undefined' && !navigator.onLine && !playableTrack.file && !playableTrack.blob) {
+        get().addToast(`المسار "${track.title}" غير محفوظ بدون نت - يمكنك حفظه للأوفلاين عند توفر النت 📥`, '📶', 'warning');
+        return;
+      }
+
       // If still completely unplayable, inform the user with an actionable toast
       if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
         get().addToast(`تعذر تشغيل "${track.title}" - يرجى استيراد ملف الأغنية أو التأكد من توفر الملف ⚠️`, '⚠️', 'warning');
@@ -517,23 +523,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       });
 
       await djAudioEngine.playTrack(playableTrack);
-
-      // Auto background offline caching for streamed tracks
-      if (playableTrack.audioUrl && !playableTrack.blob) {
-        fetch(playableTrack.audioUrl)
-          .then((res) => (res.ok ? res.blob() : null))
-          .then(async (blob) => {
-            if (blob) {
-              const db = await getDB();
-              await db.put('audioBlobs', { id: playableTrack.id, blob });
-              const currentDownloaded = get().downloadedTrackIds;
-              if (!currentDownloaded.includes(playableTrack.id)) {
-                set({ downloadedTrackIds: [...currentDownloaded, playableTrack.id] });
-              }
-            }
-          })
-          .catch(() => {});
-      }
 
       // Background cover art enrichment if track has fallback cover
       if (playableTrack.artworkUrl?.startsWith('data:image/svg')) {

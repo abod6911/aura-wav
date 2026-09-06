@@ -28,7 +28,6 @@ export function App() {
 
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const seek = usePlayerStore((state) => state.seek);
-  const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const volume = usePlayerStore((state) => state.volume);
   const setVolume = usePlayerStore((state) => state.setVolume);
@@ -65,8 +64,7 @@ export function App() {
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker
         .register('/sw.js')
-        .then((reg) => {
-          reg.update();
+        .then(() => {
           console.log('AURA.WAV PWA Service Worker Registered');
         })
         .catch((err) => console.warn('SW registration failed:', err));
@@ -113,11 +111,14 @@ export function App() {
         togglePlayPause();
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        seek(Math.min(duration, currentTime + 5));
+        const cur = usePlayerStore.getState().currentTime;
+        const dur = usePlayerStore.getState().duration;
+        seek(Math.min(dur, cur + 5));
         addToast('تقديم 5 ثوانٍ ⏩', undefined, 'info');
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        seek(Math.max(0, currentTime - 5));
+        const cur = usePlayerStore.getState().currentTime;
+        seek(Math.max(0, cur - 5));
         addToast('ترجيع 5 ثوانٍ ⏪', undefined, 'info');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
@@ -166,7 +167,6 @@ export function App() {
   }, [
     togglePlayPause,
     seek,
-    currentTime,
     duration,
     volume,
     setVolume,

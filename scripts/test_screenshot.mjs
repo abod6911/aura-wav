@@ -10,6 +10,8 @@ async function main() {
     ignoreHTTPSErrors: true,
   });
   const page = await context.newPage();
+  page.on('console', (msg) => console.log('[Console]', msg.type(), msg.text()));
+  page.on('pageerror', (err) => console.log('[PageError]', err));
   await page.goto('https://localhost:5173/', { waitUntil: 'networkidle' });
 
   // Dismiss splash

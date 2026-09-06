@@ -1,17 +1,21 @@
-const CACHE_NAME = 'aura-wav-v5';
+const CACHE_NAME = 'aura-wav-v7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/logo.svg',
+  '/favicon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  /* __BUILD_ASSETS__ */
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Non-critical precache warning:', err);
+      });
     })
   );
   self.skipWaiting();
@@ -28,9 +32,8 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -39,7 +42,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 1. Navigation requests (HTML document): NETWORK-FIRST with offline fallback
+  // 1. Navigation requests (HTML document): NETWORK-FIRST with guaranteed offline fallback
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {
     event.respondWith(
       fetch(event.request)
@@ -59,20 +62,44 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets (JS, CSS, Covers, Icons): Stale-While-Revalidate / Cache-First
+  // 2. Static Assets (JS, CSS, SVGs, Fonts, Images): CACHE-FIRST with network fallback
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => cachedResponse);
+    caches.match(event.request).then(async (cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
-      return cachedResponse || fetchPromise;
+      try {
+        const networkResponse = await fetch(event.request);
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, copy);
+        }
+        return networkResponse;
+      } catch (err) {
+        // Offline asset fallback: if specific hashed JS/CSS is missing, attempt closest match
+        const url = event.request.url;
+        const cache = await caches.open(CACHE_NAME);
+        const keys = await cache.keys();
+
+        if (url.endsWith('.js')) {
+          const jsKey = keys.find((k) => k.url.includes('/assets/') && k.url.endsWith('.js'));
+          if (jsKey) {
+            const fallback = await cache.match(jsKey);
+            if (fallback) return fallback;
+          }
+        } else if (url.endsWith('.css')) {
+          const cssKey = keys.find((k) => k.url.includes('/assets/') && k.url.endsWith('.css'));
+          if (cssKey) {
+            const fallback = await cache.match(cssKey);
+            if (fallback) return fallback;
+          }
+        }
+
+        // Return empty 200 response rather than undefined to prevent browser crash screen
+        return new Response('', { status: 200, statusText: 'Offline Fallback' });
+      }
     })
   );
 });
