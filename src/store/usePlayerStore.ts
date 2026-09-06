@@ -6,7 +6,7 @@ import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
 import { DEMO_TRACKS } from '../data/demoTracks';
 import { generateDemoAudioBlob } from '../audio/demoSynth';
-import { resolveCatalogCover, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
+import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -285,48 +285,90 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           (t) => t.source !== 'demo' && !t.id.startsWith('demo_')
         );
 
-        // Deduplication & Library Clean Migration:
-        // Group tracks by fileName, trackNumber, or title::artist and purge redundant duplicate entries
-        const seenSignatures = new Map<string, Track>();
+        // Canonical Catalog Slot Mapping & Auto-Healing Deduplication:
+        // Anchors all 1..261 songs to canonical IDs track_catalog_1..261 and preserves original order
+        const catalogSlots = new Map<number, Track>();
+        const nonCatalogTracks: Track[] = [];
         const duplicateIdsToDelete: string[] = [];
-        const uniqueRealTracks: Track[] = [];
 
         for (const track of realTracks) {
-          const fileKey = track.fileName ? `file_${track.fileName.toLowerCase().trim()}` : '';
-          const numKey = track.trackNumber ? `num_${track.trackNumber}` : '';
-          const titleKey = `sig_${track.title.toLowerCase().trim()}::${track.artist.toLowerCase().trim()}`;
-          const sig = fileKey || numKey || titleKey;
+          const catItem = resolveCatalogTrackItem(track.fileName, track.title, track.artist, track.trackNumber);
+          if (catItem) {
+            const canonicalId = `track_catalog_${catItem.number}`;
+            const existingInSlot = catalogSlots.get(catItem.number);
 
-          if (seenSignatures.has(sig)) {
-            const primary = seenSignatures.get(sig)!;
-            duplicateIdsToDelete.push(track.id);
+            // If track record had a non-canonical or duplicate ID
+            if (track.id !== canonicalId) {
+              duplicateIdsToDelete.push(track.id);
+            }
 
-            // If duplicate has an audio blob but primary does not, transfer the blob to primary!
-            if (audioBlobKeys.includes(track.id) && !audioBlobKeys.includes(primary.id)) {
+            // If this old/duplicate record had an audio blob, transfer it to canonicalId
+            if (audioBlobKeys.includes(track.id) && !audioBlobKeys.includes(canonicalId)) {
               try {
                 const blobItem = await db.get('audioBlobs', track.id);
                 if (blobItem && blobItem.blob) {
-                  await db.put('audioBlobs', { id: primary.id, blob: blobItem.blob });
-                  if (!audioBlobKeys.includes(primary.id)) {
-                    audioBlobKeys.push(primary.id);
+                  await db.put('audioBlobs', { id: canonicalId, blob: blobItem.blob });
+                  if (!audioBlobKeys.includes(canonicalId)) {
+                    audioBlobKeys.push(canonicalId);
                   }
                 }
               } catch {}
             }
 
-            // Transfer duration if valid
-            if (track.duration > 0 && (!primary.duration || primary.duration === 180)) {
-              primary.duration = track.duration;
+            if (!existingInSlot) {
+              catalogSlots.set(catItem.number, {
+                ...track,
+                id: canonicalId,
+                trackNumber: catItem.number,
+                title: catItem.title,
+                artist: catItem.artists,
+                album: catItem.album,
+                artworkUrl: catItem.coverUrl,
+                audioUrl: catItem.audioUrl,
+                fileName: track.fileName || catItem.fileName,
+                duration: track.duration > 0 ? track.duration : 180,
+              });
+            } else {
+              // Merge blob / metadata into the primary slot
+              if (track.blob || track.file) {
+                existingInSlot.blob = track.blob || existingInSlot.blob;
+                existingInSlot.file = track.file || existingInSlot.file;
+              }
+              if (track.duration > 0 && (!existingInSlot.duration || existingInSlot.duration === 180)) {
+                existingInSlot.duration = track.duration;
+              }
+              if (track.lyrics && !existingInSlot.lyrics) {
+                existingInSlot.lyrics = track.lyrics;
+                existingInSlot.syncedLyrics = track.syncedLyrics;
+              }
             }
           } else {
-            seenSignatures.set(sig, track);
-            uniqueRealTracks.push(track);
+            nonCatalogTracks.push(track);
           }
         }
 
-        // Clean up duplicate entries from IndexedDB stores
+        // Fill any missing catalog slots (1 to 261) with default catalog templates
+        const defaultTracks = getDefaultLibraryTracks();
+        for (let num = 1; num <= 261; num++) {
+          if (!catalogSlots.has(num)) {
+            const defTrack = defaultTracks[num - 1];
+            if (defTrack) {
+              catalogSlots.set(num, defTrack);
+            }
+          }
+        }
+
+        // Combine all 261 catalog tracks strictly sorted 1..261, followed by non-catalog tracks
+        const uniqueRealTracks: Track[] = [];
+        for (let num = 1; num <= 261; num++) {
+          const t = catalogSlots.get(num);
+          if (t) uniqueRealTracks.push(t);
+        }
+        uniqueRealTracks.push(...nonCatalogTracks);
+
+        // Clean up duplicate/corrupt entries from IndexedDB stores
         if (duplicateIdsToDelete.length > 0) {
-          console.log(`[Aura Clean] Successfully purged ${duplicateIdsToDelete.length} duplicate track records.`);
+          console.log(`[Aura Clean] Successfully purged ${duplicateIdsToDelete.length} redundant track records.`);
           for (const dupId of duplicateIdsToDelete) {
             try {
               await db.delete('tracks', dupId);
@@ -334,9 +376,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
               await db.delete('artworkBlobs', dupId);
             } catch {}
           }
-          setTimeout(() => {
-            get().addToast(`تم تنظيف المكتبة ودمج ${duplicateIdsToDelete.length} مسار مكرر بنجاح ✨`, '✨', 'success');
-          }, 1200);
         }
 
         // Restore cached artwork blobs into object URLs or resolve from high-res offline catalog
@@ -457,70 +496,88 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     importTracks: async (newTracks: Track[], folderName?: string) => {
-      const { tracks } = get();
-      const trackMap = new Map<string, Track>();
+      const { tracks, downloadedTrackIds } = get();
 
-      // Index existing tracks by id, fileName, and signature
-      tracks.forEach((t) => {
-        trackMap.set(t.id, t);
-        if (t.fileName) trackMap.set(`file:${t.fileName.toLowerCase().trim()}`, t);
-        if (t.trackNumber) trackMap.set(`num:${t.trackNumber}`, t);
-        trackMap.set(`sig:${t.title.toLowerCase().trim()}::${t.artist.toLowerCase().trim()}`, t);
-      });
-
-      const updatedList = [...tracks];
+      // Ensure baseList has the 261 catalog tracks
+      let baseList = tracks.length > 0 ? [...tracks] : getDefaultLibraryTracks();
+      const updatedBlobIds = new Set<string>(downloadedTrackIds);
 
       newTracks.forEach((newT) => {
-        const fileKey = newT.fileName ? `file:${newT.fileName.toLowerCase().trim()}` : null;
-        const numKey = newT.trackNumber ? `num:${newT.trackNumber}` : null;
-        const sigKey = `sig:${newT.title.toLowerCase().trim()}::${newT.artist.toLowerCase().trim()}`;
+        // Match incoming track to a canonical catalog slot (1..261)
+        const catItem = resolveCatalogTrackItem(newT.fileName, newT.title, newT.artist, newT.trackNumber);
+        const targetNum = catItem ? catItem.number : newT.trackNumber;
+        const targetId = catItem ? `track_catalog_${catItem.number}` : newT.id;
 
-        const match =
-          trackMap.get(newT.id) ||
-          (fileKey ? trackMap.get(fileKey) : null) ||
-          (numKey ? trackMap.get(numKey) : null) ||
-          trackMap.get(sigKey);
-
-        if (match) {
-          const idx = updatedList.findIndex((t) => t.id === match.id);
-          if (idx !== -1) {
-            updatedList[idx] = {
-              ...updatedList[idx],
-              file: newT.file || updatedList[idx].file,
-              blob: newT.blob || updatedList[idx].blob,
-              duration: newT.duration || updatedList[idx].duration,
-              lyrics: newT.lyrics || updatedList[idx].lyrics,
-              syncedLyrics: newT.syncedLyrics || updatedList[idx].syncedLyrics,
-              artworkUrl:
-                newT.artworkUrl && !newT.artworkUrl.includes('data:image/svg')
-                  ? newT.artworkUrl
-                  : updatedList[idx].artworkUrl,
-            };
-          }
-        } else {
-          updatedList.push(newT);
+        if (newT.blob || newT.file) {
+          updatedBlobIds.add(targetId);
         }
+
+        // Find existing slot in baseList
+        let targetIdx = -1;
+        if (catItem) {
+          targetIdx = baseList.findIndex((t) => t.id === targetId || t.trackNumber === catItem.number);
+        }
+        if (targetIdx === -1 && targetNum) {
+          targetIdx = baseList.findIndex((t) => t.trackNumber === targetNum);
+        }
+        if (targetIdx === -1 && newT.fileName) {
+          const fn = newT.fileName.toLowerCase().trim();
+          targetIdx = baseList.findIndex((t) => t.fileName && t.fileName.toLowerCase().trim() === fn);
+        }
+        if (targetIdx === -1) {
+          const sig = `${newT.title.toLowerCase().trim()}::${newT.artist.toLowerCase().trim()}`;
+          targetIdx = baseList.findIndex((t) => `${t.title.toLowerCase().trim()}::${t.artist.toLowerCase().trim()}` === sig);
+        }
+
+        if (targetIdx !== -1) {
+          // UPDATE IN PLACE at the exact existing slot!
+          baseList[targetIdx] = {
+            ...baseList[targetIdx],
+            id: targetId,
+            trackNumber: targetNum || baseList[targetIdx].trackNumber,
+            file: newT.file || baseList[targetIdx].file,
+            blob: newT.blob || baseList[targetIdx].blob,
+            duration: newT.duration > 0 ? newT.duration : baseList[targetIdx].duration,
+            lyrics: newT.lyrics || baseList[targetIdx].lyrics,
+            syncedLyrics: newT.syncedLyrics || baseList[targetIdx].syncedLyrics,
+            artworkUrl: catItem ? catItem.coverUrl : (newT.artworkUrl || baseList[targetIdx].artworkUrl),
+            fileName: newT.fileName || baseList[targetIdx].fileName,
+            source: 'local',
+          };
+        } else {
+          // Non-catalog track
+          baseList.push(newT);
+        }
+      });
+
+      // Strict sort: Keep catalog tracks in order 1..261
+      baseList.sort((a, b) => {
+        const numA = a.trackNumber ?? 99999;
+        const numB = b.trackNumber ?? 99999;
+        if (numA !== numB) return numA - numB;
+        return a.title.localeCompare(b.title);
       });
 
       const targetFolder = folderName || get().savedFolderName || 'Liked_Songs';
 
       set({
-        tracks: updatedList,
-        filteredTracks: updatedList,
+        tracks: baseList,
+        filteredTracks: baseList,
         savedFolderName: targetFolder,
-        savedFolderTrackCount: updatedList.length,
+        savedFolderTrackCount: baseList.length,
         savedFolderTimestamp: Date.now(),
+        downloadedTrackIds: Array.from(updatedBlobIds),
       });
 
       // Persist tracks and folder metadata into IndexedDB
       try {
         const db = await getDB();
         await db.put('settings', targetFolder, 'savedFolderName');
-        await db.put('settings', updatedList.length, 'savedFolderTrackCount');
+        await db.put('settings', baseList.length, 'savedFolderTrackCount');
         await db.put('settings', Date.now(), 'savedFolderTimestamp');
 
         const tx = db.transaction('tracks', 'readwrite');
-        for (const tr of updatedList) {
+        for (const tr of baseList) {
           const { file: _f, blob: _b, ...serializable } = tr;
           await tx.store.put(serializable as Track);
         }
@@ -528,6 +585,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       } catch (err) {
         console.warn('Could not persist updated tracks/folder metadata to IndexedDB:', err);
       }
+
+      get().addToast(`تم حفظ وربط ${newTracks.length} مسار في نفس أماكنها الأصلية بنجاح ⚡`, '⚡', 'success');
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {

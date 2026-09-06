@@ -50,118 +50,173 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   };
 
   return (
-    <header className="flex items-center justify-between py-3 border-b border-white/5 select-none mb-4 w-full min-w-0">
-      {/* Mobile Brand / Desktop Title */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="lg:hidden w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] flex-shrink-0">
-          <div className="w-full h-full bg-[#09090b] rounded-[10px] flex items-center justify-center">
-            <Disc className="w-4 h-4 text-[#FA243C] animate-spin-slow" />
+    <header className="py-2 sm:py-3 border-b border-white/5 select-none mb-3 sm:mb-4 w-full min-w-0">
+      {/* Mobile Bar: Sleek, compact Apple Music style */}
+      <div className="flex sm:hidden items-center justify-between w-full gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] flex-shrink-0 shadow-md shadow-[#FA243C]/20">
+            <div className="w-full h-full bg-[#09090b] rounded-[10px] flex items-center justify-center">
+              <Disc className="w-4 h-4 text-[#FA243C] animate-spin-slow" />
+            </div>
           </div>
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg md:text-2xl font-black text-white truncate">
-              <span>مكتبتي الصوتية</span>
-            </h2>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-black text-white text-base tracking-tight">AURA<span className="text-[#FA243C]">.WAV</span></span>
             <button
               onClick={onOpenImport}
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer truncate max-w-[130px] sm:max-w-none"
-              title="مجلد الأغاني المحفوظ - انقر للتحديث أو التغيير"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold truncate max-w-[110px]"
+              title="مجلد الأغاني المحفوظ"
             >
-              <FolderOpen className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <FolderOpen className="w-2.5 h-2.5 text-emerald-400 flex-shrink-0" />
               <span className="truncate">{savedFolderName || 'Liked_Songs'}</span>
             </button>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
-            <span className="flex items-center gap-1">
-              <Music className="w-3 h-3 text-[#FA243C]" />
-              <span>{tracks.length} مسار</span>
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#FF2D55]" />
-              <span>
-                {totalHours > 0 ? `${totalHours} س و ` : ''}
-                {totalMins} د
-              </span>
-            </span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>محفوظ محلياً</span>
-            </span>
-          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Sleep Timer */}
+          <button
+            onClick={() => setSleepTimerOpen(true)}
+            className={`p-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all border ${
+              sleepTimerRemaining !== null
+                ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                : 'bg-white/[0.04] active:bg-white/[0.1] border-white/[0.06] text-zinc-300'
+            }`}
+            title="مؤقت النوم الذكي"
+          >
+            <Moon className="w-3.5 h-3.5 text-[#FF456E]" />
+            {sleepTimerRemaining !== null && (
+              <span className="font-mono text-[10px] text-white">{formatTimerRemaining(sleepTimerRemaining)}</span>
+            )}
+          </button>
+
+          {/* Welcome Screen */}
+          <button
+            onClick={() => setWelcomeOpen(true)}
+            className="p-2 rounded-xl bg-white/[0.04] active:bg-white/[0.1] border border-white/[0.06] text-amber-400"
+            title="شاشة الترحيب"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Import Folder Button */}
+          <button
+            onClick={onOpenImport}
+            className="px-2.5 py-1.5 rounded-xl bg-[#FA243C] active:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-[#FA243C]/25"
+            title="استيراد أغانيك"
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            <span className="text-[11px]">استيراد</span>
+          </button>
         </div>
       </div>
 
-      {/* Header Actions */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-        {/* Replay Welcome Animation */}
-        <button
-          onClick={() => setWelcomeOpen(true)}
-          className="p-2 sm:p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-amber-400 hover:text-amber-300 transition-colors"
-          title="شاشة الترحيب السينمائية"
-        >
-          <Sparkles className="w-4 h-4" />
-        </button>
+      {/* Desktop / Tablet Bar: Full stats & actions */}
+      <div className="hidden sm:flex items-center justify-between w-full min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="lg:hidden w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] flex-shrink-0">
+            <div className="w-full h-full bg-[#09090b] rounded-[10px] flex items-center justify-center">
+              <Disc className="w-4 h-4 text-[#FA243C] animate-spin-slow" />
+            </div>
+          </div>
 
-        {/* Sleep Timer Button */}
-        <button
-          onClick={() => setSleepTimerOpen(true)}
-          className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${
-            sleepTimerRemaining !== null
-              ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
-              : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
-          }`}
-          title="مؤقت النوم الذكي"
-        >
-          <Moon className="w-4 h-4 text-[#FF456E]" />
-          {sleepTimerRemaining !== null ? (
-            <span className="font-mono text-xs text-white">{formatTimerRemaining(sleepTimerRemaining)}</span>
-          ) : (
-            <span className="hidden sm:inline">مؤقت النوم</span>
-          )}
-        </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-black text-white truncate">
+                <span>مكتبتي الصوتية</span>
+              </h2>
+              <button
+                onClick={onOpenImport}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold transition-all active:scale-95 cursor-pointer truncate"
+                title="مجلد الأغاني المحفوظ - انقر للتحديث أو التغيير"
+              >
+                <FolderOpen className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                <span className="truncate">{savedFolderName || 'Liked_Songs'}</span>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 mt-0.5">
+              <span className="flex items-center gap-1">
+                <Music className="w-3 h-3 text-[#FA243C]" />
+                <span>{tracks.length} مسار</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3 text-[#FF2D55]" />
+                <span>
+                  {totalHours > 0 ? `${totalHours} س و ` : ''}
+                  {totalMins} د
+                </span>
+              </span>
+              <span>•</span>
+              <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>محفوظ محلياً</span>
+              </span>
+            </div>
+          </div>
+        </div>
 
-        {/* Equalizer Quick Access (Desktop Only, mobile has dock tab) */}
-        <button
-          onClick={() => setEqualizerOpen(true)}
-          className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-[#FF2D55] hover:text-[#FA243C] transition-colors hidden sm:flex"
-          title="المعادل الصوتي و AutoMix"
-        >
-          <Sliders className="w-4 h-4" />
-        </button>
-
-        {/* Keyboard Shortcuts Button */}
-        <button
-          onClick={() => setShortcutsOpen(true)}
-          className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-300 hover:text-white transition-colors hidden md:flex"
-          title="اختصارات الكيبورد (?)"
-        >
-          <Keyboard className="w-4 h-4" />
-        </button>
-
-        {/* PWA Install Button if available */}
-        {deferredPrompt && (
+        {/* Desktop Header Actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
-            onClick={handleInstallClick}
-            className="px-2.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center gap-1.5 transition-all animate-pulse"
+            onClick={() => setWelcomeOpen(true)}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-amber-400 hover:text-amber-300 transition-colors"
+            title="شاشة الترحيب السينمائية"
           >
-            <Download className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span className="hidden sm:inline">تثبيت</span>
+            <Sparkles className="w-4 h-4" />
           </button>
-        )}
 
-        {/* Load Local Library Button */}
-        <button
-          onClick={onOpenImport}
-          className="p-2 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs md:text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-[#FA243C]/25 active:scale-95 cursor-pointer"
-          title="استيراد مجلد أغانٍ"
-        >
-          <FolderOpen className="w-4 h-4" />
-          <span className="hidden sm:inline">استيراد أغانيك</span>
-        </button>
+          <button
+            onClick={() => setSleepTimerOpen(true)}
+            className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${
+              sleepTimerRemaining !== null
+                ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
+            }`}
+            title="مؤقت النوم الذكي"
+          >
+            <Moon className="w-4 h-4 text-[#FF456E]" />
+            {sleepTimerRemaining !== null ? (
+              <span className="font-mono text-xs text-white">{formatTimerRemaining(sleepTimerRemaining)}</span>
+            ) : (
+              <span>مؤقت النوم</span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setEqualizerOpen(true)}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-[#FF2D55] hover:text-[#FA243C] transition-colors"
+            title="المعادل الصوتي و AutoMix"
+          >
+            <Sliders className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => setShortcutsOpen(true)}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-300 hover:text-white transition-colors hidden md:flex"
+            title="اختصارات الكيبورد (?)"
+          >
+            <Keyboard className="w-4 h-4" />
+          </button>
+
+          {deferredPrompt && (
+            <button
+              onClick={handleInstallClick}
+              className="px-2.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold flex items-center gap-1.5 transition-all animate-pulse"
+            >
+              <Download className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span>تثبيت</span>
+            </button>
+          )}
+
+          <button
+            onClick={onOpenImport}
+            className="px-4 py-2.5 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-sm font-bold flex items-center gap-2 transition-all shadow-lg shadow-[#FA243C]/25 active:scale-95 cursor-pointer"
+            title="استيراد مجلد أغانٍ"
+          >
+            <FolderOpen className="w-4 h-4" />
+            <span>استيراد أغانيك</span>
+          </button>
+        </div>
       </div>
     </header>
   );

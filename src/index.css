@@ -52,6 +52,22 @@ body {
   border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
+/* iOS Safe Area Layout Utility */
+.main-safe-area {
+  padding-top: calc(max(env(safe-area-inset-top, 0px), 52px) + 8px);
+  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(env(safe-area-inset-left, 0px), 12px);
+  padding-right: max(env(safe-area-inset-right, 0px), 12px);
+}
+@media (min-width: 768px) {
+  .main-safe-area {
+    padding-top: 1.25rem;
+    padding-bottom: 8rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
 /* Custom Sleek Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;

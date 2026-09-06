@@ -19,6 +19,10 @@ import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { WelcomeSplash } from './components/WelcomeSplash';
 import { ChangeArtworkModal } from './components/ChangeArtworkModal';
 
+if (typeof window !== 'undefined') {
+  (window as any).usePlayerStore = usePlayerStore;
+}
+
 export function App() {
   const initStore = usePlayerStore((state) => state.initStore);
   const activeTab = usePlayerStore((state) => state.activeTab);
@@ -246,7 +250,7 @@ export function App() {
       <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />
 
       {/* 3. Main View Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto px-3 sm:px-6 md:px-8 pb-[calc(160px+env(safe-area-inset-bottom,0px))] md:pb-32 z-10 scrollbar-thin scrollbar-thumb-white/10">
+      <main className="main-safe-area flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto px-3 sm:px-6 md:px-8 z-10 scrollbar-thin scrollbar-thumb-white/10">
         <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
           <Header onOpenImport={() => setIsImportModalOpen(true)} />
 

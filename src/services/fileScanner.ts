@@ -2,7 +2,7 @@ import { Track } from '../types';
 import { parseAudioMetadata, fetchOnlineArtwork, generateLuxuriousGeometricCover, generateLuxuryCanvasArtwork, getDB } from '../lib/metadata';
 import { parseLRC } from './lyricsParser';
 import { extractPaletteFromImage } from '../lib/colorSampler';
-import { resolveCatalogCover } from '../data/tracksCatalog';
+import { resolveCatalogCover, resolveCatalogTrackItem } from '../data/tracksCatalog';
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac', '.webm'];
 
@@ -120,38 +120,64 @@ export async function processAudioFiles(
 
       const syncedLyrics = lyricsText ? parseLRC(lyricsText) : undefined;
 
-      // Check if file matches an existing catalog or previously scanned track
-      const fileKey = file.name.toLowerCase().trim();
-      const metaSig = `${meta.title.toLowerCase().trim()}::${meta.artist.toLowerCase().trim()}`;
-      const matched =
-        trackByFile.get(fileKey) ||
-        (meta.trackNumber ? trackByNumber.get(meta.trackNumber) : undefined) ||
-        trackBySignature.get(metaSig);
+      // 1. Check if file matches our predefined catalog (1 to 261)
+      const catalogItem = resolveCatalogTrackItem(file.name, meta.title, meta.artist, meta.trackNumber);
 
-      const trackId = matched?.id || `track_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`;
-
-      let artworkUrl = matched?.artworkUrl || meta.artworkUrl;
+      let trackId: string;
+      let trackNumber: number | undefined;
+      let finalTitle = meta.title;
+      let finalArtist = meta.artist;
+      let finalAlbum = meta.album;
+      let artworkUrl = meta.artworkUrl;
       let artworkBlob = meta.artworkBlob;
+      let finalDuration = meta.duration || 180;
 
-      // 1. Check local catalog first (100% offline, 640x640 official artwork)
-      const catalogCover = resolveCatalogCover(meta.title, meta.artist, file.name, meta.trackNumber);
-      if (catalogCover) {
-        artworkUrl = catalogCover;
-      } else if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === '/logo.svg')) {
-        // Attempt online fetch
-        artworkBlob = (await fetchOnlineArtwork(meta.title, meta.artist)) || undefined;
-        if (artworkBlob) {
+      if (catalogItem) {
+        trackId = `track_catalog_${catalogItem.number}`;
+        trackNumber = catalogItem.number;
+        finalTitle = catalogItem.title;
+        finalArtist = catalogItem.artists;
+        finalAlbum = catalogItem.album;
+        artworkUrl = catalogItem.coverUrl; // 100% offline official 640x640 cover!
+
+        const parts = catalogItem.duration.split(':').map(Number);
+        const catDur = parts.length === 2 ? parts[0] * 60 + parts[1] : 180;
+        finalDuration = meta.duration > 0 ? meta.duration : catDur;
+      } else {
+        // Fallback matching against existing tracks in DB
+        const fileKey = file.name.toLowerCase().trim();
+        const metaSig = `${meta.title.toLowerCase().trim()}::${meta.artist.toLowerCase().trim()}`;
+        const matched =
+          trackByFile.get(fileKey) ||
+          (meta.trackNumber ? trackByNumber.get(meta.trackNumber) : undefined) ||
+          trackBySignature.get(metaSig);
+
+        trackId = matched?.id || `track_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`;
+        trackNumber = meta.trackNumber || matched?.trackNumber;
+        finalTitle = matched?.title || meta.title;
+        finalArtist = matched?.artist || meta.artist;
+        finalAlbum = matched?.album || meta.album;
+        artworkUrl = matched?.artworkUrl || artworkUrl;
+
+        // Artwork resolution for non-catalog tracks
+        const catalogCover = resolveCatalogCover(meta.title, meta.artist, file.name, meta.trackNumber);
+        if (catalogCover) {
+          artworkUrl = catalogCover;
+        } else if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === '/logo.svg')) {
+          artworkBlob = (await fetchOnlineArtwork(meta.title, meta.artist)) || undefined;
+          if (artworkBlob) {
+            artworkUrl = URL.createObjectURL(artworkBlob);
+          }
+        }
+        if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === '/logo.svg')) {
+          artworkBlob = await generateLuxuryCanvasArtwork(meta.title, meta.artist);
           artworkUrl = URL.createObjectURL(artworkBlob);
         }
       }
 
-      // If still no artwork, generate high-res luxury canvas raster PNG (iOS Dynamic Island & Lock Screen supported!)
-      if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === '/logo.svg')) {
-        artworkBlob = await generateLuxuryCanvasArtwork(meta.title, meta.artist);
-        artworkUrl = URL.createObjectURL(artworkBlob);
-      }
-
-      const palette = artworkUrl ? await extractPaletteFromImage(artworkUrl) : { primary: '#6366f1', secondary: '#a855f7' };
+      const palette = artworkUrl && !artworkUrl.startsWith('data:image/svg')
+        ? await extractPaletteFromImage(artworkUrl)
+        : { primary: '#FA243C', secondary: '#FF2D55' };
 
       // Convert File to pure Blob via ArrayBuffer to prevent iOS Safari DataCloneError in IndexedDB
       const arrayBuf = await file.arrayBuffer();
@@ -159,23 +185,23 @@ export async function processAudioFiles(
 
       const track: Track = {
         id: trackId,
-        title: matched?.title || meta.title,
-        artist: matched?.artist || meta.artist,
-        album: matched?.album || meta.album,
-        duration: meta.duration || matched?.duration || 180,
-        trackNumber: meta.trackNumber || matched?.trackNumber,
-        year: meta.year || matched?.year,
-        genre: meta.genre || matched?.genre,
-        artworkUrl: artworkUrl || matched?.artworkUrl || '/logo.svg',
+        title: finalTitle,
+        artist: finalArtist,
+        album: finalAlbum,
+        duration: finalDuration,
+        trackNumber,
+        year: meta.year,
+        genre: meta.genre,
+        artworkUrl: artworkUrl || '/logo.svg',
         dominantColor: palette.primary,
         secondaryColor: palette.secondary,
-        lyrics: lyricsText || matched?.lyrics,
-        syncedLyrics: syncedLyrics || matched?.syncedLyrics,
+        lyrics: lyricsText,
+        syncedLyrics,
         file,
         blob: pureAudioBlob,
         fileName: file.name,
         source: 'local',
-        dateAdded: matched?.dateAdded || Date.now(),
+        dateAdded: Date.now(),
       };
 
       tracks.push(track);
@@ -184,14 +210,14 @@ export async function processAudioFiles(
       const { file: _f, blob: _b, ...serializable } = track;
       await trackStore.put(serializable as Track);
 
-      // Safely store pure Audio Blob
+      // Safely store pure Audio Blob with canonical trackId (e.g. track_catalog_1)
       try {
         await audioBlobStore.put({ id: trackId, blob: pureAudioBlob });
       } catch (err) {
         console.warn(`Could not store audio blob for ${file.name} in IndexedDB:`, err);
       }
 
-      // Store artwork blob
+      // Store artwork blob if custom
       if (artworkBlob) {
         try {
           await artworkBlobStore.put({ id: trackId, blob: artworkBlob });

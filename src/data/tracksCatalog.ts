@@ -2684,6 +2684,67 @@ export function resolveCatalogCover(
 }
 
 /**
+ * Resolves a file and metadata to a specific CatalogItem (1 to 261).
+ * Matches by leading track number (e.g. "001 - ...", "01 - ...", "1. ..."),
+ * metadata trackNumber, exact filename, or title/artist similarity.
+ */
+export function resolveCatalogTrackItem(
+  filename?: string,
+  title?: string,
+  artist?: string,
+  trackNumber?: number
+): CatalogItem | null {
+  // 1. Check direct track number
+  if (trackNumber && trackNumber >= 1 && trackNumber <= TRACKS_CATALOG.length) {
+    return TRACKS_CATALOG[trackNumber - 1];
+  }
+
+  // 2. Check filename prefix (e.g. "001 - ...", "01 - ...", "1 - ...", "001.mp3", "1. ...")
+  if (filename) {
+    const match = filename.match(/^(?:track\s*[-_.]?\s*)?0*(\d{1,3})(?:[-_.\s]|$)/i) || filename.match(/^(\d+)\s*[-_.]/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num >= 1 && num <= TRACKS_CATALOG.length) {
+        return TRACKS_CATALOG[num - 1];
+      }
+    }
+
+    // Check exact or normalized filename
+    const cleanF = filename.toLowerCase().replace(/\.[^/.]+$/, '').trim();
+    for (const item of TRACKS_CATALOG) {
+      const itemF = item.fileName.toLowerCase().replace(/\.[^/.]+$/, '').trim();
+      if (cleanF === itemF) {
+        return item;
+      }
+    }
+  }
+
+  // 3. Match by clean title and artist
+  if (title) {
+    const cleanT = cleanStr(title);
+    const cleanA = artist ? cleanStr(artist) : '';
+    const primaryA = cleanA.split(' ')[0] || '';
+
+    // Direct exact or substring match
+    for (const item of TRACKS_CATALOG) {
+      const itemT = cleanStr(item.title);
+      const itemA = cleanStr(item.artists);
+
+      if (cleanT === itemT) {
+        return item;
+      }
+      if (cleanT.length > 3 && (cleanT.includes(itemT) || itemT.includes(cleanT))) {
+        if (!cleanA || itemA.includes(primaryA) || cleanA.includes(itemA.split(' ')[0])) {
+          return item;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Returns the complete initial 261 tracks library ready for instant playback.
  */
 export function getDefaultLibraryTracks(): Track[] {

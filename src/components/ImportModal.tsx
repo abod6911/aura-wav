@@ -17,9 +17,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   const [importedCount, setImportedCount] = useState<number | null>(null);
   const [importedFolderName, setImportedFolderName] = useState<string>('Liked_Songs');
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const folderInputRef = useRef<HTMLInputElement | null>(null);
+  const filesInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!isOpen) return null;
+
+  const isMobileDevice = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const handleDirectoryPicker = async () => {
     setIsScanning(true);
@@ -42,13 +45,27 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
       }
     } catch (err: any) {
       if (err.message === 'DIRECTORY_PICKER_NOT_SUPPORTED') {
-        // Trigger fallback input
-        fileInputRef.current?.click();
+        // Trigger fallback based on device
+        if (isMobileDevice) {
+          filesInputRef.current?.click();
+        } else {
+          folderInputRef.current?.click();
+        }
       } else {
         setErrorMsg('حدث خطأ أثناء قراءة المجلد، يرجى المحاولة مرة أخرى.');
       }
     } finally {
       setIsScanning(false);
+    }
+  };
+
+  const handlePrimaryClick = () => {
+    if (isMobileDevice) {
+      filesInputRef.current?.click();
+    } else if ('showDirectoryPicker' in window) {
+      handleDirectoryPicker();
+    } else {
+      folderInputRef.current?.click();
     }
   };
 
@@ -84,8 +101,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
           spread: 70,
           origin: { y: 0.6 },
         });
+      } else {
+        setErrorMsg('لم يتم العثور على ملفات صوتية متوافقة.');
       }
     } catch (err) {
+      console.warn('Import error:', err);
       setErrorMsg('تعذر استيراد بعض الملفات، تأكد من الصيغ المدعومة.');
     } finally {
       setIsScanning(false);
@@ -93,17 +113,27 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fadeIn select-none">
-      <div className="w-full max-w-lg bg-[#121218]/95 border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-        {/* Hidden Fallback Input */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fadeIn select-none">
+      <div className="w-full max-w-lg bg-[#121218]/95 border border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl space-y-5 sm:space-y-6 relative overflow-hidden">
+        {/* Hidden Folder Input (Desktop) */}
         <input
-          ref={fileInputRef}
+          ref={folderInputRef}
           type="file"
           // @ts-ignore
           webkitdirectory=""
           directory=""
           multiple
           accept="audio/*,.lrc"
+          className="hidden"
+          onChange={handleFileInputChange}
+        />
+
+        {/* Hidden Multi-File Input (Mobile / iPhone friendly without directory restriction) */}
+        <input
+          ref={filesInputRef}
+          type="file"
+          multiple
+          accept="audio/*,.mp3,.m4a,.wav,.flac,.aac,.ogg,.lrc"
           className="hidden"
           onChange={handleFileInputChange}
         />
@@ -115,14 +145,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <FolderOpen className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">استيراد مكتبة الموسيقى المحلية</h3>
-              <p className="text-xs text-aura-textSecondary">تشغيل أوفلاين بالكامل 100% مباشرة من جهازك</p>
+              <h3 className="text-lg sm:text-xl font-bold text-white">استيراد أغانيك وحفظها أوفلاين</h3>
+              <p className="text-xs text-zinc-400">تُحفظ في نفس أماكنها (1..261) وتعمل بدون إنترنت للأبد</p>
             </div>
           </div>
           {!isScanning && (
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white transition-colors"
+              className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -132,24 +162,53 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {/* Body Content */}
         {!isScanning && importedCount === null && (
           <div className="space-y-4">
+            {/* Primary Action Card */}
             <div
-              onClick={handleDirectoryPicker}
-              className="p-8 rounded-2xl border-2 border-dashed border-[#FA243C]/30 hover:border-[#FA243C]/70 bg-[#FA243C]/[0.03] hover:bg-[#FA243C]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
+              onClick={handlePrimaryClick}
+              className="p-6 sm:p-8 rounded-2xl border-2 border-dashed border-[#FA243C]/35 hover:border-[#FA243C]/70 bg-[#FA243C]/[0.04] hover:bg-[#FA243C]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
             >
               <div className="p-4 rounded-full bg-[#FA243C]/20 text-[#FA243C] group-hover:scale-110 transition-transform mb-3">
                 <UploadCloud className="w-8 h-8" />
               </div>
-              <h4 className="text-base font-bold text-white mb-1">
-                اختر مجلد الأغاني (Liked_Songs)
+              <h4 className="text-base font-extrabold text-white mb-1">
+                {isMobileDevice ? 'اضغط هنا لاختيار ملفات الأغاني' : 'اختر مجلد الأغاني (Liked_Songs)'}
               </h4>
-              <p className="text-xs text-aura-muted max-w-xs">
-                سيقوم المتصفح بقراءة جميع ملفات MP3 / FLAC / WAV واستخراج أغلفة الألبومات والكلمات المتزامنة وحفظها أوفلاين.
+              <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+                سيتم ربط الملفات تلقائياً في نفس ترتيب وأماكن الأغاني الأصلية وتخزينها في ذاكرة جهازك لتعمل أوفلاين 100%.
               </p>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-xs text-aura-textSecondary pt-2">
-              <Sparkles className="w-4 h-4 text-[#FA243C]" />
-              <span>لا يتم رفع أي ملفات إلى أي سيرفر، كل شيء يتم محلياً على جهازك.</span>
+            {/* Quick Action Buttons for Multi-platform Flexibility */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => filesInputRef.current?.click()}
+                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span>🎵 اختيار ملفات متعددة (آيفون/هاتف)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if ('showDirectoryPicker' in window) {
+                    handleDirectoryPicker();
+                  } else {
+                    folderInputRef.current?.click();
+                  }
+                }}
+                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span>📁 اختيار مجلد كامل (كمبيوتر)</span>
+              </button>
+            </div>
+
+            {/* iPhone Pro-Tip */}
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs leading-relaxed text-right flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-white block mb-0.5">📱 نصيحة لمستخدمي الآيفون:</strong>
+                عند فتح شاشة الملفات، ادخل إلى مجلد الأغاني ثم اضغط على النقاط الثلاث <strong>(•••)</strong> بالأعلى، ثم اختر <strong>"تحديد الكل" (Select All)</strong> ثم اضغط <strong>"فتح" (Open)</strong> ليتم حفظ جميع الأغاني فوراً!
+              </div>
             </div>
 
             {errorMsg && (
@@ -170,9 +229,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             </div>
 
             <div className="space-y-1">
-              <h4 className="font-bold text-white text-base">جاري قراءة واستخراج البيانات...</h4>
-              <p className="text-xs text-aura-textSecondary truncate max-w-sm mx-auto">
-                {progress?.currentFileName || 'فحص الملفات...'}
+              <h4 className="font-bold text-white text-base">جاري مطابقة وحفظ الأغاني في الذاكرة...</h4>
+              <p className="text-xs text-zinc-400 truncate max-w-sm mx-auto">
+                {progress?.currentFileName || 'معالجة الملفات...'}
               </p>
             </div>
 
@@ -184,8 +243,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                     style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-aura-muted">
-                  <span>تمت معالجة {progress.current}</span>
+                <div className="flex justify-between text-xs text-zinc-400">
+                  <span>تم حفظ {progress.current} مسار</span>
                   <span>من أصل {progress.total}</span>
                 </div>
               </div>
@@ -201,16 +260,16 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             </div>
             <div>
               <h4 className="text-lg font-bold text-white">تم حفظ مجلد [{importedFolderName}] بنجاح!</h4>
-              <p className="text-sm text-aura-textSecondary mt-1">
-                تمت إضافة <span className="text-emerald-400 font-bold">{importedCount}</span> مسار وتثبيتها في ذاكرة جهازك. سيتذكر الموقع مجلدك دائماً ويعمل 100% بدون نت.
+              <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
+                تم ربط <span className="text-emerald-400 font-bold">{importedCount}</span> مسار في نفس أماكنها وترتيبها الأصلي، وتخزينها في ذاكرة المتصفح. يمكنك تشغيلها الآن وفي أي وقت بدون إنترنت 100%.
               </p>
             </div>
 
             <button
               onClick={onClose}
-              className="w-full py-3 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold transition-all shadow-lg shadow-[#FA243C]/30"
+              className="w-full py-3 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold transition-all shadow-lg shadow-[#FA243C]/30 cursor-pointer"
             >
-              بدء الاستماع الآن
+              بدء الاستماع الآن 🎵
             </button>
           </div>
         )}

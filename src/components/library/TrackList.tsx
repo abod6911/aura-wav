@@ -134,14 +134,14 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     <div className="space-y-8 pb-32 md:pb-32 w-full max-w-full">
       {/* 1. Grand Editorial Hero Banner (Apple Music / Spotify Style) */}
       {tracks.length > 0 ? (
-        <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-2xl shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-2xl shadow-2xl">
           {/* Subtle Dynamic Ambient Backlight */}
           <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#FA243C]/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-[#FF2D55]/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-4 sm:gap-6 md:gap-8">
+          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-3.5 sm:gap-6 md:gap-8">
             {/* Mosaic 4-Art Cover */}
-            <div className="w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.8)] border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
+            <div className="w-24 h-24 sm:w-36 sm:h-36 md:w-52 md:h-52 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.8)] border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
               {heroCovers.map((src, i) => (
                 <img
                   key={i}
@@ -156,27 +156,27 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </div>
 
             {/* Playlist Editorial Metadata */}
-            <div className="flex-1 text-center md:text-right space-y-2 sm:space-y-3 min-w-0">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FA243C]/15 border border-[#FA243C]/30 text-[#FF456E] text-[11px] sm:text-xs font-semibold">
+            <div className="flex-1 text-center md:text-right space-y-1.5 sm:space-y-3 min-w-0">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FA243C]/15 border border-[#FA243C]/30 text-[#FF456E] text-[10px] sm:text-xs font-semibold">
                   <HardDrive className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>مكتبة محلية 100% أوفلاين</span>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-semibold">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-xs font-semibold">
                   <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
                   <span>المجلد المحفوظ: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
                 </div>
 
                 <button
                   onClick={onOpenImport}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[11px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                 >
                   <span>تغيير المجلد 📁</span>
                 </button>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
+              <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
                 مكتبتي الموسيقية
               </h1>
 
@@ -194,22 +194,22 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </div>
 
             {/* Play & Shuffle Big Action Controls */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="flex items-center justify-center md:justify-start gap-2.5 sm:gap-3 flex-shrink-0 w-full md:w-auto pt-1 sm:pt-0">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handlePlayAll}
-                className="h-11 sm:h-14 px-5 sm:px-8 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-3 shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:bg-zinc-200 transition-all cursor-pointer"
+                className="flex-1 md:flex-initial h-11 sm:h-14 px-6 sm:px-8 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:bg-zinc-200 transition-all cursor-pointer"
               >
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-black" />
                 <span>تشغيل الكل</span>
               </motion.button>
 
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={handleShufflePlay}
-                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer"
+                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
                 title="خلط عشوائي"
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-300" />
