@@ -55,6 +55,7 @@ interface PlayerState {
   eqGains: [number, number, number, number, number];
   activeEqPreset: string;
   bassBoost: number;
+  spatialAudio: boolean;
 
   // YouTube Music Sleep Timer
   sleepTimerRemaining: number | null; // seconds countdown
@@ -94,6 +95,8 @@ interface PlayerState {
   setAutoMix: (enabled: boolean, duration?: number) => void;
   toggleFavorite: (trackId: string) => Promise<void>;
   setBassBoost: (level: number) => void;
+  toggleSpatialAudio: () => void;
+  setSpatialAudio: (enabled: boolean) => void;
   setEqGain: (index: number, gain: number) => void;
   applyEqPreset: (preset: EqualizerPreset) => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
@@ -189,6 +192,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     eqGains: [0, 0, 0, 0, 0],
     activeEqPreset: 'Flat',
     bassBoost: 0,
+    spatialAudio: false,
 
     activeMood: null,
     smartAutoplay: true,
@@ -738,6 +742,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const clamped = Math.max(0, Math.min(18, level));
       djAudioEngine.setBassBoost(clamped);
       set({ bassBoost: clamped });
+    },
+
+    toggleSpatialAudio: () => {
+      const next = !get().spatialAudio;
+      djAudioEngine.setSpatialAudio(next);
+      set({ spatialAudio: next });
+      get().addToast(
+        next
+          ? 'تم تفعيل الصوت المكاني ثلاثي الأبعاد 🎧 (Apple Spatial Audio)'
+          : 'تم إيقاف الصوت المكاني (Standard Stereo)',
+        '🎧',
+        'info'
+      );
+    },
+
+    setSpatialAudio: (enabled: boolean) => {
+      djAudioEngine.setSpatialAudio(enabled);
+      set({ spatialAudio: enabled });
     },
 
     setEqGain: (index: number, gain: number) => {

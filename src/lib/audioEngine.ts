@@ -28,6 +28,8 @@ export class DJAudioEngine {
   private bassBoostFilter: BiquadFilterNode | null = null;
   private compressor: DynamicsCompressorNode | null = null;
   private currentBassBoost: number = 0; // 0 to 18 dB
+  private spatialCrossGain: GainNode | null = null;
+  private spatialAudioEnabled: boolean = false;
 
   // Platform capability detection
   private isMobileOrSafari: boolean = false;
@@ -209,7 +211,7 @@ export class DJAudioEngine {
         this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
 
         // Complete Studio Audio Chain:
-        // BassBoost -> EQ[0] -> ... -> EQ[4] -> Compressor -> Analyser -> MasterGain -> Destination
+        // BassBoost -> EQ[0] -> ... -> EQ[4] -> Compressor -> SpatialWidener -> Analyser -> MasterGain -> Destination
         this.bassBoostFilter.connect(this.eqFilters[0]);
 
         let prevNode: AudioNode = this.eqFilters[0];
@@ -218,7 +220,42 @@ export class DJAudioEngine {
           prevNode = this.eqFilters[i];
         }
         prevNode.connect(this.compressor);
-        this.compressor.connect(this.analyser);
+
+        // Apple Music Style Spatial Audio Expander (Binaural 3D Haas processor)
+        const splitter = this.ctx.createChannelSplitter(2);
+        const merger = this.ctx.createChannelMerger(2);
+        const delayL = this.ctx.createDelay();
+        const delayR = this.ctx.createDelay();
+        delayL.delayTime.setValueAtTime(0.014, this.ctx.currentTime); // 14ms psychoacoustic Haas delay
+        delayR.delayTime.setValueAtTime(0.014, this.ctx.currentTime);
+
+        this.spatialCrossGain = this.ctx.createGain();
+        this.spatialCrossGain.gain.setValueAtTime(this.spatialAudioEnabled ? 0.45 : 0, this.ctx.currentTime);
+
+        // Direct path
+        this.compressor.connect(merger, 0, 0);
+        this.compressor.connect(merger, 0, 1);
+
+        // Wet spatial crossfeed path
+        this.compressor.connect(splitter);
+        splitter.connect(delayL, 0);
+        splitter.connect(delayR, 1);
+
+        const invL = this.ctx.createGain();
+        invL.gain.setValueAtTime(-0.8, this.ctx.currentTime);
+        const invR = this.ctx.createGain();
+        invR.gain.setValueAtTime(-0.8, this.ctx.currentTime);
+
+        delayL.connect(invL);
+        delayR.connect(invR);
+
+        invL.connect(this.spatialCrossGain);
+        invR.connect(this.spatialCrossGain);
+
+        this.spatialCrossGain.connect(merger, 0, 1); // Cross L to R
+        this.spatialCrossGain.connect(merger, 0, 0); // Cross R to L
+
+        merger.connect(this.analyser);
         this.analyser.connect(this.masterGain);
         this.masterGain.connect(this.ctx.destination);
 
@@ -498,6 +535,20 @@ export class DJAudioEngine {
 
   public getBassBoost(): number {
     return this.currentBassBoost;
+  }
+
+  public setSpatialAudio(enabled: boolean): void {
+    this.spatialAudioEnabled = enabled;
+    if (!this.ctx || !this.spatialCrossGain) return;
+    try {
+      this.spatialCrossGain.gain.setTargetAtTime(enabled ? 0.45 : 0, this.ctx.currentTime, 0.05);
+    } catch {
+      this.spatialCrossGain.gain.setValueAtTime(enabled ? 0.45 : 0, this.ctx.currentTime);
+    }
+  }
+
+  public isSpatialAudioEnabled(): boolean {
+    return this.spatialAudioEnabled;
   }
 
   public getVisualizerData(arr: Uint8Array): void {

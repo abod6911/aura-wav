@@ -424,6 +424,11 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
   const isDownloaded = downloadedTrackIds.includes(track.id);
 
   const handleRowClick = () => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(8);
+      } catch {}
+    }
     if (isCurrent) {
       togglePlayPause();
     } else {
@@ -436,7 +441,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
   return (
     <div
       onClick={handleRowClick}
-      className={`group grid grid-cols-[24px_42px_1fr_32px_44px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_40px_40px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
+      className={`track-item-contained group grid grid-cols-[24px_42px_1fr_32px_44px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_40px_40px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.985] active:bg-white/[0.08] ${
         isCurrent
           ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent border border-indigo-500/30 shadow-[0_4px_24px_rgba(99,102,241,0.18)]'
           : 'hover:bg-white/[0.05] border border-transparent'

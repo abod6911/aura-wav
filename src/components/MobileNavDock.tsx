@@ -13,6 +13,14 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   const isEqualizerOpen = usePlayerStore((state) => state.isEqualizerOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
 
+  const triggerHaptic = () => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(8);
+      } catch {}
+    }
+  };
+
   const tabs = [
     { id: 'library', label: 'المكتبة', icon: Music },
     { id: 'favorites', label: 'المفضلة', icon: Heart },
@@ -22,7 +30,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#07070c]/90 backdrop-blur-3xl border-t border-white/[0.08] px-4 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.8)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#07070c]/85 backdrop-blur-3xl border-t border-white/[0.09] px-4 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.85)]"
     >
       {tabs.map((t) => {
         const Icon = t.icon;
@@ -32,6 +40,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             key={t.id}
             whileTap={{ scale: 0.88 }}
             onClick={() => {
+              triggerHaptic();
               setEqualizerOpen(false);
               setActiveTab(t.id);
             }}
