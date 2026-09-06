@@ -548,11 +548,20 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
         </div>
 
         {/* 4. Main Playback Controls */}
-        <div className="flex items-center justify-between px-2 my-2 flex-shrink-0">
+        <div 
+          onPointerDown={(e) => e.stopPropagation()}
+          className="flex items-center justify-between px-2 my-2 flex-shrink-0"
+          style={{ touchAction: 'manipulation' }}
+        >
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={toggleShuffle}
-            className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              triggerHaptic();
+              toggleShuffle();
+            }}
+            style={{ touchAction: 'manipulation' }}
+            className={`p-2.5 rounded-full transition-colors cursor-pointer select-none ${
               shuffle ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
             }`}
           >
@@ -561,16 +570,28 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={previousTrack}
-            className="p-2.5 text-white hover:text-[#FF456E] transition-colors cursor-pointer"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              triggerHaptic();
+              previousTrack();
+            }}
+            style={{ touchAction: 'manipulation' }}
+            className="p-2.5 text-white hover:text-[#FF456E] active:scale-90 transition-all cursor-pointer select-none"
           >
             <SkipBack className="w-7 h-7 fill-current" />
           </motion.button>
 
           <motion.button
+            data-testid="expanded-play-pause-btn"
             whileTap={{ scale: 0.9 }}
-            onClick={togglePlayPause}
-            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform cursor-pointer"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              triggerHaptic();
+              togglePlayPause();
+            }}
+            style={{ touchAction: 'manipulation' }}
+            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-90 transition-transform cursor-pointer select-none"
+            aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
               <Pause className="w-7 h-7 fill-black" />
@@ -581,16 +602,26 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={() => nextTrack(false)}
-            className="p-2.5 text-white hover:text-[#FF456E] transition-colors cursor-pointer"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              triggerHaptic();
+              nextTrack(false);
+            }}
+            style={{ touchAction: 'manipulation' }}
+            className="p-2.5 text-white hover:text-[#FF456E] active:scale-90 transition-all cursor-pointer select-none"
           >
             <SkipForward className="w-7 h-7 fill-current" />
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={cycleRepeat}
-            className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              triggerHaptic();
+              cycleRepeat();
+            }}
+            style={{ touchAction: 'manipulation' }}
+            className={`p-2.5 rounded-full transition-colors cursor-pointer select-none ${
               repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
             }`}
           >

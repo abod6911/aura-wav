@@ -22,6 +22,12 @@ body {
   height: 100%;
 }
 
+/* Eliminate 300ms mobile tap delay and optimize instant touch response */
+button, a, input, select, [role="button"], .cursor-pointer {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 #root {
   min-height: 100vh;
   min-height: 100dvh;

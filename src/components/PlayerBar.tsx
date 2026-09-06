@@ -141,9 +141,16 @@ export const PlayerBar: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
-            onClick={togglePlayPause}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                try { navigator.vibrate(10); } catch {}
+              }
+              togglePlayPause();
+            }}
+            style={{ touchAction: 'manipulation' }}
             title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-            className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-[0_0_25px_rgba(255,255,255,0.3)] relative group cursor-pointer"
+            className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 active:scale-90 transition-all shadow-[0_0_25px_rgba(255,255,255,0.3)] relative group cursor-pointer select-none"
           >
             {isPlaying ? (
               <Pause className="w-5 h-5 fill-black" />

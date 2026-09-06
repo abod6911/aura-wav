@@ -705,12 +705,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         get().playTrack(tracks[0]);
         return;
       }
-      if (isPlaying) {
+      const isEnginePlaying = djAudioEngine.isPlaying();
+      const shouldPause = isPlaying || isEnginePlaying;
+
+      if (shouldPause) {
         djAudioEngine.pause();
         set({ isPlaying: false });
+        if (currentTrack) {
+          updateMediaSession(currentTrack, false, getMediaSessionCallbacks(get));
+        }
       } else {
-        djAudioEngine.play();
         set({ isPlaying: true });
+        djAudioEngine.play().catch(() => {
+          set({ isPlaying: false });
+        });
+        if (currentTrack) {
+          updateMediaSession(currentTrack, true, getMediaSessionCallbacks(get));
+        }
       }
     },
 

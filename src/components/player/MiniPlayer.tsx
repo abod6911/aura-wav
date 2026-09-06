@@ -56,10 +56,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           previousTrack();
         }
       }}
-      onTap={handleExpand}
-      onClick={handleExpand}
       data-testid="mini-player"
-      className="md:hidden fixed bottom-[calc(68px+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 bg-[#12121a]/85 backdrop-blur-3xl border border-white/[0.12] rounded-2xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center gap-3.5 cursor-pointer select-none overflow-hidden touch-pan-y"
+      className="md:hidden fixed bottom-[calc(68px+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 bg-[#12121a]/85 backdrop-blur-3xl border border-white/[0.12] rounded-2xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center gap-3.5 select-none overflow-hidden touch-pan-y"
     >
       {/* Micro-Progress Bar Running Along Top Edge */}
       <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/[0.08]">
@@ -104,15 +102,22 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       </div>
 
       {/* Play Controls with Spring Feedback */}
-      <div className="flex items-center gap-2">
+      <div 
+        onPointerDown={(e) => e.stopPropagation()}
+        className="flex items-center gap-2"
+        style={{ touchAction: 'manipulation' }}
+      >
         <motion.button
+          data-testid="mini-play-pause-btn"
           whileTap={{ scale: 0.88 }}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             triggerHaptic();
             togglePlayPause();
           }}
-          className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg shadow-white/10 hover:scale-105 transition-transform"
+          style={{ touchAction: 'manipulation' }}
+          className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg shadow-white/10 hover:scale-105 active:scale-90 transition-transform cursor-pointer select-none"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
@@ -124,12 +129,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
 
         <motion.button
           whileTap={{ scale: 0.88 }}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             triggerHaptic();
             nextTrack(false);
           }}
-          className="p-2 text-zinc-400 hover:text-white transition-colors"
+          style={{ touchAction: 'manipulation' }}
+          className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer select-none"
           aria-label="Next track"
         >
           <SkipForward className="w-5 h-5 fill-current" />

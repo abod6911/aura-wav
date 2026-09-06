@@ -38,8 +38,23 @@ export class DJAudioEngine {
   private automixEnabled: boolean = true;
   private automixDuration: number = 5; // seconds
   private isCrossfading: boolean = false;
+  private crossfadeTimeout: any = null;
+  private crossfadeInterval: any = null;
+  private fadeVolumeInterval: any = null;
   private volume: number = 0.9;
   private playbackRate: number = 1.0;
+
+  private clearCrossfadeTimers(): void {
+    if (this.crossfadeTimeout) {
+      clearTimeout(this.crossfadeTimeout);
+      this.crossfadeTimeout = null;
+    }
+    if (this.crossfadeInterval) {
+      clearInterval(this.crossfadeInterval);
+      this.crossfadeInterval = null;
+    }
+    this.isCrossfading = false;
+  }
 
   // Callbacks
   private onTimeUpdateCallback?: (currentTime: number, duration: number) => void;
@@ -141,8 +156,8 @@ export class DJAudioEngine {
     });
 
     audio.addEventListener('loadedmetadata', () => {
-      if (this.activeChannelName === name && this.onPlaybackStateChangeCallback) {
-        this.onPlaybackStateChangeCallback(true);
+      if (this.activeChannelName === name && this.onTimeUpdateCallback) {
+        this.onTimeUpdateCallback(audio.currentTime, audio.duration || 0);
       }
     });
 
@@ -336,6 +351,7 @@ export class DJAudioEngine {
   }
 
   public async playTrack(track: Track): Promise<void> {
+    this.clearCrossfadeTimers();
     try {
       await this.initContext();
     } catch (err) {
@@ -377,6 +393,7 @@ export class DJAudioEngine {
       return this.playTrack(nextTrack);
     }
 
+    this.clearCrossfadeTimers();
     const currentChannel = this.getActive();
     const nextChannel = this.getInactive();
     const duration = Math.max(2, Math.min(12, this.automixDuration));
@@ -410,13 +427,14 @@ export class DJAudioEngine {
         // Swap active channel pointer
         this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
 
-        setTimeout(() => {
+        this.crossfadeTimeout = setTimeout(() => {
           currentChannel.audio.pause();
           currentChannel.audio.currentTime = 0;
           if (currentChannel.gain && this.ctx) {
             currentChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
           }
           this.isCrossfading = false;
+          this.crossfadeTimeout = null;
         }, duration * 1000 + 100);
       } else {
         // High-fidelity fallback crossfade using dual element volume
@@ -426,14 +444,15 @@ export class DJAudioEngine {
         const steps = 20;
         const intervalTime = (duration * 1000) / steps;
         let step = 0;
-        const fadeTimer = setInterval(() => {
+        this.crossfadeInterval = setInterval(() => {
           step++;
           const progress = step / steps;
           currentChannel.audio.volume = Math.max(0, this.volume * Math.cos(progress * 0.5 * Math.PI));
           nextChannel.audio.volume = Math.min(this.volume, this.volume * Math.sin(progress * 0.5 * Math.PI));
 
           if (step >= steps) {
-            clearInterval(fadeTimer);
+            clearInterval(this.crossfadeInterval);
+            this.crossfadeInterval = null;
             currentChannel.audio.pause();
             currentChannel.audio.currentTime = 0;
             currentChannel.audio.volume = this.volume;
@@ -444,17 +463,21 @@ export class DJAudioEngine {
       }
     } catch (err) {
       console.warn('Crossfade fallback to direct play:', err);
-      this.isCrossfading = false;
+      this.clearCrossfadeTimers();
       await this.playTrack(nextTrack);
     }
   }
 
   public async play(): Promise<void> {
+    this.clearCrossfadeTimers();
     await this.initContext();
     const active = this.getActive();
     if (active.audio.src) {
       try {
         await active.audio.play();
+        if (this.onPlaybackStateChangeCallback) {
+          this.onPlaybackStateChangeCallback(true);
+        }
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           console.warn('Play notice:', err);
@@ -464,7 +487,43 @@ export class DJAudioEngine {
   }
 
   public pause(): void {
-    this.getActive().audio.pause();
+    this.clearCrossfadeTimers();
+    if (this.fadeVolumeInterval) {
+      clearInterval(this.fadeVolumeInterval);
+      this.fadeVolumeInterval = null;
+    }
+
+    // Immediately pause BOTH audio elements so sound cuts out instantly with zero lag
+    this.channelA.audio.pause();
+    this.channelB.audio.pause();
+
+    // Cancel any scheduled gain transitions in the Web Audio graph
+    if (this.ctx) {
+      try {
+        const now = this.ctx.currentTime;
+        if (this.channelA.gain) {
+          this.channelA.gain.gain.cancelScheduledValues(now);
+          this.channelA.gain.gain.setValueAtTime(this.activeChannelName === 'A' ? 1.0 : 0.0, now);
+        }
+        if (this.channelB.gain) {
+          this.channelB.gain.gain.cancelScheduledValues(now);
+          this.channelB.gain.gain.setValueAtTime(this.activeChannelName === 'B' ? 1.0 : 0.0, now);
+        }
+      } catch (err) {
+        console.warn('Error resetting gain on pause:', err);
+      }
+    }
+
+    // Instantly notify store callback without waiting for async browser audio event
+    if (this.onPlaybackStateChangeCallback) {
+      this.onPlaybackStateChangeCallback(false);
+    }
+  }
+
+  public stop(): void {
+    this.pause();
+    this.channelA.audio.currentTime = 0;
+    this.channelB.audio.currentTime = 0;
   }
 
   public seek(time: number): void {
@@ -484,6 +543,11 @@ export class DJAudioEngine {
   }
 
   public fadeVolume(targetVol: number, durationSecs: number): void {
+    if (this.fadeVolumeInterval) {
+      clearInterval(this.fadeVolumeInterval);
+      this.fadeVolumeInterval = null;
+    }
+
     const active = this.getActive();
     if (this.masterGain && this.ctx) {
       const now = this.ctx.currentTime;
@@ -495,11 +559,12 @@ export class DJAudioEngine {
       const totalSteps = 20;
       const startVol = active.audio.volume;
       const stepDuration = (durationSecs * 1000) / totalSteps;
-      const interval = setInterval(() => {
+      this.fadeVolumeInterval = setInterval(() => {
         step++;
         active.audio.volume = Math.max(0, Math.min(1, startVol + (targetVol - startVol) * (step / totalSteps)));
         if (step >= totalSteps) {
-          clearInterval(interval);
+          clearInterval(this.fadeVolumeInterval);
+          this.fadeVolumeInterval = null;
         }
       }, stepDuration);
     }
@@ -582,7 +647,9 @@ export class DJAudioEngine {
   }
 
   public isPlaying(): boolean {
-    return !this.getActive().audio.paused;
+    const aPlaying = !this.channelA.audio.paused && !this.channelA.audio.ended && this.channelA.audio.currentTime > 0;
+    const bPlaying = !this.channelB.audio.paused && !this.channelB.audio.ended && this.channelB.audio.currentTime > 0;
+    return aPlaying || bPlaying;
   }
 
   public setCallbacks(cbs: {

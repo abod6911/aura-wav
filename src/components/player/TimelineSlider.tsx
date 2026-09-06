@@ -51,6 +51,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsScrubbing(true);
     const newTime = calculateTimeFromPointer(e.clientX);
     setScrubTime(newTime);
