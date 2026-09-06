@@ -1,0 +1,8 @@
+public/songs
+dist/songs
+Liked_Songs
+node_modules
+.git
+*.mp3
+*.wav
+*.flac

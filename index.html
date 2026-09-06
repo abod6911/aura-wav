@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ar" dir="rtl" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="AURA.WAV - مشغل موسيقى PWA عصري، أوفلاين بالكامل مع AutoMix وكلمات متزامنة" />
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AURA.WAV" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <!-- Google Fonts: Plus Jakarta Sans & Readex Pro for Arabic & English -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <title>AURA.WAV — Future Audio Experience</title>
+
+    <!-- Self-healing Cache Purge & Fallback -->
+    <script>
+      (function() {
+        if ('serviceWorker' in navigator) {
+          caches.keys().then(function(keys) {
+            keys.forEach(function(k) {
+              if (k !== 'aura-wav-v5') {
+                console.log('[Cache Purge] Deleted stale cache:', k);
+                caches.delete(k);
+              }
+            });
+          });
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-[#09090b] text-[#f4f4f5] antialiased selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden font-sans">
+    <div id="root">
+      <div id="app-splash" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #08080a; color: #f4f4f5; font-family: 'Readex Pro', sans-serif;">
+        <div style="width: 44px; height: 44px; border: 3.5px solid rgba(99, 102, 241, 0.2); border-top-color: #6366f1; border-radius: 50%; animation: auraSpin 0.9s linear infinite;"></div>
+        <div style="margin-top: 20px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; color: #e4e4e7;">AURA<span style="color: #818cf8;">.WAV</span></div>
+        <p style="margin-top: 6px; font-size: 12px; color: #71717a;">جاري بدء المشغل الصوتي...</p>
+        <style>@keyframes auraSpin { to { transform: rotate(360deg); } }</style>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

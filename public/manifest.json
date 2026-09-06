@@ -1,0 +1,33 @@
+{
+  "name": "AURA.WAV — Offline-First PWA Music Player",
+  "short_name": "AURA.WAV",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "description": "مشغل موسيقى متطور بدون إنترنت، يدعم AutoMix الذكي، الكلمات المتزامنة والمعادل الصوتي",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["music", "entertainment", "audio"],
+  "dir": "rtl",
+  "lang": "ar"
+}
