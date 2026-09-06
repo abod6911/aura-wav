@@ -86,6 +86,16 @@ export const PlayerBar: React.FC = () => {
           <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
             {currentTrack?.artist || 'AURA.WAV'}
           </p>
+          {currentTrack && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/[0.08] text-zinc-300 border border-white/10 tracking-wider uppercase font-mono">
+                Lossless
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 tracking-wider uppercase font-mono">
+                Spatial
+              </span>
+            </div>
+          )}
         </div>
 
         {currentTrack && (
@@ -129,10 +139,11 @@ export const PlayerBar: React.FC = () => {
 
           {/* Large Hero Play/Pause Button */}
           <motion.button
+            whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={togglePlayPause}
             title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-            className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.25)] relative group"
+            className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 transition-all shadow-[0_0_25px_rgba(255,255,255,0.3)] relative group cursor-pointer"
           >
             {isPlaying ? (
               <Pause className="w-5 h-5 fill-black" />

@@ -246,26 +246,28 @@ export function App() {
       <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />
 
       {/* 3. Main View Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto px-3 sm:px-6 md:px-10 pb-[calc(160px+env(safe-area-inset-bottom,0px))] md:pb-28 z-10">
-        <Header onOpenImport={() => setIsImportModalOpen(true)} />
+      <main className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto px-3 sm:px-6 md:px-8 pb-[calc(160px+env(safe-area-inset-bottom,0px))] md:pb-32 z-10 scrollbar-thin scrollbar-thumb-white/10">
+        <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
+          <Header onOpenImport={() => setIsImportModalOpen(true)} />
 
-        {/* Dynamic Tab Views */}
-        {isLoadingLibrary ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-            <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-            <p className="text-xs text-zinc-400 font-medium">جاري تحميل مكتبتك الصوتية...</p>
-          </div>
-        ) : (
-          <div className="flex-1">
-            {activeTab === 'library' && (
-              <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
-            )}
-            {activeTab === 'favorites' && (
-              <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
-            )}
-            {activeTab === 'playlists' && <PlaylistsView />}
-          </div>
-        )}
+          {/* Dynamic Tab Views */}
+          {isLoadingLibrary ? (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
+              <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+              <p className="text-xs text-zinc-400 font-medium">جاري تحميل مكتبتك الصوتية...</p>
+            </div>
+          ) : (
+            <div className="flex-1 w-full min-w-0">
+              {activeTab === 'library' && (
+                <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
+              )}
+              {activeTab === 'favorites' && (
+                <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
+              )}
+              {activeTab === 'playlists' && <PlaylistsView />}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* 4. Desktop Persistent Player Bar */}

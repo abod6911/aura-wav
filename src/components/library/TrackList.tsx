@@ -121,6 +121,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     return tracks.slice(0, 4).map((t) => t.artworkUrl || '/logo.svg');
   }, [tracks]);
 
+  // Featured tracks for Apple Music / Spotify style editorial shelf
+  const featuredTracks = useMemo(() => {
+    if (tracks.length === 0) return [];
+    const favs = tracks.filter((t) => favorites.includes(t.id));
+    if (favs.length >= 6) return favs.slice(0, 6);
+    const remaining = tracks.filter((t) => !favorites.includes(t.id));
+    return [...favs, ...remaining].slice(0, 6);
+  }, [tracks, favorites]);
+
   return (
     <div className="space-y-8 pb-32 md:pb-32 w-full max-w-full">
       {/* 1. Grand Editorial Hero Banner (Apple Music / Spotify Style) */}
@@ -190,7 +199,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePlayAll}
-                className="h-11 sm:h-14 px-5 sm:px-8 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-3 shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:bg-zinc-200 transition-all"
+                className="h-11 sm:h-14 px-5 sm:px-8 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-3 shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:bg-zinc-200 transition-all cursor-pointer"
               >
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-black" />
                 <span>تشغيل الكل</span>
@@ -200,7 +209,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleShufflePlay}
-                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-all"
+                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer"
                 title="خلط عشوائي"
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-300" />
@@ -218,10 +227,60 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           </p>
           <button
             onClick={onOpenImport}
-            className="px-8 py-3.5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-xl"
+            className="px-8 py-3.5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-xl cursor-pointer"
           >
             استيراد المجلد المحلي (261 أغنية)
           </button>
+        </div>
+      )}
+
+      {/* 1.5 Featured Picks Editorial Shelf (Apple Music / Spotify Style) */}
+      {tracks.length > 0 && (
+        <div className="space-y-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                مختارات مميزة لك
+              </h3>
+            </div>
+            <span className="text-xs text-zinc-400 font-medium">استمع فوراً لأبرز الأغاني</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            {featuredTracks.map((t) => (
+              <div
+                key={t.id}
+                onClick={() => playTrack(t, tracks)}
+                className="group relative p-3 rounded-2xl bg-[#0e0e16]/60 hover:bg-white/[0.08] border border-white/[0.06] hover:border-indigo-500/30 backdrop-blur-xl transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 select-none"
+              >
+                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-[#151520] shadow-md border border-white/5">
+                  <img
+                    src={t.artworkUrl || '/logo.svg'}
+                    alt={t.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/logo.svg';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                    <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
+                      <Play className="w-4 h-4 fill-black translate-x-0.5" />
+                    </div>
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors" dir="auto">
+                    {t.title}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5" dir="auto">
+                    {t.artist}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -361,49 +420,51 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         )}
       </div>
 
-      {/* 3. Balanced Track Table (Strict LTR for Optical Perfection) */}
-      <div dir="ltr" className="w-full max-w-full">
-        {/* Table Column Headers (Desktop) */}
-        <div className="hidden md:grid grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_40px_40px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.08] select-none uppercase tracking-wider">
-          <span className="text-center font-mono">#</span>
-          <span>Cover</span>
-          <span>Title & Artist</span>
-          <span>Album</span>
-          <span className="text-center" title="حفظ للتشغيل بدون إنترنت">
-            <Download className="w-3.5 h-3.5 mx-auto opacity-70" />
-          </span>
-          <span className="text-center">
-            <Heart className="w-3.5 h-3.5 mx-auto opacity-70" />
-          </span>
-          <span className="text-right font-mono flex items-center justify-end gap-1">
-            <Clock className="w-3 h-3" />
-            <span>Time</span>
-          </span>
-          <span />
-        </div>
+      {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
+      <div className="bg-[#0b0b12]/80 border border-white/[0.08] rounded-3xl p-2 sm:p-5 backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+        <div dir="ltr" className="w-full max-w-full">
+          {/* Table Column Headers (Desktop) */}
+          <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">
+            <span className="text-center font-mono">#</span>
+            <span>Cover</span>
+            <span>Title & Artist</span>
+            <span>Album</span>
+            <span className="text-center" title="حفظ للتشغيل بدون إنترنت">
+              <Download className="w-3.5 h-3.5 mx-auto opacity-70" />
+            </span>
+            <span className="text-center">
+              <Heart className="w-3.5 h-3.5 mx-auto opacity-70" />
+            </span>
+            <span className="text-right font-mono flex items-center justify-end gap-1">
+              <Clock className="w-3 h-3" />
+              <span>Time</span>
+            </span>
+            <span />
+          </div>
 
-        {/* Track Rows List */}
-        {filtered.length > 0 ? (
-          <div className="divide-y divide-white/[0.02] pt-1">
-            {filtered.map((track, idx) => (
-              <TrackTableRow
-                key={track.id}
-                track={track}
-                index={idx}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-3xl mt-4">
-            <Filter className="w-10 h-10 mx-auto text-zinc-600" />
-            <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-              {searchQuery
-                ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
-                : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
-            </p>
-          </div>
-        )}
+          {/* Track Rows List */}
+          {filtered.length > 0 ? (
+            <div className="divide-y divide-white/[0.02] pt-1">
+              {filtered.map((track, idx) => (
+                <TrackTableRow
+                  key={track.id}
+                  track={track}
+                  index={idx}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
+              <Filter className="w-10 h-10 mx-auto text-zinc-600" />
+              <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
+              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                {searchQuery
+                  ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
+                  : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -442,7 +503,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
     <div
       onClick={handleRowClick}
       style={{ touchAction: 'manipulation' }}
-      className={`track-item-contained group grid grid-cols-[24px_42px_1fr_32px_44px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_40px_40px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.985] active:bg-white/[0.08] ${
+      className={`track-item-contained group grid grid-cols-[26px_44px_1fr_32px_40px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.985] active:bg-white/[0.08] ${
         isCurrent
           ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent border border-indigo-500/30 shadow-[0_4px_24px_rgba(99,102,241,0.18)]'
           : 'hover:bg-white/[0.05] border border-transparent'
