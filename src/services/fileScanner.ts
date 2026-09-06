@@ -49,8 +49,21 @@ async function scanDirectoryHandle(
 export async function processAudioFiles(
   files: File[],
   lrcFiles: File[] = [],
-  onProgress?: (progress: ScanProgress) => void
+  onProgress?: (progress: ScanProgress) => void,
+  folderName?: string
 ): Promise<Track[]> {
+  // Auto-detect folder name from webkitRelativePath if available
+  let resolvedFolderName = folderName;
+  if (!resolvedFolderName && files.length > 0) {
+    const firstRel = (files[0] as any).webkitRelativePath;
+    if (firstRel && typeof firstRel === 'string' && firstRel.includes('/')) {
+      resolvedFolderName = firstRel.split('/')[0];
+    }
+  }
+  if (!resolvedFolderName) {
+    resolvedFolderName = 'Liked_Songs';
+  }
+
   const lrcMap = new Map<string, string>();
   for (const lrc of lrcFiles) {
     try {
@@ -192,6 +205,16 @@ export async function processAudioFiles(
   }
 
   await tx.done;
+
+  try {
+    const dbSettings = await getDB();
+    await dbSettings.put('settings', resolvedFolderName, 'savedFolderName');
+    await dbSettings.put('settings', tracks.length, 'savedFolderTrackCount');
+    await dbSettings.put('settings', Date.now(), 'savedFolderTimestamp');
+  } catch (err) {
+    console.warn('Could not persist folder settings:', err);
+  }
+
   return tracks;
 }
 
@@ -201,11 +224,12 @@ export async function pickLocalDirectory(
   if ('showDirectoryPicker' in window) {
     try {
       const dirHandle = await (window as any).showDirectoryPicker({ mode: 'read' });
-      // Persist directory handle in IndexedDB
+      // Persist directory handle and name in IndexedDB
       try {
         const db = await getDB();
         await db.put('settings', dirHandle, 'savedDirectoryHandle');
         await db.put('settings', dirHandle.name, 'savedDirectoryName');
+        await db.put('settings', dirHandle.name, 'savedFolderName');
       } catch (err) {
         console.warn('Could not persist directory handle:', err);
       }
@@ -214,7 +238,7 @@ export async function pickLocalDirectory(
       const lrcMap = new Map<string, string>();
 
       await scanDirectoryHandle(dirHandle, audioFiles, lrcMap);
-      return await processAudioFiles(audioFiles, [], onProgress);
+      return await processAudioFiles(audioFiles, [], onProgress, dirHandle.name);
     } catch (err: any) {
       if (err.name === 'AbortError') return [];
       throw err;

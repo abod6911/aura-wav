@@ -15,6 +15,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
   const isOnline = usePlayerStore((state) => state.isOnline);
 
+  const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   // Listen for PWA installation prompt
@@ -58,9 +60,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
         </div>
 
         <div className="min-w-0">
-          <h2 className="text-lg md:text-2xl font-black text-white truncate">
-            <span>مكتبتي الصوتية</span>
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg md:text-2xl font-black text-white truncate">
+              <span>مكتبتي الصوتية</span>
+            </h2>
+            <button
+              onClick={onOpenImport}
+              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-xs font-bold transition-all active:scale-95 cursor-pointer truncate max-w-[130px] sm:max-w-none"
+              title="مجلد الأغاني المحفوظ - انقر للتحديث أو التغيير"
+            >
+              <FolderOpen className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <span className="truncate">{savedFolderName || 'Liked_Songs'}</span>
+            </button>
+          </div>
           <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-zinc-400 mt-0.5">
             <span className="flex items-center gap-1">
               <Music className="w-3 h-3 text-indigo-400" />
@@ -77,7 +89,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             <span>•</span>
             <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>أوفلاين</span>
+              <span>محفوظ محلياً</span>
             </span>
           </div>
         </div>

@@ -77,11 +77,17 @@ interface PlayerState {
   downloadedTrackIds: string[];
   toasts: ToastItem[];
 
+  // Persistent Folder Engine
+  savedFolderName: string | null;
+  savedFolderTrackCount: number;
+  savedFolderTimestamp: number | null;
+
   // Actions
   initStore: () => Promise<void>;
   setSearchQuery: (query: string) => void;
   setActiveMood: (mood: string | null) => void;
-  importTracks: (newTracks: Track[]) => void;
+  setSavedFolderName: (name: string) => void;
+  importTracks: (newTracks: Track[], folderName?: string) => Promise<void>;
   playTrack: (track: Track, newQueue?: Track[]) => Promise<void>;
   togglePlayPause: () => void;
   nextTrack: (viaAutoMix?: boolean) => Promise<void>;
@@ -213,21 +219,47 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
     toasts: [],
+    savedFolderName: 'Liked_Songs',
+    savedFolderTrackCount: 0,
+    savedFolderTimestamp: null,
 
     setWelcomeOpen: (open) => set({ isWelcomeOpen: open }),
     setIsOnline: (online) => set({ isOnline: online }),
+    setSavedFolderName: (name) => {
+      set({ savedFolderName: name });
+      getDB().then((db) => {
+        db.put('settings', name, 'savedFolderName').catch(() => {});
+      });
+    },
 
     initStore: async () => {
       try {
         const db = await getDB();
-        const [cachedTracks, favs, playlists, automixSetting, volSetting, audioBlobKeys] = await Promise.all([
+        const [
+          cachedTracks,
+          favs,
+          playlists,
+          automixSetting,
+          volSetting,
+          audioBlobKeys,
+          savedFolderNameVal,
+          savedFolderTrackCountVal,
+          savedFolderTimestampVal,
+          savedDirNameVal,
+        ] = await Promise.all([
           db.getAll('tracks'),
           db.getAll('favorites'),
           db.getAll('playlists'),
           db.get('settings', 'automix'),
           db.get('settings', 'volume'),
           db.getAllKeys('audioBlobs'),
+          db.get('settings', 'savedFolderName'),
+          db.get('settings', 'savedFolderTrackCount'),
+          db.get('settings', 'savedFolderTimestamp'),
+          db.get('settings', 'savedDirectoryName'),
         ]);
+
+        const resolvedFolderName = savedFolderNameVal || savedDirNameVal || 'Liked_Songs';
 
         const favIds = (favs || []).map((f) => f.id);
         const automix = automixSetting || { enabled: true, duration: 5 };
@@ -373,6 +405,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           });
         }
 
+        const finalFolderCount = savedFolderTrackCountVal || finalTracks.length;
+        if (!savedFolderNameVal) {
+          try {
+            await db.put('settings', resolvedFolderName, 'savedFolderName');
+            await db.put('settings', finalFolderCount, 'savedFolderTrackCount');
+            await db.put('settings', Date.now(), 'savedFolderTimestamp');
+          } catch {}
+        }
+
         set({
           tracks: finalTracks,
           filteredTracks: finalTracks,
@@ -382,6 +423,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           automixDuration: automix.duration,
           volume: vol,
           downloadedTrackIds: (audioBlobKeys as string[]) || [],
+          savedFolderName: resolvedFolderName,
+          savedFolderTrackCount: finalFolderCount,
+          savedFolderTimestamp: savedFolderTimestampVal || Date.now(),
           isLoadingLibrary: false,
         });
       } catch (e) {
@@ -390,6 +434,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         set({
           tracks: fallbackTracks,
           filteredTracks: fallbackTracks,
+          savedFolderName: 'Liked_Songs',
+          savedFolderTrackCount: fallbackTracks.length,
+          savedFolderTimestamp: Date.now(),
           isLoadingLibrary: false,
         });
       }
@@ -409,7 +456,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({ searchQuery: query, filteredTracks: filtered });
     },
 
-    importTracks: (newTracks: Track[]) => {
+    importTracks: async (newTracks: Track[], folderName?: string) => {
       const { tracks } = get();
       const trackMap = new Map<string, Track>();
 
@@ -455,10 +502,32 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       });
 
+      const targetFolder = folderName || get().savedFolderName || 'Liked_Songs';
+
       set({
         tracks: updatedList,
         filteredTracks: updatedList,
+        savedFolderName: targetFolder,
+        savedFolderTrackCount: updatedList.length,
+        savedFolderTimestamp: Date.now(),
       });
+
+      // Persist tracks and folder metadata into IndexedDB
+      try {
+        const db = await getDB();
+        await db.put('settings', targetFolder, 'savedFolderName');
+        await db.put('settings', updatedList.length, 'savedFolderTrackCount');
+        await db.put('settings', Date.now(), 'savedFolderTimestamp');
+
+        const tx = db.transaction('tracks', 'readwrite');
+        for (const tr of updatedList) {
+          const { file: _f, blob: _b, ...serializable } = tr;
+          await tx.store.put(serializable as Track);
+        }
+        await tx.done;
+      } catch (err) {
+        console.warn('Could not persist updated tracks/folder metadata to IndexedDB:', err);
+      }
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
@@ -509,20 +578,29 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
-      let updatedQueue = newQueue || state.queue;
-      if (!newQueue && updatedQueue.length === 0) {
-        updatedQueue = [...state.tracks];
+      // Smart queue reference: only change queue if different
+      let updatedQueue = state.queue;
+      if (newQueue && newQueue.length > 0) {
+        if (state.queue.length !== newQueue.length || state.queue[0]?.id !== newQueue[0]?.id) {
+          updatedQueue = newQueue;
+        }
+      } else if (updatedQueue.length === 0) {
+        updatedQueue = state.tracks;
       }
 
       updateMediaSession(playableTrack, true, getMediaSessionCallbacks(get));
 
+      // IMMEDIATE UI STATE UPDATE: gives 0ms instant feedback on mobile tap
       set({
         currentTrack: playableTrack,
         queue: updatedQueue,
         isPlaying: true,
       });
 
-      await djAudioEngine.playTrack(playableTrack);
+      // Launch audio playback asynchronously
+      djAudioEngine.playTrack(playableTrack).catch((err) => {
+        console.warn('Play track notice:', err);
+      });
 
       // Background cover art enrichment if track has fallback cover
       if (playableTrack.artworkUrl?.startsWith('data:image/svg')) {

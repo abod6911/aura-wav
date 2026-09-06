@@ -38,11 +38,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
   const favorites = usePlayerStore((state) => state.favorites);
   const playTrack = usePlayerStore((state) => state.playTrack);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
   const activeMood = usePlayerStore((state) => state.activeMood);
   const setActiveMood = usePlayerStore((state) => state.setActiveMood);
+  const savedFolderName = usePlayerStore((state) => state.savedFolderName);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('number');
@@ -150,9 +148,23 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
             {/* Playlist Editorial Metadata */}
             <div className="flex-1 text-center md:text-right space-y-2 sm:space-y-3 min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-semibold">
-                <HardDrive className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>مكتبة محلية 100% أوفلاين</span>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-semibold">
+                  <HardDrive className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span>مكتبة محلية 100% أوفلاين</span>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-semibold">
+                  <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
+                  <span>المجلد المحفوظ: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
+                </div>
+
+                <button
+                  onClick={onOpenImport}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[11px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>تغيير المجلد 📁</span>
+                </button>
               </div>
 
               <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
@@ -168,7 +180,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 <span>•</span>
                 <span>{formattedTotalTime}</span>
                 <span>•</span>
-                <span className="text-emerald-400 font-semibold">جاهز للتشغيل</span>
+                <span className="text-emerald-400 font-semibold">محفوظ ويعمل بدون نت 100%</span>
               </div>
             </div>
 
@@ -378,7 +390,6 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 key={track.id}
                 track={track}
                 index={idx}
-                allFilteredTracks={filtered}
               />
             ))}
           </div>
@@ -401,27 +412,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 interface TrackTableRowProps {
   track: Track;
   index: number;
-  allFilteredTracks: Track[];
 }
 
-const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFilteredTracks }) => {
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const playTrack = usePlayerStore((state) => state.playTrack);
-  const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
-  const favorites = usePlayerStore((state) => state.favorites);
-  const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
-  const addToQueue = usePlayerStore((state) => state.addToQueue);
-  const playNextInQueue = usePlayerStore((state) => state.playNextInQueue);
-  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
-  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
-  const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
+const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }) => {
+  const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
+  const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
+  const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
+  const isDownloaded = usePlayerStore((state) => state.downloadedTrackIds.includes(track.id));
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const isCurrent = currentTrack?.id === track.id;
-  const isFav = favorites.includes(track.id);
-  const isDownloaded = downloadedTrackIds.includes(track.id);
 
   const handleRowClick = () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -429,10 +428,11 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
         navigator.vibrate(8);
       } catch {}
     }
+    const store = usePlayerStore.getState();
     if (isCurrent) {
-      togglePlayPause();
+      store.togglePlayPause();
     } else {
-      playTrack(track, allFilteredTracks);
+      store.playTrack(track, store.filteredTracks);
     }
   };
 
@@ -441,6 +441,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
   return (
     <div
       onClick={handleRowClick}
+      style={{ touchAction: 'manipulation' }}
       className={`track-item-contained group grid grid-cols-[24px_42px_1fr_32px_44px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_40px_40px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.985] active:bg-white/[0.08] ${
         isCurrent
           ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent border border-indigo-500/30 shadow-[0_4px_24px_rgba(99,102,241,0.18)]'
@@ -521,7 +522,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
         <button
           onClick={(e) => {
             e.stopPropagation();
-            downloadTrackForOffline(track.id);
+            usePlayerStore.getState().downloadTrackForOffline(track.id);
           }}
           className="p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125"
           title={isDownloaded ? 'محفوظ أوفلاين ⚡' : 'حفظ للتشغيل بدون إنترنت'}
@@ -540,7 +541,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
         <button
           onClick={(e) => {
             e.stopPropagation();
-            toggleFavorite(track.id);
+            usePlayerStore.getState().toggleFavorite(track.id);
           }}
           className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125"
           aria-label="Toggle favorite"
@@ -579,7 +580,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
           <button
             onClick={(e) => {
               e.stopPropagation();
-              playNextInQueue(track);
+              usePlayerStore.getState().playNextInQueue(track);
               setIsMenuOpen(false);
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
@@ -590,7 +591,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
           <button
             onClick={(e) => {
               e.stopPropagation();
-              addToQueue(track);
+              usePlayerStore.getState().addToQueue(track);
               setIsMenuOpen(false);
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
@@ -601,7 +602,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setChangeArtworkModal(true, track);
+              usePlayerStore.getState().setChangeArtworkModal(true, track);
               setIsMenuOpen(false);
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
@@ -612,7 +613,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
           <button
             onClick={(e) => {
               e.stopPropagation();
-              downloadTrackForOffline(track.id);
+              usePlayerStore.getState().downloadTrackForOffline(track.id);
               setIsMenuOpen(false);
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
@@ -633,4 +634,4 @@ const TrackTableRow: React.FC<TrackTableRowProps> = ({ track, index, allFiltered
       </div>
     </div>
   );
-};
+});

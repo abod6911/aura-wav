@@ -23,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const cleanAndRepairLibrary = usePlayerStore((state) => state.cleanAndRepairLibrary);
+  const savedFolderName = usePlayerStore((state) => state.savedFolderName);
 
   return (
     <aside className="hidden lg:flex w-64 flex-col justify-between p-6 border-l border-white/5 bg-[#0e0e14]/70 backdrop-blur-2xl z-30 select-none">
@@ -118,13 +119,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
       {/* Footer Section */}
       <div className="space-y-3">
+        {/* Active Persistent Folder Indicator */}
+        <div className="p-3 rounded-2xl bg-indigo-500/[0.08] border border-indigo-500/20 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-indigo-300 flex items-center gap-1.5">
+              <FolderPlus className="w-3.5 h-3.5 text-indigo-400" />
+              <span>المجلد المحفوظ:</span>
+            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="محفوظ محلياً" />
+          </div>
+          <p className="text-xs font-bold text-white truncate" dir="auto">
+            {savedFolderName || 'Liked_Songs'}
+          </p>
+          <p className="text-[10px] text-zinc-400">
+            {tracks.length} مسار مخزن ومحفوظ أوفلاين
+          </p>
+        </div>
+
         {/* Import Folder Action */}
         <button
           onClick={onOpenImport}
           className="w-full py-3 px-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         >
           <FolderPlus className="w-4 h-4 text-indigo-400" />
-          <span>استيراد مجلد محلي</span>
+          <span>تغيير أو استيراد مجلد</span>
         </button>
 
         {/* Repair & Clean Library */}

@@ -91,7 +91,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
     return tracks.filter(
       (t) => t.id !== currentTrack.id && t.artist.toLowerCase().includes(primaryArtist)
     ).slice(0, 6);
-  }, [currentTrack, tracks]);
+  }, [currentTrack?.id, tracks.length]);
 
   const similarTracks = useMemo(() => {
     if (!currentTrack) return [];
@@ -101,7 +101,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
       if (currentTrack.genre && t.genre === currentTrack.genre) return true;
       return Math.abs(t.duration - currentTrack.duration) < 25;
     }).slice(0, 6);
-  }, [currentTrack, tracks]);
+  }, [currentTrack?.id, tracks.length]);
 
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
@@ -160,16 +160,15 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-2 flex-shrink-0 cursor-pointer transition-colors"
         />
 
-        {/* Dynamic Atmospheric Blurred Radial Mesh */}
+        {/* Dynamic Hardware-Accelerated Ambient Radial Mesh (Zero GPU stall on iOS) */}
         <div
-          className="absolute inset-0 -z-10 opacity-25 filter blur-3xl scale-110 transition-all duration-1000 pointer-events-none"
+          className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-35"
           style={{
-            backgroundImage: currentTrack.artworkUrl ? `url(${currentTrack.artworkUrl})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            background: `radial-gradient(circle at 50% 25%, ${currentTrack.dominantColor || '#6366f1'} 0%, transparent 60%), radial-gradient(circle at 80% 75%, ${currentTrack.secondaryColor || '#a855f7'} 0%, transparent 55%), #07070b`,
+            transform: 'translateZ(0)',
           }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#07070b]/70 via-[#07070b]/92 to-[#07070b] pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#07070b]/50 via-[#07070b]/85 to-[#07070b] pointer-events-none" />
 
         {/* 1. Top Header Bar */}
         <div className="flex items-center justify-between pt-1 flex-shrink-0">

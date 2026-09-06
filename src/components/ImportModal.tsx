@@ -15,6 +15,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+  const [importedFolderName, setImportedFolderName] = useState<string>('Liked_Songs');
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -29,7 +30,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
     try {
       const tracks = await pickLocalDirectory((p) => setProgress(p));
       if (tracks.length > 0) {
-        importTracks(tracks);
+        const folderName = usePlayerStore.getState().savedFolderName || 'Liked_Songs';
+        await importTracks(tracks, folderName);
+        setImportedFolderName(folderName);
         setImportedCount(tracks.length);
         confetti({
           particleCount: 80,
@@ -60,12 +63,21 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 
     try {
       const fileList = Array.from(files);
+      let detectedFolder = 'Liked_Songs';
+      if (fileList[0] && (fileList[0] as any).webkitRelativePath) {
+        const rel = (fileList[0] as any).webkitRelativePath;
+        if (rel.includes('/')) {
+          detectedFolder = rel.split('/')[0];
+        }
+      }
+
       const audioFiles = fileList.filter((f) => !f.name.toLowerCase().endsWith('.lrc'));
       const lrcFiles = fileList.filter((f) => f.name.toLowerCase().endsWith('.lrc'));
 
-      const tracks = await processAudioFiles(audioFiles, lrcFiles, (p) => setProgress(p));
+      const tracks = await processAudioFiles(audioFiles, lrcFiles, (p) => setProgress(p), detectedFolder);
       if (tracks.length > 0) {
-        importTracks(tracks);
+        await importTracks(tracks, detectedFolder);
+        setImportedFolderName(detectedFolder);
         setImportedCount(tracks.length);
         confetti({
           particleCount: 80,
@@ -188,9 +200,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-white">تم الاستيراد بنجاح!</h4>
+              <h4 className="text-lg font-bold text-white">تم حفظ مجلد [{importedFolderName}] بنجاح!</h4>
               <p className="text-sm text-aura-textSecondary mt-1">
-                تمت إضافة <span className="text-emerald-400 font-bold">{importedCount}</span> مسار إلى مكتبتك المحلية وتخزينها في الذاكرة لتستمتع بها بدون إنترنت.
+                تمت إضافة <span className="text-emerald-400 font-bold">{importedCount}</span> مسار وتثبيتها في ذاكرة جهازك. سيتذكر الموقع مجلدك دائماً ويعمل 100% بدون نت.
               </p>
             </div>
 
