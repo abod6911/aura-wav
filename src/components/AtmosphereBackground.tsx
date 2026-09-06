@@ -6,9 +6,9 @@ export const AtmosphereBackground: React.FC = () => {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
 
-  const [c1, setC1] = useState('rgba(99, 102, 241, 0.45)');
-  const [c2, setC2] = useState('rgba(168, 85, 247, 0.4)');
-  const [c3, setC3] = useState('rgba(236, 72, 153, 0.3)');
+  const [c1, setC1] = useState('rgba(250, 36, 60, 0.35)');
+  const [c2, setC2] = useState('rgba(255, 45, 85, 0.28)');
+  const [c3, setC3] = useState('rgba(214, 14, 46, 0.2)');
 
   useEffect(() => {
     if (currentTrack?.artworkUrl) {

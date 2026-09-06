@@ -8,13 +8,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        apple: {
+          red: "#FA243C",
+          redHover: "#FF375F",
+          redDark: "#D60E2E",
+          pink: "#FF2D55",
+          card: "rgba(24, 24, 28, 0.75)",
+          cardHover: "rgba(36, 36, 42, 0.85)",
+        },
         aura: {
-          bg: "#09090b",
-          card: "rgba(18, 18, 23, 0.7)",
-          cardHover: "rgba(28, 28, 36, 0.8)",
+          bg: "#050507",
+          card: "rgba(22, 22, 26, 0.75)",
+          cardHover: "rgba(32, 32, 38, 0.85)",
           border: "rgba(255, 255, 255, 0.08)",
-          accent: "#6366f1",
-          accentGlow: "rgba(99, 102, 241, 0.4)",
+          accent: "#FA243C",
+          accentGlow: "rgba(250, 36, 60, 0.45)",
           textPrimary: "#f4f4f5",
           textSecondary: "#a1a1aa",
           muted: "#71717a",

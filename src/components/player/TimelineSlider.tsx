@@ -95,7 +95,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
         <div className="w-full h-1.5 bg-white/[0.08] rounded-full overflow-hidden transition-all group-hover:h-2">
           {/* Glowing Filled Progress Bar */}
           <div
-            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full relative"
+            className="h-full bg-gradient-to-r from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] rounded-full relative shadow-[0_0_12px_rgba(250,36,60,0.5)]"
             style={{ width: `${progressPercent}%` }}
           >
             {/* Subtle light sheen */}
@@ -106,7 +106,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
         {/* Glassmorphic Circular Thumb */}
         <div
           className={`absolute -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.8)] border border-white/60 pointer-events-none transition-transform duration-75 ${
-            isScrubbing ? 'scale-125 ring-4 ring-indigo-500/30' : 'group-hover:scale-110'
+            isScrubbing ? 'scale-125 ring-4 ring-[#FA243C]/40' : 'group-hover:scale-110'
           }`}
           style={{ left: `${progressPercent}%` }}
         />

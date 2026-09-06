@@ -30,17 +30,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
       {/* Brand & Logo */}
       <div className="space-y-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 p-[1.5px] shadow-lg shadow-indigo-600/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] p-[1.5px] shadow-lg shadow-[#FA243C]/25">
             <div className="w-full h-full bg-[#09090b] rounded-[14px] flex items-center justify-center">
-              <Disc className="w-5 h-5 text-indigo-400 animate-spin-slow" />
+              <Disc className="w-5 h-5 text-[#FA243C] animate-spin-slow" />
             </div>
           </div>
           <div>
             <h1 className="text-lg font-black tracking-wider text-white">
-              AURA<span className="text-indigo-400">.WAV</span>
+              AURA<span className="text-[#FA243C]">.WAV</span>
             </h1>
             <p className="text-[10px] text-aura-muted font-mono tracking-widest uppercase">
-              Pro Audio Player
+              Apple Music Edition
             </p>
           </div>
         </div>
@@ -53,9 +53,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveTab('library')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'library'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+                ? 'bg-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
                 : 'text-aura-textSecondary hover:text-white hover:bg-white/5'
             }`}
           >
@@ -68,14 +68,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveTab('favorites')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'favorites'
-                ? 'bg-red-500 text-white shadow-lg shadow-red-500/25'
+                ? 'bg-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
                 : 'text-aura-textSecondary hover:text-white hover:bg-white/5'
             }`}
           >
             <div className="flex items-center gap-3">
-              <Heart className="w-4 h-4" />
+              <Heart className="w-4 h-4 fill-current" />
               <span>المفضلة</span>
             </div>
             <span className="text-xs opacity-75 font-mono">{favorites.length}</span>
@@ -83,9 +83,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveTab('playlists')}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'playlists'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25'
+                ? 'bg-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
                 : 'text-aura-textSecondary hover:text-white hover:bg-white/5'
             }`}
           >
@@ -104,14 +104,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setEqualizerOpen(true)}
-            className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold text-aura-textSecondary hover:text-white hover:bg-white/5 transition-all"
+            className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold text-aura-textSecondary hover:text-white hover:bg-white/5 transition-all cursor-pointer"
           >
             <div className="flex items-center gap-3">
-              <Sliders className="w-4 h-4 text-purple-400" />
+              <Sliders className="w-4 h-4 text-[#FF375F]" />
               <span>المعادل & AutoMix</span>
             </div>
             {automixEnabled && (
-              <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-[#FA243C] animate-ping" />
             )}
           </button>
         </div>
@@ -120,10 +120,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
       {/* Footer Section */}
       <div className="space-y-3">
         {/* Active Persistent Folder Luxury Card */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-950/30 via-white/[0.03] to-white/[0.01] border border-indigo-500/20 shadow-lg space-y-2.5">
+        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#FA243C]/15 via-white/[0.03] to-white/[0.01] border border-[#FA243C]/25 shadow-lg space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-extrabold text-indigo-300 flex items-center gap-1.5">
-              <FolderPlus className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[11px] font-extrabold text-[#FF456E] flex items-center gap-1.5">
+              <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
               <span>المجلد المحفوظ</span>
             </span>
             <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">
@@ -143,9 +143,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
           <button
             onClick={onOpenImport}
-            className="w-full py-2 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/60 text-indigo-200 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm"
+            className="w-full py-2 px-3 rounded-xl bg-[#FA243C]/20 hover:bg-[#FA243C]/35 border border-[#FA243C]/35 hover:border-[#FA243C]/60 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-sm"
           >
-            <FolderPlus className="w-3.5 h-3.5 text-indigo-300" />
+            <FolderPlus className="w-3.5 h-3.5 text-[#FF456E]" />
             <span>تغيير أو تحديث المجلد</span>
           </button>
         </div>
@@ -156,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           title="فحص وتنظيف المكتبة ودمج المسارات المكررة"
           className="w-full py-2.5 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 text-zinc-400 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
         >
-          <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+          <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
           <span>تنظيف وفحص المكتبة</span>
         </button>
 

@@ -49,22 +49,20 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             {isActive && (
               <motion.div
                 layoutId="mobileNavGlow"
-                className="absolute inset-0 rounded-xl bg-indigo-500/15 border border-indigo-500/25"
+                className="absolute inset-0 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/25 shadow-[0_0_12px_rgba(250,36,60,0.2)]"
                 transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
               />
             )}
             <Icon
               className={`w-5 h-5 relative z-10 transition-colors ${
                 isActive
-                  ? t.id === 'favorites'
-                    ? 'text-red-400'
-                    : 'text-indigo-400'
+                  ? 'text-[#FA243C]'
                   : 'text-zinc-400'
               }`}
             />
             <span
               className={`text-[10px] font-bold relative z-10 transition-colors ${
-                isActive ? 'text-white' : 'text-zinc-500'
+                isActive ? 'text-white font-black' : 'text-zinc-500'
               }`}
             >
               {t.label}
@@ -82,18 +80,18 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
         {isEqualizerOpen && (
           <motion.div
             layoutId="mobileNavGlow"
-            className="absolute inset-0 rounded-xl bg-purple-500/15 border border-purple-500/25"
+            className="absolute inset-0 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/25 shadow-[0_0_12px_rgba(250,36,60,0.2)]"
             transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
           />
         )}
         <Sliders
           className={`w-5 h-5 relative z-10 transition-colors ${
-            isEqualizerOpen ? 'text-purple-400' : 'text-zinc-400'
+            isEqualizerOpen ? 'text-[#FA243C]' : 'text-zinc-400'
           }`}
         />
         <span
           className={`text-[10px] font-bold relative z-10 transition-colors ${
-            isEqualizerOpen ? 'text-white' : 'text-zinc-500'
+            isEqualizerOpen ? 'text-white font-black' : 'text-zinc-500'
           }`}
         >
           المعادل

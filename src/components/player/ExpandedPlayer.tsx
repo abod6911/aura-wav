@@ -181,8 +181,8 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           </motion.button>
 
           <div className="text-center">
-            <span className="text-[10px] font-mono tracking-widest text-indigo-400 uppercase font-extrabold">
-              AURA.WAV PLAYER
+            <span className="text-[10px] font-mono tracking-widest text-[#FA243C] uppercase font-extrabold">
+              APPLE MUSIC EDITION
             </span>
             <h5 className="text-xs text-zinc-400 font-medium truncate max-w-[180px] sm:max-w-xs">
               {currentTrack.album || 'Single'}
@@ -193,9 +193,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={() => setSleepTimerOpen(true)}
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors cursor-pointer ${
                 sleepTimerRemaining !== null
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                  ? 'bg-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
                   : 'bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300'
               }`}
               title="مؤقت النوم"
@@ -206,7 +206,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={() => setEqualizerOpen(true)}
-              className="w-10 h-10 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] text-purple-400 flex items-center justify-center transition-colors"
+              className="w-10 h-10 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] text-[#FF2D55] flex items-center justify-center transition-colors cursor-pointer"
               title="المعادل الصوتي"
             >
               <Sliders className="w-4 h-4" />
@@ -249,7 +249,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                 />
 
                 {isAutoMixing && (
-                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-purple-600/90 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-1.5 animate-pulse">
+                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#FA243C]/90 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-1.5 animate-pulse">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>AutoMix جارٍ</span>
                   </div>
@@ -263,7 +263,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   title="تغيير الغلاف والبحث أونلاين"
                   className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/15 flex items-center gap-1.5 shadow-lg active:scale-95 transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#FF456E]" />
                   <span>تغيير الغلاف 🎨</span>
                 </button>
               </motion.div>
@@ -273,7 +273,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                 <p
                   dir="auto"
                   onClick={() => setActiveTab('lyrics')}
-                  className="text-xs sm:text-sm text-indigo-300 font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/10 max-w-sm truncate cursor-pointer hover:bg-white/10 transition-colors animate-fadeIn"
+                  className="text-xs sm:text-sm text-[#FF456E] font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-[#FA243C]/10 border border-[#FA243C]/25 max-w-sm truncate cursor-pointer hover:bg-[#FA243C]/20 transition-colors animate-fadeIn"
                 >
                   "{lyrics[activeLyricIndex].text}"
                 </p>
@@ -292,16 +292,16 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             >
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <ListMusic className="w-4 h-4 text-indigo-400" />
+                  <ListMusic className="w-4 h-4 text-[#FA243C]" />
                   <span className="text-sm font-bold text-white">قائمة التالي ({queue.length})</span>
                 </div>
 
                 {/* Smart Autoplay Toggle */}
                 <button
                   onClick={toggleSmartAutoplay}
-                  className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+                  className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     smartAutoplay
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                      ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                       : 'bg-white/5 text-zinc-400'
                   }`}
                 >
@@ -318,7 +318,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                       key={`${t.id}_${idx}`}
                       onClick={() => playTrack(t)}
                       className={`flex items-center justify-between p-2 rounded-2xl cursor-pointer transition-colors ${
-                        isCur ? 'bg-indigo-600/20 border border-indigo-500/30' : 'hover:bg-white/[0.04]'
+                        isCur ? 'bg-[#FA243C]/20 border border-[#FA243C]/35' : 'hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -328,7 +328,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                           className="w-10 h-10 rounded-xl object-cover"
                         />
                         <div className="min-w-0 text-left">
-                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-indigo-300' : 'text-white'}`}>
+                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#FF456E]' : 'text-white'}`}>
                             {t.title}
                           </h5>
                           <p className="text-[11px] text-zinc-400 truncate">{t.artist}</p>
@@ -341,7 +341,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                             e.stopPropagation();
                             removeFromQueue(idx);
                           }}
-                          className="p-1.5 text-zinc-500 hover:text-red-400"
+                          className="p-1.5 text-zinc-500 hover:text-[#FA243C]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -364,7 +364,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             >
               <div className="flex items-center justify-between pb-2 border-b border-white/[0.06] flex-shrink-0">
                 <span className="text-sm font-bold text-white flex items-center gap-2">
-                  <Mic2 className="w-4 h-4 text-purple-400" />
+                  <Mic2 className="w-4 h-4 text-[#FA243C]" />
                   <span>الكلمات المتزامنة</span>
                 </span>
                 <span className="text-[11px] text-zinc-400">انقر على أي سطر للانتقال</span>
@@ -483,9 +483,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                     triggerHaptic();
                     toggleSpatialAudio();
                   }}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-sm ${
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
                     spatialAudio
-                      ? 'bg-gradient-to-r from-indigo-600/40 to-purple-600/40 border-indigo-400/50 text-indigo-200 shadow-indigo-500/20'
+                      ? 'bg-gradient-to-r from-[#FA243C]/30 to-[#FF2D55]/30 border-[#FA243C]/50 text-[#FF456E] shadow-[#FA243C]/20'
                       : 'bg-white/[0.05] border-white/10 text-zinc-400 hover:text-white'
                   }`}
                   title="انقر لتفعيل أو تعطيل الصوت المكاني ثلاثي الأبعاد"
@@ -493,7 +493,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Lossless 24-bit</span>
                   <span className="text-white/20">|</span>
-                  <span className={spatialAudio ? 'text-indigo-300 font-extrabold' : ''}>
+                  <span className={spatialAudio ? 'text-[#FF456E] font-extrabold' : ''}>
                     {spatialAudio ? 'Spatial Audio 3D 🎧 (مُفعل)' : 'Spatial Audio'}
                   </span>
                 </motion.button>
@@ -504,7 +504,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               {/* Playback Rate Button */}
               <button
                 onClick={cycleRate}
-                className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono font-bold text-zinc-300 transition-colors"
+                className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono font-bold text-zinc-300 transition-colors cursor-pointer"
                 title="سرعة التشغيل"
               >
                 {playbackRate}x
@@ -514,7 +514,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               <motion.button
                 whileTap={{ scale: 0.8 }}
                 onClick={() => downloadTrackForOffline(currentTrack.id)}
-                className="p-2 text-zinc-400 hover:text-emerald-400 transition-colors"
+                className="p-2 text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer"
                 title={downloadedTrackIds.includes(currentTrack.id) ? 'محفوظ أوفلاين ⚡' : 'حفظ للتشغيل بدون إنترنت'}
               >
                 {downloadedTrackIds.includes(currentTrack.id) ? (
@@ -528,11 +528,11 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               <motion.button
                 whileTap={{ scale: 0.8 }}
                 onClick={() => toggleFavorite(currentTrack.id)}
-                className="p-2 text-zinc-400 hover:text-red-400 transition-colors"
+                className="p-2 text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer"
               >
                 <Heart
                   className={`w-6 h-6 transition-colors ${
-                    isFav ? 'text-red-500 fill-red-500' : 'text-zinc-500'
+                    isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-500'
                   }`}
                 />
               </motion.button>
@@ -552,8 +552,8 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={toggleShuffle}
-            className={`p-2.5 rounded-full transition-colors ${
-              shuffle ? 'text-indigo-400 bg-indigo-500/15' : 'text-zinc-500'
+            className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+              shuffle ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
             }`}
           >
             <Shuffle className="w-5 h-5" />
@@ -562,7 +562,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={previousTrack}
-            className="p-2.5 text-white hover:text-indigo-300 transition-colors"
+            className="p-2.5 text-white hover:text-[#FF456E] transition-colors cursor-pointer"
           >
             <SkipBack className="w-7 h-7 fill-current" />
           </motion.button>
@@ -570,7 +570,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={togglePlayPause}
-            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform"
+            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform cursor-pointer"
           >
             {isPlaying ? (
               <Pause className="w-7 h-7 fill-black" />
@@ -582,7 +582,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={() => nextTrack(false)}
-            className="p-2.5 text-white hover:text-indigo-300 transition-colors"
+            className="p-2.5 text-white hover:text-[#FF456E] transition-colors cursor-pointer"
           >
             <SkipForward className="w-7 h-7 fill-current" />
           </motion.button>
@@ -590,21 +590,21 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           <motion.button
             whileTap={{ scale: 0.85 }}
             onClick={cycleRepeat}
-            className={`p-2.5 rounded-full transition-colors ${
-              repeatMode !== 'off' ? 'text-indigo-400 bg-indigo-500/15' : 'text-zinc-500'
+            className={`p-2.5 rounded-full transition-colors cursor-pointer ${
+              repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
             }`}
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
           </motion.button>
         </div>
 
-        {/* 5. YouTube Music Flagship 3 Tabs Selector */}
+        {/* 5. Apple Music 3 Tabs Selector */}
         <div className="flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
             onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               activeTab === 'up_next'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -614,9 +614,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
           <button
             onClick={() => setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               activeTab === 'lyrics'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -626,9 +626,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
           <button
             onClick={() => setActiveTab(activeTab === 'related' ? 'player' : 'related')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
               activeTab === 'related'
-                ? 'bg-pink-600 text-white shadow-md shadow-pink-600/30'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >

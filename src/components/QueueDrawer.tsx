@@ -23,7 +23,7 @@ export const QueueDrawer: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
+            <div className="p-2 rounded-xl bg-[#FA243C]/20 text-[#FA243C]">
               <ListMusic className="w-5 h-5" />
             </div>
             <div>
@@ -33,7 +33,7 @@ export const QueueDrawer: React.FC = () => {
           </div>
           <button
             onClick={() => setQueueOpen(false)}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white transition-colors"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -44,10 +44,10 @@ export const QueueDrawer: React.FC = () => {
           {/* Currently Playing Card */}
           {currentTrack && (
             <div className="space-y-2">
-              <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-[#FA243C] uppercase tracking-wider">
                 يعمل الآن
               </span>
-              <div className="p-3 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-[#FA243C]/10 border border-[#FA243C]/30 flex items-center gap-3">
                 <img
                   src={currentTrack.artworkUrl || '/logo.svg'}
                   alt={currentTrack.title}
@@ -58,9 +58,9 @@ export const QueueDrawer: React.FC = () => {
                   <p className="text-xs text-aura-textSecondary truncate">{currentTrack.artist}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-1 h-3 bg-indigo-500 rounded-full animate-pulse" />
-                  <div className="w-1 h-5 bg-indigo-400 rounded-full animate-pulse delay-75" />
-                  <div className="w-1 h-2 bg-indigo-300 rounded-full animate-pulse delay-150" />
+                  <div className="w-1 h-3 bg-[#FA243C] rounded-full animate-pulse" />
+                  <div className="w-1 h-5 bg-[#FF2D55] rounded-full animate-pulse delay-75" />
+                  <div className="w-1 h-2 bg-[#FF5E7E] rounded-full animate-pulse delay-150" />
                 </div>
               </div>
             </div>
@@ -101,7 +101,7 @@ export const QueueDrawer: React.FC = () => {
                         <button
                           onClick={() => playTrack(track)}
                           title="تشغيل فوري"
-                          className="p-1.5 rounded-lg hover:bg-indigo-600/30 text-indigo-400"
+                          className="p-1.5 rounded-lg hover:bg-[#FA243C]/20 text-[#FA243C] cursor-pointer"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                         </button>

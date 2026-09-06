@@ -28,12 +28,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     <div className="space-y-6 pb-28 md:pb-24">
       {/* Hero CTA Banner when Library has only Demo Tracks */}
       {hasOnlyDemoTracks && (
-        <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-[#121218] border border-indigo-500/30 shadow-2xl">
-          <div className="absolute top-0 left-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-r from-[#FA243C]/20 via-[#FF2D55]/15 to-[#121218] border border-[#FA243C]/30 shadow-2xl">
+          <div className="absolute top-0 left-0 w-80 h-80 bg-[#FA243C]/20 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FA243C]/20 text-[#FF456E] text-xs font-semibold">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>جاهز للاستيراد الفوري</span>
               </div>
@@ -41,13 +41,13 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 ابدأ بتحميل مكتبة أغانيك الخاصة
               </h2>
               <p className="text-sm text-aura-textSecondary leading-relaxed">
-                يمكنك تحميل مجلد <code className="text-indigo-300 font-mono bg-white/10 px-1.5 py-0.5 rounded">Liked_Songs</code> المحلي واستخراج كافة أغلفة الألبومات والكلمات المتزامنة لتستمع إليها بدون إنترنت للأبد.
+                يمكنك تحميل مجلد <code className="text-[#FF456E] font-mono bg-white/10 px-1.5 py-0.5 rounded">Liked_Songs</code> المحلي واستخراج كافة أغلفة الألبومات والكلمات المتزامنة لتستمع إليها بدون إنترنت للأبد.
               </p>
             </div>
 
             <button
               onClick={onOpenImport}
-              className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm flex items-center gap-2.5 transition-all shadow-xl shadow-indigo-600/30 hover:scale-105 active:scale-95 flex-shrink-0"
+              className="px-6 py-3.5 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold text-sm flex items-center gap-2.5 transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 flex-shrink-0 cursor-pointer"
             >
               <FolderOpen className="w-5 h-5" />
               <span>تحميل مكتبتي المحلية (261 أغنية)</span>
@@ -66,7 +66,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             placeholder="ابحث باسم الأغنية، الفنان، أو الألبوم..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.05] hover:bg-white/[0.08] focus:bg-white/[0.1] border border-white/10 focus:border-indigo-500/50 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-aura-muted focus:outline-none transition-all"
+            className="w-full bg-white/[0.05] hover:bg-white/[0.08] focus:bg-white/[0.1] border border-white/10 focus:border-[#FA243C]/50 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-aura-muted focus:outline-none transition-all"
           />
           {searchQuery && (
             <button
@@ -108,7 +108,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             onClick={() => setActiveFilter('local')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
               activeFilter === 'local'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                 : 'bg-white/5 hover:bg-white/10 text-aura-textSecondary'
             }`}
           >

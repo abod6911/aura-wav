@@ -35,8 +35,8 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      const dominant = currentTrack?.dominantColor || 'rgb(139, 92, 246)';
-      const secondary = currentTrack?.secondaryColor || 'rgb(6, 182, 212)';
+      const dominant = currentTrack?.dominantColor || 'rgb(250, 36, 60)';
+      const secondary = currentTrack?.secondaryColor || 'rgb(255, 45, 85)';
 
       // Vibrant dynamic gradient
       const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);

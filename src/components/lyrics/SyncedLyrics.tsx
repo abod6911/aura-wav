@@ -120,12 +120,12 @@ export const SyncedLyrics: React.FC = () => {
         {/* Top Header Bar */}
         <div className="w-full px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/[0.08] z-20">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-xs font-semibold text-indigo-300">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-xs font-semibold text-[#FF456E]">
+              <Sparkles className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
               <span>Synced Lyrics</span>
             </div>
             {isAutoMixing && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600/30 border border-purple-500/40 text-xs font-bold text-purple-200 animate-pulse">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-xs font-bold text-[#FF456E] animate-pulse">
                 AutoMix Active
               </span>
             )}
@@ -184,7 +184,7 @@ export const SyncedLyrics: React.FC = () => {
               <button
                 onClick={toggleShuffle}
                 className={`p-2 rounded-full transition-colors ${
-                  shuffle ? 'text-indigo-400 bg-indigo-500/20' : 'text-zinc-500 hover:text-white'
+                  shuffle ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
                 }`}
               >
                 <Shuffle className="w-4 h-4" />
@@ -219,7 +219,7 @@ export const SyncedLyrics: React.FC = () => {
               <button
                 onClick={cycleRepeat}
                 className={`p-2 rounded-full transition-colors ${
-                  repeatMode !== 'off' ? 'text-indigo-400 bg-indigo-500/20' : 'text-zinc-500 hover:text-white'
+                  repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
                 }`}
               >
                 {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
@@ -295,7 +295,7 @@ export const SyncedLyrics: React.FC = () => {
               })
             ) : currentTrack?.lyrics ? (
               <div className="text-center py-24 text-zinc-400 space-y-4 whitespace-pre-line text-lg leading-loose">
-                <Music2 className="w-12 h-12 mx-auto text-indigo-400 opacity-60" />
+                <Music2 className="w-12 h-12 mx-auto text-[#FA243C] opacity-60" />
                 <p className="text-white text-2xl font-bold">كلمات الأغنية</p>
                 <div className="max-w-xl mx-auto text-zinc-300 text-lg leading-relaxed">
                   {currentTrack.lyrics}
@@ -303,10 +303,10 @@ export const SyncedLyrics: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-36 text-zinc-400 space-y-4">
-                <Music2 className="w-14 h-14 mx-auto text-indigo-400 animate-pulse opacity-40" />
+                <Music2 className="w-14 h-14 mx-auto text-[#FA243C] animate-pulse opacity-40" />
                 <h4 className="text-white text-2xl font-bold">لا توجد كلمات متزامنة متاحة</h4>
                 <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-                  يمكنك وضع ملف <code className="text-indigo-300 font-mono bg-white/10 px-1.5 py-0.5 rounded">.lrc</code> بنفس اسم الأغنية أو يتم جلبها تلقائياً عند الاتصال بالإنترنت.
+                  يمكنك وضع ملف <code className="text-[#FF456E] font-mono bg-white/10 px-1.5 py-0.5 rounded">.lrc</code> بنفس اسم الأغنية أو يتم جلبها تلقائياً عند الاتصال بالإنترنت.
                 </p>
               </div>
             )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { AudioVisualizer } from './AudioVisualizer';
+import { TimelineSlider } from './player/TimelineSlider';
 import {
   Play,
   Pause,
@@ -70,7 +71,7 @@ export const MobilePlayerSheet: React.FC = () => {
           {/* Top Progress Line */}
           <div className="absolute top-0 left-3 right-3 h-[2px] bg-white/10 rounded-full overflow-hidden">
             <div
-              className="bg-indigo-500 h-full rounded-full"
+              className="bg-[#FA243C] h-full rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -134,8 +135,8 @@ export const MobilePlayerSheet: React.FC = () => {
             </button>
 
             <div className="text-center">
-              <span className="text-[10px] uppercase tracking-wider text-indigo-400 font-bold">
-                مشغل AURA.WAV
+              <span className="text-[10px] uppercase tracking-wider text-[#FA243C] font-bold">
+                مشغل AURA.WAV • APPLE MUSIC
               </span>
               <h5 className="text-xs text-aura-textSecondary truncate max-w-[200px]">
                 {currentTrack.album}
@@ -145,7 +146,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={() => setVisualizerMode(!visualizerMode)}
               className={`p-2 rounded-full transition-colors ${
-                visualizerMode ? 'bg-indigo-600 text-white' : 'bg-white/10 text-white/70'
+                visualizerMode ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30' : 'bg-white/10 text-white/70'
               }`}
               title="محلل الصوت"
             >
@@ -158,7 +159,7 @@ export const MobilePlayerSheet: React.FC = () => {
             {visualizerMode ? (
               <div className="w-full max-w-xs h-64 glass-panel rounded-3xl p-4 flex flex-col justify-center items-center border border-white/15">
                 <AudioVisualizer height={160} bars={32} mode="bars" />
-                <span className="text-xs text-indigo-300 font-mono mt-4">Real-Time Waveform</span>
+                <span className="text-xs text-[#FF456E] font-mono mt-4">Real-Time Waveform</span>
               </div>
             ) : (
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group">
@@ -168,7 +169,7 @@ export const MobilePlayerSheet: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
                 {automixEnabled && isCrossfadingSoon && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-purple-600/90 text-white text-[10px] font-bold shadow-lg animate-pulse">
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#FA243C]/90 text-white text-[10px] font-bold shadow-lg animate-pulse">
                     AutoMix جارٍ...
                   </div>
                 )}
@@ -178,56 +179,53 @@ export const MobilePlayerSheet: React.FC = () => {
 
           {/* Track Details & Favorite */}
           <div className="flex items-center justify-between mb-2">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-extrabold text-white truncate">{currentTrack.title}</h2>
-              <p className="text-sm text-aura-textSecondary truncate">{currentTrack.artist}</p>
+            <div className="min-w-0 flex-1 pr-2">
+              <h3 className="text-xl font-black text-white truncate">{currentTrack.title}</h3>
+              <p className="text-sm font-medium text-aura-textSecondary truncate">{currentTrack.artist}</p>
             </div>
             <button
               onClick={() => toggleFavorite(currentTrack.id)}
-              className="p-2.5 text-aura-muted hover:text-red-400"
+              className="p-2.5 rounded-full hover:bg-white/10 text-aura-muted hover:text-red-400"
             >
               <Heart
-                className={`w-6 h-6 ${isFav ? 'text-red-500 fill-red-500' : 'text-white/40'}`}
+                className={`w-6 h-6 ${
+                  isFav ? 'text-red-500 fill-red-500' : 'text-white/40'
+                }`}
               />
             </button>
           </div>
 
-          {/* Scrubber */}
-          <div className="space-y-1 mb-4">
-            <input
-              type="range"
-              min={0}
-              max={duration || 100}
-              step={0.1}
-              value={currentTime}
-              onChange={(e) => seek(parseFloat(e.target.value))}
-              className="w-full h-1.5 bg-white/15 rounded-full appearance-none accent-white"
-              style={{
-                background: `linear-gradient(to right, #6366f1 ${progressPercent}%, rgba(255, 255, 255, 0.15) ${progressPercent}%)`,
-              }}
+          {/* Scrubber Progress Slider */}
+          <div className="mb-4">
+            <TimelineSlider
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={seek}
+              showTimestamps={true}
             />
-            <div className="flex justify-between text-xs font-mono text-aura-muted">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
           </div>
 
-          {/* Playback Controls */}
-          <div className="flex items-center justify-between px-2 mb-6">
+          {/* Main Controls: Apple Music Style Big Center Play */}
+          <div className="flex items-center justify-between px-2 mb-6" dir="ltr">
             <button
               onClick={toggleShuffle}
-              className={`p-2 rounded-full ${shuffle ? 'text-indigo-400' : 'text-white/40'}`}
+              className={`p-2 transition-colors ${
+                shuffle ? 'text-[#FA243C]' : 'text-white/40'
+              }`}
             >
               <Shuffle className="w-5 h-5" />
             </button>
 
-            <button onClick={previousTrack} className="p-2 text-white">
-              <SkipBack className="w-7 h-7 fill-current" />
+            <button
+              onClick={previousTrack}
+              className="p-2 text-white hover:opacity-80 active:scale-90 transition-transform"
+            >
+              <SkipBack className="w-8 h-8 fill-white" />
             </button>
 
             <button
               onClick={togglePlayPause}
-              className="p-5 rounded-full bg-white text-black shadow-xl shadow-white/20 active:scale-95 transition-transform"
+              className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
             >
               {isPlaying ? (
                 <Pause className="w-7 h-7 fill-black" />
@@ -236,24 +234,25 @@ export const MobilePlayerSheet: React.FC = () => {
               )}
             </button>
 
-            <button onClick={() => nextTrack(false)} className="p-2 text-white">
-              <SkipForward className="w-7 h-7 fill-current" />
+            <button
+              onClick={() => nextTrack(false)}
+              className="p-2 text-white hover:opacity-80 active:scale-90 transition-transform"
+            >
+              <SkipForward className="w-8 h-8 fill-white" />
             </button>
 
             <button
               onClick={cycleRepeat}
-              className={`p-2 rounded-full ${repeatMode !== 'off' ? 'text-indigo-400' : 'text-white/40'}`}
+              className={`p-2 transition-colors ${
+                repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-white/40'
+              }`}
             >
-              {repeatMode === 'one' ? (
-                <Repeat1 className="w-5 h-5" />
-              ) : (
-                <Repeat className="w-5 h-5" />
-              )}
+              {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
             </button>
           </div>
 
-          {/* Footer Quick Action Bar */}
-          <div className="flex items-center justify-around py-3 border-t border-white/10">
+          {/* Quick Actions Footer */}
+          <div className="flex items-center justify-around pt-3 border-t border-white/10">
             <button
               onClick={() => {
                 setMobilePlayerOpen(false);
@@ -261,7 +260,7 @@ export const MobilePlayerSheet: React.FC = () => {
               }}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Mic2 className="w-5 h-5 text-indigo-400" />
+              <Mic2 className="w-5 h-5 text-[#FA243C]" />
               <span>الكلمات</span>
             </button>
 
@@ -269,7 +268,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setEqualizerOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Sliders className="w-5 h-5 text-purple-400" />
+              <Sliders className="w-5 h-5 text-[#FF2D55]" />
               <span>المعادل & AutoMix</span>
             </button>
 
@@ -277,7 +276,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setQueueOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <ListMusic className="w-5 h-5 text-pink-400" />
+              <ListMusic className="w-5 h-5 text-[#FF456E]" />
               <span>الانتظار</span>
             </button>
           </div>

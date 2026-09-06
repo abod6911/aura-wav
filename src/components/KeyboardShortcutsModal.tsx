@@ -36,7 +36,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <div className="w-10 h-10 rounded-2xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C]">
                 <Keyboard className="w-5 h-5" />
               </div>
               <div>
@@ -61,7 +61,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] transition-colors"
               >
                 <span className="text-xs text-zinc-300 font-medium">{s.desc}</span>
-                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-indigo-300 shadow-sm">
+                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-[#FF456E] shadow-sm">
                   {s.key}
                 </kbd>
               </div>

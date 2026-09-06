@@ -224,12 +224,12 @@ export function App() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#08080a] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-indigo-500/20"
+      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#08080a] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#FA243C]/20"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-[#08080a]/90 backdrop-blur-xl border-4 border-dashed border-indigo-400/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="p-6 rounded-3xl bg-indigo-500/20 text-indigo-400 mb-4 animate-bounce border border-indigo-500/30 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-[#08080a]/90 backdrop-blur-xl border-4 border-dashed border-[#FA243C]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
+          <div className="p-6 rounded-3xl bg-[#FA243C]/20 text-[#FA243C] mb-4 animate-bounce border border-[#FA243C]/30 shadow-2xl">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
@@ -253,7 +253,7 @@ export function App() {
           {/* Dynamic Tab Views */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
-              <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+              <div className="w-12 h-12 rounded-full border-4 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
               <p className="text-xs text-zinc-400 font-medium">جاري تحميل مكتبتك الصوتية...</p>
             </div>
           ) : (

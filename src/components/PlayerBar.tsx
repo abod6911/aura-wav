@@ -91,7 +91,7 @@ export const PlayerBar: React.FC = () => {
               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/[0.08] text-zinc-300 border border-white/10 tracking-wider uppercase font-mono">
                 Lossless
               </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 tracking-wider uppercase font-mono">
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#FA243C]/15 text-[#FF456E] border border-[#FA243C]/30 tracking-wider uppercase font-mono">
                 Spatial
               </span>
             </div>
@@ -101,12 +101,12 @@ export const PlayerBar: React.FC = () => {
         {currentTrack && (
           <button
             onClick={() => toggleFavorite(currentTrack.id)}
-            className="p-2 rounded-full hover:bg-white/10 text-zinc-500 hover:text-red-400 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 text-zinc-500 hover:text-[#FA243C] transition-colors"
             aria-label="Favorite"
           >
             <Heart
               className={`w-4 h-4 transition-transform active:scale-125 ${
-                isFav ? 'text-red-500 fill-red-500' : 'text-zinc-500'
+                isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-500'
               }`}
             />
           </button>
@@ -121,8 +121,8 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={toggleShuffle}
             title="خلط الأغاني"
-            className={`p-2 rounded-full transition-colors ${
-              shuffle ? 'text-indigo-400 bg-indigo-500/15' : 'text-zinc-500 hover:text-white'
+            className={`p-2 rounded-full transition-colors cursor-pointer ${
+              shuffle ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500 hover:text-white'
             }`}
           >
             <Shuffle className="w-4 h-4" />
@@ -132,7 +132,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={previousTrack}
             title="السابق"
-            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all"
+            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
           >
             <SkipBack className="w-5 h-5 fill-current" />
           </button>
@@ -156,7 +156,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => nextTrack(false)}
             title="التالي"
-            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all"
+            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
           >
             <SkipForward className="w-5 h-5 fill-current" />
           </button>
@@ -165,9 +165,9 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={cycleRepeat}
             title="تكرار"
-            className={`p-2 rounded-full transition-colors ${
+            className={`p-2 rounded-full transition-colors cursor-pointer ${
               repeatMode !== 'off'
-                ? 'text-indigo-400 bg-indigo-500/15'
+                ? 'text-[#FA243C] bg-[#FA243C]/15'
                 : 'text-zinc-500 hover:text-white'
             }`}
           >
@@ -184,8 +184,8 @@ export const PlayerBar: React.FC = () => {
               title={`AutoMix نشط (${automixDuration}s Crossfade)`}
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
                 isCrossfadingSoon
-                  ? 'bg-purple-600/30 text-purple-200 border-purple-400 animate-pulse'
-                  : 'bg-white/[0.04] text-purple-400 border-purple-500/30'
+                  ? 'bg-[#FA243C]/30 text-[#FF456E] border-[#FA243C] animate-pulse'
+                  : 'bg-white/[0.04] text-[#FF456E] border-[#FA243C]/35'
               }`}
             >
               <Sparkles className="w-3 h-3" />
@@ -209,7 +209,7 @@ export const PlayerBar: React.FC = () => {
         <button
           onClick={cyclePlaybackRate}
           title="سرعة التشغيل"
-          className="px-2 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-xs font-mono text-zinc-400 hover:text-white transition-colors"
+          className="px-2 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-xs font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer"
         >
           {playbackRate}x
         </button>
@@ -218,9 +218,9 @@ export const PlayerBar: React.FC = () => {
         <button
           onClick={() => setLyricsOpen(!isLyricsOpen)}
           title="الكلمات المتزامنة"
-          className={`p-2 rounded-xl transition-all ${
+          className={`p-2 rounded-xl transition-all cursor-pointer ${
             isLyricsOpen
-              ? 'bg-white text-black shadow-md'
+              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
@@ -231,9 +231,9 @@ export const PlayerBar: React.FC = () => {
         <button
           onClick={() => setEqualizerOpen(!isEqualizerOpen)}
           title="المعادل الصوتي و AutoMix"
-          className={`p-2 rounded-xl transition-all ${
+          className={`p-2 rounded-xl transition-all cursor-pointer ${
             isEqualizerOpen
-              ? 'bg-white text-black shadow-md'
+              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
@@ -244,9 +244,9 @@ export const PlayerBar: React.FC = () => {
         <button
           onClick={() => setQueueOpen(!isQueueOpen)}
           title="قائمة الانتظار"
-          className={`p-2 rounded-xl transition-all ${
+          className={`p-2 rounded-xl transition-all cursor-pointer ${
             isQueueOpen
-              ? 'bg-white text-black shadow-md'
+              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
@@ -257,15 +257,15 @@ export const PlayerBar: React.FC = () => {
         <button
           onClick={() => setSleepTimerOpen(!isSleepTimerOpen)}
           title="مؤقت النوم الذكي"
-          className={`relative p-2 rounded-xl transition-all ${
+          className={`relative p-2 rounded-xl transition-all cursor-pointer ${
             isSleepTimerOpen || sleepTimerRemaining !== null
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
           <Moon className="w-4 h-4" />
           {sleepTimerRemaining !== null && (
-            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-indigo-400 text-black text-[9px] font-bold rounded-full">
+            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-white text-[#FA243C] text-[9px] font-bold rounded-full">
               {Math.ceil(sleepTimerRemaining / 60)}m
             </span>
           )}
@@ -275,7 +275,7 @@ export const PlayerBar: React.FC = () => {
         <div className="flex items-center gap-2 pl-2">
           <button
             onClick={() => setVolume(volume === 0 ? 0.9 : 0)}
-            className="text-zinc-500 hover:text-white transition-colors"
+            className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
           >
             {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -286,7 +286,7 @@ export const PlayerBar: React.FC = () => {
             step={0.01}
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-20 accent-white cursor-pointer"
+            className="w-20 accent-[#FA243C] cursor-pointer"
           />
         </div>
       </div>

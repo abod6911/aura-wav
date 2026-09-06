@@ -111,7 +111,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400">
+            <div className="p-2.5 rounded-2xl bg-[#FA243C]/20 text-[#FA243C]">
               <FolderOpen className="w-6 h-6" />
             </div>
             <div>
@@ -134,9 +134,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
           <div className="space-y-4">
             <div
               onClick={handleDirectoryPicker}
-              className="p-8 rounded-2xl border-2 border-dashed border-indigo-500/30 hover:border-indigo-500/70 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
+              className="p-8 rounded-2xl border-2 border-dashed border-[#FA243C]/30 hover:border-[#FA243C]/70 bg-[#FA243C]/[0.03] hover:bg-[#FA243C]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
             >
-              <div className="p-4 rounded-full bg-indigo-500/20 text-indigo-400 group-hover:scale-110 transition-transform mb-3">
+              <div className="p-4 rounded-full bg-[#FA243C]/20 text-[#FA243C] group-hover:scale-110 transition-transform mb-3">
                 <UploadCloud className="w-8 h-8" />
               </div>
               <h4 className="text-base font-bold text-white mb-1">
@@ -148,7 +148,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             </div>
 
             <div className="flex items-center justify-center gap-2 text-xs text-aura-textSecondary pt-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <Sparkles className="w-4 h-4 text-[#FA243C]" />
               <span>لا يتم رفع أي ملفات إلى أي سيرفر، كل شيء يتم محلياً على جهازك.</span>
             </div>
 
@@ -165,8 +165,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {isScanning && (
           <div className="py-8 space-y-5 text-center">
             <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-              <FolderOpen className="w-7 h-7 text-indigo-400 absolute inset-0 m-auto" />
+              <div className="absolute inset-0 rounded-full border-4 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
+              <FolderOpen className="w-7 h-7 text-[#FA243C] absolute inset-0 m-auto" />
             </div>
 
             <div className="space-y-1">
@@ -180,7 +180,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <div className="space-y-2 max-w-xs mx-auto">
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-indigo-500 h-full rounded-full transition-all duration-150"
+                    className="bg-[#FA243C] h-full rounded-full transition-all duration-150"
                     style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                   />
                 </div>
@@ -208,7 +208,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 
             <button
               onClick={onClose}
-              className="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-600/30"
+              className="w-full py-3 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold transition-all shadow-lg shadow-[#FA243C]/30"
             >
               بدء الاستماع الآن
             </button>

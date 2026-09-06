@@ -64,7 +64,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* Micro-Progress Bar Running Along Top Edge */}
       <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/[0.08]">
         <div
-          className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-150"
+          className="h-full bg-gradient-to-r from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] transition-all duration-150 shadow-[0_0_8px_rgba(250,36,60,0.6)]"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -91,7 +91,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             {currentTrack.title}
           </h4>
           {spatialAudio && (
-            <span className="text-[9px] px-1 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 flex-shrink-0">
+            <span className="text-[9px] px-1 py-0.2 rounded bg-[#FA243C]/20 text-[#FF456E] font-bold border border-[#FA243C]/30 flex-shrink-0">
               3D
             </span>
           )}

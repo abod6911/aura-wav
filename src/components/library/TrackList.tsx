@@ -136,8 +136,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       {tracks.length > 0 ? (
         <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-2xl shadow-2xl">
           {/* Subtle Dynamic Ambient Backlight */}
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#FA243C]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-[#FF2D55]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-4 sm:gap-6 md:gap-8">
             {/* Mosaic 4-Art Cover */}
@@ -158,7 +158,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             {/* Playlist Editorial Metadata */}
             <div className="flex-1 text-center md:text-right space-y-2 sm:space-y-3 min-w-0">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-semibold">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FA243C]/15 border border-[#FA243C]/30 text-[#FF456E] text-[11px] sm:text-xs font-semibold">
                   <HardDrive className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   <span>مكتبة محلية 100% أوفلاين</span>
                 </div>
@@ -219,15 +219,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       ) : (
         /* Empty State Hero CTA */
-        <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 bg-gradient-to-b from-indigo-950/30 to-[#0c0c12] border border-white/[0.08] text-center space-y-4">
-          <FolderOpen className="w-14 h-14 mx-auto text-indigo-400 animate-bounce" />
+        <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/15 to-[#0c0c12] border border-white/[0.08] text-center space-y-4">
+          <FolderOpen className="w-14 h-14 mx-auto text-[#FA243C] animate-bounce" />
           <h2 className="text-2xl md:text-3xl font-black text-white">لا توجد أغانٍ محملة حالياً</h2>
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
-            قم باستيراد مجلد أغانيك المحلي <code className="text-indigo-300 bg-white/10 px-2 py-0.5 rounded font-mono">Liked_Songs</code> للاستماع فوراً بدون اتصال مع كافة الأغلفة.
+            قم باستيراد مجلد أغانيك المحلي <code className="text-[#FF456E] bg-white/10 px-2 py-0.5 rounded font-mono">Liked_Songs</code> للاستماع فوراً بدون اتصال مع كافة الأغلفة.
           </p>
           <button
             onClick={onOpenImport}
-            className="px-8 py-3.5 rounded-2xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-xl cursor-pointer"
+            className="px-8 py-3.5 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold text-sm transition-all shadow-xl cursor-pointer"
           >
             استيراد المجلد المحلي (261 أغنية)
           </button>
@@ -239,7 +239,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         <div className="space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <Sparkles className="w-4 h-4 text-[#FA243C]" />
               <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
                 مختارات مميزة لك
               </h3>
@@ -252,7 +252,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <div
                 key={t.id}
                 onClick={() => playTrack(t, tracks)}
-                className="group relative p-3 rounded-2xl bg-[#0e0e16]/60 hover:bg-white/[0.08] border border-white/[0.06] hover:border-indigo-500/30 backdrop-blur-xl transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:shadow-indigo-500/10 hover:-translate-y-1 select-none"
+                className="group relative p-3 rounded-2xl bg-[#0e0e16]/60 hover:bg-white/[0.08] border border-white/[0.06] hover:border-[#FA243C]/40 backdrop-blur-xl transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:shadow-[#FA243C]/15 hover:-translate-y-1 select-none"
               >
                 <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-[#151520] shadow-md border border-white/5">
                   <img
@@ -271,7 +271,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-indigo-300 transition-colors" dir="auto">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#FF456E] transition-colors" dir="auto">
                     {t.title}
                   </h4>
                   <p className="text-[11px] text-zinc-400 truncate mt-0.5" dir="auto">
@@ -295,7 +295,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             placeholder="ابحث برقم المسار، العنوان، الفنان، أو الألبوم... (اضغط / للبحث)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-indigo-500/50 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all"
+            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all"
           />
           {searchQuery && (
             <button
@@ -311,7 +311,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         <div className="flex flex-wrap items-center gap-2 select-none">
           <button
             onClick={() => setActiveFilter('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeFilter === 'all'
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
@@ -323,21 +323,21 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveFilter('favorites')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeFilter === 'favorites'
-                ? 'bg-red-500 text-white shadow-md shadow-red-500/25'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className="w-3.5 h-3.5 fill-current" />
             <span>المفضلة ({favorites.length})</span>
           </button>
 
           <button
             onClick={() => setActiveFilter('lyrics')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeFilter === 'lyrics'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
@@ -379,9 +379,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <button
                 key={m.id}
                 onClick={() => setActiveMood(isSelected ? null : m.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border ${
+                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
                   isSelected
-                    ? 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white border-white/20 shadow-lg shadow-indigo-600/30 scale-105'
+                    ? 'bg-gradient-to-r from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] text-white border-white/20 shadow-lg shadow-[#FA243C]/30 scale-105'
                     : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.06]'
                 }`}
               >
@@ -393,9 +393,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
         {/* Active Mood Radio Banner */}
         {activeMood && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-[#0e0e14] border border-indigo-500/30 animate-fadeIn">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#FA243C]/20 via-[#FF2D55]/10 to-[#0e0e14] border border-[#FA243C]/30 animate-fadeIn">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+              <Sparkles className="w-4 h-4 text-[#FA243C] animate-pulse" />
               <span className="text-xs font-bold text-white">
                 تم تفعيل وضع المزاج: {filtered.length} مسار متوافق
               </span>
@@ -404,14 +404,14 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePlayAll}
-                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-all"
+                className="px-3.5 py-1.5 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-[#FA243C]/25 transition-all cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-white" />
                 <span>تشغيل راديو هذا المزاج</span>
               </button>
               <button
                 onClick={() => setActiveMood(null)}
-                className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-all"
+                className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-all cursor-pointer"
               >
                 إلغاء
               </button>
@@ -505,7 +505,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
       style={{ touchAction: 'manipulation' }}
       className={`track-item-contained group grid grid-cols-[26px_44px_1fr_32px_40px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.985] active:bg-white/[0.08] ${
         isCurrent
-          ? 'bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent border border-indigo-500/30 shadow-[0_4px_24px_rgba(99,102,241,0.18)]'
+          ? 'bg-gradient-to-r from-[#FA243C]/20 via-[#FF2D55]/10 to-transparent border border-[#FA243C]/35 shadow-[0_4px_24px_rgba(250,36,60,0.22)]'
           : 'hover:bg-white/[0.05] border border-transparent'
       }`}
     >
@@ -513,14 +513,14 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
       <div className="text-center flex items-center justify-center">
         {isCurrent && isPlaying ? (
           <div className="flex items-end gap-[2px] h-3.5">
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_0.8s_infinite] h-full" />
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_1s_infinite] h-4/5" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
           </div>
         ) : (
           <span
             className={`text-xs font-mono md:group-hover:hidden transition-colors ${
-              isCurrent ? 'text-indigo-400 font-bold' : 'text-zinc-500'
+              isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
             }`}
           >
             {displayIndex}
@@ -552,7 +552,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
         <h4
           dir="auto"
           className={`text-xs sm:text-[15px] font-bold truncate tracking-tight ${
-            isCurrent ? 'text-indigo-300' : 'text-white group-hover:text-indigo-100'
+            isCurrent ? 'text-[#FF456E]' : 'text-white group-hover:text-white'
           }`}
         >
           {track.title}
@@ -566,7 +566,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             </span>
           )}
           {track.syncedLyrics && track.syncedLyrics.length > 0 && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-bold tracking-wider uppercase flex-shrink-0">
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FF456E] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
               LYRICS
             </span>
           )}
@@ -592,7 +592,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           {isDownloaded ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           ) : (
-            <Download className="w-4 h-4 text-zinc-600 hover:text-indigo-300 transition-colors" />
+            <Download className="w-4 h-4 text-zinc-600 hover:text-[#FF456E] transition-colors" />
           )}
         </button>
       </div>
@@ -609,7 +609,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
         >
           <Heart
             className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
-              isFav ? 'text-red-500 fill-red-500' : 'text-zinc-600 hover:text-zinc-300'
+              isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-600 hover:text-zinc-300'
             }`}
           />
         </button>
@@ -646,7 +646,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            <Radio className="w-3.5 h-3.5 text-indigo-400" />
+            <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
             <span>تشغيل التالي مباشرة</span>
           </button>
           <button
@@ -657,7 +657,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            <ListPlus className="w-3.5 h-3.5 text-purple-400" />
+            <ListPlus className="w-3.5 h-3.5 text-[#FF2D55]" />
             <span>إضافة إلى قائمة الانتظار</span>
           </button>
           <button
@@ -668,7 +668,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            <ImageIcon className="w-3.5 h-3.5 text-pink-400" />
+            <ImageIcon className="w-3.5 h-3.5 text-[#FF375F]" />
             <span>تغيير الغلاف والبحث أونلاين 🎨</span>
           </button>
           <button

@@ -41,7 +41,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
       onClick={handleRowClick}
       className={`group flex items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 rounded-2xl cursor-pointer transition-all duration-200 select-none ${
         isCurrent
-          ? 'bg-indigo-600/20 border border-indigo-500/30 shadow-lg shadow-indigo-600/10'
+          ? 'bg-[#FA243C]/15 border border-[#FA243C]/30 shadow-lg shadow-[#FA243C]/10'
           : 'hover:bg-white/[0.05] border border-transparent'
       }`}
     >
@@ -49,9 +49,9 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
       <div className="w-7 text-center flex-shrink-0 flex items-center justify-center">
         {isCurrent && isPlaying ? (
           <div className="flex items-end gap-[2px] h-4">
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_0.8s_infinite] h-full" />
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-            <span className="w-1 bg-indigo-400 rounded-full animate-[bounce_1s_infinite] h-4/5" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
           </div>
         ) : (
           <span className="text-xs font-mono text-aura-muted group-hover:hidden">
@@ -80,7 +80,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
       <div className="flex-1 min-w-0">
         <h4
           className={`text-sm md:text-base font-semibold truncate transition-colors ${
-            isCurrent ? 'text-indigo-300 font-bold' : 'text-white group-hover:text-indigo-200'
+            isCurrent ? 'text-[#FF456E] font-bold' : 'text-white group-hover:text-[#FA243C]'
           }`}
         >
           {track.title}
@@ -88,7 +88,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
         <div className="flex items-center gap-2 text-xs text-aura-textSecondary truncate">
           <span>{track.artist}</span>
           {track.syncedLyrics && track.syncedLyrics.length > 0 && (
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-medium">
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FF456E] font-medium">
               LYRICS
             </span>
           )}
@@ -139,7 +139,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
             }}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-right transition-colors"
           >
-            <Radio className="w-3.5 h-3.5 text-indigo-400" />
+            <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
             <span>تشغيل التالي مباشرة</span>
           </button>
           <button
@@ -149,7 +149,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
             }}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-right transition-colors"
           >
-            <ListPlus className="w-3.5 h-3.5 text-purple-400" />
+            <ListPlus className="w-3.5 h-3.5 text-[#FF2D55]" />
             <span>إضافة إلى الانتظار</span>
           </button>
         </div>
