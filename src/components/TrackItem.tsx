@@ -30,7 +30,11 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, index }) => {
 
   const handleRowClick = () => {
     if (isCurrent) {
-      togglePlayPause();
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        usePlayerStore.getState().setMobilePlayerOpen(true);
+      } else {
+        togglePlayPause();
+      }
     } else {
       playTrack(track);
     }

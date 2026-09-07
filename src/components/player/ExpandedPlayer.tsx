@@ -79,6 +79,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
   const automixStyle = usePlayerStore((state) => state.automixStyle);
   const playDJSound = usePlayerStore((state) => state.playDJSound);
+  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
+  const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
+  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
   const [activeDJPHand, setActiveDJPHand] = useState<string | null>(null);
@@ -121,8 +124,6 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
     }).slice(0, 6);
   }, [currentTrack?.id, tracks.length]);
 
-  const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
-  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const effectiveOpen = isOpen || isMobilePlayerOpen;
 
   const handleClose = () => {
@@ -143,10 +144,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
     }
   }, [effectiveOpen, activeTab, activeLyricIndex]);
 
-  if (!effectiveOpen || !currentTrack) return null;
-
-  const isFav = favorites.includes(currentTrack.id);
-  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
+  const isFav = currentTrack ? favorites.includes(currentTrack.id) : false;
   const isAutoMixing =
     isAutoMixingLive ||
     (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
@@ -159,10 +157,12 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+      {effectiveOpen && currentTrack && (
+        <motion.div
+          key="expanded-player-sheet"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 260 }}
         drag="y"
         dragConstraints={{ top: 0 }}
@@ -776,8 +776,9 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             <Compass className="w-4 h-4" />
             <span>مشابهة (Related)</span>
           </button>
-        </div>
-      </motion.div>
+          </div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 };

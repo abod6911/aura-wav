@@ -602,7 +602,11 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
     }
     const store = usePlayerStore.getState();
     if (isCurrent) {
-      store.togglePlayPause();
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        store.setMobilePlayerOpen(true);
+      } else {
+        store.togglePlayPause();
+      }
     } else {
       store.playTrack(track, store.filteredTracks);
     }
