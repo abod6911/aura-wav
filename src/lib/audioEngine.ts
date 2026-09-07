@@ -8,6 +8,8 @@ export const EQ_BANDS = [
   { freq: 16000, type: 'highshelf' as BiquadFilterType, label: '16kHz (Air)' },
 ] as const;
 
+export type AutoMixStyle = 'crossfade' | 'vinyl_brake' | 'echo_out' | 'filter_sweep';
+
 interface Channel {
   name: 'A' | 'B';
   audio: HTMLAudioElement;
@@ -37,6 +39,7 @@ export class DJAudioEngine {
   // Configuration
   private automixEnabled: boolean = true;
   private automixDuration: number = 5; // seconds
+  private automixStyle: AutoMixStyle = 'crossfade';
   private isCrossfading: boolean = false;
   private crossfadeTimeout: any = null;
   private crossfadeInterval: any = null;
@@ -465,6 +468,367 @@ export class DJAudioEngine {
       console.warn('Crossfade fallback to direct play:', err);
       this.clearCrossfadeTimers();
       await this.playTrack(nextTrack);
+    }
+  }
+
+  /**
+   * Unified DJ Transition Router
+   */
+  public async transitionTo(nextTrack: Track, style?: AutoMixStyle): Promise<void> {
+    const selectedStyle = style || this.automixStyle;
+    if (!this.automixEnabled) {
+      return this.playTrack(nextTrack);
+    }
+    switch (selectedStyle) {
+      case 'vinyl_brake':
+        return this.vinylBrakeTransition(nextTrack);
+      case 'echo_out':
+        return this.echoOutTransition(nextTrack);
+      case 'filter_sweep':
+        return this.filterSweepTransition(nextTrack);
+      case 'crossfade':
+      default:
+        return this.crossfadeTo(nextTrack);
+    }
+  }
+
+  /**
+   * DJ Vinyl Brake Transition (Turntable Motor Deceleration)
+   * Decelerates playback rate with realistic physical motor friction before punching in next track
+   */
+  public async vinylBrakeTransition(nextTrack: Track): Promise<void> {
+    if (this.isCrossfading) {
+      return this.playTrack(nextTrack);
+    }
+    this.clearCrossfadeTimers();
+    const currentChannel = this.getActive();
+    const nextChannel = this.getInactive();
+    this.isCrossfading = true;
+
+    try {
+      this.prepareTrackInChannel(nextChannel, nextTrack);
+      const brakeSteps = 16;
+      const stepDuration = 1400 / brakeSteps;
+      let step = 0;
+      const initialRate = this.playbackRate;
+
+      this.crossfadeInterval = setInterval(() => {
+        step++;
+        const ratio = step / brakeSteps;
+        // Exponential turntable motor inertia curve
+        currentChannel.audio.playbackRate = Math.max(0.06, initialRate * (1 - Math.pow(ratio, 0.65)));
+
+        if (step >= brakeSteps) {
+          clearInterval(this.crossfadeInterval);
+          this.crossfadeInterval = null;
+
+          currentChannel.audio.pause();
+          currentChannel.audio.currentTime = 0;
+          currentChannel.audio.playbackRate = this.playbackRate;
+          if (currentChannel.gain && this.ctx) {
+            currentChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
+          }
+
+          // Punch in next track
+          if (nextChannel.gain && this.ctx) {
+            nextChannel.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+          }
+          nextChannel.audio.volume = this.volume;
+          nextChannel.audio.playbackRate = this.playbackRate;
+          this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
+          this.isCrossfading = false;
+          nextChannel.audio.play().catch(() => {});
+        }
+      }, stepDuration);
+    } catch (err) {
+      console.warn('Vinyl brake fallback to direct play:', err);
+      this.clearCrossfadeTimers();
+      await this.playTrack(nextTrack);
+    }
+  }
+
+  /**
+   * DJ Echo Out & Reverb Tail Transition
+   * Sends outgoing track into a hypnotic delay/feedback loop while dropping the next track cleanly
+   */
+  public async echoOutTransition(nextTrack: Track): Promise<void> {
+    if (this.isCrossfading) {
+      return this.playTrack(nextTrack);
+    }
+    this.clearCrossfadeTimers();
+    const currentChannel = this.getActive();
+    const nextChannel = this.getInactive();
+    this.isCrossfading = true;
+
+    try {
+      this.prepareTrackInChannel(nextChannel, nextTrack);
+
+      if (this.ctx && currentChannel.source) {
+        const now = this.ctx.currentTime;
+        const delay = this.ctx.createDelay();
+        delay.delayTime.setValueAtTime(0.32, now); // 320ms rhythmic echo
+
+        const feedback = this.ctx.createGain();
+        feedback.gain.setValueAtTime(0.65, now);
+        feedback.gain.exponentialRampToValueAtTime(0.01, now + 3.0);
+
+        const echoFilter = this.ctx.createBiquadFilter();
+        echoFilter.type = 'lowpass';
+        echoFilter.frequency.setValueAtTime(2400, now);
+
+        currentChannel.source.connect(delay);
+        delay.connect(echoFilter);
+        echoFilter.connect(feedback);
+        feedback.connect(delay);
+        feedback.connect(this.masterGain || this.ctx.destination);
+
+        // Fade out dry outgoing track rapidly
+        if (currentChannel.gain) {
+          currentChannel.gain.gain.setValueAtTime(1.0, now);
+          currentChannel.gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        }
+
+        // Start next track with smooth intro
+        if (nextChannel.gain) {
+          nextChannel.gain.gain.setValueAtTime(0, now);
+          nextChannel.gain.gain.linearRampToValueAtTime(1.0, now + 0.5);
+        }
+        await nextChannel.audio.play();
+        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
+
+        this.crossfadeTimeout = setTimeout(() => {
+          currentChannel.audio.pause();
+          currentChannel.audio.currentTime = 0;
+          try {
+            currentChannel.source?.disconnect(delay);
+            delay.disconnect();
+            feedback.disconnect();
+          } catch {}
+          this.isCrossfading = false;
+          this.crossfadeTimeout = null;
+        }, 3200);
+      } else {
+        await this.crossfadeTo(nextTrack);
+      }
+    } catch (err) {
+      console.warn('Echo out fallback to direct play:', err);
+      this.clearCrossfadeTimers();
+      await this.playTrack(nextTrack);
+    }
+  }
+
+  /**
+   * DJ Filter Sweep Transition (Resonant High/Low-Pass Cut)
+   * Sweeps resonant DJ lowpass filter cutting out treble before bass drop on next track
+   */
+  public async filterSweepTransition(nextTrack: Track): Promise<void> {
+    if (this.isCrossfading) {
+      return this.playTrack(nextTrack);
+    }
+    this.clearCrossfadeTimers();
+    const currentChannel = this.getActive();
+    const nextChannel = this.getInactive();
+    const sweepDuration = 2.8;
+    this.isCrossfading = true;
+
+    try {
+      this.prepareTrackInChannel(nextChannel, nextTrack);
+
+      if (this.ctx && currentChannel.gain && nextChannel.gain) {
+        const now = this.ctx.currentTime;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(3.8, now); // Distinctive resonant club filter peak
+        filter.frequency.setValueAtTime(18000, now);
+        filter.frequency.exponentialRampToValueAtTime(220, now + sweepDuration);
+
+        currentChannel.gain.disconnect();
+        currentChannel.gain.connect(filter);
+        filter.connect(this.bassBoostFilter || this.masterGain || this.ctx.destination);
+
+        nextChannel.gain.gain.setValueAtTime(0, now);
+        nextChannel.gain.gain.linearRampToValueAtTime(1.0, now + sweepDuration * 0.75);
+
+        await nextChannel.audio.play();
+        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
+
+        this.crossfadeTimeout = setTimeout(() => {
+          currentChannel.audio.pause();
+          currentChannel.audio.currentTime = 0;
+          try {
+            filter.disconnect();
+            currentChannel.gain?.disconnect();
+            if (this.bassBoostFilter) {
+              currentChannel.gain?.connect(this.bassBoostFilter);
+            }
+          } catch {}
+          this.isCrossfading = false;
+          this.crossfadeTimeout = null;
+        }, sweepDuration * 1000 + 100);
+      } else {
+        await this.crossfadeTo(nextTrack);
+      }
+    } catch (err) {
+      console.warn('Filter sweep fallback to direct play:', err);
+      this.clearCrossfadeTimers();
+      await this.playTrack(nextTrack);
+    }
+  }
+
+  public setAutoMixStyle(style: AutoMixStyle): void {
+    this.automixStyle = style;
+  }
+
+  public getAutoMixStyle(): AutoMixStyle {
+    return this.automixStyle;
+  }
+
+  /**
+   * Procedural DJ Soundboard Generator (100% Offline, Zero Latency)
+   * High-energy club drops synthesized on-the-fly via Web Audio API
+   */
+  public playDJSound(effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer'): void {
+    if (!this.ctx) {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        this.ctx = new AudioCtx();
+      } catch {
+        return;
+      }
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+
+    const now = this.ctx.currentTime;
+    const dest = this.masterGain || this.ctx.destination;
+
+    switch (effect) {
+      case 'scratch': {
+        // Authentic dual vinyl scratch: modulated noise + pitched sine scrub
+        const bufferSize = Math.floor(this.ctx.sampleRate * 0.38);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI * 10);
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.setValueAtTime(4.2, now);
+        filter.frequency.setValueAtTime(500, now);
+        filter.frequency.linearRampToValueAtTime(2400, now + 0.12);
+        filter.frequency.linearRampToValueAtTime(350, now + 0.32);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.75, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(dest);
+        noise.start(now);
+        break;
+      }
+
+      case 'airhorn': {
+        // Iconic 3-burst stadium dancehall airhorn chord (F5, G#5, C6)
+        const notes = [698.46, 830.61, 1046.50];
+        const bursts = [0, 0.15, 0.30];
+
+        bursts.forEach((burstTime) => {
+          notes.forEach((freq) => {
+            const osc = this.ctx!.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + burstTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.95, now + burstTime + 0.13);
+
+            const gain = this.ctx!.createGain();
+            gain.gain.setValueAtTime(0, now + burstTime);
+            gain.gain.linearRampToValueAtTime(0.20, now + burstTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + burstTime + 0.14);
+
+            osc.connect(gain);
+            gain.connect(dest);
+            osc.start(now + burstTime);
+            osc.stop(now + burstTime + 0.15);
+          });
+        });
+        break;
+      }
+
+      case 'echo_drop': {
+        // Deep sub-bass boom (45Hz sine drop) with punchy initial transient
+        const sub = this.ctx.createOscillator();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(130, now);
+        sub.frequency.exponentialRampToValueAtTime(36, now + 0.45);
+
+        const subGain = this.ctx.createGain();
+        subGain.gain.setValueAtTime(0.9, now);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+        sub.connect(subGain);
+        subGain.connect(dest);
+        sub.start(now);
+        sub.stop(now + 0.7);
+        break;
+      }
+
+      case 'laser': {
+        // High-energy EDM riser / laser beam
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(130, now);
+        osc.frequency.exponentialRampToValueAtTime(2800, now + 0.28);
+        osc.frequency.exponentialRampToValueAtTime(75, now + 0.52);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.55, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.52);
+
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.start(now);
+        osc.stop(now + 0.52);
+        break;
+      }
+
+      case 'cheer': {
+        // Stadium crowd cheer and clapping (filtered pink noise bursts)
+        const bufferSize = Math.floor(this.ctx.sampleRate * 1.6);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          data[i] = (b0 + b1 + b2) * 0.18;
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1100, now);
+        filter.Q.setValueAtTime(1.4, now);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.48, now + 0.28);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.55);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(dest);
+        noise.start(now);
+        break;
+      }
     }
   }
 

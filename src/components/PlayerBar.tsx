@@ -17,6 +17,8 @@ import {
   Heart,
   Sparkles,
   Moon,
+  Flame,
+  Disc3,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -53,6 +55,12 @@ export const PlayerBar: React.FC = () => {
   const isSleepTimerOpen = usePlayerStore((state) => state.isSleepTimerOpen);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
+
+  const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
+  const setSoundboardOpen = usePlayerStore((state) => state.setSoundboardOpen);
+  const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
+  const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
+  const automixStyle = usePlayerStore((state) => state.automixStyle);
 
   const isFav = currentTrack ? favorites.includes(currentTrack.id) : false;
   const isCrossfadingSoon =
@@ -185,19 +193,23 @@ export const PlayerBar: React.FC = () => {
             )}
           </button>
 
-          {/* AutoMix Pill Status */}
+          {/* AutoMix Interactive Pill Status */}
           {automixEnabled && (
-            <div
-              title={`AutoMix نشط (${automixDuration}s Crossfade)`}
-              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+            <button
+              onClick={() => setAutoMixModalOpen(true)}
+              title={`AutoMix نشط (${automixDuration} ثواني - ${automixStyle}) - انقر لتغيير النمط`}
+              data-testid="desktop-automix-pill"
+              className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
                 isCrossfadingSoon
                   ? 'bg-[#FA243C]/30 text-[#FF456E] border-[#FA243C] animate-pulse'
-                  : 'bg-white/[0.04] text-[#FF456E] border-[#FA243C]/35'
+                  : 'bg-white/[0.04] text-[#FF456E] border-[#FA243C]/35 hover:bg-[#FA243C]/10'
               }`}
             >
               <Sparkles className="w-3 h-3" />
-              <span>AUTOMIX</span>
-            </div>
+              <span>
+                AUTOMIX • {automixStyle === 'vinyl_brake' ? 'VINYL 💽' : automixStyle === 'echo_out' ? 'ECHO 🌌' : automixStyle === 'filter_sweep' ? 'FILTER 🎚️' : 'FADE 🌊'}
+              </span>
+            </button>
           )}
         </div>
 
@@ -232,6 +244,21 @@ export const PlayerBar: React.FC = () => {
           }`}
         >
           <Mic2 className="w-4 h-4" />
+        </button>
+
+        {/* DJ Soundboard Live Pads Toggle */}
+        <button
+          onClick={() => setSoundboardOpen(!isSoundboardOpen)}
+          title="لوحة مؤثرات الـ DJ الصوتية الحية (Vinyl Scratch, Airhorn, Bass Drop...)"
+          data-testid="desktop-dj-soundboard-btn"
+          className={`p-2 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+            isSoundboardOpen
+              ? 'bg-gradient-to-r from-[#FA243C] to-amber-500 text-white shadow-lg shadow-[#FA243C]/40'
+              : 'hover:bg-white/[0.08] text-amber-400 hover:text-amber-300'
+          }`}
+        >
+          <Flame className="w-4 h-4 fill-current animate-pulse" />
+          <span className="hidden xl:inline text-[10px] font-mono font-black tracking-wider">DJ LIVE</span>
         </button>
 
         {/* Equalizer & AutoMix Modal Toggle */}

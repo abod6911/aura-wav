@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset } from '../types';
-import { djAudioEngine, EQ_BANDS } from '../lib/audioEngine';
+import { djAudioEngine, EQ_BANDS, AutoMixStyle } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
@@ -52,6 +52,7 @@ interface PlayerState {
   // Audio Features
   automixEnabled: boolean;
   automixDuration: number;
+  automixStyle: AutoMixStyle;
   eqGains: [number, number, number, number, number];
   activeEqPreset: string;
   bassBoost: number;
@@ -72,6 +73,8 @@ interface PlayerState {
   isShortcutsOpen: boolean;
   isWelcomeOpen: boolean;
   isChangeArtworkOpen: boolean;
+  isSoundboardOpen: boolean;
+  isAutoMixModalOpen: boolean;
   artworkTargetTrack: Track | null;
   isOnline: boolean;
   downloadedTrackIds: string[];
@@ -99,6 +102,10 @@ interface PlayerState {
   cycleRepeat: () => void;
   toggleSmartAutoplay: () => void;
   setAutoMix: (enabled: boolean, duration?: number) => void;
+  setAutomixStyle: (style: AutoMixStyle) => void;
+  setSoundboardOpen: (open: boolean) => void;
+  setAutoMixModalOpen: (open: boolean) => void;
+  playDJSound: (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => void;
   toggleFavorite: (trackId: string) => Promise<void>;
   setBassBoost: (level: number) => void;
   toggleSpatialAudio: () => void;
@@ -195,6 +202,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     automixEnabled: true,
     automixDuration: 5,
+    automixStyle: (typeof localStorage !== 'undefined' && (localStorage.getItem('aura_automix_style') as AutoMixStyle)) || 'crossfade',
     eqGains: [0, 0, 0, 0, 0],
     activeEqPreset: 'Flat',
     bassBoost: 0,
@@ -215,6 +223,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isShortcutsOpen: false,
     isWelcomeOpen: false,
     isChangeArtworkOpen: false,
+    isSoundboardOpen: false,
+    isAutoMixModalOpen: false,
     artworkTargetTrack: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
@@ -267,6 +277,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         djAudioEngine.setVolume(vol);
         djAudioEngine.setAutoMix(automix.enabled, automix.duration);
+        djAudioEngine.setAutoMixStyle(get().automixStyle);
 
         // Filter out and purge any demo tracks from previous sessions
         for (const t of cachedTracks) {
@@ -759,7 +770,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         updateMediaSession(nextTrack, true, getMediaSessionCallbacks(get));
 
         if (viaAutoMix && get().automixEnabled) {
-          await djAudioEngine.crossfadeTo(nextTrack);
+          await djAudioEngine.transitionTo(nextTrack, get().automixStyle);
         } else {
           await djAudioEngine.playTrack(nextTrack);
         }
@@ -854,6 +865,21 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.setAutoMix(enabled, dur);
       set({ automixEnabled: enabled, automixDuration: dur });
       getDB().then((db) => db.put('settings', { enabled, duration: dur }, 'automix'));
+    },
+
+    setAutomixStyle: (style: AutoMixStyle) => {
+      djAudioEngine.setAutoMixStyle(style);
+      set({ automixStyle: style });
+      try {
+        localStorage.setItem('aura_automix_style', style);
+      } catch {}
+    },
+
+    setSoundboardOpen: (open: boolean) => set({ isSoundboardOpen: open }),
+    setAutoMixModalOpen: (open: boolean) => set({ isAutoMixModalOpen: open }),
+
+    playDJSound: (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => {
+      djAudioEngine.playDJSound(effect);
     },
 
     toggleFavorite: async (trackId: string) => {

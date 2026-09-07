@@ -23,7 +23,9 @@ import {
   Zap,
   Gauge,
   Download,
-  CheckCircle2
+  CheckCircle2,
+  Flame,
+  Disc
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,6 +73,11 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const spatialAudio = usePlayerStore((state) => state.spatialAudio);
   const toggleSpatialAudio = usePlayerStore((state) => state.toggleSpatialAudio);
+
+  const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
+  const setSoundboardOpen = usePlayerStore((state) => state.setSoundboardOpen);
+  const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
+  const automixStyle = usePlayerStore((state) => state.automixStyle);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
   const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
@@ -190,6 +197,25 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           </div>
 
           <div className="flex items-center gap-1.5">
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => {
+                triggerHaptic();
+                setSoundboardOpen(!isSoundboardOpen);
+              }}
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all cursor-pointer relative ${
+                isSoundboardOpen
+                  ? 'bg-gradient-to-tr from-[#FA243C] to-amber-500 text-white shadow-lg shadow-[#FA243C]/40'
+                  : 'bg-white/[0.08] hover:bg-white/[0.14] text-amber-400'
+              }`}
+              title="لوحة مؤثرات الـ DJ الصوتية الحية"
+              data-testid="expanded-dj-soundboard-btn"
+            >
+              <Flame className="w-4 h-4 fill-current" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#FA243C] ring-2 ring-[#07070b] animate-ping" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#FA243C] ring-2 ring-[#07070b]" />
+            </motion.button>
+
             <motion.button
               whileTap={{ scale: 0.88 }}
               onClick={() => setSleepTimerOpen(true)}
@@ -474,8 +500,8 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               <p className="text-sm text-zinc-400 truncate mt-0.5 font-medium">
                 {currentTrack.artist}
               </p>
-              {/* Apple Music Style Hi-Res Lossless & Spatial Audio Badge */}
-              <div className="flex items-center gap-2 mt-1.5">
+              {/* Apple Music Style Hi-Res Lossless, Spatial Audio & DJ AutoMix Badges */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <motion.button
                   data-testid="spatial-audio-badge"
                   whileTap={{ scale: 0.94 }}
@@ -494,7 +520,27 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   <span>Lossless 24-bit</span>
                   <span className="text-white/20">|</span>
                   <span className={spatialAudio ? 'text-[#FF456E] font-extrabold' : ''}>
-                    {spatialAudio ? 'Spatial Audio 3D 🎧 (مُفعل)' : 'Spatial Audio'}
+                    {spatialAudio ? 'Spatial 3D 🎧' : 'Spatial Audio'}
+                  </span>
+                </motion.button>
+
+                <motion.button
+                  data-testid="automix-badge"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setAutoMixModalOpen(true);
+                  }}
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                    automixEnabled
+                      ? 'bg-gradient-to-r from-purple-500/20 to-[#FA243C]/20 border-purple-500/40 text-purple-300 hover:border-purple-400'
+                      : 'bg-white/[0.05] border-white/10 text-zinc-500 hover:text-zinc-300'
+                  }`}
+                  title="انقر لاختيار نمط انتقال الـ AutoMix (Vinyl Brake, Echo Out, Filter Sweep)"
+                >
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  <span>
+                    AutoMix: {automixStyle === 'vinyl_brake' ? 'Vinyl Brake 💽' : automixStyle === 'echo_out' ? 'Echo Out 🌌' : automixStyle === 'filter_sweep' ? 'Filter Sweep 🎚️' : 'Crossfade 🌊'}
                   </span>
                 </motion.button>
               </div>

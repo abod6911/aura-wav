@@ -18,6 +18,8 @@ import { SleepTimerModal } from './components/SleepTimerModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { WelcomeSplash } from './components/WelcomeSplash';
 import { ChangeArtworkModal } from './components/ChangeArtworkModal';
+import { DJSoundboard } from './components/dj/DJSoundboard';
+import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
 
 if (typeof window !== 'undefined') {
   (window as any).usePlayerStore = usePlayerStore;
@@ -305,6 +307,8 @@ export function App() {
         onClose={() => setIsImportModalOpen(false)}
       />
       <ChangeArtworkModal />
+      <DJSoundboard />
+      <AutoMixSelectorModal />
     </div>
   );
 }
