@@ -22,6 +22,7 @@ export interface Track {
   file?: File;
   blob?: Blob;
   source: 'local' | 'demo';
+  storageType?: 'opfs' | 'indexeddb';
   dateAdded: number;
 }
 

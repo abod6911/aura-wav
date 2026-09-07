@@ -3,6 +3,7 @@ import { parseAudioMetadata, fetchOnlineArtwork, generateLuxuriousGeometricCover
 import { parseLRC } from './lyricsParser';
 import { extractPaletteFromImage } from '../lib/colorSampler';
 import { resolveCatalogCover, resolveCatalogTrackItem } from '../data/tracksCatalog';
+import { saveAudioFileToStorage } from './storageManager';
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac', '.webm'];
 
@@ -79,13 +80,9 @@ export async function processAudioFiles(
   const total = audioFiles.length;
   const tracks: Track[] = [];
   const db = await getDB();
-  const tx = db.transaction(['tracks', 'audioBlobs', 'artworkBlobs'], 'readwrite');
-  const trackStore = tx.objectStore('tracks');
-  const audioBlobStore = tx.objectStore('audioBlobs');
-  const artworkBlobStore = tx.objectStore('artworkBlobs');
 
   // Load existing tracks to match and enrich rather than creating duplicate entries
-  const existingTracks = (await trackStore.getAll()) as Track[];
+  const existingTracks = (await db.getAll('tracks')) as Track[];
   const trackByFile = new Map<string, Track>();
   const trackByNumber = new Map<number, Track>();
   const trackBySignature = new Map<string, Track>();
@@ -206,21 +203,21 @@ export async function processAudioFiles(
 
       tracks.push(track);
 
-      // Save serializable track (without file/blob reference in track record)
-      const { file: _f, blob: _b, ...serializable } = track;
-      await trackStore.put(serializable as Track);
+      // 1. Permanently store raw audio into OPFS / IndexedDB audio vault
+      const storageEngine = await saveAudioFileToStorage(trackId, pureAudioBlob);
 
-      // Safely store pure Audio Blob with canonical trackId (e.g. track_catalog_1)
+      // 2. Save serializable track metadata
+      const { file: _f, blob: _b, ...serializable } = track;
       try {
-        await audioBlobStore.put({ id: trackId, blob: pureAudioBlob });
+        await db.put('tracks', { ...serializable, storageType: storageEngine } as Track);
       } catch (err) {
-        console.warn(`Could not store audio blob for ${file.name} in IndexedDB:`, err);
+        console.warn(`Could not store track metadata for ${file.name}:`, err);
       }
 
-      // Store artwork blob if custom
+      // 3. Store artwork blob if custom
       if (artworkBlob) {
         try {
-          await artworkBlobStore.put({ id: trackId, blob: artworkBlob });
+          await db.put('artworkBlobs', { id: trackId, blob: artworkBlob });
         } catch {
           // ignore
         }
@@ -229,8 +226,6 @@ export async function processAudioFiles(
       console.warn(`Failed to process ${file.name}:`, err);
     }
   }
-
-  await tx.done;
 
   try {
     const dbSettings = await getDB();

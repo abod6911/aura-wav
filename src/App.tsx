@@ -18,7 +18,8 @@ import { SleepTimerModal } from './components/SleepTimerModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { WelcomeSplash } from './components/WelcomeSplash';
 import { ChangeArtworkModal } from './components/ChangeArtworkModal';
-import { DJSoundboard } from './components/dj/DJSoundboard';
+import { SettingsModal } from './components/SettingsModal';
+import { DJFxSheet } from './components/dj/DJFxSheet';
 import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
 
 import { djAudioEngine } from './lib/audioEngine';
@@ -54,6 +55,8 @@ export function App() {
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const isShortcutsOpen = usePlayerStore((state) => state.isShortcutsOpen);
   const setShortcutsOpen = usePlayerStore((state) => state.setShortcutsOpen);
+  const isSettingsOpen = usePlayerStore((state) => state.isSettingsOpen);
+  const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const isWelcomeOpen = usePlayerStore((state) => state.isWelcomeOpen);
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
   const setIsOnline = usePlayerStore((state) => state.setIsOnline);
@@ -110,6 +113,7 @@ export function App() {
         setLyricsOpen(false);
         setMobilePlayerOpen(false);
         setIsImportModalOpen(false);
+        setSettingsOpen(false);
         return;
       }
 
@@ -309,8 +313,13 @@ export function App() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onOpenImport={() => setIsImportModalOpen(true)}
+      />
       <ChangeArtworkModal />
-      <DJSoundboard />
+      <DJFxSheet />
       <AutoMixSelectorModal />
     </div>
   );

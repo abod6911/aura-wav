@@ -7,6 +7,13 @@ import { fetchLyricsOnline } from '../services/lyricsParser';
 import { DEMO_TRACKS } from '../data/demoTracks';
 import { generateDemoAudioBlob } from '../audio/demoSynth';
 import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
+import {
+  getAudioFileFromStorage,
+  getStorageStatistics,
+  clearAllLocalStorage,
+  saveAudioFileToStorage,
+  StorageStats,
+} from '../services/storageManager';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -136,6 +143,12 @@ interface PlayerState {
   removeToast: (id: string) => void;
   downloadTrackForOffline: (trackId: string) => Promise<void>;
   cacheAllAvailableTracksOffline: () => Promise<void>;
+  isSettingsOpen: boolean;
+  storageStats: StorageStats | null;
+  setSettingsOpen: (open: boolean) => void;
+  refreshStorageStats: () => Promise<StorageStats>;
+  clearLocalLibrary: () => Promise<void>;
+  rescanLibrary: () => Promise<void>;
   createPlaylist: (name: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
@@ -147,12 +160,11 @@ export const resolveTrackAudioSource = async (tr: Track): Promise<Track> => {
   let resolved = tr;
   if (!resolved.file && !resolved.blob) {
     try {
-      const db = await getDB();
-      let item = await db.get('audioBlobs', resolved.id);
-      if (!item && resolved.trackNumber) {
-        item = await db.get('audioBlobs', `track_catalog_${resolved.trackNumber}`);
+      let blob = await getAudioFileFromStorage(resolved.id);
+      if (!blob && resolved.trackNumber) {
+        blob = await getAudioFileFromStorage(`track_catalog_${resolved.trackNumber}`);
       }
-      if (item && item.blob) resolved = { ...resolved, blob: item.blob };
+      if (blob) resolved = { ...resolved, blob };
     } catch {}
   }
   if (!resolved.file && !resolved.blob && !resolved.audioUrl && resolved.fileName) {
@@ -344,6 +356,42 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     savedFolderName: 'Liked_Songs',
     savedFolderTrackCount: 0,
     savedFolderTimestamp: null,
+
+    isSettingsOpen: false,
+    storageStats: null,
+    setSettingsOpen: (open) => set({ isSettingsOpen: open }),
+    refreshStorageStats: async () => {
+      const stats = await getStorageStatistics();
+      set({ storageStats: stats });
+      return stats;
+    },
+    clearLocalLibrary: async () => {
+      await clearAllLocalStorage();
+      djAudioEngine.stop();
+      set({
+        tracks: [],
+        filteredTracks: [],
+        currentTrack: null,
+        queue: [],
+        history: [],
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        favorites: [],
+        downloadedTrackIds: [],
+        savedFolderName: null,
+        savedFolderTrackCount: 0,
+        savedFolderTimestamp: null,
+      });
+      await get().refreshStorageStats();
+      get().addToast('تم تفريغ المكتبة المحلية بالكامل 🗑️', '🗑️', 'info');
+    },
+    rescanLibrary: async () => {
+      get().addToast('جاري فحص وتحديث ملفات المكتبة المحلية... 🔍', '🔍', 'info');
+      await get().initStore();
+      await get().refreshStorageStats();
+      get().addToast('تم فحص وتحديث ملفات المكتبة بنجاح ⚡', '⚡', 'success');
+    },
 
     setWelcomeOpen: (open) => set({ isWelcomeOpen: open }),
     setIsOnline: (online) => set({ isOnline: online }),
@@ -734,19 +782,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       let playableTrack = track;
       // 1. Check in-memory file/blob
-      // 2. ALWAYS retrieve saved audio blob from IndexedDB if not in memory (works 100% offline!)
+      // 2. Retrieve saved audio from OPFS or IndexedDB (works 100% offline!)
       if (!playableTrack.file && !playableTrack.blob) {
         try {
-          const db = await getDB();
-          let item = await db.get('audioBlobs', track.id);
-          if (!item && track.trackNumber) {
-            item = await db.get('audioBlobs', `track_catalog_${track.trackNumber}`);
+          let blob = await getAudioFileFromStorage(track.id);
+          if (!blob && track.trackNumber) {
+            blob = await getAudioFileFromStorage(`track_catalog_${track.trackNumber}`);
           }
-          if (item && item.blob) {
-            playableTrack = { ...track, blob: item.blob };
+          if (blob) {
+            playableTrack = { ...track, blob };
           }
         } catch (err) {
-          console.warn('Error retrieving audio blob:', err);
+          console.warn('Error retrieving audio blob from storage:', err);
         }
       }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FolderOpen, Download, Disc, Clock, Music, Moon, Keyboard, Sliders, Sparkles, Wifi, WifiOff } from 'lucide-react';
+import { FolderOpen, Download, Disc, Clock, Music, Moon, Keyboard, Sliders, Sparkles, Wifi, WifiOff, Settings } from 'lucide-react';
 
 interface HeaderProps {
   onOpenImport: () => void;
@@ -13,6 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const setShortcutsOpen = usePlayerStore((state) => state.setShortcutsOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
+  const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const isOnline = usePlayerStore((state) => state.isOnline);
 
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
@@ -96,6 +97,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             title="شاشة الترحيب"
           >
             <Sparkles className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Settings / Storage Manager */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="p-2 rounded-xl bg-white/[0.04] active:bg-white/[0.1] border border-white/[0.06] text-zinc-300 hover:text-white"
+            title="إدارة التخزين والمكتبة المحلية"
+          >
+            <Settings className="w-3.5 h-3.5 text-[#FA243C]" />
           </button>
 
           {/* Import Folder Button */}
@@ -188,6 +198,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             title="المعادل الصوتي و AutoMix"
           >
             <Sliders className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-zinc-300 hover:text-white transition-colors"
+            title="إدارة التخزين والمكتبة المحلية"
+          >
+            <Settings className="w-4 h-4 text-[#FA243C]" />
           </button>
 
           <button

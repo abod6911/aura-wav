@@ -9,6 +9,7 @@ import {
   WifiOff,
   Disc,
   Sparkles,
+  HardDrive,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const favorites = usePlayerStore((state) => state.favorites);
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
+  const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const cleanAndRepairLibrary = usePlayerStore((state) => state.cleanAndRepairLibrary);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
 
@@ -113,6 +115,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
             {automixEnabled && (
               <span className="w-2 h-2 rounded-full bg-[#FA243C] animate-ping" />
             )}
+          </button>
+
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold text-aura-textSecondary hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+          >
+            <div className="flex items-center gap-3">
+              <HardDrive className="w-4 h-4 text-[#FA243C]" />
+              <span>إدارة التخزين والمكتبة</span>
+            </div>
           </button>
         </div>
       </div>

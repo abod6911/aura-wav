@@ -176,6 +176,7 @@ export const SyncedLyrics: React.FC = () => {
                 duration={duration}
                 onSeek={seek}
                 showTimestamps={true}
+                accentColor={palette.primary}
               />
             </div>
 
@@ -261,31 +262,37 @@ export const SyncedLyrics: React.FC = () => {
             {lyrics.length > 0 ? (
               lyrics.map((line, idx) => {
                 const isActive = idx === activeIndex;
-                const isPast = idx < activeIndex;
                 const isArabic = isArabicText(line.text);
 
                 return (
                   <motion.div
                     key={`${line.time}_${idx}`}
                     ref={isActive ? activeLineRef : null}
-                    onClick={() => seek(line.time)}
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                        try {
+                          navigator.vibrate(12);
+                        } catch {}
+                      }
+                      seek(line.time);
+                    }}
                     initial={false}
                     animate={{
-                      scale: isActive ? 1.03 : 1.0,
-                      opacity: isActive ? 1 : isPast ? 0.4 : 0.25,
-                      filter: isActive ? 'blur(0px)' : 'blur(1px)',
+                      scale: isActive ? 1.04 : 1.0,
+                      opacity: isActive ? 1 : 0.35,
+                      filter: isActive ? 'blur(0px)' : 'blur(0.6px)',
                     }}
-                    transition={{ duration: 0.3 }}
-                    className={`cursor-pointer transition-all duration-300 py-2 px-3 rounded-2xl overflow-visible origin-left ${
-                      isActive ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    className={`cursor-pointer transition-all duration-300 py-3 px-4 rounded-2xl overflow-visible origin-right ${
+                      isActive ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'
                     } ${isArabic ? 'text-right' : 'text-left'}`}
                     dir={isArabic ? 'rtl' : 'ltr'}
                   >
                     <p
                       className={`tracking-tight font-sans transition-all duration-300 ${
                         isActive
-                          ? 'text-[#ffffff] font-extrabold text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.7)]'
-                          : 'text-white hover:text-white/80 hover:filter-none font-bold text-lg sm:text-xl md:text-2xl'
+                          ? 'text-white font-black text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.85)]'
+                          : 'text-white hover:text-white/90 font-bold text-lg sm:text-xl md:text-2xl'
                       }`}
                     >
                       {line.text}
@@ -320,6 +327,7 @@ export const SyncedLyrics: React.FC = () => {
             duration={duration}
             onSeek={seek}
             showTimestamps={true}
+            accentColor={palette.primary}
           />
 
           <div className="flex items-center justify-between pt-1" dir="ltr">
