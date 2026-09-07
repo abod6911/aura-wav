@@ -261,12 +261,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const current = get().currentTrack;
       set({
         currentTrack: incomingTrack,
+        currentTime: 0,
+        duration: incomingTrack.duration || 0,
         history: current ? [...get().history, current] : get().history,
       });
       updateMediaSession(incomingTrack, true, getMediaSessionCallbacks(get));
     },
     onTransitionComplete: (newTrack) => {
-      set({ currentTrack: newTrack, isAutoMixingLive: false });
+      set({
+        currentTrack: newTrack,
+        currentTime: 0,
+        duration: newTrack.duration || 0,
+        isAutoMixingLive: false,
+      });
       if (!newTrack.syncedLyrics || newTrack.syncedLyrics.length === 0) {
         fetchLyricsOnline(newTrack.title, newTrack.artist, newTrack.duration).then((res) => {
           if (res && (res.syncedLyrics || res.plainLyrics)) {
@@ -789,12 +796,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({
         currentTrack: playableTrack,
         queue: updatedQueue,
-        isPlaying: true,
+        currentTime: 0,
+        duration: playableTrack.duration || 0,
       });
 
       // Launch audio playback asynchronously
-      djAudioEngine.playTrack(playableTrack).catch((err) => {
+      djAudioEngine.playTrack(playableTrack).then((success) => {
+        if (!success) {
+          set({ isPlaying: false });
+        }
+      }).catch((err) => {
         console.warn('Play track notice:', err);
+        set({ isPlaying: false });
       });
 
       // Background cover art enrichment if track has fallback cover
@@ -835,15 +848,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
 
-    togglePlayPause: () => {
+    togglePlayPause: async () => {
       djAudioEngine.primeDecks();
       const { isPlaying, currentTrack, tracks } = get();
       if (!currentTrack && tracks.length > 0) {
         get().playTrack(tracks[0]);
         return;
       }
+      const activeAudio = djAudioEngine.getActiveAudio();
+      const isAudioActive = activeAudio && !activeAudio.paused && !activeAudio.ended && activeAudio.currentTime > 0;
       const isEnginePlaying = djAudioEngine.isPlaying();
-      const shouldPause = isPlaying || isEnginePlaying;
+      const shouldPause = isPlaying || isAudioActive || isEnginePlaying;
 
       if (shouldPause) {
         djAudioEngine.pause();
@@ -852,11 +867,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           updateMediaSession(currentTrack, false, getMediaSessionCallbacks(get));
         }
       } else {
-        set({ isPlaying: true });
-        djAudioEngine.play().catch(() => {
+        const success = await djAudioEngine.play();
+        if (!success) {
           set({ isPlaying: false });
-        });
-        if (currentTrack) {
+        } else if (currentTrack) {
           updateMediaSession(currentTrack, true, getMediaSessionCallbacks(get));
         }
       }
@@ -934,7 +948,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         if (shouldUseAutoMix) {
           set({
             queue: effectiveQueue,
-            isPlaying: true,
           });
           await djAudioEngine.transitionTo(targetTrack, automixStyle);
         } else {
@@ -943,10 +956,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             currentTrack: targetTrack,
             queue: effectiveQueue,
             history: [...get().history, currentTrack],
-            isPlaying: true,
+            currentTime: 0,
+            duration: targetTrack.duration || 0,
           });
           updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
-          await djAudioEngine.playTrack(targetTrack);
+          const success = await djAudioEngine.playTrack(targetTrack);
+          if (!success) {
+            set({ isPlaying: false });
+          }
         }
 
         if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
