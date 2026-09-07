@@ -21,8 +21,11 @@ import { ChangeArtworkModal } from './components/ChangeArtworkModal';
 import { DJSoundboard } from './components/dj/DJSoundboard';
 import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
 
+import { djAudioEngine } from './lib/audioEngine';
+
 if (typeof window !== 'undefined') {
   (window as any).usePlayerStore = usePlayerStore;
+  (window as any).djAudioEngine = djAudioEngine;
 }
 
 export function App() {

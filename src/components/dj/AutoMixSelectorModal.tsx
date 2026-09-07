@@ -214,6 +214,26 @@ export const AutoMixSelectorModal: React.FC = () => {
               );
             })}
           </div>
+
+          {/* Test Transition Now Button */}
+          <div className="pt-2 border-t border-white/[0.08]">
+            <button
+              onClick={() => {
+                const store = usePlayerStore.getState();
+                if (!store.currentTrack) {
+                  store.addToast('شغّل أي أغنية أولاً لتجربة الانتقال الفوري 🎵', '🎵', 'info');
+                  return;
+                }
+                store.addToast(`جارٍ تنفيذ انتقال ${TRANSITION_OPTIONS.find((t) => t.id === automixStyle)?.titleAr || ''} الآن ⚡`, '🎛️', 'info');
+                store.nextTrack(false);
+                setAutoMixModalOpen(false);
+              }}
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF2D55] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#FA243C]/25 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Zap className="w-4 h-4 fill-white" />
+              <span>تجربة انتقال فوري بهذا النمط الآن ⚡</span>
+            </button>
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>

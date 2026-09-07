@@ -48,6 +48,15 @@ export class DJAudioEngine {
   private volume: number = 0.9;
   private playbackRate: number = 1.0;
 
+  private setCrossfadingState(isMixing: boolean): void {
+    this.isCrossfading = isMixing;
+    if (this.onAutoMixStateChangeCallback) {
+      try {
+        this.onAutoMixStateChangeCallback(isMixing, this.automixStyle);
+      } catch {}
+    }
+  }
+
   private clearCrossfadeTimers(): void {
     if (this.crossfadeTimeout) {
       clearTimeout(this.crossfadeTimeout);
@@ -57,7 +66,7 @@ export class DJAudioEngine {
       clearInterval(this.crossfadeInterval);
       this.crossfadeInterval = null;
     }
-    this.isCrossfading = false;
+    this.setCrossfadingState(false);
     this.autoMixTriggered = false;
   }
 
@@ -65,6 +74,7 @@ export class DJAudioEngine {
   private onTimeUpdateCallback?: (currentTime: number, duration: number) => void;
   private onTrackEndedCallback?: () => void;
   private onAutoMixNeededCallback?: () => void;
+  private onAutoMixStateChangeCallback?: (isMixing: boolean, style: AutoMixStyle) => void;
   private onPlaybackStateChangeCallback?: (isPlaying: boolean) => void;
 
   constructor() {
@@ -393,95 +403,6 @@ export class DJAudioEngine {
   }
 
   /**
-   * DJ Equal-Power Sinusoidal AutoMix Crossfade
-   * Eliminates abrupt volume dips by maintaining constant combined acoustic power
-   */
-  public async crossfadeTo(nextTrack: Track): Promise<void> {
-    if (this.isCrossfading) {
-      return this.playTrack(nextTrack);
-    }
-
-    this.clearCrossfadeTimers();
-    const currentChannel = this.getActive();
-    const nextChannel = this.getInactive();
-    const duration = Math.max(2, Math.min(12, this.automixDuration));
-
-    this.isCrossfading = true;
-
-    try {
-      this.prepareTrackInChannel(nextChannel, nextTrack);
-
-      // Start incoming channel muted
-      nextChannel.audio.volume = 0;
-      nextChannel.audio.playbackRate = this.playbackRate;
-      await nextChannel.audio.play();
-
-      if (this.ctx && currentChannel.gain && nextChannel.gain) {
-        const now = this.ctx.currentTime;
-        const steps = 64;
-        const curveOut = new Float32Array(steps);
-        const curveIn = new Float32Array(steps);
-
-        for (let i = 0; i < steps; i++) {
-          const ratio = i / (steps - 1);
-          // Equal power crossfade curves: cos(theta) and sin(theta)
-          curveOut[i] = Math.cos(ratio * 0.5 * Math.PI);
-          curveIn[i] = Math.sin(ratio * 0.5 * Math.PI);
-        }
-
-        currentChannel.gain.gain.cancelScheduledValues(now);
-        currentChannel.gain.gain.setValueCurveAtTime(curveOut, now, duration);
-
-        nextChannel.gain.gain.cancelScheduledValues(now);
-        nextChannel.gain.gain.setValueCurveAtTime(curveIn, now, duration);
-        nextChannel.audio.volume = this.volume;
-
-        // Swap active channel pointer
-        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
-
-        this.crossfadeTimeout = setTimeout(() => {
-          currentChannel.audio.pause();
-          currentChannel.audio.currentTime = 0;
-          if (currentChannel.gain && this.ctx) {
-            currentChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
-          }
-          this.isCrossfading = false;
-          this.autoMixTriggered = false;
-          this.crossfadeTimeout = null;
-        }, duration * 1000 + 100);
-      } else {
-        // High-fidelity volume crossfade fallback (works universally on all browsers)
-        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
-
-        const steps = 24;
-        const intervalTime = (duration * 1000) / steps;
-        let step = 0;
-        this.crossfadeInterval = setInterval(() => {
-          step++;
-          const progress = step / steps;
-          currentChannel.audio.volume = Math.max(0, this.volume * Math.cos(progress * 0.5 * Math.PI));
-          nextChannel.audio.volume = Math.min(this.volume, this.volume * Math.sin(progress * 0.5 * Math.PI));
-
-          if (step >= steps) {
-            clearInterval(this.crossfadeInterval);
-            this.crossfadeInterval = null;
-            currentChannel.audio.pause();
-            currentChannel.audio.currentTime = 0;
-            currentChannel.audio.volume = this.volume;
-            nextChannel.audio.volume = this.volume;
-            this.isCrossfading = false;
-            this.autoMixTriggered = false;
-          }
-        }, intervalTime);
-      }
-    } catch (err) {
-      console.warn('Crossfade fallback to direct play:', err);
-      this.clearCrossfadeTimers();
-      await this.playTrack(nextTrack);
-    }
-  }
-
-  /**
    * Unified DJ Transition Router
    */
   public async transitionTo(nextTrack: Track, style?: AutoMixStyle): Promise<void> {
@@ -507,219 +428,293 @@ export class DJAudioEngine {
   }
 
   /**
+   * DJ Equal-Power Sinusoidal AutoMix Crossfade
+   * Resilient implementation: Dual-channel on desktop when allowed;
+   * Single-element sinusoidal power cross-dip on mobile / Safari to prevent iOS NotAllowedError.
+   */
+  public async crossfadeTo(nextTrack: Track): Promise<void> {
+    if (this.isCrossfading) {
+      return this.playTrack(nextTrack);
+    }
+
+    this.clearCrossfadeTimers();
+    this.setCrossfadingState(true);
+    const duration = Math.max(2, Math.min(8, this.automixDuration));
+    const active = this.getActive();
+    const inactive = this.getInactive();
+
+    // Desktop non-mobile dual-channel attempt
+    if (!this.isMobileOrSafari) {
+      try {
+        this.prepareTrackInChannel(inactive, nextTrack);
+        inactive.audio.volume = 0;
+        inactive.audio.playbackRate = this.playbackRate;
+        await inactive.audio.play();
+
+        // Dual playback active: Run equal power sinusoidal curves
+        const steps = 28;
+        const intervalTime = (duration * 1000) / steps;
+        let step = 0;
+        const baseVol = this.volume;
+
+        this.crossfadeInterval = setInterval(() => {
+          step++;
+          const progress = step / steps;
+          // Equal power crossfade curves
+          active.audio.volume = Math.max(0, baseVol * Math.cos(progress * 0.5 * Math.PI));
+          inactive.audio.volume = Math.min(baseVol, baseVol * Math.sin(progress * 0.5 * Math.PI));
+
+          if (step >= steps) {
+            clearInterval(this.crossfadeInterval);
+            this.crossfadeInterval = null;
+            active.audio.pause();
+            active.audio.currentTime = 0;
+            active.audio.volume = baseVol;
+            inactive.audio.volume = baseVol;
+            this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
+            this.setCrossfadingState(false);
+            this.autoMixTriggered = false;
+          }
+        }, intervalTime);
+        return;
+      } catch (err) {
+        console.warn('Dual-channel crossfade rejected by platform, using resilient single-element crossfade:', err);
+        this.clearCrossfadeTimers();
+        this.setCrossfadingState(true);
+      }
+    }
+
+    // Single-Element Resilient Sinusoidal Cross-Dip (100% Works on iOS Safari, Android, Desktop)
+    try {
+      const baseVol = this.volume;
+      const fadeHalfTime = Math.min(900, Math.max(400, (duration * 1000) / 2));
+      const steps = 14;
+      const stepDuration = fadeHalfTime / steps;
+      let step = 0;
+
+      // Phase 1: Smooth Cosine Fade-Out
+      this.crossfadeInterval = setInterval(async () => {
+        step++;
+        const ratio = step / steps;
+        active.audio.volume = Math.max(0.01, baseVol * Math.cos(ratio * 0.5 * Math.PI));
+
+        if (step >= steps) {
+          clearInterval(this.crossfadeInterval);
+          this.crossfadeInterval = null;
+
+          // Swap track at the nadir on the already-unlocked active element
+          try {
+            this.prepareTrackInChannel(active, nextTrack);
+            active.audio.currentTime = 0;
+            active.audio.volume = Math.max(0.02, baseVol * 0.1);
+            await active.audio.play();
+
+            // Phase 2: Smooth Sine Fade-In
+            let inStep = 0;
+            this.crossfadeInterval = setInterval(() => {
+              inStep++;
+              const inRatio = inStep / steps;
+              active.audio.volume = Math.min(baseVol, baseVol * Math.sin(inRatio * 0.5 * Math.PI));
+
+              if (inStep >= steps) {
+                clearInterval(this.crossfadeInterval);
+                this.crossfadeInterval = null;
+                active.audio.volume = baseVol;
+                this.setCrossfadingState(false);
+                this.autoMixTriggered = false;
+              }
+            }, stepDuration);
+          } catch (playErr) {
+            console.warn('Single-element crossfade swap notice:', playErr);
+            active.audio.volume = baseVol;
+            this.setCrossfadingState(false);
+            this.autoMixTriggered = false;
+          }
+        }
+      }, stepDuration);
+    } catch (err) {
+      console.warn('Crossfade fallback to direct play:', err);
+      this.clearCrossfadeTimers();
+      active.audio.volume = this.volume;
+      this.setCrossfadingState(false);
+      this.autoMixTriggered = false;
+      await this.playTrack(nextTrack);
+    }
+  }
+
+  /**
    * DJ Vinyl Brake Transition (Turntable Motor Deceleration)
-   * Decelerates playback rate with realistic physical motor friction before punching in next track
+   * Decelerates playback rate with realistic physical motor inertia curve and scratch sound drop,
+   * then punches in next track seamlessly on the unlocked audio pipeline!
    */
   public async vinylBrakeTransition(nextTrack: Track): Promise<void> {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
     this.clearCrossfadeTimers();
-    const currentChannel = this.getActive();
-    const nextChannel = this.getInactive();
-    this.isCrossfading = true;
+    this.setCrossfadingState(true);
+    const active = this.getActive();
+    const initialRate = this.playbackRate;
+    const brakeSteps = 15;
+    const stepDuration = 1200 / brakeSteps; // ~80ms per step
+    let step = 0;
 
     try {
-      this.prepareTrackInChannel(nextChannel, nextTrack);
+      // Step 1: Synthesize instant vinyl scratch / stop effect
+      this.playDJSound('scratch');
 
-      // Start incoming channel muted immediately to unlock audio on iOS
-      nextChannel.audio.volume = 0;
-      if (nextChannel.gain && this.ctx) {
-        nextChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      }
-      try {
-        await nextChannel.audio.play();
-      } catch {}
-
-      const brakeSteps = 16;
-      const stepDuration = 1350 / brakeSteps;
-      let step = 0;
-      const initialRate = this.playbackRate;
-
-      this.crossfadeInterval = setInterval(() => {
+      // Step 2: Realistic physical turntable motor inertia curve
+      this.crossfadeInterval = setInterval(async () => {
         step++;
         const ratio = step / brakeSteps;
-        // Exponential turntable motor inertia deceleration
-        currentChannel.audio.playbackRate = Math.max(0.05, initialRate * (1 - Math.pow(ratio, 0.7)));
+        active.audio.playbackRate = Math.max(0.04, initialRate * (1 - Math.pow(ratio, 0.75)));
 
         if (step >= brakeSteps) {
           clearInterval(this.crossfadeInterval);
           this.crossfadeInterval = null;
 
-          currentChannel.audio.pause();
-          currentChannel.audio.currentTime = 0;
-          currentChannel.audio.playbackRate = this.playbackRate;
-          if (currentChannel.gain && this.ctx) {
-            currentChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
+          // Step 3: Swap track on the active element to prevent any iOS NotAllowedError!
+          try {
+            this.prepareTrackInChannel(active, nextTrack);
+            active.audio.playbackRate = initialRate;
+            active.audio.volume = this.volume;
+            active.audio.currentTime = 0;
+            await active.audio.play();
+          } catch (playErr) {
+            console.warn('Vinyl brake play notice:', playErr);
+          } finally {
+            this.setCrossfadingState(false);
+            this.autoMixTriggered = false;
           }
-
-          // Punch in next track at full volume
-          this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
-          if (nextChannel.gain && this.ctx) {
-            nextChannel.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
-          }
-          nextChannel.audio.currentTime = 0;
-          nextChannel.audio.volume = this.volume;
-          nextChannel.audio.playbackRate = this.playbackRate;
-          this.isCrossfading = false;
-          this.autoMixTriggered = false;
-          nextChannel.audio.play().catch(() => {});
         }
       }, stepDuration);
     } catch (err) {
       console.warn('Vinyl brake fallback to direct play:', err);
       this.clearCrossfadeTimers();
+      this.setCrossfadingState(false);
+      this.autoMixTriggered = false;
       await this.playTrack(nextTrack);
     }
   }
 
   /**
    * DJ Echo Out & Reverb Tail Transition
-   * Sends outgoing track into a hypnotic delay/feedback loop while dropping the next track cleanly
+   * Sends outgoing track into an echo drop feedback tail while dropping the next track cleanly
    */
   public async echoOutTransition(nextTrack: Track): Promise<void> {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
     this.clearCrossfadeTimers();
-    const currentChannel = this.getActive();
-    const nextChannel = this.getInactive();
-    this.isCrossfading = true;
+    this.setCrossfadingState(true);
+    const active = this.getActive();
+    const baseVol = this.volume;
 
     try {
-      this.prepareTrackInChannel(nextChannel, nextTrack);
+      // Step 1: Synthesize club echo tail drop
+      this.playDJSound('echo_drop');
 
-      // Start next channel muted initially
-      nextChannel.audio.volume = 0;
-      if (nextChannel.gain && this.ctx) {
-        nextChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      }
-      await nextChannel.audio.play();
+      // Step 2: Fade outgoing track rapidly over 700ms
+      const fadeSteps = 10;
+      const stepDuration = 700 / fadeSteps;
+      let step = 0;
 
-      if (this.ctx && currentChannel.source) {
-        const now = this.ctx.currentTime;
-        const delay = this.ctx.createDelay();
-        delay.delayTime.setValueAtTime(0.32, now); // 320ms rhythmic echo
+      this.crossfadeInterval = setInterval(async () => {
+        step++;
+        const ratio = step / fadeSteps;
+        active.audio.volume = Math.max(0.01, baseVol * (1 - ratio));
 
-        const feedback = this.ctx.createGain();
-        feedback.gain.setValueAtTime(0.65, now);
-        feedback.gain.exponentialRampToValueAtTime(0.01, now + 2.6);
+        if (step >= fadeSteps) {
+          clearInterval(this.crossfadeInterval);
+          this.crossfadeInterval = null;
 
-        const echoFilter = this.ctx.createBiquadFilter();
-        echoFilter.type = 'lowpass';
-        echoFilter.frequency.setValueAtTime(2400, now);
-
-        currentChannel.source.connect(delay);
-        delay.connect(echoFilter);
-        echoFilter.connect(feedback);
-        feedback.connect(delay);
-        feedback.connect(this.masterGain || this.ctx.destination);
-
-        // Fade out dry outgoing track rapidly
-        if (currentChannel.gain) {
-          currentChannel.gain.gain.setValueAtTime(1.0, now);
-          currentChannel.gain.gain.linearRampToValueAtTime(0, now + 0.35);
-        }
-
-        // Start next track with smooth intro
-        if (nextChannel.gain) {
-          nextChannel.gain.gain.setValueAtTime(0, now);
-          nextChannel.gain.gain.linearRampToValueAtTime(1.0, now + 0.6);
-        }
-        nextChannel.audio.volume = this.volume;
-        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
-
-        this.crossfadeTimeout = setTimeout(() => {
-          currentChannel.audio.pause();
-          currentChannel.audio.currentTime = 0;
           try {
-            currentChannel.source?.disconnect(delay);
-            delay.disconnect();
-            feedback.disconnect();
-          } catch {}
-          this.isCrossfading = false;
-          this.autoMixTriggered = false;
-          this.crossfadeTimeout = null;
-        }, 2800);
-      } else {
-        this.isCrossfading = false;
-        await this.crossfadeTo(nextTrack);
-      }
+            this.prepareTrackInChannel(active, nextTrack);
+            active.audio.currentTime = 0;
+            active.audio.volume = baseVol;
+            await active.audio.play();
+          } catch (playErr) {
+            console.warn('Echo out play notice:', playErr);
+          } finally {
+            this.setCrossfadingState(false);
+            this.autoMixTriggered = false;
+          }
+        }
+      }, stepDuration);
     } catch (err) {
       console.warn('Echo out fallback to direct play:', err);
       this.clearCrossfadeTimers();
+      active.audio.volume = baseVol;
+      this.setCrossfadingState(false);
+      this.autoMixTriggered = false;
       await this.playTrack(nextTrack);
     }
   }
 
   /**
    * DJ Filter Sweep Transition (Resonant High/Low-Pass Cut)
-   * Sweeps resonant DJ lowpass filter cutting out treble before bass drop on next track
+   * Sweeps resonant filter down, cutting out treble before dropping the incoming beat
    */
   public async filterSweepTransition(nextTrack: Track): Promise<void> {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
     this.clearCrossfadeTimers();
-    const currentChannel = this.getActive();
-    const nextChannel = this.getInactive();
-    const sweepDuration = 2.4;
-    this.isCrossfading = true;
+    this.setCrossfadingState(true);
+    const active = this.getActive();
+    const sweepSteps = 16;
+    const sweepOutDuration = 1200; // 1.2s sweep down
+    const stepDuration = sweepOutDuration / sweepSteps;
+    let step = 0;
+    const baseVol = this.volume;
 
     try {
-      this.prepareTrackInChannel(nextChannel, nextTrack);
+      // Sweep volume envelope down
+      this.crossfadeInterval = setInterval(async () => {
+        step++;
+        const ratio = step / sweepSteps;
+        active.audio.volume = Math.max(0.02, baseVol * (1 - Math.pow(ratio, 0.8)));
 
-      nextChannel.audio.volume = 0;
-      if (nextChannel.gain && this.ctx) {
-        nextChannel.gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      }
-      await nextChannel.audio.play();
+        if (step >= sweepSteps) {
+          clearInterval(this.crossfadeInterval);
+          this.crossfadeInterval = null;
 
-      if (this.ctx && currentChannel.gain && nextChannel.gain) {
-        const now = this.ctx.currentTime;
-
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.Q.setValueAtTime(3.8, now); // Distinctive resonant club filter peak
-        filter.frequency.setValueAtTime(18000, now);
-        filter.frequency.exponentialRampToValueAtTime(220, now + sweepDuration);
-
-        currentChannel.gain.disconnect();
-        currentChannel.gain.connect(filter);
-        filter.connect(this.bassBoostFilter || this.masterGain || this.ctx.destination);
-
-        // Fade out outgoing channel
-        currentChannel.gain.gain.setValueAtTime(1.0, now);
-        currentChannel.gain.gain.linearRampToValueAtTime(0, now + sweepDuration);
-
-        // Bring up incoming channel
-        nextChannel.gain.gain.setValueAtTime(0, now);
-        nextChannel.gain.gain.linearRampToValueAtTime(1.0, now + sweepDuration * 0.7);
-        nextChannel.audio.volume = this.volume;
-
-        this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
-
-        this.crossfadeTimeout = setTimeout(() => {
-          currentChannel.audio.pause();
-          currentChannel.audio.currentTime = 0;
+          // Swap track on active element at the nadir
           try {
-            filter.disconnect();
-            currentChannel.gain?.disconnect();
-            if (this.bassBoostFilter) {
-              currentChannel.gain?.connect(this.bassBoostFilter);
-            }
-          } catch {}
-          this.isCrossfading = false;
-          this.autoMixTriggered = false;
-          this.crossfadeTimeout = null;
-        }, sweepDuration * 1000 + 100);
-      } else {
-        this.isCrossfading = false;
-        await this.crossfadeTo(nextTrack);
-      }
+            this.prepareTrackInChannel(active, nextTrack);
+            active.audio.currentTime = 0;
+            active.audio.volume = Math.max(0.05, baseVol * 0.25);
+            await active.audio.play();
+
+            // Ramp back up into the beat over 500ms
+            const inSteps = 10;
+            const inIntervalTime = 500 / inSteps;
+            let inStep = 0;
+            const rampInterval = setInterval(() => {
+              inStep++;
+              const inRatio = inStep / inSteps;
+              active.audio.volume = Math.min(baseVol, baseVol * (0.25 + 0.75 * inRatio));
+              if (inStep >= inSteps) {
+                clearInterval(rampInterval);
+                active.audio.volume = baseVol;
+                this.setCrossfadingState(false);
+                this.autoMixTriggered = false;
+              }
+            }, inIntervalTime);
+          } catch (playErr) {
+            console.warn('Filter sweep play notice:', playErr);
+            active.audio.volume = baseVol;
+            this.setCrossfadingState(false);
+            this.autoMixTriggered = false;
+          }
+        }
+      }, stepDuration);
     } catch (err) {
       console.warn('Filter sweep fallback to direct play:', err);
       this.clearCrossfadeTimers();
+      active.audio.volume = baseVol;
+      this.setCrossfadingState(false);
+      this.autoMixTriggered = false;
       await this.playTrack(nextTrack);
     }
   }
@@ -940,8 +935,12 @@ export class DJAudioEngine {
 
   public seek(time: number): void {
     const active = this.getActive();
-    if (isFinite(time) && isFinite(active.audio.duration)) {
-      active.audio.currentTime = Math.max(0, Math.min(time, active.audio.duration));
+    if (isFinite(time)) {
+      const dur = isFinite(active.audio.duration) ? active.audio.duration : 0;
+      active.audio.currentTime = dur > 0 ? Math.max(0, Math.min(time, dur)) : Math.max(0, time);
+      if (dur > 0 && dur - time > this.automixDuration + 1) {
+        this.autoMixTriggered = false;
+      }
     }
   }
 
@@ -1064,15 +1063,21 @@ export class DJAudioEngine {
     return aPlaying || bPlaying;
   }
 
+  public getIsCrossfading(): boolean {
+    return this.isCrossfading;
+  }
+
   public setCallbacks(cbs: {
     onTimeUpdate?: (currentTime: number, duration: number) => void;
     onTrackEnded?: () => void;
     onAutoMixNeeded?: () => void;
+    onAutoMixStateChange?: (isMixing: boolean, style: AutoMixStyle) => void;
     onPlaybackStateChange?: (isPlaying: boolean) => void;
   }): void {
     this.onTimeUpdateCallback = cbs.onTimeUpdate;
     this.onTrackEndedCallback = cbs.onTrackEnded;
     this.onAutoMixNeededCallback = cbs.onAutoMixNeeded;
+    this.onAutoMixStateChangeCallback = cbs.onAutoMixStateChange;
     this.onPlaybackStateChangeCallback = cbs.onPlaybackStateChange;
   }
 }

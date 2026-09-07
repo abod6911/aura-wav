@@ -43,6 +43,8 @@ export const MobilePlayerSheet: React.FC = () => {
   const setLyricsOpen = usePlayerStore((state) => state.setLyricsOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
+  const automixStyle = usePlayerStore((state) => state.automixStyle);
+  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
 
   const [visualizerMode, setVisualizerMode] = useState(false);
 
@@ -51,7 +53,8 @@ export const MobilePlayerSheet: React.FC = () => {
   const isFav = favorites.includes(currentTrack.id);
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
   const isCrossfadingSoon =
-    automixEnabled && duration > 15 && duration - currentTime <= automixDuration;
+    isAutoMixingLive ||
+    (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
 
   const formatTime = (secs: number) => {
     if (!secs || isNaN(secs)) return '0:00';
@@ -169,8 +172,16 @@ export const MobilePlayerSheet: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
                 {automixEnabled && isCrossfadingSoon && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#FA243C]/90 text-white text-[10px] font-bold shadow-lg animate-pulse">
-                    AutoMix جارٍ...
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#FA243C]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
+                    <span>
+                      {automixStyle === 'vinyl_brake'
+                        ? 'AutoMix: فرملة فينيل 💽'
+                        : automixStyle === 'echo_out'
+                        ? 'AutoMix: صدى متلاشٍ 🌌'
+                        : automixStyle === 'filter_sweep'
+                        ? 'AutoMix: فلتر كلوب 🎚️'
+                        : 'AutoMix: تلاشٍ انسيابي 🪄'}
+                    </span>
                   </div>
                 )}
               </div>

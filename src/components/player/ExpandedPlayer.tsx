@@ -146,8 +146,10 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   if (!effectiveOpen || !currentTrack) return null;
 
   const isFav = favorites.includes(currentTrack.id);
+  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
   const isAutoMixing =
-    automixEnabled && duration > 15 && duration - currentTime <= automixDuration;
+    isAutoMixingLive ||
+    (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
 
   const cycleRate = () => {
     const rates = [0.75, 1.0, 1.25, 1.5];
@@ -286,9 +288,17 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                 />
 
                 {isAutoMixing && (
-                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#FA243C]/90 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-1.5 animate-pulse">
+                  <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-[#FA243C]/95 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-1.5 animate-pulse border border-white/20">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>AutoMix جارٍ</span>
+                    <span>
+                      {automixStyle === 'vinyl_brake'
+                        ? 'AutoMix: فرملة فينيل 💽'
+                        : automixStyle === 'echo_out'
+                        ? 'AutoMix: صدى متلاشٍ 🌌'
+                        : automixStyle === 'filter_sweep'
+                        ? 'AutoMix: فلتر كلوب 🎚️'
+                        : 'AutoMix: تلاشٍ انسيابي 🪄'}
+                    </span>
                   </div>
                 )}
                 {/* Change Artwork Overlay Button */}
