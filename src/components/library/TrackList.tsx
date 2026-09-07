@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Track } from '../../types';
 import {
@@ -21,7 +21,8 @@ import {
   HardDrive,
   Download,
   CheckCircle2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ArrowUp
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -32,6 +33,8 @@ interface TrackListProps {
 
 type SortOption = 'number' | 'title' | 'artist' | 'duration';
 
+export type RangeOption = 'all' | '1-50' | '51-100' | '101-150' | '151-200' | '201-261';
+
 export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const tracks = usePlayerStore((state) => state.tracks);
   const searchQuery = usePlayerStore((state) => state.searchQuery);
@@ -41,9 +44,26 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const activeMood = usePlayerStore((state) => state.activeMood);
   const setActiveMood = usePlayerStore((state) => state.setActiveMood);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
+  const cacheAllAvailableTracksOffline = usePlayerStore((state) => state.cacheAllAvailableTracksOffline);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics' | 'offline'>('all');
+  const [activeRange, setActiveRange] = useState<RangeOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('number');
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 350);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const readyOfflineCount = useMemo(() => {
+    return tracks.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id))).length;
+  }, [tracks, downloadedTrackIds]);
 
   // Filter tracks
   const filtered = useMemo(() => {
@@ -66,6 +86,17 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       list = list.filter((t) => favorites.includes(t.id));
     } else if (activeFilter === 'lyrics') {
       list = list.filter((t) => t.syncedLyrics && t.syncedLyrics.length > 0);
+    } else if (activeFilter === 'offline') {
+      list = list.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id)));
+    }
+
+    // Range filter (active when not searching)
+    if (!searchQuery.trim() && activeRange !== 'all') {
+      const [start, end] = activeRange.split('-').map(Number);
+      list = list.filter((t) => {
+        const num = t.trackNumber ?? 99999;
+        return num >= start && num <= end;
+      });
     }
 
     // Sort
@@ -88,7 +119,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     });
 
     return list;
-  }, [tracks, searchQuery, activeFilter, sortBy, favorites]);
+  }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds]);
 
   // Handle Play All
   const handlePlayAll = () => {
@@ -345,6 +376,19 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <span>بكلمات متزامنة</span>
           </button>
 
+          <button
+            onClick={() => setActiveFilter('offline')}
+            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeFilter === 'offline'
+                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
+            }`}
+            title="إظهار الأغاني الجاهزة للتشغيل أوفلاين في الذاكرة"
+          >
+            <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
+            <span>أوفلاين ({readyOfflineCount})</span>
+          </button>
+
           {/* Sort Dropdown */}
           <div className="relative flex items-center">
             <select
@@ -359,6 +403,58 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </select>
           </div>
         </div>
+      </div>
+
+      {/* Quick Numeric Range Jump Bar & Bulk Cache Offline Action */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 select-none scrollbar-none">
+          <span className="text-[11px] sm:text-xs font-bold text-zinc-400 flex-shrink-0 pl-1">
+            تصفح سريع:
+          </span>
+          {[
+            { id: 'all', label: `الكل (${tracks.length})` },
+            { id: '1-50', label: '#1 - 50' },
+            { id: '51-100', label: '#51 - 100' },
+            { id: '101-150', label: '#101 - 150' },
+            { id: '151-200', label: '#151 - 200' },
+            { id: '201-261', label: '#201 - 261' },
+          ].map((r) => {
+            const isSel = activeRange === r.id;
+            return (
+              <button
+                key={r.id}
+                onClick={() => {
+                  setActiveRange(r.id as RangeOption);
+                  if (searchQuery) setSearchQuery('');
+                }}
+                className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-all border cursor-pointer ${
+                  isSel
+                    ? 'bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF5E7E] shadow-sm'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
+                }`}
+              >
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 1-Click Offline Caching CTA */}
+        <button
+          onClick={() => cacheAllAvailableTracksOffline()}
+          disabled={!!downloadAllProgress || (tracks.length > 0 && readyOfflineCount === tracks.length)}
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-bold transition-all flex-shrink-0 cursor-pointer disabled:opacity-50"
+          title="حفظ كافة الأغاني المتوفرة في ذاكرة المتصفح لتعمل بدون نت للأبد"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          <span>
+            {downloadAllProgress
+              ? `جاري حفظ الأغاني: ${downloadAllProgress.current}/${downloadAllProgress.total}`
+              : tracks.length > 0 && readyOfflineCount === tracks.length
+              ? 'كل الأغاني محفوظة أوفلاين ⚡'
+              : `حفظ الكل أوفلاين (${readyOfflineCount}/${tracks.length})`}
+          </span>
+        </button>
       </div>
 
       {/* 2.5 YouTube Music Mood & Activity Bar */}
@@ -466,6 +562,21 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           )}
         </div>
       </div>
+
+      {/* Floating Scroll to Top Action Button */}
+      {showScrollTop && (
+        <motion.button
+          initial={{ opacity: 0, y: 15, scale: 0.85 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 15, scale: 0.85 }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-24 right-4 z-40 px-4 py-2.5 rounded-full bg-[#12121c]/90 border border-white/20 text-white shadow-[0_8px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl flex items-center gap-2 text-xs font-bold hover:bg-white/20 active:scale-95 transition-all cursor-pointer select-none"
+          title="العودة للأعلى"
+        >
+          <ArrowUp className="w-4 h-4 text-[#FA243C]" />
+          <span>للأعلى</span>
+        </motion.button>
+      )}
     </div>
   );
 };

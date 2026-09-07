@@ -11,6 +11,11 @@ interface ImportModalProps {
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => {
   const importTracks = usePlayerStore((state) => state.importTracks);
+  const tracks = usePlayerStore((state) => state.tracks);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
+  const cacheAllAvailableTracksOffline = usePlayerStore((state) => state.cacheAllAvailableTracksOffline);
+
   const [isScanning, setIsScanning] = useState(false);
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -199,6 +204,33 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <span>📁 اختيار مجلد كامل (كمبيوتر)</span>
+              </button>
+            </div>
+
+            {/* 1-Click Sync/Cache All Available Tracks */}
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-right">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-emerald-300 font-bold text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span>حفظ فوري في ذاكرة الجهاز (IndexedDB)</span>
+                </div>
+                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                  احفظ كافة الأغاني المتاحة في ذاكرة المتصفح لتشغيلها دائماً وبشكل كامل بدون إنترنت 100%.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  await cacheAllAvailableTracksOffline();
+                }}
+                disabled={!!downloadAllProgress || (tracks.length > 0 && downloadedTrackIds.length === tracks.length)}
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 shadow-md shadow-emerald-500/20"
+              >
+                {downloadAllProgress
+                  ? `جاري الحفظ: ${downloadAllProgress.current}/${downloadAllProgress.total}`
+                  : tracks.length > 0 && downloadedTrackIds.length === tracks.length
+                  ? 'محفوظة بالكامل أوفلاين ⚡'
+                  : `حفظ الكل أوفلاين (${downloadedTrackIds.length}/${tracks.length})`}
               </button>
             </div>
 

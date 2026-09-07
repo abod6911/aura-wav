@@ -78,6 +78,7 @@ interface PlayerState {
   artworkTargetTrack: Track | null;
   isOnline: boolean;
   downloadedTrackIds: string[];
+  downloadAllProgress: { current: number; total: number } | null;
   toasts: ToastItem[];
 
   // Persistent Folder Engine
@@ -133,6 +134,7 @@ interface PlayerState {
   addToast: (message: string, icon?: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
   downloadTrackForOffline: (trackId: string) => Promise<void>;
+  cacheAllAvailableTracksOffline: () => Promise<void>;
   createPlaylist: (name: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
@@ -228,6 +230,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     artworkTargetTrack: null,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
+    downloadAllProgress: null,
     toasts: [],
     savedFolderName: 'Liked_Songs',
     savedFolderTrackCount: 0,
@@ -598,6 +601,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         for (const tr of baseList) {
           const { file: _f, blob: _b, ...serializable } = tr;
           await tx.store.put(serializable as Track);
+          if (tr.blob) {
+            try {
+              await db.put('audioBlobs', { id: tr.id, blob: tr.blob });
+              if (tr.trackNumber) {
+                await db.put('audioBlobs', { id: `track_catalog_${tr.trackNumber}`, blob: tr.blob });
+              }
+            } catch {}
+          }
         }
         await tx.done;
       } catch (err) {
@@ -616,7 +627,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (!playableTrack.file && !playableTrack.blob) {
         try {
           const db = await getDB();
-          const item = await db.get('audioBlobs', track.id);
+          let item = await db.get('audioBlobs', track.id);
+          if (!item && track.trackNumber) {
+            item = await db.get('audioBlobs', `track_catalog_${track.trackNumber}`);
+          }
           if (item && item.blob) {
             playableTrack = { ...track, blob: item.blob };
           }
@@ -770,7 +784,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         if (!nextTrack.file && !nextTrack.blob) {
           try {
             const db = await getDB();
-            const item = await db.get('audioBlobs', nextTrack.id);
+            let item = await db.get('audioBlobs', nextTrack.id);
+            if (!item && nextTrack.trackNumber) {
+              item = await db.get('audioBlobs', `track_catalog_${nextTrack.trackNumber}`);
+            }
             if (item && item.blob) nextTrack = { ...rawNext, blob: item.blob };
           } catch {}
         }
@@ -832,7 +849,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           if (!resolvedCandidate.file && !resolvedCandidate.blob) {
             try {
               const db = await getDB();
-              const item = await db.get('audioBlobs', resolvedCandidate.id);
+              let item = await db.get('audioBlobs', resolvedCandidate.id);
+              if (!item && resolvedCandidate.trackNumber) {
+                item = await db.get('audioBlobs', `track_catalog_${resolvedCandidate.trackNumber}`);
+              }
               if (item && item.blob) resolvedCandidate = { ...candidate, blob: item.blob };
             } catch {}
           }
@@ -870,9 +890,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         const rawPrev = queue[currentIndex - 1];
         let prevTrack = rawPrev;
         if (!prevTrack.file && !prevTrack.blob) {
-          const db = await getDB();
-          const item = await db.get('audioBlobs', prevTrack.id);
-          if (item && item.blob) prevTrack = { ...rawPrev, blob: item.blob };
+          try {
+            const db = await getDB();
+            let item = await db.get('audioBlobs', prevTrack.id);
+            if (!item && prevTrack.trackNumber) {
+              item = await db.get('audioBlobs', `track_catalog_${prevTrack.trackNumber}`);
+            }
+            if (item && item.blob) prevTrack = { ...rawPrev, blob: item.blob };
+          } catch {}
         }
         await get().playTrack(prevTrack);
       } else {
@@ -1239,7 +1264,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         if (blob) {
           const db = await getDB();
           await db.put('audioBlobs', { id: track.id, blob });
-          set({ downloadedTrackIds: [...get().downloadedTrackIds, trackId] });
+          if (track.trackNumber) {
+            await db.put('audioBlobs', { id: `track_catalog_${track.trackNumber}`, blob });
+          }
+          set({ downloadedTrackIds: Array.from(new Set([...get().downloadedTrackIds, trackId])) });
           addToast(`تم حفظ "${track.title}" أوفلاين بنجاح ⚡`, undefined, 'success');
         } else {
           addToast(`تعذر حفظ المسار أوفلاين`, undefined, 'warning');
@@ -1247,6 +1275,62 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       } catch (err) {
         console.warn('Error downloading track offline:', err);
         addToast(`خطأ أثناء الحفظ للأوفلاين`, undefined, 'warning');
+      }
+    },
+
+    cacheAllAvailableTracksOffline: async () => {
+      const { tracks, downloadedTrackIds, addToast } = get();
+      if (tracks.length === 0) return;
+
+      const neededTracks = tracks.filter((t) => !downloadedTrackIds.includes(t.id));
+      if (neededTracks.length === 0) {
+        addToast('جميع المسارات الـ 261 محفوظة أوفلاين بالفعل في الذاكرة ⚡', '⚡', 'success');
+        return;
+      }
+
+      addToast(`بدء حفظ ${neededTracks.length} مسار للعمل بدون إنترنت ⚡...`, '📥', 'info');
+      set({ downloadAllProgress: { current: 0, total: neededTracks.length } });
+
+      let savedCount = 0;
+      const newDownloaded = new Set<string>(downloadedTrackIds);
+
+      try {
+        const db = await getDB();
+        for (let i = 0; i < neededTracks.length; i++) {
+          const track = neededTracks[i];
+          let blob: Blob | null = track.blob || null;
+          if (!blob && track.file) {
+            blob = track.file;
+          } else if (!blob && track.audioUrl) {
+            try {
+              const res = await fetch(track.audioUrl);
+              if (res.ok) {
+                blob = await res.blob();
+              }
+            } catch {}
+          }
+
+          if (blob) {
+            await db.put('audioBlobs', { id: track.id, blob });
+            if (track.trackNumber) {
+              await db.put('audioBlobs', { id: `track_catalog_${track.trackNumber}`, blob });
+            }
+            newDownloaded.add(track.id);
+            savedCount++;
+          }
+
+          set({
+            downloadAllProgress: { current: i + 1, total: neededTracks.length },
+            downloadedTrackIds: Array.from(newDownloaded),
+          });
+        }
+
+        addToast(`تم حفظ ${savedCount} مسار في الذاكرة بنجاح ⚡ تعمل الآن أوفلاين للأبد!`, '✅', 'success');
+      } catch (err) {
+        console.warn('Error during bulk offline caching:', err);
+        addToast('حدث خطأ أثناء حفظ بعض المسارات للأوفلاين', '⚠️', 'warning');
+      } finally {
+        set({ downloadAllProgress: null });
       }
     },
   };

@@ -78,8 +78,10 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   const setSoundboardOpen = usePlayerStore((state) => state.setSoundboardOpen);
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
   const automixStyle = usePlayerStore((state) => state.automixStyle);
+  const playDJSound = usePlayerStore((state) => state.playDJSound);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
+  const [activeDJPHand, setActiveDJPHand] = useState<string | null>(null);
   const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
 
   // Trigger subtle mobile haptic feedback if available
@@ -89,6 +91,15 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
         navigator.vibrate(10);
       } catch {}
     }
+  };
+
+  const handleQuickDJDrop = (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => {
+    triggerHaptic();
+    setActiveDJPHand(effect);
+    playDJSound(effect);
+    setTimeout(() => {
+      setActiveDJPHand((curr) => (curr === effect ? null : curr));
+    }, 350);
   };
 
   // Related songs computation (More by same artist, or matching genre)
@@ -673,6 +684,49 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
           </motion.button>
+        </div>
+
+        {/* 4.5 Mini DJ Soundboard Quick-Pads Strip (Instant Live Drops) */}
+        <div className="px-2.5 py-1.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-1.5 flex-shrink-0 select-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-1 justify-around">
+            {[
+              { id: 'scratch', label: 'خربشة', icon: '💽', border: 'border-[#FA243C]/40', bg: 'bg-[#FA243C]/20 text-white' },
+              { id: 'airhorn', label: 'بوق', icon: '📢', border: 'border-amber-500/40', bg: 'bg-amber-500/20 text-amber-200' },
+              { id: 'echo_drop', label: 'بيس', icon: '💥', border: 'border-purple-500/40', bg: 'bg-purple-500/20 text-purple-200' },
+              { id: 'laser', label: 'ليزر', icon: '⚡', border: 'border-emerald-500/40', bg: 'bg-emerald-500/20 text-emerald-200' },
+              { id: 'cheer', label: 'جمهور', icon: '👏', border: 'border-blue-500/40', bg: 'bg-blue-500/20 text-blue-200' },
+            ].map((pad) => {
+              const isTriggered = activeDJPHand === pad.id;
+              return (
+                <motion.button
+                  key={pad.id}
+                  whileTap={{ scale: 0.88 }}
+                  onClick={() => handleQuickDJDrop(pad.id as any)}
+                  className={`px-2 sm:px-2.5 py-1 rounded-xl border text-[10px] sm:text-xs font-bold flex items-center gap-1 transition-all cursor-pointer select-none ${
+                    isTriggered
+                      ? `${pad.bg} ${pad.border} scale-105 shadow-md shadow-[#FA243C]/20`
+                      : 'border-white/[0.06] bg-white/[0.04] text-zinc-300 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                  title={`تأثير DJ مباشر: ${pad.label}`}
+                >
+                  <span className={isTriggered ? 'animate-bounce' : ''}>{pad.icon}</span>
+                  <span className="text-[10px] sm:text-[11px]">{pad.label}</span>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => {
+              triggerHaptic();
+              setAutoMixModalOpen(true);
+            }}
+            className="px-2 py-1 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all hover:bg-purple-500/25 active:scale-95 flex-shrink-0 cursor-pointer"
+            title="إعدادات الـ AutoMix"
+          >
+            <Sparkles className="w-3 h-3 text-purple-400" />
+            <span>AutoMix</span>
+          </button>
         </div>
 
         {/* 5. Apple Music 3 Tabs Selector */}
