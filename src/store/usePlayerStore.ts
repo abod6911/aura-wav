@@ -205,7 +205,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         djAudioEngine.seek(0);
         djAudioEngine.play();
       } else {
-        get().nextTrack({ forceImmediate: false });
+        get().nextTrack({ forceImmediate: true });
       }
     },
     onPreloadNeeded: async (currentTrack) => {
@@ -721,6 +721,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
+      djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
       const state = get();
 
@@ -835,6 +836,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     togglePlayPause: () => {
+      djAudioEngine.primeDecks();
       const { isPlaying, currentTrack, tracks } = get();
       if (!currentTrack && tracks.length > 0) {
         get().playTrack(tracks[0]);
@@ -861,6 +863,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     nextTrack: async (options?: { forceImmediate?: boolean } | boolean) => {
+      djAudioEngine.primeDecks();
       const { queue, tracks, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying, automixStyle } = get();
       if (!currentTrack) {
         if (tracks.length > 0) get().playTrack(tracks[0]);
@@ -967,6 +970,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     previousTrack: async () => {
+      djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
       const { queue, currentTrack, currentTime } = get();
       if (!currentTrack) return;
@@ -1435,4 +1439,8 @@ function getMediaSessionCallbacks(get: () => PlayerState) {
     onPrevious: () => get().previousTrack(),
     onSeek: (t: number) => get().seek(t),
   };
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).usePlayerStore = usePlayerStore;
 }

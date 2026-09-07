@@ -63,6 +63,7 @@ export class DJAudioEngine {
   // Platform capability detection
   private isMobileOrSafari: boolean = false;
   private isUnlocked: boolean = false;
+  private pendingGaplessFallbackTrack: Track | null = null;
 
   // Configuration & States
   private automixEnabled: boolean = true;
@@ -107,6 +108,16 @@ export class DJAudioEngine {
     this.channelA = this.createChannel('A');
     this.channelB = this.createChannel('B');
 
+    // Attach global gesture priming on very first touch/click anywhere on document
+    if (typeof window !== 'undefined') {
+      const gesturePriming = () => {
+        this.primeDecks();
+      };
+      ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((evt) => {
+        window.addEventListener(evt, gesturePriming, { capture: true, passive: true });
+      });
+    }
+
     // Initialize Unthrottled Background Timer Worker
     this.initTimerWorker();
 
@@ -137,9 +148,20 @@ export class DJAudioEngine {
 
     if (!isFinite(cur) || !isFinite(dur) || dur <= 0) return;
 
-    // 1. High-frequency UI timeupdate callback
+    // 1. High-frequency UI timeupdate callback with lockscreen scrubber sync
     if (this.onTimeUpdateCallback) {
-      this.onTimeUpdateCallback(cur, dur);
+      if (this.isCrossfading && this.midpointFired) {
+        const inactive = this.getInactive();
+        const inCur = inactive.audio.currentTime;
+        const inDur = inactive.audio.duration;
+        if (isFinite(inCur) && isFinite(inDur) && inDur > 0) {
+          this.onTimeUpdateCallback(inCur, inDur);
+        } else {
+          this.onTimeUpdateCallback(cur, dur);
+        }
+      } else {
+        this.onTimeUpdateCallback(cur, dur);
+      }
     }
 
     // 2. Pre-warming & lookahead trigger (12–15s prior to track end)
@@ -216,6 +238,16 @@ export class DJAudioEngine {
 
     audio.addEventListener('ended', () => {
       if (this.activeChannelName === name && !this.isCrossfading) {
+        // Gapless fallback on already-unlocked primary deck if iOS previously rejected secondary deck
+        if (this.pendingGaplessFallbackTrack) {
+          const next = this.pendingGaplessFallbackTrack;
+          this.pendingGaplessFallbackTrack = null;
+          this.autoMixTriggered = false;
+          this.preloadTriggered = false;
+          this.gaplessSwapAndPlay(this.getActive(), next);
+          return;
+        }
+
         this.autoMixTriggered = false;
         this.preloadTriggered = false;
         if (this.onTrackEndedCallback) {
@@ -370,29 +402,89 @@ export class DJAudioEngine {
     return this.ctx;
   }
 
+  public ensureChannelsAttached(): void {
+    if (typeof document === 'undefined' || !document.body) return;
+    [this.channelA, this.channelB].forEach((ch) => {
+      if (ch && ch.audio && !document.body.contains(ch.audio)) {
+        ch.audio.style.position = 'fixed';
+        ch.audio.style.bottom = '0';
+        ch.audio.style.left = '0';
+        ch.audio.style.width = '1px';
+        ch.audio.style.height = '1px';
+        ch.audio.style.opacity = '0.001';
+        ch.audio.style.pointerEvents = 'none';
+        ch.audio.style.zIndex = '-1';
+        ch.audio.setAttribute('playsinline', 'true');
+        ch.audio.setAttribute('webkit-playsinline', 'true');
+        document.body.appendChild(ch.audio);
+      }
+    });
+  }
+
   /**
-   * Unlock both audio channels during user interaction gesture
-   * Permanently permits programmatic background dual-playback on iOS Safari / WebKit
+   * User Gesture Audio Priming (Dual-Deck Unlocking):
+   * Synchronously instantiates and primes BOTH audio instances (deckA and deckB)
+   * on the first user interaction (touch/click event).
+   * Plays a fraction of silence on both decks simultaneously and pauses/mutes
+   * the secondary deck immediately inside the touch handler.
+   * This registers BOTH elements with iOS WebKit as "user-activated", permanently
+   * permitting programmatic background and lock-screen playback without user gestures.
    */
-  public async unlockEngines(): Promise<void> {
-    if (this.isUnlocked) return;
+  public primeDecks(): void {
     try {
-      await this.initContext();
-      const silentWav = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-      
+      this.ensureChannelsAttached();
+
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+
+      if (this.isUnlocked) return;
+
+      const SILENT_AUDIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+
+      // Prime Deck A if not already holding user track
       if (!this.channelA.audio.src) {
-        this.channelA.audio.src = silentWav;
-        await this.channelA.audio.play().catch(() => {});
-        this.channelA.audio.pause();
+        this.channelA.audio.src = SILENT_AUDIO;
+        this.channelA.audio.volume = 0;
+        this.channelA.audio.play().catch(() => {});
       }
+
+      // Prime Deck B (secondary deck)
       if (!this.channelB.audio.src) {
-        this.channelB.audio.src = silentWav;
-        await this.channelB.audio.play().catch(() => {});
-        this.channelB.audio.pause();
+        this.channelB.audio.src = SILENT_AUDIO;
+        this.channelB.audio.volume = 0;
+        const playB = this.channelB.audio.play();
+        if (playB !== undefined) {
+          playB
+            .then(() => {
+              this.channelB.audio.pause();
+              this.channelB.audio.currentTime = 0;
+            })
+            .catch(() => {});
+        } else {
+          this.channelB.audio.pause();
+          this.channelB.audio.currentTime = 0;
+        }
       }
+
       this.isUnlocked = true;
     } catch (err) {
-      console.warn('[DJAudioEngine] Audio unlock notice:', err);
+      console.warn('[DJAudioEngine] Deck priming notice:', err);
+    }
+  }
+
+  public async unlockEngines(): Promise<void> {
+    this.primeDecks();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      try {
+        await this.ctx.resume();
+      } catch {}
     }
   }
 
@@ -543,21 +635,14 @@ export class DJAudioEngine {
   /**
    * Enterprise Equal-Power Sinusoidal AutoMix Crossfade
    * Hardware-scheduled via Web Audio setValueCurveAtTime with 0 dB volume drop
+   * Hardened against iOS WebKit autoplay policies with pre-flight verification & gapless fallback
    */
   public async crossfadeTo(nextTrack: Track): Promise<void> {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
 
-    this.cancelActiveTransitions(false);
-    this.setCrossfadingState(true);
-
     const duration = Math.max(2, Math.min(12, this.automixDuration));
-    this.currentTransitionDuration = duration;
-    this.crossfadeStartTime = performance.now();
-    this.midpointFired = false;
-    this.incomingTrackUnderTransition = nextTrack;
-
     const active = this.getActive();
     const inactive = this.getInactive();
 
@@ -569,12 +654,90 @@ export class DJAudioEngine {
     inactive.audio.currentTime = 0;
     inactive.audio.playbackRate = this.playbackRate;
 
-    // Pre-calculate Equal-Power curves
+    // STEP 1: Mute secondary channel before attempting playback
+    inactive.audio.volume = 0.0;
+    if (this.ctx && inactive.gain) {
+      inactive.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+      inactive.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      inactive.gainValue = 0.0;
+    }
+
+    // STEP 2: Strict Pre-flight verification for iOS WebKit:
+    // Attempt secondary deck playback BEFORE touching or fading the active track!
+    let secondaryPlaySuccess = false;
+    try {
+      const playPromise = inactive.audio.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+      }
+      secondaryPlaySuccess = true;
+    } catch (err: any) {
+      console.warn('[DJAudioEngine] Secondary deck playback rejected on iOS:', err?.name || err);
+      secondaryPlaySuccess = false;
+    }
+
+    // STEP 3: Fallback recovery if iOS rejected secondary deck playback:
+    if (!secondaryPlaySuccess) {
+      // Abort crossfade attempt immediately
+      this.setCrossfadingState(false);
+      this.incomingTrackUnderTransition = null;
+
+      // Keep active track playing at 100% volume with ZERO disruption to its natural end
+      if (this.ctx && active.gain) {
+        active.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        active.gainValue = 1.0;
+      }
+      active.audio.volume = 1.0;
+
+      // Register fallback track to swap seamlessly on 'ended' of the primary deck
+      this.pendingGaplessFallbackTrack = nextTrack;
+      return;
+    }
+
+    // STEP 4: Secondary deck confirmed playing: wait until it actively emits audio
+    await new Promise<void>((resolve) => {
+      if (!inactive.audio.paused && (inactive.audio.currentTime > 0 || inactive.audio.readyState >= 3)) {
+        return resolve();
+      }
+      let resolved = false;
+      const onPlaying = () => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          resolve();
+        }
+      };
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          cleanup();
+          resolve();
+        }
+      }, 350);
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        inactive.audio.removeEventListener('playing', onPlaying);
+        inactive.audio.removeEventListener('timeupdate', onPlaying);
+      };
+
+      inactive.audio.addEventListener('playing', onPlaying, { once: true });
+      inactive.audio.addEventListener('timeupdate', onPlaying, { once: true });
+    });
+
+    // STEP 5: Both decks are confirmed running: schedule hardware Equal-Power curves
+    this.cancelActiveTransitions(false);
+    this.setCrossfadingState(true);
+    this.currentTransitionDuration = duration;
+    this.crossfadeStartTime = performance.now();
+    this.midpointFired = false;
+    this.incomingTrackUnderTransition = nextTrack;
+
     const { outgoingCurve, incomingCurve } = generateEqualPowerCurves(64);
 
     if (this.ctx && active.gain && inactive.gain) {
       const now = this.ctx.currentTime;
-      // Hardware-level AudioParam scheduling
       active.gain.gain.cancelScheduledValues(now);
       inactive.gain.gain.cancelScheduledValues(now);
 
@@ -583,23 +746,8 @@ export class DJAudioEngine {
 
       active.audio.volume = 1.0;
       inactive.audio.volume = 1.0;
-
-      try {
-        await inactive.audio.play();
-      } catch (err) {
-        console.warn('[DJAudioEngine] Crossfade inactive channel play notice:', err);
-        // Fallback to single-element transition if dual playback was blocked
-        return this.resilientSingleElementCrossfade(active, nextTrack, duration);
-      }
     } else {
-      // Software fallback using Equal-Power mathematical curve
-      try {
-        inactive.audio.volume = 0;
-        await inactive.audio.play();
-        this.softwareEqualPowerCrossfade(active, inactive, duration);
-      } catch {
-        return this.resilientSingleElementCrossfade(active, nextTrack, duration);
-      }
+      this.softwareEqualPowerCrossfade(active, inactive, duration);
     }
   }
 
@@ -616,57 +764,43 @@ export class DJAudioEngine {
 
       if (step >= steps) {
         clearInterval(intId);
-        this.finalizeTransition();
+        if (inactive.audio.currentTime > 0 || !inactive.audio.paused) {
+          this.finalizeTransition();
+        } else {
+          setTimeout(() => this.finalizeTransition(), 200);
+        }
       }
     }, intervalTime);
   }
 
-  private async resilientSingleElementCrossfade(active: Channel, nextTrack: Track, durationSec: number): Promise<void> {
-    const halfTime = (durationSec * 1000) / 2;
-    const steps = 15;
-    const stepDuration = halfTime / steps;
-    let step = 0;
-
-    const fadeOutInterval = setInterval(async () => {
-      step++;
-      const ratio = step / steps;
-      active.audio.volume = Math.max(0.01, Math.cos(ratio * 0.5 * Math.PI));
-
-      if (step >= steps) {
-        clearInterval(fadeOutInterval);
-        try {
-          this.prepareTrackInChannel(active, nextTrack);
-          active.audio.currentTime = 0;
-          active.audio.volume = 0.05;
-          await active.audio.play();
-
-          if (this.onMidpointReachedCallback) {
-            this.onMidpointReachedCallback(nextTrack);
-          }
-
-          let inStep = 0;
-          const fadeInInterval = setInterval(() => {
-            inStep++;
-            const inRatio = inStep / steps;
-            active.audio.volume = Math.min(1.0, Math.sin(inRatio * 0.5 * Math.PI));
-
-            if (inStep >= steps) {
-              clearInterval(fadeInInterval);
-              active.audio.volume = 1.0;
-              this.setCrossfadingState(false);
-              this.autoMixTriggered = false;
-              this.preloadTriggered = false;
-              if (this.onTransitionCompleteCallback) {
-                this.onTransitionCompleteCallback(nextTrack);
-              }
-            }
-          }, stepDuration);
-        } catch (e) {
-          console.warn('[DJAudioEngine] Resilient crossfade notice:', e);
-          this.playTrack(nextTrack);
-        }
+  /**
+   * Gapless source swap on active audio element (used as fallback when iOS blocks secondary deck)
+   * Guaranteed to work on iOS WebKit without user gesture because the element is already playing.
+   */
+  public async gaplessSwapAndPlay(channel: Channel, track: Track): Promise<void> {
+    this.prepareTrackInChannel(channel, track);
+    channel.audio.currentTime = 0;
+    channel.audio.playbackRate = this.playbackRate;
+    channel.audio.volume = 1.0;
+    if (this.ctx && channel.gain) {
+      channel.gain.gain.cancelScheduledValues(this.ctx.currentTime);
+      channel.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      channel.gainValue = 1.0;
+    }
+    try {
+      await channel.audio.play();
+      if (this.onMidpointReachedCallback) {
+        this.onMidpointReachedCallback(track);
       }
-    }, stepDuration);
+      if (this.onTransitionCompleteCallback) {
+        this.onTransitionCompleteCallback(track);
+      }
+    } catch (e) {
+      console.warn('[DJAudioEngine] Gapless swap play notice:', e);
+      if (this.onTrackEndedCallback) {
+        this.onTrackEndedCallback();
+      }
+    }
   }
 
   /**
@@ -677,6 +811,38 @@ export class DJAudioEngine {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
+
+    const active = this.getActive();
+    const inactive = this.getInactive();
+
+    this.prepareTrackInChannel(inactive, nextTrack);
+    inactive.audio.currentTime = 0;
+    inactive.audio.volume = 0.0;
+    if (this.ctx && inactive.gain) {
+      inactive.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      inactive.gainValue = 0.0;
+    }
+
+    let secondaryPlaySuccess = false;
+    try {
+      const p = inactive.audio.play();
+      if (p !== undefined) await p;
+      secondaryPlaySuccess = true;
+    } catch {
+      secondaryPlaySuccess = false;
+    }
+
+    if (!secondaryPlaySuccess) {
+      this.setCrossfadingState(false);
+      this.incomingTrackUnderTransition = null;
+      if (this.ctx && active.gain) {
+        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      }
+      active.audio.volume = 1.0;
+      this.pendingGaplessFallbackTrack = nextTrack;
+      return;
+    }
+
     this.cancelActiveTransitions(false);
     this.setCrossfadingState(true);
 
@@ -685,15 +851,10 @@ export class DJAudioEngine {
     this.crossfadeStartTime = performance.now();
     this.midpointFired = false;
     this.incomingTrackUnderTransition = nextTrack;
-
-    const active = this.getActive();
-    const inactive = this.getInactive();
     const initialRate = this.playbackRate;
 
-    // Trigger procedural turntable scratch drop
     this.playDJSound('scratch');
 
-    // Decelerate motor inertia curve
     const brakeSteps = 16;
     const stepDuration = (duration * 1000) / brakeSteps;
     let step = 0;
@@ -714,28 +875,13 @@ export class DJAudioEngine {
         clearInterval(brakeInterval);
         active.audio.playbackRate = initialRate;
 
-        // Punch in next track on inactive channel
-        this.prepareTrackInChannel(inactive, nextTrack);
-        inactive.audio.currentTime = 0;
-        inactive.audio.playbackRate = initialRate;
-
-        if (this.ctx && inactive.gain) {
+        if (this.ctx && inactive.gain && active.gain) {
           inactive.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
-          active.gain?.gain.setValueAtTime(0.0, this.ctx.currentTime);
+          active.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
         }
         inactive.audio.volume = 1.0;
         active.audio.volume = 0.0;
-
-        try {
-          await inactive.audio.play();
-        } catch {
-          // Fallback on active
-          this.prepareTrackInChannel(active, nextTrack);
-          active.audio.volume = 1.0;
-          await active.audio.play();
-        } finally {
-          this.finalizeTransition();
-        }
+        this.finalizeTransition();
       }
     }, stepDuration);
   }
@@ -747,6 +893,38 @@ export class DJAudioEngine {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
+
+    const active = this.getActive();
+    const inactive = this.getInactive();
+
+    this.prepareTrackInChannel(inactive, nextTrack);
+    inactive.audio.currentTime = 0;
+    inactive.audio.volume = 0.0;
+    if (this.ctx && inactive.gain) {
+      inactive.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      inactive.gainValue = 0.0;
+    }
+
+    let secondaryPlaySuccess = false;
+    try {
+      const p = inactive.audio.play();
+      if (p !== undefined) await p;
+      secondaryPlaySuccess = true;
+    } catch {
+      secondaryPlaySuccess = false;
+    }
+
+    if (!secondaryPlaySuccess) {
+      this.setCrossfadingState(false);
+      this.incomingTrackUnderTransition = null;
+      if (this.ctx && active.gain) {
+        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      }
+      active.audio.volume = 1.0;
+      this.pendingGaplessFallbackTrack = nextTrack;
+      return;
+    }
+
     this.cancelActiveTransitions(false);
     this.setCrossfadingState(true);
 
@@ -756,10 +934,6 @@ export class DJAudioEngine {
     this.midpointFired = false;
     this.incomingTrackUnderTransition = nextTrack;
 
-    const active = this.getActive();
-    const inactive = this.getInactive();
-
-    // Club echo drop boom
     this.playDJSound('echo_drop');
 
     if (this.ctx && active.gain && inactive.gain) {
@@ -767,22 +941,13 @@ export class DJAudioEngine {
       active.gain.gain.setValueAtTime(1.0, now);
       active.gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
 
-      this.prepareTrackInChannel(inactive, nextTrack);
-      inactive.audio.currentTime = 0;
       inactive.gain.gain.setValueAtTime(0.0, now);
       inactive.gain.gain.linearRampToValueAtTime(1.0, now + 0.9);
 
       active.audio.volume = 1.0;
       inactive.audio.volume = 1.0;
-
-      try {
-        await inactive.audio.play();
-      } catch {
-        this.prepareTrackInChannel(active, nextTrack);
-        await active.audio.play();
-      }
     } else {
-      this.resilientSingleElementCrossfade(active, nextTrack, duration);
+      this.softwareEqualPowerCrossfade(active, inactive, duration);
     }
   }
 
@@ -793,6 +958,38 @@ export class DJAudioEngine {
     if (this.isCrossfading) {
       return this.playTrack(nextTrack);
     }
+
+    const active = this.getActive();
+    const inactive = this.getInactive();
+
+    this.prepareTrackInChannel(inactive, nextTrack);
+    inactive.audio.currentTime = 0;
+    inactive.audio.volume = 0.0;
+    if (this.ctx && inactive.gain) {
+      inactive.gain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      inactive.gainValue = 0.0;
+    }
+
+    let secondaryPlaySuccess = false;
+    try {
+      const p = inactive.audio.play();
+      if (p !== undefined) await p;
+      secondaryPlaySuccess = true;
+    } catch {
+      secondaryPlaySuccess = false;
+    }
+
+    if (!secondaryPlaySuccess) {
+      this.setCrossfadingState(false);
+      this.incomingTrackUnderTransition = null;
+      if (this.ctx && active.gain) {
+        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      }
+      active.audio.volume = 1.0;
+      this.pendingGaplessFallbackTrack = nextTrack;
+      return;
+    }
+
     this.cancelActiveTransitions(false);
     this.setCrossfadingState(true);
 
@@ -802,12 +999,8 @@ export class DJAudioEngine {
     this.midpointFired = false;
     this.incomingTrackUnderTransition = nextTrack;
 
-    const active = this.getActive();
-    const inactive = this.getInactive();
-
     if (this.ctx && active.filter && inactive.filter && active.gain && inactive.gain) {
       const now = this.ctx.currentTime;
-      // Sweep outgoing lowpass filter down to 250Hz
       active.filter.frequency.cancelScheduledValues(now);
       active.filter.frequency.setValueAtTime(20000, now);
       active.filter.frequency.exponentialRampToValueAtTime(250, now + 1.1);
@@ -816,10 +1009,6 @@ export class DJAudioEngine {
       active.gain.gain.setValueAtTime(1.0, now);
       active.gain.gain.linearRampToValueAtTime(0.1, now + 1.1);
 
-      this.prepareTrackInChannel(inactive, nextTrack);
-      inactive.audio.currentTime = 0;
-
-      // Sweep incoming filter up from 300Hz to 20000Hz
       inactive.filter.frequency.cancelScheduledValues(now);
       inactive.filter.frequency.setValueAtTime(300, now + 0.5);
       inactive.filter.frequency.exponentialRampToValueAtTime(20000, now + 1.5);
@@ -830,14 +1019,8 @@ export class DJAudioEngine {
 
       active.audio.volume = 1.0;
       inactive.audio.volume = 1.0;
-
-      try {
-        await inactive.audio.play();
-      } catch {
-        this.resilientSingleElementCrossfade(active, nextTrack, duration);
-      }
     } else {
-      this.resilientSingleElementCrossfade(active, nextTrack, duration);
+      this.softwareEqualPowerCrossfade(active, inactive, duration);
     }
   }
 
@@ -924,6 +1107,7 @@ export class DJAudioEngine {
     this.preloadTriggered = false;
     this.midpointFired = false;
     this.incomingTrackUnderTransition = null;
+    this.pendingGaplessFallbackTrack = null;
   }
 
   private setCrossfadingState(isMixing: boolean): void {
@@ -1278,3 +1462,6 @@ export class DJAudioEngine {
 }
 
 export const djAudioEngine = new DJAudioEngine();
+if (typeof window !== 'undefined') {
+  (window as any).djAudioEngine = djAudioEngine;
+}
