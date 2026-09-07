@@ -95,7 +95,7 @@ interface PlayerState {
   importTracks: (newTracks: Track[], folderName?: string) => Promise<void>;
   playTrack: (track: Track, newQueue?: Track[]) => Promise<void>;
   togglePlayPause: () => void;
-  nextTrack: (viaAutoMix?: boolean) => Promise<void>;
+  nextTrack: (options?: { forceImmediate?: boolean } | boolean) => Promise<void>;
   previousTrack: () => Promise<void>;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
@@ -143,6 +143,35 @@ interface PlayerState {
 
 let sleepTimerInterval: any = null;
 
+export const resolveTrackAudioSource = async (tr: Track): Promise<Track> => {
+  let resolved = tr;
+  if (!resolved.file && !resolved.blob) {
+    try {
+      const db = await getDB();
+      let item = await db.get('audioBlobs', resolved.id);
+      if (!item && resolved.trackNumber) {
+        item = await db.get('audioBlobs', `track_catalog_${resolved.trackNumber}`);
+      }
+      if (item && item.blob) resolved = { ...resolved, blob: item.blob };
+    } catch {}
+  }
+  if (!resolved.file && !resolved.blob && !resolved.audioUrl && resolved.fileName) {
+    try {
+      const db = await getDB();
+      const dirHandle = await db.get('settings', 'savedDirectoryHandle');
+      if (dirHandle) {
+        const perm = await dirHandle.queryPermission({ mode: 'read' });
+        if (perm === 'granted') {
+          const fileHandle = await dirHandle.getFileHandle(resolved.fileName);
+          const file = await fileHandle.getFile();
+          resolved = { ...resolved, file };
+        }
+      }
+    } catch {}
+  }
+  return resolved;
+};
+
 export const usePlayerStore = create<PlayerState>((set, get) => {
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
@@ -176,14 +205,82 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         djAudioEngine.seek(0);
         djAudioEngine.play();
       } else {
-        get().nextTrack();
+        get().nextTrack({ forceImmediate: false });
+      }
+    },
+    onPreloadNeeded: async (currentTrack) => {
+      const { queue, tracks, shuffle, repeatMode } = get();
+      const effectiveQueue = queue.length > 0 ? queue : tracks;
+      if (effectiveQueue.length === 0) return;
+
+      let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
+      if (currentIndex === -1 && currentTrack.trackNumber) {
+        currentIndex = effectiveQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
+      }
+      if (currentIndex === -1) {
+        const curTitle = currentTrack.title.toLowerCase().trim();
+        currentIndex = effectiveQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
+      }
+
+      let nextIndex = -1;
+      if (shuffle) {
+        nextIndex = Math.floor(Math.random() * effectiveQueue.length);
+      } else if (currentIndex >= 0 && currentIndex < effectiveQueue.length - 1) {
+        nextIndex = currentIndex + 1;
+      } else if (repeatMode === 'all' || currentIndex === -1) {
+        nextIndex = 0;
+      } else if (repeatMode === 'one') {
+        nextIndex = currentIndex >= 0 ? currentIndex : 0;
+      }
+
+      if (nextIndex >= 0 && nextIndex < effectiveQueue.length) {
+        let candidate = await resolveTrackAudioSource(effectiveQueue[nextIndex]);
+        if (!candidate.file && !candidate.blob && !candidate.audioUrl) {
+          for (let offset = 1; offset <= Math.min(10, effectiveQueue.length); offset++) {
+            const candIdx = (nextIndex + offset) % effectiveQueue.length;
+            const cand = await resolveTrackAudioSource(effectiveQueue[candIdx]);
+            if (cand.file || cand.blob || cand.audioUrl) {
+              candidate = cand;
+              break;
+            }
+          }
+        }
+        if (candidate.file || candidate.blob || candidate.audioUrl) {
+          djAudioEngine.preloadNextTrack(candidate);
+        }
       }
     },
     onAutoMixNeeded: () => {
-      get().nextTrack();
+      get().nextTrack({ forceImmediate: false });
     },
     onAutoMixStateChange: (isMixing) => {
       set({ isAutoMixingLive: isMixing });
+    },
+    onMidpointReached: (incomingTrack) => {
+      // Exactly at 50% power crossing point, switch MediaSession & UI metadata
+      const current = get().currentTrack;
+      set({
+        currentTrack: incomingTrack,
+        history: current ? [...get().history, current] : get().history,
+      });
+      updateMediaSession(incomingTrack, true, getMediaSessionCallbacks(get));
+    },
+    onTransitionComplete: (newTrack) => {
+      set({ currentTrack: newTrack, isAutoMixingLive: false });
+      if (!newTrack.syncedLyrics || newTrack.syncedLyrics.length === 0) {
+        fetchLyricsOnline(newTrack.title, newTrack.artist, newTrack.duration).then((res) => {
+          if (res && (res.syncedLyrics || res.plainLyrics)) {
+            const updated: Track = {
+              ...newTrack,
+              syncedLyrics: res.syncedLyrics,
+              lyrics: res.plainLyrics || newTrack.lyrics,
+            };
+            if (get().currentTrack?.id === updated.id) {
+              set({ currentTrack: updated });
+            }
+          }
+        });
+      }
     },
   });
 
@@ -624,6 +721,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
+      djAudioEngine.cancelActiveTransitions(true);
       const state = get();
 
       let playableTrack = track;
@@ -816,43 +914,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
 
       if (nextIndex >= 0 && nextIndex < effectiveQueue.length) {
-        // Resolve audio source for track
-        const resolveSource = async (tr: Track): Promise<Track> => {
-          let resolved = tr;
-          if (!resolved.file && !resolved.blob) {
-            try {
-              const db = await getDB();
-              let item = await db.get('audioBlobs', resolved.id);
-              if (!item && resolved.trackNumber) {
-                item = await db.get('audioBlobs', `track_catalog_${resolved.trackNumber}`);
-              }
-              if (item && item.blob) resolved = { ...resolved, blob: item.blob };
-            } catch {}
-          }
-          if (!resolved.file && !resolved.blob && !resolved.audioUrl && resolved.fileName) {
-            try {
-              const db = await getDB();
-              const dirHandle = await db.get('settings', 'savedDirectoryHandle');
-              if (dirHandle) {
-                const perm = await dirHandle.queryPermission({ mode: 'read' });
-                if (perm === 'granted') {
-                  const fileHandle = await dirHandle.getFileHandle(resolved.fileName);
-                  const file = await fileHandle.getFile();
-                  resolved = { ...resolved, file };
-                }
-              }
-            } catch {}
-          }
-          return resolved;
-        };
-
-        let targetTrack = await resolveSource(effectiveQueue[nextIndex]);
+        let targetTrack = await resolveTrackAudioSource(effectiveQueue[nextIndex]);
 
         // Auto-skip unplayable tracks: search forward up to 10 tracks if candidate is unplayable
         if (!targetTrack.file && !targetTrack.blob && !targetTrack.audioUrl) {
           for (let offset = 1; offset <= Math.min(10, effectiveQueue.length); offset++) {
             const candIdx = (nextIndex + offset) % effectiveQueue.length;
-            const cand = await resolveSource(effectiveQueue[candIdx]);
+            const cand = await resolveTrackAudioSource(effectiveQueue[candIdx]);
             if (cand.file || cand.blob || cand.audioUrl) {
               targetTrack = cand;
               break;
@@ -860,18 +928,21 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
 
-        set({
-          currentTrack: targetTrack,
-          queue: effectiveQueue,
-          history: [...get().history, currentTrack],
-          isPlaying: true,
-        });
-
-        updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
-
         if (shouldUseAutoMix) {
+          set({
+            queue: effectiveQueue,
+            isPlaying: true,
+          });
           await djAudioEngine.transitionTo(targetTrack, automixStyle);
         } else {
+          djAudioEngine.cancelActiveTransitions(true);
+          set({
+            currentTrack: targetTrack,
+            queue: effectiveQueue,
+            history: [...get().history, currentTrack],
+            isPlaying: true,
+          });
+          updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
           await djAudioEngine.playTrack(targetTrack);
         }
 
@@ -896,6 +967,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     previousTrack: async () => {
+      djAudioEngine.cancelActiveTransitions(true);
       const { queue, currentTrack, currentTime } = get();
       if (!currentTrack) return;
 
