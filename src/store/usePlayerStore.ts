@@ -173,11 +173,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         djAudioEngine.seek(0);
         djAudioEngine.play();
       } else {
-        get().nextTrack(false);
+        get().nextTrack();
       }
     },
     onAutoMixNeeded: () => {
-      get().nextTrack(true);
+      get().nextTrack();
     },
   });
 
@@ -278,6 +278,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         djAudioEngine.setVolume(vol);
         djAudioEngine.setAutoMix(automix.enabled, automix.duration);
         djAudioEngine.setAutoMixStyle(get().automixStyle);
+
+        set({
+          volume: vol,
+          automixEnabled: automix.enabled,
+          automixDuration: automix.duration,
+          favorites: favIds,
+        });
 
         // Filter out and purge any demo tracks from previous sessions
         for (const t of cachedTracks) {
@@ -736,9 +743,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
 
-    nextTrack: async (viaAutoMix = false) => {
-      const { queue, currentTrack, shuffle, repeatMode } = get();
+    nextTrack: async (options?: { forceImmediate?: boolean } | boolean) => {
+      const { queue, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying } = get();
       if (!currentTrack || queue.length === 0) return;
+
+      const isEnginePlaying = isPlaying || djAudioEngine.isPlaying();
+      const forceImmediate = typeof options === 'object' ? !!options.forceImmediate : false;
+      const shouldUseAutoMix = !forceImmediate && automixEnabled && isEnginePlaying;
 
       const currentIndex = queue.findIndex((t) => t.id === currentTrack.id);
       let nextIndex = -1;
@@ -755,10 +766,29 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         const rawNext = queue[nextIndex];
         let nextTrack = rawNext;
 
+        // Resolve audio source from IndexedDB audioBlobs
         if (!nextTrack.file && !nextTrack.blob) {
-          const db = await getDB();
-          const item = await db.get('audioBlobs', nextTrack.id);
-          if (item && item.blob) nextTrack = { ...rawNext, blob: item.blob };
+          try {
+            const db = await getDB();
+            const item = await db.get('audioBlobs', nextTrack.id);
+            if (item && item.blob) nextTrack = { ...rawNext, blob: item.blob };
+          } catch {}
+        }
+
+        // Resolve from FileSystemDirectoryHandle if needed
+        if (!nextTrack.file && !nextTrack.blob && !nextTrack.audioUrl && nextTrack.fileName) {
+          try {
+            const db = await getDB();
+            const dirHandle = await db.get('settings', 'savedDirectoryHandle');
+            if (dirHandle) {
+              const perm = await dirHandle.queryPermission({ mode: 'read' });
+              if (perm === 'granted') {
+                const fileHandle = await dirHandle.getFileHandle(nextTrack.fileName);
+                const file = await fileHandle.getFile();
+                nextTrack = { ...nextTrack, file };
+              }
+            }
+          } catch {}
         }
 
         set({
@@ -769,7 +799,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         updateMediaSession(nextTrack, true, getMediaSessionCallbacks(get));
 
-        if (viaAutoMix && get().automixEnabled) {
+        if (shouldUseAutoMix) {
           await djAudioEngine.transitionTo(nextTrack, get().automixStyle);
         } else {
           await djAudioEngine.playTrack(nextTrack);
@@ -798,9 +828,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           allTracks[Math.floor(Math.random() * allTracks.length)];
 
         if (candidate) {
-          get().addToQueue(candidate);
-          get().addToast(`تشغيل تلقائي ذكي: ${candidate.title}`, '✨');
-          await get().playTrack(candidate);
+          let resolvedCandidate = candidate;
+          if (!resolvedCandidate.file && !resolvedCandidate.blob) {
+            try {
+              const db = await getDB();
+              const item = await db.get('audioBlobs', resolvedCandidate.id);
+              if (item && item.blob) resolvedCandidate = { ...candidate, blob: item.blob };
+            } catch {}
+          }
+          get().addToQueue(resolvedCandidate);
+          get().addToast(`تشغيل تلقائي ذكي: ${resolvedCandidate.title}`, '✨');
+          set({
+            currentTrack: resolvedCandidate,
+            history: [...get().history, currentTrack],
+            isPlaying: true,
+          });
+          updateMediaSession(resolvedCandidate, true, getMediaSessionCallbacks(get));
+          if (shouldUseAutoMix) {
+            await djAudioEngine.transitionTo(resolvedCandidate, get().automixStyle);
+          } else {
+            await djAudioEngine.playTrack(resolvedCandidate);
+          }
         }
       } else {
         djAudioEngine.pause();
