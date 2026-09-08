@@ -12,6 +12,7 @@ export interface Track {
   trackNumber?: number;
   year?: string | number;
   genre?: string;
+  category?: string;
   artworkUrl?: string;
   coverUrl?: string; // Spotify alias for artworkUrl
   audioUrl?: string;

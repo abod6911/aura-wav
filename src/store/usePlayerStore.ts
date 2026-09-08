@@ -551,9 +551,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
 
-        // Fill any missing catalog slots (1 to 261) with default catalog templates
+        // Fill any missing catalog slots (1 to TRACKS_CATALOG.length) with default catalog templates
         const defaultTracks = getDefaultLibraryTracks();
-        for (let num = 1; num <= 261; num++) {
+        for (let num = 1; num <= TRACKS_CATALOG.length; num++) {
           if (!catalogSlots.has(num)) {
             const defTrack = defaultTracks[num - 1];
             if (defTrack) {
@@ -562,9 +562,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
 
-        // Combine all 261 catalog tracks strictly sorted 1..261, followed by non-catalog tracks
+        // Combine all catalog tracks strictly sorted 1..TRACKS_CATALOG.length, followed by non-catalog tracks
         const uniqueRealTracks: Track[] = [];
-        for (let num = 1; num <= 261; num++) {
+        for (let num = 1; num <= TRACKS_CATALOG.length; num++) {
           const t = catalogSlots.get(num);
           if (t) uniqueRealTracks.push(t);
         }
