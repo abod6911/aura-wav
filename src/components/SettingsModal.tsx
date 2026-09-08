@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   FileMusic,
   ShieldCheck,
+  RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -186,6 +187,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             >
               <RefreshCw className={`w-4 h-4 text-purple-400 ${isRescanning ? 'animate-spin' : ''}`} />
               <span>{isRescanning ? 'جاري فحص الملفات...' : 'إعادة فحص وتحديث المكتبة (Rescan / Refresh)'}</span>
+            </button>
+
+            {/* Force Reload & Update App */}
+            <button
+              onClick={async () => {
+                if ('serviceWorker' in navigator) {
+                  const registrations = await navigator.serviceWorker.getRegistrations();
+                  for (const reg of registrations) {
+                    await reg.unregister();
+                  }
+                }
+                if ('caches' in window) {
+                  const keys = await caches.keys();
+                  for (const key of keys) {
+                    await caches.delete(key);
+                  }
+                }
+                window.location.href = window.location.origin + '/?t=' + Date.now();
+              }}
+              className="w-full py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <RotateCcw className="w-4 h-4 text-cyan-400" />
+              <span>تحديث التطبيق الفوري ومسح الذاكرة المؤقتة (Force Reload)</span>
             </button>
 
             {/* Clear Library Button / Confirmation */}

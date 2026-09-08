@@ -72,14 +72,45 @@ export function App() {
   useEffect(() => {
     initStore();
 
-    // Register Service Worker for PWA
+    // Register Service Worker for PWA with automatic instant updates
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker
         .register('/sw.js')
-        .then(() => {
+        .then((reg) => {
           console.log('AURA.WAV PWA Service Worker Registered');
+          // Check for update immediately on load
+          reg.update().catch(() => {});
+
+          // If a new worker is found and installs
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            }
+          });
         })
         .catch((err) => console.warn('SW registration failed:', err));
+
+      const handleUpdateCheck = () => {
+        navigator.serviceWorker.getRegistration().then((r) => r?.update().catch(() => {}));
+      };
+      window.addEventListener('focus', handleUpdateCheck);
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
+      return () => {
+        window.removeEventListener('focus', handleUpdateCheck);
+      };
     }
   }, [initStore]);
 
