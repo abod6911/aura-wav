@@ -4,6 +4,7 @@ import { parseLRC } from './lyricsParser';
 import { extractPaletteFromImage } from '../lib/colorSampler';
 import { resolveCatalogCover, resolveCatalogTrackItem } from '../data/tracksCatalog';
 import { saveAudioFileToStorage } from './storageManager';
+import { bulkSaveTracksToDexie } from '../db/dexieDB';
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac', '.webm'];
 
@@ -234,6 +235,12 @@ export async function processAudioFiles(
     await dbSettings.put('settings', Date.now(), 'savedFolderTimestamp');
   } catch (err) {
     console.warn('Could not persist folder settings:', err);
+  }
+
+  try {
+    await bulkSaveTracksToDexie(tracks);
+  } catch (dexieErr) {
+    console.warn('Could not save tracks to Dexie:', dexieErr);
   }
 
   return tracks;

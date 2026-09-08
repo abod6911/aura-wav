@@ -15,6 +15,7 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream } from '../services/streamingEngine';
+import { bulkSaveTracksToDexie, getAllTracksFromDexie } from '../db/dexieDB';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -795,6 +796,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         await tx.done;
       } catch (err) {
         console.warn('Could not persist updated tracks/folder metadata to IndexedDB:', err);
+      }
+
+      try {
+        await bulkSaveTracksToDexie(baseList);
+      } catch (dexieErr) {
+        console.warn('Could not persist to Dexie:', dexieErr);
       }
 
       get().addToast(`تم حفظ وربط ${newTracks.length} مسار في نفس أماكنها الأصلية بنجاح`, undefined, 'success');

@@ -10,6 +10,7 @@
  */
 
 import { getDB } from '../db/indexedDB';
+import { dexieDB } from '../db/dexieDB';
 
 const OPFS_DIR_NAME = 'aura_audio_vault';
 
@@ -82,7 +83,11 @@ export async function saveAudioFileToStorage(
     }
   }
 
-  // Fallback: Atomic per-track write into IndexedDB audioBlobs
+  // Fallback: Atomic write into Dexie & IndexedDB audioBlobs
+  try {
+    await dexieDB.audioBlobs.put({ id: trackId, blob: blobOrFile });
+  } catch {}
+
   const db = await getDB();
   const tx = db.transaction('audioBlobs', 'readwrite');
   await tx.store.put({ id: trackId, blob: blobOrFile });
@@ -91,7 +96,7 @@ export async function saveAudioFileToStorage(
 }
 
 /**
- * Retrieve raw audio Blob from OPFS or IndexedDB
+ * Retrieve raw audio Blob from OPFS, Dexie.js, or IndexedDB
  */
 export async function getAudioFileFromStorage(trackId: string): Promise<Blob | null> {
   // 1. Try OPFS first
@@ -105,9 +110,17 @@ export async function getAudioFileFromStorage(trackId: string): Promise<Blob | n
         return file;
       }
     } catch {
-      // Not found in OPFS or error, continue to IndexedDB check
+      // Not found in OPFS or error, continue to Dexie check
     }
   }
+
+  // 2. Try Dexie.js next
+  try {
+    const dexieRec = await dexieDB.audioBlobs.get(trackId);
+    if (dexieRec && dexieRec.blob) {
+      return dexieRec.blob;
+    }
+  } catch {}
 
   // 2. Try IndexedDB audioBlobs
   try {
