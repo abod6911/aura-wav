@@ -102,7 +102,7 @@ interface PlayerState {
   importTracks: (newTracks: Track[], folderName?: string) => Promise<void>;
   playTrack: (track: Track, newQueue?: Track[]) => Promise<void>;
   togglePlayPause: () => void;
-  nextTrack: (options?: { forceImmediate?: boolean } | boolean) => Promise<void>;
+  nextTrack: (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => Promise<void>;
   previousTrack: () => Promise<void>;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
@@ -267,7 +267,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
     onAutoMixNeeded: () => {
-      get().nextTrack({ forceImmediate: false });
+      get().nextTrack({ isAutoMixTrigger: true, forceImmediate: false });
     },
     onAutoMixStateChange: (isMixing) => {
       set({ isAutoMixingLive: isMixing });
@@ -928,7 +928,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
 
-    nextTrack: async (options?: { forceImmediate?: boolean } | boolean) => {
+    nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
       djAudioEngine.primeDecks();
       const { queue, tracks, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying, automixStyle } = get();
       if (!currentTrack) {
@@ -941,8 +941,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (effectiveQueue.length === 0) return;
 
       const isEnginePlaying = isPlaying || djAudioEngine.isPlaying();
-      const forceImmediate = typeof options === 'object' ? !!options.forceImmediate : false;
-      const shouldUseAutoMix = !forceImmediate && automixEnabled && isEnginePlaying;
+      // AutoMix is ONLY for scheduled natural song endings, NOT manual user button taps!
+      const isAutoMixTrigger = typeof options === 'object' && !!options.isAutoMixTrigger;
+      const forceImmediate = typeof options === 'object' ? (options.forceImmediate !== false) : true;
+      const shouldUseAutoMix = isAutoMixTrigger && !forceImmediate && automixEnabled && isEnginePlaying;
 
       let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
       if (currentIndex === -1 && currentTrack.trackNumber) {
@@ -1049,9 +1051,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
-      const currentIndex = queue.findIndex((t) => t.id === currentTrack.id);
+      const effectiveQueue = queue.length > 0 ? queue : get().tracks;
+      const currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
       if (currentIndex > 0) {
-        const rawPrev = queue[currentIndex - 1];
+        const rawPrev = effectiveQueue[currentIndex - 1];
         let prevTrack = rawPrev;
         if (!prevTrack.file && !prevTrack.blob) {
           try {

@@ -179,7 +179,7 @@ export const PlayerBar: React.FC = () => {
 
           {/* Next */}
           <button
-            onClick={() => nextTrack(false)}
+            onClick={() => nextTrack({ forceImmediate: true })}
             title="التالي"
             className="w-10 h-10 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer"
           >

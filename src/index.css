@@ -311,3 +311,20 @@ input[type=range]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 20px rgba(250, 36, 60, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
+/* 60 to 120 FPS ProMotion Hardware Compositing */
+.gpu-layer,
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  will-change: transform, opacity;
+}
+
+/* 120Hz Smooth Momentum Scrolling */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+

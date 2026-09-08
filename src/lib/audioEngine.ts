@@ -676,13 +676,18 @@ export class DJAudioEngine {
     this.autoMixTriggered = false;
     this.preloadTriggered = false;
 
+    // STRICT AUDIO ISOLATION: Explicitly pause and reset BOTH channels before playing new track
+    this.channelA.audio.pause();
+    this.channelB.audio.pause();
+    this.channelA.audio.currentTime = 0;
+    this.channelB.audio.currentTime = 0;
+    this.channelA.audio.volume = 0.0;
+    this.channelB.audio.volume = 0.0;
+    this.channelA.isPreloaded = false;
+    this.channelB.isPreloaded = false;
+
     const active = this.getActive();
     const inactive = this.getInactive();
-
-    inactive.audio.pause();
-    inactive.audio.currentTime = 0;
-    inactive.audio.volume = 0.0;
-    inactive.isPreloaded = false;
 
     // Reset progress tracking callback immediately so UI scrubber is at 0:00
     if (this.onTimeUpdateCallback) {

@@ -13,13 +13,14 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
   const tracks = usePlayerStore((state) => state.tracks);
 
   useEffect(() => {
-    const hasSeen = sessionStorage.getItem('aura_welcome_seen');
+    const hasSeen = localStorage.getItem('aura_welcome_seen') || sessionStorage.getItem('aura_welcome_seen');
     if (forceShow || !hasSeen) {
       setVisible(true);
     }
   }, [forceShow]);
 
   const handleDismiss = () => {
+    localStorage.setItem('aura_welcome_seen', 'true');
     sessionStorage.setItem('aura_welcome_seen', 'true');
     setVisible(false);
     if (onComplete) onComplete();

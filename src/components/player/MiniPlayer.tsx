@@ -141,7 +141,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           onClick={(e) => {
             e.stopPropagation();
             triggerHaptic();
-            nextTrack(false);
+            nextTrack({ forceImmediate: true });
           }}
           style={{ touchAction: 'manipulation' }}
           className="w-11 h-11 rounded-full satin-metal-button flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer select-none flex-shrink-0"
