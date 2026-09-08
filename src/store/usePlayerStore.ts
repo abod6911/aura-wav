@@ -14,6 +14,7 @@ import {
   saveAudioFileToStorage,
   StorageStats,
 } from '../services/storageManager';
+import { resolvePlayableStream } from '../services/streamingEngine';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -845,6 +846,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
+      // 4. Resolve stream URL if online track without file/blob
+      if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
+        try {
+          const resolvedStream = await resolvePlayableStream(playableTrack);
+          if (resolvedStream) {
+            playableTrack = { ...playableTrack, audioUrl: resolvedStream };
+          }
+        } catch (streamErr) {
+          console.warn('[Stream Resolver] Error resolving stream:', streamErr);
+        }
+      }
+
       // If still completely unplayable, inform the user with an actionable toast
       if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
         get().addToast(`تعذر تشغيل "${track.title}" - يرجى استيراد ملف الأغنية أو التأكد من توفر الملف`, undefined, 'warning');
@@ -872,15 +885,35 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         playbackState: 'buffering',
       });
 
-      // Launch audio playback asynchronously
-      djAudioEngine.playTrack(playableTrack).then((success) => {
+      // Launch audio playback asynchronously with auto-retry fallback
+      djAudioEngine.playTrack(playableTrack).then(async (success) => {
         if (!success) {
+          // Automatic Error Fallback & Retry Mechanism: query alternative stream instance
+          console.warn('[Audio Engine] Primary stream failed, attempting resilient fallback stream...');
+          const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
+          if (fallbackUrl && fallbackUrl !== playableTrack.audioUrl) {
+            playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
+            const retrySuccess = await djAudioEngine.playTrack(playableTrack);
+            if (retrySuccess) {
+              set({ isPlaying: true, playbackState: 'playing', currentTrack: playableTrack });
+              return;
+            }
+          }
           set({ isPlaying: false, playbackState: 'error' });
         } else {
           set({ isPlaying: true, playbackState: 'playing' });
         }
-      }).catch((err) => {
-        console.warn('Play track notice:', err);
+      }).catch(async (err) => {
+        console.warn('Play track notice, trying fallback:', err);
+        const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
+        if (fallbackUrl && fallbackUrl !== playableTrack.audioUrl) {
+          playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
+          const retrySuccess = await djAudioEngine.playTrack(playableTrack);
+          if (retrySuccess) {
+            set({ isPlaying: true, playbackState: 'playing', currentTrack: playableTrack });
+            return;
+          }
+        }
         set({ isPlaying: false, playbackState: 'error' });
       });
 

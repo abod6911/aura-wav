@@ -302,7 +302,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             >
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <ListMusic className="w-4 h-4 text-[#FA243C]" />
+                  <ListMusic className="w-4 h-4 text-[#1DB954]" />
                   <span className="text-sm font-bold text-white">قائمة التالي ({queue.length})</span>
                 </div>
 
@@ -311,7 +311,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   onClick={toggleSmartAutoplay}
                   className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     smartAutoplay
-                      ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                      ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
                       : 'bg-white/5 text-zinc-400'
                   }`}
                 >

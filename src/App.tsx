@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { TrackList } from './components/library/TrackList';
 import { PlaylistsView } from './components/PlaylistsView';
 import { SpotifyHomeView } from './components/SpotifyHomeView';
+import { InfiniteSearchView } from './components/InfiniteSearchView';
 import { RightSidebar } from './components/RightSidebar';
 import { PlayerBar } from './components/PlayerBar';
 import { MiniPlayer } from './components/player/MiniPlayer';
@@ -307,7 +308,8 @@ export function App() {
               {(activeTab === 'home' || activeTab === 'premium') && (
                 <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />
               )}
-              {(activeTab === 'library' || activeTab === 'search') && (
+              {activeTab === 'search' && <InfiniteSearchView />}
+              {activeTab === 'library' && (
                 <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
               )}
               {activeTab === 'favorites' && (
