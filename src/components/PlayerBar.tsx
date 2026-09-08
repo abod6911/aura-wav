@@ -217,7 +217,7 @@ export const PlayerBar: React.FC = () => {
             >
               <Sparkles className="w-3 h-3 text-purple-400" />
               <span>
-                AUTOMIX • {automixStyle === 'vinyl_brake' ? 'VINYL 💽' : automixStyle === 'echo_out' ? 'ECHO 🌌' : automixStyle === 'filter_sweep' ? 'FILTER 🎚️' : 'FADE 🌊'}
+                AUTOMIX • {automixStyle === 'vinyl_brake' ? 'VINYL' : automixStyle === 'echo_out' ? 'ECHO' : automixStyle === 'filter_sweep' ? 'FILTER' : 'CROSSFADE'}
               </span>
             </button>
           )}

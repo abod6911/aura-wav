@@ -79,7 +79,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             isPlaying ? 'scale-105' : 'scale-100 opacity-90'
           }`}
         />
-        <div className="absolute inset-0 m-auto w-2 h-2 rounded-full bg-black/60 border border-white/30" />
+        <div className="absolute inset-0 m-auto w-2 h-2 rounded-full bg-black/60 border border-white/30 pointer-events-none" />
       </div>
 
       {/* Track Info with Lossless & Spatial Indicator */}
@@ -120,7 +120,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             touchAction: 'manipulation',
             ['--aura-glow' as any]: currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
           }}
-          className="w-10 h-10 rounded-full hi-fi-play-button text-black flex items-center justify-center relative group cursor-pointer select-none"
+          className="w-11 h-11 rounded-full hi-fi-play-button text-black flex items-center justify-center relative group cursor-pointer select-none flex-shrink-0"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {/* Dynamic artwork aura backlight */}
@@ -129,9 +129,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             style={{ backgroundColor: currentTrack.dominantColor || '#FA243C' }}
           />
           {isPlaying ? (
-            <Pause className="w-4 h-4 fill-zinc-900 text-zinc-900" />
+            <Pause className="w-5 h-5 fill-zinc-900 text-zinc-900" />
           ) : (
-            <Play className="w-4 h-4 fill-zinc-900 text-zinc-900 translate-x-0.5" />
+            <Play className="w-5 h-5 fill-zinc-900 text-zinc-900 translate-x-0.5" />
           )}
         </motion.button>
 
@@ -144,10 +144,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             nextTrack(false);
           }}
           style={{ touchAction: 'manipulation' }}
-          className="w-9 h-9 rounded-full satin-metal-button flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer select-none"
+          className="w-11 h-11 rounded-full satin-metal-button flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer select-none flex-shrink-0"
           aria-label="Next track"
         >
-          <SkipForward className="w-4 h-4 fill-current" />
+          <SkipForward className="w-5 h-5 fill-current" />
         </motion.button>
       </div>
     </motion.div>

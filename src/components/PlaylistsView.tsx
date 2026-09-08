@@ -32,7 +32,7 @@ export const PlaylistsView: React.FC = () => {
     e.preventDefault();
     if (!newPlaylistName.trim()) return;
     await createPlaylist(newPlaylistName.trim());
-    addToast(`تم إنشاء قائمة: ${newPlaylistName.trim()} 🎉`, '🎉', 'success');
+    addToast(`تم إنشاء قائمة: ${newPlaylistName.trim()}`, undefined, 'success');
     setNewPlaylistName('');
     setIsCreating(false);
   };
@@ -40,7 +40,7 @@ export const PlaylistsView: React.FC = () => {
   const handlePlayAll = () => {
     if (playlistTracks.length > 0) {
       playTrack(playlistTracks[0], playlistTracks);
-      addToast(`تشغيل قائمة: ${selectedPlaylist?.name}`, '▶️');
+      addToast(`تشغيل قائمة: ${selectedPlaylist?.name}`, undefined, 'info');
     }
   };
 
@@ -77,7 +77,7 @@ export const PlaylistsView: React.FC = () => {
             <button
               onClick={() => {
                 deletePlaylist(selectedPlaylist.id);
-                addToast('تم حذف قائمة التشغيل', '🗑️');
+                addToast('تم حذف قائمة التشغيل', undefined, 'info');
                 setSelectedPlaylistId(null);
               }}
               className="p-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"

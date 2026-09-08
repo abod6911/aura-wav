@@ -127,30 +127,30 @@ export function App() {
         const cur = usePlayerStore.getState().currentTime;
         const dur = usePlayerStore.getState().duration;
         seek(Math.min(dur, cur + 5));
-        addToast('تقديم 5 ثوانٍ ⏩', undefined, 'info');
+        addToast('تقديم 5 ثوانٍ', undefined, 'info');
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         const cur = usePlayerStore.getState().currentTime;
         seek(Math.max(0, cur - 5));
-        addToast('ترجيع 5 ثوانٍ ⏪', undefined, 'info');
+        addToast('ترجيع 5 ثوانٍ', undefined, 'info');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         const nextVol = Math.min(1, Math.round((volume + 0.05) * 100) / 100);
         setVolume(nextVol);
-        addToast(`الصوت: ${Math.round(nextVol * 100)}% 🔊`, undefined, 'info');
+        addToast(`مستوى الصوت: ${Math.round(nextVol * 100)}%`, undefined, 'info');
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         const nextVol = Math.max(0, Math.round((volume - 0.05) * 100) / 100);
         setVolume(nextVol);
-        addToast(`الصوت: ${Math.round(nextVol * 100)}% 🔉`, undefined, 'info');
+        addToast(`مستوى الصوت: ${Math.round(nextVol * 100)}%`, undefined, 'info');
       } else if (e.key.toLowerCase() === 'm') {
         if (volume > 0) {
           prevVolumeRef.current = volume;
           setVolume(0);
-          addToast('تم كتم الصوت 🔇', undefined, 'info');
+          addToast('تم كتم الصوت', undefined, 'info');
         } else {
           setVolume(prevVolumeRef.current || 0.8);
-          addToast('تم إلغاء كتم الصوت 🔊', undefined, 'info');
+          addToast('تم إلغاء كتم الصوت', undefined, 'info');
         }
       } else if (e.key.toLowerCase() === 'l') {
         setLyricsOpen(!isLyricsOpen);

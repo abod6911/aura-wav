@@ -12,13 +12,18 @@ import {
   Gauge,
   SlidersHorizontal,
   CheckCircle2,
+  Disc,
+  Volume2,
+  Activity,
+  Radio,
+  Waves,
 } from 'lucide-react';
 
 interface SoundPad {
   id: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer';
   titleAr: string;
   titleEn: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   gradient: string;
   glowColor: string;
@@ -29,7 +34,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'scratch',
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
-    icon: '💽',
+    icon: Disc,
     color: '#FA243C',
     gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
     glowColor: 'rgba(250, 36, 60, 0.45)',
@@ -38,7 +43,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'airhorn',
     titleAr: 'بوق الحفلة',
     titleEn: 'Club Airhorn',
-    icon: '📢',
+    icon: Volume2,
     color: '#FF9500',
     gradient: 'from-amber-500/25 via-amber-500/10 to-transparent',
     glowColor: 'rgba(245, 158, 11, 0.45)',
@@ -47,7 +52,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'echo_drop',
     titleAr: 'صدمة البيس',
     titleEn: 'Sub Bass Drop',
-    icon: '💥',
+    icon: Activity,
     color: '#AF52DE',
     gradient: 'from-purple-500/25 via-purple-500/10 to-transparent',
     glowColor: 'rgba(175, 82, 222, 0.45)',
@@ -56,7 +61,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'laser',
     titleAr: 'ليزر حماسي',
     titleEn: 'Laser Riser',
-    icon: '⚡',
+    icon: Zap,
     color: '#30D158',
     gradient: 'from-emerald-500/25 via-emerald-500/10 to-transparent',
     glowColor: 'rgba(52, 199, 89, 0.45)',
@@ -65,41 +70,41 @@ const SOUND_PADS: SoundPad[] = [
     id: 'cheer',
     titleAr: 'هتاف الجمهور',
     titleEn: 'Crowd Cheer',
-    icon: '👏',
+    icon: Radio,
     color: '#0A84FF',
     gradient: 'from-blue-500/25 via-blue-500/10 to-transparent',
     glowColor: 'rgba(10, 132, 255, 0.45)',
   },
 ];
 
-const AUTOMIX_STYLES: { id: AutoMixStyle; nameAr: string; nameEn: string; desc: string; icon: string }[] = [
+const AUTOMIX_STYLES: { id: AutoMixStyle; nameAr: string; nameEn: string; desc: string; icon: React.ComponentType<{ className?: string }> }[] = [
   {
     id: 'crossfade',
     nameAr: 'تلاشٍ انسيابي (Classic)',
     nameEn: 'Smooth Crossfade',
     desc: 'تلاشي صوتي هادئ وتدريجي بين الأغنيتين',
-    icon: '🌊',
+    icon: Waves,
   },
   {
     id: 'vinyl_brake',
     nameAr: 'فرملة الفينيل (Turntable)',
     nameEn: 'Vinyl Brake',
     desc: 'إيقاف تدريجي مع انخفاض النغمة مثل أسطوانة الـ DJ',
-    icon: '💽',
+    icon: Disc,
   },
   {
     id: 'echo_out',
     nameAr: 'الصدى المتلاشي (Club Echo)',
     nameEn: 'Echo Out',
     desc: 'تكرار صدى متلاشٍ في فضاء ثلاثي الأبعاد',
-    icon: '🌌',
+    icon: Sparkles,
   },
   {
     id: 'filter_sweep',
     nameAr: 'فلتر الترددات (Filter Sweep)',
     nameEn: 'Filter Sweep',
     desc: 'سحب الترددات العالية والمنخفضة تمهيداً للدخول الحماسي',
-    icon: '🎚️',
+    icon: SlidersHorizontal,
   },
 ];
 
@@ -240,13 +245,14 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                       isActive ? 'bg-white/[0.16] scale-[0.98]' : 'hover:bg-white/[0.06]'
                     }`}
                   >
-                    <span
-                      className={`text-2xl transition-transform duration-200 ${
+                    <div
+                      className={`transition-transform duration-200 ${
                         isActive ? 'scale-125' : 'scale-100'
                       }`}
+                      style={{ color: pad.color }}
                     >
-                      {pad.icon}
-                    </span>
+                      <pad.icon className="w-6 h-6" />
+                    </div>
 
                     <div className="text-center">
                       <span className="block text-xs font-extrabold text-white">
@@ -269,13 +275,12 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                 );
               })}
 
-              {/* Quick Reset All Effects */}
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 onClick={() => {
                   triggerHaptic(15);
                   setPlaybackRate(1.0);
-                  addToast('تمت إعادة ضبط سرعة ونغمة الـ DJ إلى 1.0x 🎚️', undefined, 'info');
+                  addToast('تمت إعادة ضبط سرعة ونغمة الـ DJ إلى 1.0x', undefined, 'info');
                 }}
                 className="rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
               >
@@ -288,7 +293,6 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
             </div>
           </div>
 
-          {/* 2. Turntable Pitch / Playback Rate Slider */}
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -336,7 +340,6 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
               <span className="text-[10px] font-mono text-zinc-500">1.5x</span>
             </div>
 
-            {/* Quick Pitch Presets */}
             <div className="flex items-center justify-between gap-1 pt-1" dir="ltr">
               {[0.8, 0.9, 1.0, 1.1, 1.25].map((rate) => (
                 <button
@@ -357,7 +360,6 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
             </div>
           </div>
 
-          {/* 3. AutoMix Transition Modes & Duration */}
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -370,7 +372,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   triggerHaptic(15);
                   setAutoMix(!automixEnabled, automixDuration);
                   addToast(
-                    !automixEnabled ? 'تم تفعيل الانتقال التلقائي الذكي ⚡' : 'تم تعطيل الانتقال التلقائي',
+                    !automixEnabled ? 'تم تفعيل الانتقال التلقائي الذكي' : 'تم تعطيل الانتقال التلقائي',
                     undefined,
                     'info'
                   );
@@ -381,14 +383,14 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                     : 'bg-white/5 border-white/10 text-zinc-500'
                 }`}
               >
-                {automixEnabled ? 'مفعّل ✓' : 'معطّل'}
+                {automixEnabled ? 'مفعّل' : 'معطّل'}
               </button>
             </div>
 
-            {/* Transition Style Selector */}
             <div className="grid grid-cols-2 gap-2 pt-1">
               {AUTOMIX_STYLES.map((style) => {
                 const isSelected = automixStyle === style.id;
+                const StyleIcon = style.icon;
                 return (
                   <button
                     key={style.id}
@@ -404,7 +406,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-base">{style.icon}</span>
+                      <StyleIcon className={`w-4 h-4 ${isSelected ? 'text-[#FF456E]' : 'text-zinc-400'}`} />
                       {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />}
                     </div>
                     <span className="text-xs font-bold text-white leading-tight">{style.nameAr}</span>

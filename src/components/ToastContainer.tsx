@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Info } from 'lucide-react';
 
 export const ToastContainer: React.FC = () => {
   const toasts = usePlayerStore((state) => state.toasts);
@@ -20,7 +20,13 @@ export const ToastContainer: React.FC = () => {
             className="pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#14141e]/90 backdrop-blur-2xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.6)] text-white text-xs font-semibold"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              {t.icon && <span className="text-base flex-shrink-0">{t.icon}</span>}
+              {t.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              ) : t.type === 'warning' ? (
+                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              ) : (
+                <Info className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              )}
               <span className="truncate">{t.message}</span>
             </div>
 

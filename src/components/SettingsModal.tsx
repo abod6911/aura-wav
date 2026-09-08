@@ -121,7 +121,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span>المساحة المستهلكة محلياً</span>
               </span>
               <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/25">
-                {storageStats?.engine === 'opfs' ? 'OPFS نشط ⚡' : 'IndexedDB نشط ⚡'}
+                {storageStats?.engine === 'opfs' ? 'OPFS نشط' : 'IndexedDB نشط'}
               </span>
             </div>
 

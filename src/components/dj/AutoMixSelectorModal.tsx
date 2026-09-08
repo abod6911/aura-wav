@@ -2,14 +2,14 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
-import { Sliders, X, Check, Disc, Waves, Sparkles, Radio, Zap } from 'lucide-react';
+import { Sliders, X, Check, Disc, Waves, Sparkles, Radio, Zap, SlidersHorizontal } from 'lucide-react';
 
 interface TransitionOption {
   id: AutoMixStyle;
   titleAr: string;
   titleEn: string;
   description: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   badge: string;
 }
 
@@ -19,7 +19,7 @@ const TRANSITION_OPTIONS: TransitionOption[] = [
     titleAr: 'تلاشي متوازن كلاسيكي',
     titleEn: 'Equal-Power Crossfade',
     description: 'انتقال ناعم ودقيق يحافظ على الطاقة الصوتية المستمرة بين المسارين دون أي انقطاع.',
-    icon: '🌊',
+    icon: Waves,
     badge: 'Apple Music Default',
   },
   {
@@ -27,7 +27,7 @@ const TRANSITION_OPTIONS: TransitionOption[] = [
     titleAr: 'توقف قرص الفينيل',
     titleEn: 'Vinyl Turntable Brake',
     description: 'تباطؤ فيزيائي واقعي لموتور أسطوانة الفينيل مع انخفاض النغمة ثم انطلاق فوري للأغنية الجديدة.',
-    icon: '💽',
+    icon: Disc,
     badge: 'DJ Club Style',
   },
   {
@@ -35,15 +35,15 @@ const TRANSITION_OPTIONS: TransitionOption[] = [
     titleAr: 'الصدى المتلاشي',
     titleEn: 'Echo Out & Reverb Tail',
     description: 'إرسال نهاية الأغنية في حلقة صدى فضائية متلاشية في الخلفية بينما تتقدم الأغنية التالية.',
-    icon: '🌌',
-    badge: 'Spacial Echo',
+    icon: Sparkles,
+    badge: 'Spatial Echo',
   },
   {
     id: 'filter_sweep',
     titleAr: 'فلتر تصفية الترددات',
     titleEn: 'Resonant Filter Sweep',
     description: 'مسح رنان للترددات العالية وقص ناعم للتريبل يحاكي أشهر مكسرات مهرجانات الـ EDM.',
-    icon: '🎚️',
+    icon: SlidersHorizontal,
     badge: 'Pioneer Pro DJ',
   },
 ];
@@ -68,7 +68,7 @@ export const AutoMixSelectorModal: React.FC = () => {
       } catch {}
     }
     const match = TRANSITION_OPTIONS.find((t) => t.id === style);
-    addToast(`تم اختيار نمط الانتقال: ${match?.titleAr || style}`, '🎛️', 'success');
+    addToast(`تم اختيار نمط الانتقال: ${match?.titleAr || style}`, undefined, 'success');
   };
 
   return (
@@ -118,7 +118,9 @@ export const AutoMixSelectorModal: React.FC = () => {
           {/* Master Enable / Disable Toggle */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
             <div className="flex items-center gap-3">
-              <span className="text-xl">🎛️</span>
+              <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
+                <SlidersHorizontal className="w-5 h-5" />
+              </div>
               <div>
                 <h4 className="text-sm font-bold text-white">تفعيل ميزة الـ AutoMix</h4>
                 <p className="text-[11px] text-zinc-400">انتقال سلس ومدمج بدون أي صمت بين الأغاني</p>
@@ -169,6 +171,7 @@ export const AutoMixSelectorModal: React.FC = () => {
           <div className="space-y-2.5 max-h-[42vh] overflow-y-auto pr-1">
             {TRANSITION_OPTIONS.map((opt) => {
               const isSelected = automixStyle === opt.id;
+              const OptIcon = opt.icon;
               return (
                 <div
                   key={opt.id}
@@ -181,7 +184,9 @@ export const AutoMixSelectorModal: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl mt-0.5">{opt.icon}</span>
+                    <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? 'bg-[#FA243C]/20 text-white' : 'bg-white/[0.06] text-zinc-400'}`}>
+                      <OptIcon className="w-5 h-5" />
+                    </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <h4
@@ -221,17 +226,17 @@ export const AutoMixSelectorModal: React.FC = () => {
               onClick={() => {
                 const store = usePlayerStore.getState();
                 if (!store.currentTrack) {
-                  store.addToast('شغّل أي أغنية أولاً لتجربة الانتقال الفوري 🎵', '🎵', 'info');
+                  store.addToast('شغّل أي أغنية أولاً لتجربة الانتقال الفوري', undefined, 'info');
                   return;
                 }
-                store.addToast(`جارٍ تنفيذ انتقال ${TRANSITION_OPTIONS.find((t) => t.id === automixStyle)?.titleAr || ''} الآن ⚡`, '🎛️', 'info');
+                store.addToast(`جارٍ تنفيذ انتقال ${TRANSITION_OPTIONS.find((t) => t.id === automixStyle)?.titleAr || ''} الآن`, undefined, 'info');
                 store.nextTrack(false);
                 setAutoMixModalOpen(false);
               }}
               className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF2D55] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#FA243C]/25 active:scale-[0.98] transition-all cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
-              <span>تجربة انتقال فوري بهذا النمط الآن ⚡</span>
+              <span>تجربة انتقال فوري بهذا النمط الآن</span>
             </button>
           </div>
         </motion.div>

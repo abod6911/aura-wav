@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { Sparkles, X, Disc, Volume2, Flame, Sliders, Zap } from 'lucide-react';
+import { Sparkles, X, Disc, Volume2, Flame, Sliders, Zap, Activity, Radio, SlidersHorizontal } from 'lucide-react';
 
 interface SoundPad {
   id: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer';
   titleAr: string;
   titleEn: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   gradient: string;
   glowColor: string;
@@ -18,7 +18,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'scratch',
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
-    icon: '💽',
+    icon: Disc,
     color: '#FA243C',
     gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
     glowColor: 'rgba(250, 36, 60, 0.45)',
@@ -27,7 +27,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'airhorn',
     titleAr: 'بوق الحفلة',
     titleEn: 'Club Airhorn',
-    icon: '📢',
+    icon: Volume2,
     color: '#FF9500',
     gradient: 'from-amber-500/25 via-amber-500/10 to-transparent',
     glowColor: 'rgba(245, 158, 11, 0.45)',
@@ -36,7 +36,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'echo_drop',
     titleAr: 'صدمة البيس',
     titleEn: 'Sub Bass Drop',
-    icon: '💥',
+    icon: Activity,
     color: '#AF52DE',
     gradient: 'from-purple-500/25 via-purple-500/10 to-transparent',
     glowColor: 'rgba(175, 82, 222, 0.45)',
@@ -45,7 +45,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'laser',
     titleAr: 'ليزر حماسي',
     titleEn: 'Laser Riser',
-    icon: '⚡',
+    icon: Zap,
     color: '#30D158',
     gradient: 'from-emerald-500/25 via-emerald-500/10 to-transparent',
     glowColor: 'rgba(52, 199, 89, 0.45)',
@@ -54,7 +54,7 @@ const SOUND_PADS: SoundPad[] = [
     id: 'cheer',
     titleAr: 'هتاف الجمهور',
     titleEn: 'Crowd Cheer',
-    icon: '👏',
+    icon: Radio,
     color: '#0A84FF',
     gradient: 'from-blue-500/25 via-blue-500/10 to-transparent',
     glowColor: 'rgba(10, 132, 255, 0.45)',
@@ -88,14 +88,14 @@ export const DJSoundboard: React.FC = () => {
   const getStyleLabel = () => {
     switch (automixStyle) {
       case 'vinyl_brake':
-        return 'توقف الفينيل 💽';
+        return 'توقف الفينيل (Vinyl Brake)';
       case 'echo_out':
-        return 'الصدى المتلاشي 🌌';
+        return 'الصدى المتلاشي (Echo Out)';
       case 'filter_sweep':
-        return 'فلتر الترددات 🎚️';
+        return 'فلتر الترددات (Filter Sweep)';
       case 'crossfade':
       default:
-        return 'تلاشي كلاسيكي 🌊';
+        return 'تلاشي كلاسيكي (Crossfade)';
     }
   };
 
@@ -164,14 +164,15 @@ export const DJSoundboard: React.FC = () => {
                     isActive ? 'bg-white/[0.15] scale-[0.98]' : 'hover:bg-white/[0.06]'
                   }`}
                 >
-                  {/* Glowing LED Ring */}
-                  <span
-                    className={`text-2xl sm:text-3xl transition-transform duration-200 ${
+                  {/* Glowing LED Icon */}
+                  <div
+                    className={`transition-transform duration-200 ${
                       isActive ? 'scale-125' : 'scale-100'
                     }`}
+                    style={{ color: pad.color }}
                   >
-                    {pad.icon}
-                  </span>
+                    <pad.icon className="w-7 h-7 sm:w-8 sm:h-8" />
+                  </div>
 
                   <div className="text-center">
                     <span className="block text-xs sm:text-sm font-extrabold text-white">
@@ -205,7 +206,7 @@ export const DJSoundboard: React.FC = () => {
               style={{ touchAction: 'manipulation' }}
               className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
             >
-              <Sliders className="w-6 h-6 text-[#FA243C]" />
+              <SlidersHorizontal className="w-6 h-6 text-[#FA243C]" />
               <div className="text-center">
                 <span className="block text-xs sm:text-sm font-extrabold text-white">
                   نمط الانتقال
@@ -228,9 +229,10 @@ export const DJSoundboard: React.FC = () => {
                 setSoundboardOpen(false);
                 setAutoMixModalOpen(true);
               }}
-              className="text-[#FF456E] hover:underline font-semibold"
+              className="text-[#FF456E] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
             >
-              تغيير نمط الانتقال ⚙️
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>تغيير نمط الانتقال</span>
             </button>
           </div>
         </motion.div>

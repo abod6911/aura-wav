@@ -221,7 +221,7 @@ export const EqualizerModal: React.FC = () => {
                   { label: '0dB', val: 0 },
                   { label: '+6dB', val: 6 },
                   { label: '+12dB', val: 12 },
-                  { label: '+18dB ⚡', val: 18 },
+                  { label: '+18dB MAX', val: 18 },
                 ].map((p) => (
                   <button
                     key={p.val}
@@ -382,7 +382,7 @@ export const EqualizerModal: React.FC = () => {
           {/* Bottom Actions */}
           <div className="flex items-center justify-between pt-1">
             <span className="text-[11px] text-zinc-500">
-              💡 اضغط نقراً مزدوجاً على أي شريط لإعادته فوراً إلى 0dB
+              اضغط نقراً مزدوجاً على أي شريط لإعادته فوراً إلى 0dB
             </span>
 
             <motion.button

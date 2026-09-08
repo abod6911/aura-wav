@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { pickLocalDirectory, processAudioFiles, ScanProgress } from '../services/fileScanner';
-import { FolderOpen, UploadCloud, CheckCircle2, AlertCircle, Sparkles, X } from 'lucide-react';
+import { FolderOpen, UploadCloud, CheckCircle2, AlertCircle, Sparkles, X, FileAudio } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ImportModalProps {
@@ -190,7 +190,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 onClick={() => filesInputRef.current?.click()}
                 className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <span>🎵 اختيار ملفات متعددة (آيفون/هاتف)</span>
+                <FileAudio className="w-4 h-4 text-[#FA243C]" />
+                <span>اختيار ملفات متعددة (هاتف / آيفون)</span>
               </button>
               <button
                 type="button"
@@ -203,7 +204,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 }}
                 className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <span>📁 اختيار مجلد كامل (كمبيوتر)</span>
+                <FolderOpen className="w-4 h-4 text-blue-400" />
+                <span>اختيار مجلد كامل (كمبيوتر)</span>
               </button>
             </div>
 
@@ -229,7 +231,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 {downloadAllProgress
                   ? `جاري الحفظ: ${downloadAllProgress.current}/${downloadAllProgress.total}`
                   : tracks.length > 0 && downloadedTrackIds.length === tracks.length
-                  ? 'محفوظة بالكامل أوفلاين ⚡'
+                  ? 'محفوظة بالكامل أوفلاين'
                   : `حفظ الكل أوفلاين (${downloadedTrackIds.length}/${tracks.length})`}
               </button>
             </div>
@@ -238,7 +240,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs leading-relaxed text-right flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <strong className="text-white block mb-0.5">📱 نصيحة لمستخدمي الآيفون:</strong>
+                <strong className="text-white block mb-0.5">نصيحة لمستخدمي الآيفون:</strong>
                 عند فتح شاشة الملفات، ادخل إلى مجلد الأغاني ثم اضغط على النقاط الثلاث <strong>(•••)</strong> بالأعلى، ثم اختر <strong>"تحديد الكل" (Select All)</strong> ثم اضغط <strong>"فتح" (Open)</strong> ليتم حفظ جميع الأغاني فوراً!
               </div>
             </div>
@@ -301,7 +303,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               onClick={onClose}
               className="w-full py-3 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold transition-all shadow-lg shadow-[#FA243C]/30 cursor-pointer"
             >
-              بدء الاستماع الآن 🎵
+              بدء الاستماع الآن
             </button>
           </div>
         )}

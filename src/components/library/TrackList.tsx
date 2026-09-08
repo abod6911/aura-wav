@@ -203,7 +203,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   onClick={onOpenImport}
                   className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                 >
-                  <span>تغيير المجلد 📁</span>
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>تغيير المجلد</span>
                 </button>
               </div>
 
@@ -451,7 +452,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             {downloadAllProgress
               ? `جاري حفظ الأغاني: ${downloadAllProgress.current}/${downloadAllProgress.total}`
               : tracks.length > 0 && readyOfflineCount === tracks.length
-              ? 'كل الأغاني محفوظة أوفلاين ⚡'
+              ? 'كل الأغاني محفوظة أوفلاين'
               : `حفظ الكل أوفلاين (${readyOfflineCount}/${tracks.length})`}
           </span>
         </button>
@@ -464,11 +465,11 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             أجواء ومزاج:
           </span>
           {[
-            { id: 'energize', label: '⚡ حماسي وطاقة' },
-            { id: 'relax', label: '☕ استرخاء وهدوء' },
-            { id: 'focus', label: '🎯 تركيز ومذاكرة' },
-            { id: 'commute', label: '🚗 طريق وسفر' },
-            { id: 'party', label: '🎉 حفلة ورقص' },
+            { id: 'energize', label: 'حماسي وطاقة' },
+            { id: 'relax', label: 'استرخاء وهدوء' },
+            { id: 'focus', label: 'تركيز ومذاكرة' },
+            { id: 'commute', label: 'طريق وسفر' },
+            { id: 'party', label: 'حفلة ورقص' },
           ].map((m) => {
             const isSelected = activeMood === m.id;
             return (
@@ -701,7 +702,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             usePlayerStore.getState().downloadTrackForOffline(track.id);
           }}
           className="p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125"
-          title={isDownloaded ? 'محفوظ أوفلاين ⚡' : 'حفظ للتشغيل بدون إنترنت'}
+          title={isDownloaded ? 'محفوظ أوفلاين' : 'حفظ للتشغيل بدون إنترنت'}
           aria-label="Download track offline"
         >
           {isDownloaded ? (
@@ -784,7 +785,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
             <ImageIcon className="w-3.5 h-3.5 text-[#FF375F]" />
-            <span>تغيير الغلاف والبحث أونلاين 🎨</span>
+            <span>تغيير الغلاف والبحث أونلاين</span>
           </button>
           <button
             onClick={(e) => {
@@ -797,7 +798,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             {isDownloaded ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>محفوظ أوفلاين في الذاكرة ⚡</span>
+                <span>محفوظ أوفلاين في الذاكرة</span>
               </>
             ) : (
               <>

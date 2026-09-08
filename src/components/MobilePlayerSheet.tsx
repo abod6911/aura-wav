@@ -175,12 +175,12 @@ export const MobilePlayerSheet: React.FC = () => {
                   <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#FA243C]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
                     <span>
                       {automixStyle === 'vinyl_brake'
-                        ? 'AutoMix: فرملة فينيل 💽'
+                        ? 'AutoMix: فرملة فينيل'
                         : automixStyle === 'echo_out'
-                        ? 'AutoMix: صدى متلاشٍ 🌌'
+                        ? 'AutoMix: صدى متلاشٍ'
                         : automixStyle === 'filter_sweep'
-                        ? 'AutoMix: فلتر كلوب 🎚️'
-                        : 'AutoMix: تلاشٍ انسيابي 🪄'}
+                        ? 'AutoMix: فلتر كلوب'
+                        : 'AutoMix: تلاشٍ انسيابي'}
                     </span>
                   </div>
                 )}

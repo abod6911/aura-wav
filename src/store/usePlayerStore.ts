@@ -212,7 +212,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           djAudioEngine.pause();
           djAudioEngine.setVolume(volume);
           set({ isPlaying: false, sleepTimerSetting: null, sleepTimerRemaining: null });
-          addToast('تم إيقاف الموسيقى بواسطة مؤقت النوم 🌙', '🌙', 'info');
+          addToast('تم إيقاف الموسيقى بواسطة مؤقت النوم', undefined, 'info');
         }, 2000);
         return;
       }
@@ -388,13 +388,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         savedFolderTimestamp: null,
       });
       await get().refreshStorageStats();
-      get().addToast('تم تفريغ المكتبة المحلية بالكامل 🗑️', '🗑️', 'info');
+      get().addToast('تم تفريغ المكتبة المحلية بالكامل', undefined, 'info');
     },
     rescanLibrary: async () => {
-      get().addToast('جاري فحص وتحديث ملفات المكتبة المحلية... 🔍', '🔍', 'info');
+      get().addToast('جاري فحص وتحديث ملفات المكتبة المحلية...', undefined, 'info');
       await get().initStore();
       await get().refreshStorageStats();
-      get().addToast('تم فحص وتحديث ملفات المكتبة بنجاح ⚡', '⚡', 'success');
+      get().addToast('تم فحص وتحديث ملفات المكتبة بنجاح', undefined, 'success');
     },
 
     setWelcomeOpen: (open) => set({ isWelcomeOpen: open }),
@@ -777,7 +777,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         console.warn('Could not persist updated tracks/folder metadata to IndexedDB:', err);
       }
 
-      get().addToast(`تم حفظ وربط ${newTracks.length} مسار في نفس أماكنها الأصلية بنجاح ⚡`, '⚡', 'success');
+      get().addToast(`تم حفظ وربط ${newTracks.length} مسار في نفس أماكنها الأصلية بنجاح`, undefined, 'success');
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
@@ -822,13 +822,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       // 4. If offline and no local file/blob saved, warn user clearly
       if (typeof navigator !== 'undefined' && !navigator.onLine && !playableTrack.file && !playableTrack.blob) {
-        get().addToast(`المسار "${track.title}" غير محفوظ بدون نت - يمكنك حفظه للأوفلاين عند توفر النت 📥`, '📶', 'warning');
+        get().addToast(`المسار "${track.title}" غير محفوظ بدون نت - يمكنك حفظه للأوفلاين عند توفر النت`, undefined, 'warning');
         return;
       }
 
       // If still completely unplayable, inform the user with an actionable toast
       if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
-        get().addToast(`تعذر تشغيل "${track.title}" - يرجى استيراد ملف الأغنية أو التأكد من توفر الملف ⚠️`, '⚠️', 'warning');
+        get().addToast(`تعذر تشغيل "${track.title}" - يرجى استيراد ملف الأغنية أو التأكد من توفر الملف`, undefined, 'warning');
         return;
       }
 
@@ -1150,9 +1150,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({ spatialAudio: next });
       get().addToast(
         next
-          ? 'تم تفعيل الصوت المكاني ثلاثي الأبعاد 🎧 (Apple Spatial Audio)'
+          ? 'تم تفعيل الصوت المكاني ثلاثي الأبعاد (Apple Spatial Audio)'
           : 'تم إيقاف الصوت المكاني (Standard Stereo)',
-        '🎧',
+        undefined,
         'info'
       );
     },
@@ -1185,7 +1185,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         activeEqPreset: preset.name,
         bassBoost: extraBass,
       });
-      get().addToast(`تم تفعيل وضع: ${preset.nameAr}`, '🎚️', 'info');
+      get().addToast(`تم تفعيل وضع: ${preset.nameAr}`, undefined, 'info');
     },
 
     reorderQueue: (startIndex: number, endIndex: number) => {
@@ -1260,25 +1260,26 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           updateMediaSession(newCurrent, get().isPlaying, getMediaSessionCallbacks(get));
         }
 
-        get().addToast('تم تحديث غلاف الأغنية بنجاح 🎨', '🎨', 'success');
+        get().addToast('تم تحديث غلاف الأغنية بنجاح', undefined, 'success');
       } catch (err) {
         console.warn('Error updating track artwork:', err);
-        get().addToast('تعذر حفظ الغلاف الجديد', '⚠️', 'warning');
+        get().addToast('تعذر حفظ الغلاف الجديد', undefined, 'warning');
       }
     },
 
     cleanAndRepairLibrary: async () => {
-      get().addToast('جارٍ فحص وتنظيف المكتبة...', '🧹', 'info');
+      get().addToast('جارٍ فحص وتنظيف المكتبة...', undefined, 'info');
       await get().initStore();
-      get().addToast('تم فحص المكتبة وحفظ التغييرات بنجاح ✨', '✨', 'success');
+      get().addToast('تم فحص المكتبة وحفظ التغييرات بنجاح', undefined, 'success');
     },
 
     toggleSmartAutoplay: () => {
       const next = !get().smartAutoplay;
       set({ smartAutoplay: next });
       get().addToast(
-        next ? 'تم تفعيل التشغيل التلقائي الذكي ✨' : 'تم إيقاف التشغيل التلقائي',
-        '✨'
+        next ? 'تم تفعيل التشغيل التلقائي الذكي' : 'تم إيقاف التشغيل التلقائي',
+        undefined,
+        'info'
       );
     },
 
@@ -1290,19 +1291,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       if (setting === null) {
         set({ sleepTimerSetting: null, sleepTimerRemaining: null });
-        get().addToast('تم إلغاء مؤقت النوم', '⏰');
+        get().addToast('تم إلغاء مؤقت النوم', undefined, 'info');
         return;
       }
 
       if (setting === 'end_of_track') {
         set({ sleepTimerSetting: 'end_of_track', sleepTimerRemaining: null });
-        get().addToast('سيتم إيقاف الموسيقى عند نهاية الأغنية الحالية 🌙', '🌙');
+        get().addToast('سيتم إيقاف الموسيقى عند نهاية الأغنية الحالية', undefined, 'info');
         return;
       }
 
       const totalSecs = setting * 60;
       set({ sleepTimerSetting: setting, sleepTimerRemaining: totalSecs });
-      get().addToast(`تم ضبط مؤقت النوم: ${setting} دقيقة 🌙`, '🌙');
+      get().addToast(`تم ضبط مؤقت النوم: ${setting} دقيقة`, undefined, 'info');
 
       sleepTimerInterval = setInterval(() => {
         const cur = get().sleepTimerRemaining;
@@ -1324,14 +1325,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           djAudioEngine.pause();
           djAudioEngine.setVolume(get().volume);
           set({ isPlaying: false, sleepTimerSetting: null, sleepTimerRemaining: null });
-          get().addToast('تم إيقاف الموسيقى بواسطة مؤقت النوم 🌙', '🌙');
+          get().addToast('تم إيقاف الموسيقى بواسطة مؤقت النوم', undefined, 'info');
         } else {
           set({ sleepTimerRemaining: nextSecs });
         }
       }, 1000);
     },
 
-    addToast: (message: string, icon = '✨', type: 'info' | 'success' | 'warning' = 'info') => {
+    addToast: (message: string, icon?: string, type: 'info' | 'success' | 'warning' = 'info') => {
       const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const newToast: ToastItem = { id, message, icon, type };
       set((state) => ({ toasts: [...state.toasts.slice(-4), newToast] }));
@@ -1408,7 +1409,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (!track) return;
 
       if (downloadedTrackIds.includes(trackId)) {
-        addToast(`المسار "${track.title}" محفوظ مسبقاً للأوفلاين ⚡`, undefined, 'info');
+        addToast(`المسار "${track.title}" محفوظ مسبقاً للأوفلاين`, undefined, 'info');
         return;
       }
 
@@ -1432,7 +1433,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             await db.put('audioBlobs', { id: `track_catalog_${track.trackNumber}`, blob });
           }
           set({ downloadedTrackIds: Array.from(new Set([...get().downloadedTrackIds, trackId])) });
-          addToast(`تم حفظ "${track.title}" أوفلاين بنجاح ⚡`, undefined, 'success');
+          addToast(`تم حفظ "${track.title}" أوفلاين بنجاح`, undefined, 'success');
         } else {
           addToast(`تعذر حفظ المسار أوفلاين`, undefined, 'warning');
         }
@@ -1448,11 +1449,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       const neededTracks = tracks.filter((t) => !downloadedTrackIds.includes(t.id));
       if (neededTracks.length === 0) {
-        addToast('جميع المسارات الـ 261 محفوظة أوفلاين بالفعل في الذاكرة ⚡', '⚡', 'success');
+        addToast('جميع المسارات الـ 261 محفوظة أوفلاين بالفعل في الذاكرة', undefined, 'success');
         return;
       }
 
-      addToast(`بدء حفظ ${neededTracks.length} مسار للعمل بدون إنترنت ⚡...`, '📥', 'info');
+      addToast(`بدء حفظ ${neededTracks.length} مسار للعمل بدون إنترنت...`, undefined, 'info');
       set({ downloadAllProgress: { current: 0, total: neededTracks.length } });
 
       let savedCount = 0;
@@ -1489,10 +1490,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           });
         }
 
-        addToast(`تم حفظ ${savedCount} مسار في الذاكرة بنجاح ⚡ تعمل الآن أوفلاين للأبد!`, '✅', 'success');
+        addToast(`تم حفظ ${savedCount} مسار في الذاكرة بنجاح - تعمل الآن أوفلاين للأبد`, undefined, 'success');
       } catch (err) {
         console.warn('Error during bulk offline caching:', err);
-        addToast('حدث خطأ أثناء حفظ بعض المسارات للأوفلاين', '⚠️', 'warning');
+        addToast('حدث خطأ أثناء حفظ بعض المسارات للأوفلاين', undefined, 'warning');
       } finally {
         set({ downloadAllProgress: null });
       }
