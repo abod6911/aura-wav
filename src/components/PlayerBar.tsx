@@ -75,7 +75,7 @@ export const PlayerBar: React.FC = () => {
   return (
     <footer
       dir="ltr"
-      className="hidden md:flex fixed bottom-0 left-0 right-0 h-24 z-40 bg-[#0a0a0f]/90 backdrop-blur-3xl px-6 items-center justify-between border-t border-white/[0.08] select-none shadow-[0_-8px_32px_rgba(0,0,0,0.6)]"
+      className="hidden md:flex fixed bottom-0 left-0 right-0 h-24 z-40 bg-[#0a0a0f]/90 backdrop-blur-3xl px-6 items-center justify-between border-t border-white/[0.08] select-none shadow-[0_-8px_32px_rgba(0,0,0,0.6)] contain-paint-layout gpu-accelerated"
     >
       {/* 1. Track Info (Left) */}
       <div className="flex items-center gap-3.5 w-1/4 min-w-0">
@@ -124,31 +124,33 @@ export const PlayerBar: React.FC = () => {
       {/* 2. Main Playback Controls & Bulletproof Scrubber (Center) */}
       <div className="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
         {/* Buttons Row */}
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4">
           {/* Shuffle */}
           <button
             onClick={toggleShuffle}
             title="خلط الأغاني"
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
-              shuffle ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500 hover:text-white'
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+              shuffle 
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_12px_rgba(250,36,60,0.35)]' 
+                : 'satin-metal-button text-zinc-400'
             }`}
           >
-            <Shuffle className="w-4 h-4" />
+            <Shuffle className="w-3.5 h-3.5" />
           </button>
 
           {/* Previous */}
           <button
             onClick={previousTrack}
             title="السابق"
-            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            className="w-10 h-10 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer"
           >
-            <SkipBack className="w-5 h-5 fill-current" />
+            <SkipBack className="w-4 h-4 fill-current" />
           </button>
 
-          {/* Large Hero Play/Pause Button */}
+          {/* Large Luxury Hi-Fi Play/Pause Button */}
           <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.90 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -156,14 +158,22 @@ export const PlayerBar: React.FC = () => {
               }
               togglePlayPause();
             }}
-            style={{ touchAction: 'manipulation' }}
+            style={{ 
+              touchAction: 'manipulation',
+              ['--aura-glow' as any]: currentTrack?.dominantColor || 'rgba(250, 36, 60, 0.45)'
+            }}
             title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-            className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center hover:bg-zinc-200 active:scale-90 transition-all shadow-[0_0_25px_rgba(255,255,255,0.3)] relative group cursor-pointer select-none"
+            className="w-12 h-12 rounded-full hi-fi-play-button text-black flex items-center justify-center relative group cursor-pointer select-none"
           >
+            {/* Dynamic artwork aura backlight */}
+            <div 
+              className="absolute inset-0 rounded-full blur-md opacity-40 group-hover:opacity-75 transition-opacity pointer-events-none -z-10"
+              style={{ backgroundColor: currentTrack?.dominantColor || '#FA243C' }}
+            />
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-black" />
+              <Pause className="w-5 h-5 fill-zinc-900 text-zinc-900" />
             ) : (
-              <Play className="w-5 h-5 fill-black translate-x-0.5" />
+              <Play className="w-5 h-5 fill-zinc-900 text-zinc-900 translate-x-0.5" />
             )}
           </motion.button>
 
@@ -171,25 +181,25 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => nextTrack(false)}
             title="التالي"
-            className="p-2 rounded-full text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all cursor-pointer"
+            className="w-10 h-10 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer"
           >
-            <SkipForward className="w-5 h-5 fill-current" />
+            <SkipForward className="w-4 h-4 fill-current" />
           </button>
 
           {/* Repeat */}
           <button
             onClick={cycleRepeat}
             title="تكرار"
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               repeatMode !== 'off'
-                ? 'text-[#FA243C] bg-[#FA243C]/15'
-                : 'text-zinc-500 hover:text-white'
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_12px_rgba(250,36,60,0.35)]'
+                : 'satin-metal-button text-zinc-400'
             }`}
           >
             {repeatMode === 'one' ? (
-              <Repeat1 className="w-4 h-4" />
+              <Repeat1 className="w-3.5 h-3.5" />
             ) : (
-              <Repeat className="w-4 h-4" />
+              <Repeat className="w-3.5 h-3.5" />
             )}
           </button>
 
@@ -199,13 +209,13 @@ export const PlayerBar: React.FC = () => {
               onClick={() => setAutoMixModalOpen(true)}
               title={`AutoMix نشط (${automixDuration} ثواني - ${automixStyle}) - انقر لتغيير النمط`}
               data-testid="desktop-automix-pill"
-              className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+              className={`luxury-capsule flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer ${
                 isCrossfadingSoon
-                  ? 'bg-[#FA243C]/30 text-[#FF456E] border-[#FA243C] animate-pulse'
-                  : 'bg-white/[0.04] text-[#FF456E] border-[#FA243C]/35 hover:bg-[#FA243C]/10'
+                  ? 'luxury-capsule-active text-[#FF456E] animate-pulse'
+                  : 'text-[#FF456E] hover:bg-[#FA243C]/10'
               }`}
             >
-              <Sparkles className="w-3 h-3" />
+              <Sparkles className="w-3 h-3 text-purple-400" />
               <span>
                 AUTOMIX • {automixStyle === 'vinyl_brake' ? 'VINYL 💽' : automixStyle === 'echo_out' ? 'ECHO 🌌' : automixStyle === 'filter_sweep' ? 'FILTER 🎚️' : 'FADE 🌊'}
               </span>

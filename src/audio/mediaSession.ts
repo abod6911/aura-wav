@@ -19,6 +19,65 @@ function buildArtworkObjects(url: string) {
   }));
 }
 
+let activeCallbacks: MediaSessionCallbacks | null = null;
+let lastPositionUpdate = 0;
+let lastReportedTime = 0;
+
+/**
+ * Register global MediaSession action handlers early so iOS WebKit binds the standalone window.
+ */
+export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks) {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
+    return;
+  }
+  activeCallbacks = callbacks;
+
+  // Declare audio intent on iOS 16.4+
+  if ('audioSession' in navigator) {
+    try {
+      (navigator as any).audioSession.type = 'playback';
+    } catch {}
+  }
+
+  const actions: [MediaSessionAction, (details: any) => void][] = [
+    ['play', () => activeCallbacks?.onPlay()],
+    ['pause', () => activeCallbacks?.onPause()],
+    ['nexttrack', () => activeCallbacks?.onNext()],
+    ['previoustrack', () => activeCallbacks?.onPrevious()],
+    [
+      'seekto',
+      (details: any) => {
+        if (details.seekTime !== undefined) {
+          activeCallbacks?.onSeek(details.seekTime);
+        }
+      },
+    ],
+    [
+      'seekbackward',
+      (details: any) => {
+        const offset = details.seekOffset || 10;
+        activeCallbacks?.onSeek(Math.max(0, lastReportedTime - offset));
+      },
+    ],
+    [
+      'seekforward',
+      (details: any) => {
+        const offset = details.seekOffset || 10;
+        activeCallbacks?.onSeek(lastReportedTime + offset);
+      },
+    ],
+    ['stop', () => activeCallbacks?.onPause()],
+  ];
+
+  actions.forEach(([action, handler]) => {
+    try {
+      navigator.mediaSession.setActionHandler(action, handler);
+    } catch {
+      // ignore unsupported actions
+    }
+  });
+}
+
 /**
  * Native OS, Dynamic Island & Lock screen MediaSession API integration
  */
@@ -27,9 +86,11 @@ export function updateMediaSession(
   isPlaying: boolean,
   callbacks: MediaSessionCallbacks
 ) {
-  if (!('mediaSession' in navigator) || !track) {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) {
     return;
   }
+
+  activeCallbacks = callbacks;
 
   // Declare audio intent on iOS 16.4+
   if ('audioSession' in navigator) {
@@ -77,27 +138,16 @@ export function updateMediaSession(
     console.warn('PlaybackState error:', err);
   }
 
-  // 3. Set Action Handlers
-  try {
-    navigator.mediaSession.setActionHandler('play', () => callbacks.onPlay());
-    navigator.mediaSession.setActionHandler('pause', () => callbacks.onPause());
-    navigator.mediaSession.setActionHandler('nexttrack', () => callbacks.onNext());
-    navigator.mediaSession.setActionHandler('previoustrack', () => callbacks.onPrevious());
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime !== undefined) {
-        callbacks.onSeek(details.seekTime);
-      }
-    });
-  } catch (err) {
-    console.warn('MediaSession action handler error:', err);
-  }
+  // 3. Ensure action handlers are bound to this active window
+  initMediaSessionHandlers(callbacks);
 }
 
-let lastPositionUpdate = 0;
-let lastReportedTime = 0;
-
 export function updateMediaSessionPosition(duration: number, currentTime: number) {
-  if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) {
+  if (
+    typeof navigator === 'undefined' ||
+    !('mediaSession' in navigator) ||
+    !('setPositionState' in navigator.mediaSession)
+  ) {
     return;
   }
   const now = Date.now();
@@ -114,7 +164,7 @@ export function updateMediaSessionPosition(duration: number, currentTime: number
       navigator.mediaSession.setPositionState({
         duration: Math.max(duration, 0.1),
         playbackRate: 1,
-        position: Math.min(currentTime, duration),
+        position: Math.max(0, Math.min(currentTime, duration)),
       });
     } catch {
       // ignore

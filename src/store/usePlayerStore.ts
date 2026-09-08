@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset } from '../types';
 import { djAudioEngine, EQ_BANDS, AutoMixStyle } from '../lib/audioEngine';
-import { updateMediaSession, updateMediaSessionPosition } from '../audio/mediaSession';
+import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
 import { DEMO_TRACKS } from '../data/demoTracks';
@@ -188,6 +188,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
     onTimeUpdate: (cur, dur) => {
+      // Gate React state re-renders when app is hidden to prevent background CPU choking
+      if (typeof document !== 'undefined' && document.hidden) {
+        return;
+      }
       set({ currentTime: cur, duration: dur });
       updateMediaSessionPosition(dur, cur);
     },
@@ -404,6 +408,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     initStore: async () => {
       try {
+        initMediaSessionHandlers(getMediaSessionCallbacks(get));
         const db = await getDB();
         const [
           cachedTracks,
@@ -1507,4 +1512,31 @@ function getMediaSessionCallbacks(get: () => PlayerState) {
 
 if (typeof window !== 'undefined') {
   (window as any).usePlayerStore = usePlayerStore;
+}
+
+// Seamless background-to-foreground UI synchronization
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      try {
+        const snap = djAudioEngine.syncPlaybackState();
+        const current = usePlayerStore.getState().currentTrack;
+        if (snap.duration > 0 || snap.isPlaying) {
+          usePlayerStore.setState({
+            currentTime: snap.currentTime,
+            duration: snap.duration > 0 ? snap.duration : usePlayerStore.getState().duration,
+            isPlaying: snap.isPlaying,
+          });
+          if (current) {
+            updateMediaSessionPosition(
+              snap.duration > 0 ? snap.duration : usePlayerStore.getState().duration,
+              snap.currentTime
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('Playback state synchronization error:', err);
+      }
+    }
+  });
 }

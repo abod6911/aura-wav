@@ -172,7 +172,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             handleClose();
           }
         }}
-        className="fixed inset-0 z-50 bg-[#07070b] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y"
+        className="fixed inset-0 z-50 bg-[#07070b] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
       >
         {/* Apple Music Drag Handle Pill */}
         <div
@@ -618,89 +618,110 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           />
         </div>
 
-        {/* 4. Main Playback Controls */}
+        {/* 4. Luxury Hi-Fi Master Playback Controls */}
         <div 
           onPointerDown={(e) => e.stopPropagation()}
-          className="flex items-center justify-between px-2 my-2 flex-shrink-0"
+          className="flex items-center justify-between px-3 my-2 flex-shrink-0"
           style={{ touchAction: 'manipulation' }}
         >
+          {/* Shuffle Button */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.88 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
               toggleShuffle();
             }}
             style={{ touchAction: 'manipulation' }}
-            className={`p-2.5 rounded-full transition-colors cursor-pointer select-none ${
-              shuffle ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+              shuffle 
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_15px_rgba(250,36,60,0.35)]' 
+                : 'satin-metal-button text-zinc-400'
             }`}
+            title="تشغيل عشوائي"
           >
             <Shuffle className="w-5 h-5" />
           </motion.button>
 
+          {/* Previous Track Button */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.88 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
               previousTrack();
             }}
             style={{ touchAction: 'manipulation' }}
-            className="p-2.5 text-white hover:text-[#FF456E] active:scale-90 transition-all cursor-pointer select-none"
+            className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none"
+            title="السابق"
           >
-            <SkipBack className="w-7 h-7 fill-current" />
+            <SkipBack className="w-6 h-6 fill-current" />
           </motion.button>
 
+          {/* Master Luxury Hi-Fi Play/Pause Button */}
           <motion.button
             data-testid="expanded-play-pause-btn"
-            whileTap={{ scale: 0.92 }}
+            whileTap={{ scale: 0.90 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
               togglePlayPause();
             }}
-            style={{ touchAction: 'manipulation' }}
-            className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_35px_rgba(255,255,255,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer select-none flex-shrink-0"
+            style={{ 
+              touchAction: 'manipulation',
+              ['--aura-glow' as any]: currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
+            }}
+            className="w-20 h-20 sm:w-22 sm:h-22 rounded-full hi-fi-play-button text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
+            {/* Dynamic artwork aura backlight */}
+            <div 
+              className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover:opacity-75 transition-opacity pointer-events-none -z-10"
+              style={{ backgroundColor: currentTrack.dominantColor || '#FA243C' }}
+            />
             {isPlaying ? (
-              <Pause className="w-8 h-8 fill-black" />
+              <Pause className="w-8 h-8 fill-zinc-900 text-zinc-900 transition-transform active:scale-95" />
             ) : (
-              <Play className="w-8 h-8 fill-black translate-x-0.5" />
+              <Play className="w-8 h-8 fill-zinc-900 text-zinc-900 translate-x-0.5 transition-transform active:scale-95" />
             )}
           </motion.button>
 
+          {/* Next Track Button */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.88 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
               nextTrack(false);
             }}
             style={{ touchAction: 'manipulation' }}
-            className="p-2.5 text-white hover:text-[#FF456E] active:scale-90 transition-all cursor-pointer select-none"
+            className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none"
+            title="التالي"
           >
-            <SkipForward className="w-7 h-7 fill-current" />
+            <SkipForward className="w-6 h-6 fill-current" />
           </motion.button>
 
+          {/* Repeat Button */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.88 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
               cycleRepeat();
             }}
             style={{ touchAction: 'manipulation' }}
-            className={`p-2.5 rounded-full transition-colors cursor-pointer select-none ${
-              repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/15' : 'text-zinc-500'
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+              repeatMode !== 'off' 
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_15px_rgba(250,36,60,0.35)]' 
+                : 'satin-metal-button text-zinc-400'
             }`}
+            title="تكرار"
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
           </motion.button>
         </div>
 
-        {/* 4.5 Sleek Floating DJ FX & AutoMix Quick Pills */}
+        {/* 4.5 Sleek Floating Luxury DJ FX & AutoMix Capsule Pills */}
         <div className="flex items-center justify-center gap-3 flex-shrink-0 select-none py-1">
           <motion.button
             whileTap={{ scale: 0.94 }}
@@ -708,7 +729,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               triggerHaptic();
               setSoundboardOpen(true);
             }}
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 via-[#FA243C]/20 to-amber-500/20 hover:from-purple-500/30 hover:to-amber-500/30 border border-white/15 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-black/40 cursor-pointer backdrop-blur-md transition-all active:scale-95"
+            className="luxury-capsule px-4 py-2 rounded-full text-white text-xs font-black flex items-center gap-2 cursor-pointer"
             title="فتح لوحة مؤثرات الـ DJ والسرعة"
           >
             <span className="text-sm">🎛️</span>
@@ -726,15 +747,16 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
               triggerHaptic();
               setAutoMixModalOpen(true);
             }}
-            className={`px-3.5 py-2 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
-              automixEnabled
-                ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
-                : 'bg-white/[0.05] border-white/10 text-zinc-400 hover:text-white'
+            className={`luxury-capsule px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer ${
+              automixEnabled ? 'luxury-capsule-active text-purple-300' : 'text-zinc-400'
             }`}
             title="إعدادات الـ AutoMix"
           >
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
             <span>AutoMix {automixEnabled ? 'مفعّل ✓' : ''}</span>
+            {isAutoMixingLive && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            )}
           </motion.button>
         </div>
 

@@ -28,7 +28,10 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     // Track peak heights for authentic studio bouncy peak meters
     const peaks = new Float32Array(bars).fill(0);
 
+    let isRunning = typeof document === 'undefined' ? true : !document.hidden;
+
     const render = () => {
+      if (!isRunning) return;
       animationId = requestAnimationFrame(render);
 
       djAudioEngine.getVisualizerData(dataArray);
@@ -111,10 +114,32 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       }
     };
 
-    render();
+    if (isRunning) {
+      animationId = requestAnimationFrame(render);
+    }
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        isRunning = false;
+        cancelAnimationFrame(animationId);
+      } else {
+        if (!isRunning) {
+          isRunning = true;
+          animationId = requestAnimationFrame(render);
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
 
     return () => {
+      isRunning = false;
       cancelAnimationFrame(animationId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
     };
   }, [isPlaying, currentTrack, bars, mode]);
 

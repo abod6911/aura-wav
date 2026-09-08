@@ -149,7 +149,10 @@ export class DJAudioEngine {
     if (!isFinite(cur) || !isFinite(dur) || dur <= 0) return;
 
     // 1. High-frequency UI timeupdate callback with lockscreen scrubber sync
-    if (this.onTimeUpdateCallback) {
+    // CRITICAL: Gate UI callbacks when document is hidden (background/lock screen)
+    // This prevents React state update thrashing and background CPU starvation on mobile WebKit.
+    const isHidden = typeof document !== 'undefined' && document.hidden;
+    if (!isHidden && this.onTimeUpdateCallback) {
       if (this.isCrossfading && this.midpointFired) {
         const inactive = this.getInactive();
         const inCur = inactive.audio.currentTime;
@@ -1559,6 +1562,23 @@ export class DJAudioEngine {
 
   public getIsCrossfading(): boolean {
     return this.isCrossfading;
+  }
+
+  public syncPlaybackState(): {
+    currentTime: number;
+    duration: number;
+    isPlaying: boolean;
+    currentTrack: Track | null;
+  } {
+    const active = this.getActive();
+    const cur = active.audio.currentTime || 0;
+    const dur = active.audio.duration || 0;
+    return {
+      currentTime: isFinite(cur) ? cur : 0,
+      duration: isFinite(dur) ? dur : 0,
+      isPlaying: this.isPlaying(),
+      currentTrack: active.track,
+    };
   }
 
   public setCallbacks(cbs: {
