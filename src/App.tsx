@@ -75,7 +75,7 @@ export function App() {
     // Register Service Worker for PWA with automatic instant updates
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker
-        .register('/sw.js')
+        .register('/sw.js', { updateViaCache: 'none' })
         .then((reg) => {
           console.log('AURA.WAV PWA Service Worker Registered');
           // Check for update immediately on load

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-wav-v7';
+const CACHE_NAME = 'aura-wav-v8';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

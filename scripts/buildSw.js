@@ -1,4 +1,4 @@
-﻿import fs from 'fs';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,7 +20,7 @@ if (fs.existsSync(assetsDir)) {
 
 console.log('[buildSw] Found bundle assets to cache:', assetFiles);
 
-const cacheVersion = 'aura-wav-v7-' + Date.now();
+const cacheVersion = 'aura-wav-v8-' + Date.now();
 let swContent = fs.readFileSync(swPublicPath, 'utf8');
 
 swContent = swContent.replace(/const CACHE_NAME = ['"].*?['"];/, "const CACHE_NAME = '" + cacheVersion + "';");
