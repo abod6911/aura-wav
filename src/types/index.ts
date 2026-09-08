@@ -13,9 +13,11 @@ export interface Track {
   year?: string | number;
   genre?: string;
   artworkUrl?: string;
+  coverUrl?: string; // Spotify alias for artworkUrl
   audioUrl?: string;
   fileName?: string;
   dominantColor?: string;
+  accentColor?: string; // Spotify alias for dominantColor
   secondaryColor?: string;
   lyrics?: string;
   syncedLyrics?: LyricLine[];
@@ -40,5 +42,7 @@ export interface EqualizerPreset {
   gains: [number, number, number, number, number]; // 60Hz, 250Hz, 1kHz, 4kHz, 16kHz
 }
 
+export type PlaybackState = 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
 export type RepeatMode = 'off' | 'all' | 'one';
-export type ViewTab = 'library' | 'player' | 'playlists' | 'favorites' | 'settings';
+export type ViewTab = 'home' | 'search' | 'library' | 'favorites' | 'playlists' | 'settings' | 'premium';
+

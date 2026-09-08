@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { Music, Heart, Sliders, ListMusic } from 'lucide-react';
+import { Home, Search, Library, Sparkles, Sliders } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface MobileNavDockProps {
@@ -10,8 +10,7 @@ interface MobileNavDockProps {
 export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
-  const isEqualizerOpen = usePlayerStore((state) => state.isEqualizerOpen);
-  const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
+  const addToast = usePlayerStore((state) => state.addToast);
 
   const triggerHaptic = () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -22,46 +21,40 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   };
 
   const tabs = [
-    { id: 'library', label: 'المكتبة', icon: Music },
-    { id: 'favorites', label: 'المفضلة', icon: Heart },
-    { id: 'playlists', label: 'القوائم', icon: ListMusic },
+    { id: 'home', label: 'الرئيسية', icon: Home },
+    { id: 'search', label: 'بحث', icon: Search },
+    { id: 'library', label: 'مكتبتك', icon: Library },
+    { id: 'premium', label: 'بريميوم', icon: Sparkles },
   ] as const;
 
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#07070c]/85 backdrop-blur-3xl border-t border-white/[0.09] px-4 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.85)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#121212]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.85)]"
     >
       {tabs.map((t) => {
         const Icon = t.icon;
-        const isActive = activeTab === t.id && !isEqualizerOpen;
+        const isActive = activeTab === t.id;
         return (
           <motion.button
             key={t.id}
             whileTap={{ scale: 0.88 }}
             onClick={() => {
               triggerHaptic();
-              setEqualizerOpen(false);
+              if (t.id === 'premium') {
+                addToast('أنت تستمتع حالياً بجميع مميزات بريميوم مجاناً مدى الحياة!', undefined, 'success');
+              }
               setActiveTab(t.id);
             }}
-            className="relative flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all"
+            className="relative flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all flex-1"
           >
-            {isActive && (
-              <motion.div
-                layoutId="mobileNavGlow"
-                className="absolute inset-0 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/25 shadow-[0_0_12px_rgba(250,36,60,0.2)]"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-              />
-            )}
             <Icon
-              className={`w-5 h-5 relative z-10 transition-colors ${
-                isActive
-                  ? 'text-[#FA243C]'
-                  : 'text-zinc-400'
+              className={`w-5 h-5 transition-colors ${
+                isActive ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
               }`}
             />
             <span
-              className={`text-[10px] font-bold relative z-10 transition-colors ${
+              className={`text-[10px] font-bold transition-colors ${
                 isActive ? 'text-white font-black' : 'text-zinc-500'
               }`}
             >
@@ -70,33 +63,6 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
           </motion.button>
         );
       })}
-
-      {/* Equalizer & AutoMix tab */}
-      <motion.button
-        whileTap={{ scale: 0.88 }}
-        onClick={() => setEqualizerOpen(!isEqualizerOpen)}
-        className="relative flex flex-col items-center gap-1 py-1 px-4 rounded-xl transition-all"
-      >
-        {isEqualizerOpen && (
-          <motion.div
-            layoutId="mobileNavGlow"
-            className="absolute inset-0 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/25 shadow-[0_0_12px_rgba(250,36,60,0.2)]"
-            transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-          />
-        )}
-        <Sliders
-          className={`w-5 h-5 relative z-10 transition-colors ${
-            isEqualizerOpen ? 'text-[#FA243C]' : 'text-zinc-400'
-          }`}
-        />
-        <span
-          className={`text-[10px] font-bold relative z-10 transition-colors ${
-            isEqualizerOpen ? 'text-white font-black' : 'text-zinc-500'
-          }`}
-        >
-          المعادل
-        </span>
-      </motion.button>
     </nav>
   );
 };

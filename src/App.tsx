@@ -5,6 +5,8 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { TrackList } from './components/library/TrackList';
 import { PlaylistsView } from './components/PlaylistsView';
+import { SpotifyHomeView } from './components/SpotifyHomeView';
+import { RightSidebar } from './components/RightSidebar';
 import { PlayerBar } from './components/PlayerBar';
 import { MiniPlayer } from './components/player/MiniPlayer';
 import { ExpandedPlayer } from './components/player/ExpandedPlayer';
@@ -268,12 +270,12 @@ export function App() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#08080a] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#FA243C]/20"
+      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#121212] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#1DB954]/20"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-[#08080a]/90 backdrop-blur-xl border-4 border-dashed border-[#FA243C]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="p-6 rounded-3xl bg-[#FA243C]/20 text-[#FA243C] mb-4 animate-bounce border border-[#FA243C]/30 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-[#121212]/90 backdrop-blur-xl border-4 border-dashed border-[#1DB954]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
+          <div className="p-6 rounded-3xl bg-[#1DB954]/20 text-[#1DB954] mb-4 animate-bounce border border-[#1DB954]/30 shadow-2xl">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
@@ -286,7 +288,7 @@ export function App() {
       {/* 1. Dynamic Album Art Ambient Mesh */}
       <AtmosphereBackground />
 
-      {/* 2. Desktop Sidebar */}
+      {/* 2. Desktop Left Sidebar */}
       <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />
 
       {/* 3. Main View Area */}
@@ -297,12 +299,15 @@ export function App() {
           {/* Dynamic Tab Views */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
-              <div className="w-12 h-12 rounded-full border-4 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
+              <div className="w-12 h-12 rounded-full border-4 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
               <p className="text-xs text-zinc-400 font-medium">جاري تحميل مكتبتك الصوتية...</p>
             </div>
           ) : (
             <div className="flex-1 w-full min-w-0">
-              {activeTab === 'library' && (
+              {(activeTab === 'home' || activeTab === 'premium') && (
+                <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />
+              )}
+              {(activeTab === 'library' || activeTab === 'search') && (
                 <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
               )}
               {activeTab === 'favorites' && (
@@ -313,6 +318,9 @@ export function App() {
           )}
         </div>
       </main>
+
+      {/* 3.5 Desktop Right Sidebar (Collapsible Queue & Details) */}
+      <RightSidebar />
 
       {/* 4. Desktop Persistent Player Bar */}
       <PlayerBar />

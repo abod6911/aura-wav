@@ -175,27 +175,27 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
         dragConstraints={{ top: 0 }}
         dragElastic={0.15}
         onDragEnd={(_, info) => {
-          if (info.offset.y > 140 || info.velocity.y > 450) {
+          if (info.offset.y > 100 || info.velocity.y > 300) {
             handleClose();
           }
         }}
-        className="fixed inset-0 z-50 bg-[#07070b] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
+        className="fixed inset-0 z-50 bg-[#121212] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
       >
-        {/* Apple Music Drag Handle Pill */}
+        {/* Drag Handle Pill */}
         <div
           onClick={handleClose}
           className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-2 flex-shrink-0 cursor-pointer transition-colors"
         />
 
-        {/* Dynamic Hardware-Accelerated Ambient Radial Mesh (Zero GPU stall on iOS) */}
+        {/* Dynamic Hardware-Accelerated Ambient Radial Mesh */}
         <div
-          className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-35"
+          className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-40"
           style={{
-            background: `radial-gradient(circle at 50% 25%, ${currentTrack.dominantColor || '#6366f1'} 0%, transparent 60%), radial-gradient(circle at 80% 75%, ${currentTrack.secondaryColor || '#a855f7'} 0%, transparent 55%), #07070b`,
+            background: `radial-gradient(circle at 50% 25%, ${currentTrack.accentColor || currentTrack.dominantColor || '#1DB954'} 0%, transparent 60%), radial-gradient(circle at 80% 75%, ${currentTrack.secondaryColor || '#1ed760'} 0%, transparent 55%), #121212`,
             transform: 'translateZ(0)',
           }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#07070b]/50 via-[#07070b]/85 to-[#07070b] pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#121212]/50 via-[#121212]/85 to-[#121212] pointer-events-none" />
 
         {/* 1. Top Header Bar (Ergonomic Minimalist Top 15%) */}
         <div className="flex items-center justify-between pt-1 px-1 flex-shrink-0">
@@ -283,7 +283,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                 <p
                   dir="auto"
                   onClick={() => setActiveTab('lyrics')}
-                  className="text-xs sm:text-sm text-[#FF456E] font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-[#FA243C]/10 border border-[#FA243C]/25 max-w-sm truncate cursor-pointer hover:bg-[#FA243C]/20 transition-colors animate-fadeIn"
+                  className="text-xs sm:text-sm text-[#1ed760] font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/25 max-w-sm truncate cursor-pointer hover:bg-[#1DB954]/20 transition-colors animate-fadeIn"
                 >
                   "{lyrics[activeLyricIndex].text}"
                 </p>
@@ -520,12 +520,12 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   triggerHaptic();
                   toggleFavorite(currentTrack.id);
                 }}
-                className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer rounded-full"
+                className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#1DB954] transition-colors cursor-pointer rounded-full"
                 aria-label={isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}
               >
                 <Heart
                   className={`w-6 h-6 transition-colors ${
-                    isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-500'
+                    isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-500'
                   }`}
                 />
               </motion.button>
@@ -537,7 +537,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             duration={duration}
             onSeek={seek}
             showTimestamps={true}
-            accentColor={currentTrack.dominantColor || '#FA243C'}
+            accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#1DB954'}
           />
         </div>
 
@@ -560,10 +560,10 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             style={{ touchAction: 'manipulation' }}
             className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               shuffle 
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF456E] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
+                ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
             }`}
-            title="تشغيل عشوائي (Shuffle)"
+            title="تشغيل عشوائي ذكي (Smart Shuffle)"
             aria-label="Shuffle"
           >
             <Shuffle className="w-5 h-5" />
@@ -597,7 +597,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             }}
             style={{ 
               touchAction: 'manipulation',
-              ['--aura-glow' as any]: currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
+              ['--aura-glow' as any]: currentTrack.accentColor || currentTrack.dominantColor || 'rgba(29, 185, 84, 0.45)'
             }}
             className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_25px_rgba(255,255,255,0.4)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform"
             aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -605,7 +605,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             {/* Dynamic artwork aura backlight */}
             <div 
               className="absolute inset-0 rounded-full blur-xl opacity-45 group-hover:opacity-80 transition-opacity pointer-events-none -z-10"
-              style={{ backgroundColor: currentTrack.dominantColor || '#FA243C' }}
+              style={{ backgroundColor: currentTrack.accentColor || currentTrack.dominantColor || '#1DB954' }}
             />
             {isPlaying ? (
               <Pause className="w-8 h-8 fill-[#09090b] text-[#09090b] transition-transform active:scale-95" />
@@ -643,7 +643,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             style={{ touchAction: 'manipulation' }}
             className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               repeatMode !== 'off' 
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF456E] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
+                ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
             }`}
             title="تكرار (Repeat)"

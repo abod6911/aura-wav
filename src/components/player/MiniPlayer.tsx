@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { Play, Pause, SkipForward } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Play, Pause, SkipForward, ChevronLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MiniPlayerProps {
   onExpand: () => void;
@@ -17,7 +17,6 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const previousTrack = usePlayerStore((state) => state.previousTrack);
 
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
-  const spatialAudio = usePlayerStore((state) => state.spatialAudio);
 
   if (!currentTrack) return null;
 
@@ -50,88 +49,67 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       onDragEnd={(_, info) => {
         if (info.offset.x < -60 || info.velocity.x < -250) {
           triggerHaptic();
-          nextTrack(false);
+          nextTrack({ forceImmediate: true });
         } else if (info.offset.x > 60 || info.velocity.x > 250) {
           triggerHaptic();
           previousTrack();
         }
       }}
       data-testid="mini-player"
-      className="md:hidden fixed bottom-[calc(68px+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 bg-[#12121a]/85 backdrop-blur-3xl border border-white/[0.12] rounded-2xl p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center gap-3.5 select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
+      className="md:hidden fixed bottom-[calc(68px+env(safe-area-inset-bottom,0px))] left-3 right-3 z-40 bg-[#242424]/95 backdrop-blur-2xl border border-white/[0.12] rounded-xl p-2 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center gap-3 select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
     >
-      {/* Micro-Progress Bar Running Along Top Edge */}
-      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/[0.08]">
-        <div
-          className="h-full bg-gradient-to-r from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] transition-all duration-150 shadow-[0_0_8px_rgba(250,36,60,0.6)]"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
-
-      {/* Album Artwork with Vinyl Spindle */}
+      {/* Album Artwork */}
       <div
         onClick={handleExpand}
-        className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black/50 border border-white/10 shadow-md cursor-pointer"
+        className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-black/60 border border-white/10 shadow-md cursor-pointer"
       >
         <img
-          src={currentTrack.artworkUrl || '/logo.svg'}
+          src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
           alt={currentTrack.title}
-          className={`w-full h-full object-cover transition-transform duration-700 ${
+          className={`w-full h-full object-cover transition-transform duration-500 ${
             isPlaying ? 'scale-105' : 'scale-100 opacity-90'
           }`}
         />
-        <div className="absolute inset-0 m-auto w-2 h-2 rounded-full bg-black/60 border border-white/30 pointer-events-none" />
       </div>
 
-      {/* Track Info with Lossless & Spatial Indicator */}
+      {/* Track Info */}
       <div onClick={handleExpand} className="flex-1 min-w-0 cursor-pointer">
-        <div className="flex items-center gap-1.5">
-          <h4 className="text-xs font-extrabold text-white truncate tracking-tight">
-            {currentTrack.title}
-          </h4>
-          {spatialAudio && (
-            <span className="text-[9px] px-1 py-0.2 rounded bg-[#FA243C]/20 text-[#FF456E] font-bold border border-[#FA243C]/30 flex-shrink-0">
-              3D
-            </span>
-          )}
+        <h4 className="text-xs font-bold text-white truncate tracking-tight">
+          {currentTrack.title}
+        </h4>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-[11px] text-zinc-400 truncate font-medium">
+            {currentTrack.artist}
+          </p>
+          {/* Subtle Swipe Indicator */}
+          <span className="hidden xs:inline-flex items-center text-[9px] text-zinc-500 font-medium">
+            • اسحب للتخطي
+          </span>
         </div>
-        <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium flex items-center gap-1">
-          <span>{currentTrack.artist}</span>
-          <span className="text-zinc-600">•</span>
-          <span className="text-[10px] text-emerald-400/90 font-mono">Lossless</span>
-        </p>
       </div>
 
       {/* Play Controls with Spring Feedback */}
       <div 
         onPointerDown={(e) => e.stopPropagation()}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1.5 flex-shrink-0"
         style={{ touchAction: 'manipulation' }}
       >
         <motion.button
           data-testid="mini-play-pause-btn"
-          whileTap={{ scale: 0.90 }}
+          whileTap={{ scale: 0.88 }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             triggerHaptic();
             togglePlayPause();
           }}
-          style={{ 
-            touchAction: 'manipulation',
-            ['--aura-glow' as any]: currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
-          }}
-          className="w-11 h-11 rounded-full hi-fi-play-button text-black flex items-center justify-center relative group cursor-pointer select-none flex-shrink-0"
+          className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-md hover:scale-105 transition-transform"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
-          {/* Dynamic artwork aura backlight */}
-          <div 
-            className="absolute inset-0 rounded-full blur-md opacity-35 pointer-events-none -z-10"
-            style={{ backgroundColor: currentTrack.dominantColor || '#FA243C' }}
-          />
           {isPlaying ? (
-            <Pause className="w-5 h-5 fill-zinc-900 text-zinc-900" />
+            <Pause className="w-4 h-4 fill-black text-black" />
           ) : (
-            <Play className="w-5 h-5 fill-zinc-900 text-zinc-900 translate-x-0.5" />
+            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
           )}
         </motion.button>
 
@@ -144,11 +122,19 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             nextTrack({ forceImmediate: true });
           }}
           style={{ touchAction: 'manipulation' }}
-          className="w-11 h-11 rounded-full satin-metal-button flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer select-none flex-shrink-0"
+          className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer select-none flex-shrink-0"
           aria-label="Next track"
         >
-          <SkipForward className="w-5 h-5 fill-current" />
+          <SkipForward className="w-4 h-4 fill-current" />
         </motion.button>
+      </div>
+
+      {/* Spotify Signature Green Bottom Progress Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/[0.08]">
+        <div
+          className="h-full bg-[#1DB954] transition-all duration-150"
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
     </motion.div>
   );

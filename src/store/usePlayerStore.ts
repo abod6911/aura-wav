@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset } from '../types';
+import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset, PlaybackState } from '../types';
 import { djAudioEngine, EQ_BANDS, AutoMixStyle } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
@@ -42,12 +42,15 @@ interface PlayerState {
   favorites: string[];
   isLoadingLibrary: boolean;
   activeMood: string | null;
+  activeFilterPill: 'all' | 'music' | 'podcasts';
 
   // Playback State
   currentTrack: Track | null;
   queue: Track[];
+  originalQueue: Track[];
   history: Track[];
   isPlaying: boolean;
+  playbackState: PlaybackState;
   currentTime: number;
   duration: number;
   volume: number;
@@ -55,6 +58,10 @@ interface PlayerState {
   shuffle: boolean;
   repeatMode: RepeatMode;
   smartAutoplay: boolean;
+
+  // Desktop Spotify Layout
+  isRightSidebarOpen: boolean;
+  activeRightSidebarTab: 'queue' | 'now_playing';
 
   // Audio Features
   automixEnabled: boolean;
@@ -152,6 +159,12 @@ interface PlayerState {
   createPlaylist: (name: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
+  setPlaybackState: (state: PlaybackState) => void;
+  toggleRightSidebar: () => void;
+  setRightSidebarOpen: (open: boolean) => void;
+  setActiveRightSidebarTab: (tab: 'queue' | 'now_playing') => void;
+  setActiveFilterPill: (pill: 'all' | 'music' | 'podcasts') => void;
+  clearQueue: () => void;
 }
 
 let sleepTimerInterval: any = null;
@@ -196,7 +209,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       updateMediaSessionPosition(dur, cur);
     },
     onPlaybackStateChange: (isPlaying) => {
-      set({ isPlaying });
+      set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
       const current = get().currentTrack;
       if (current) {
         updateMediaSession(current, isPlaying, getMediaSessionCallbacks(get));
@@ -317,14 +330,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     currentTrack: null,
     queue: [],
+    originalQueue: [],
     history: [],
     isPlaying: false,
+    playbackState: 'idle',
     currentTime: 0,
     duration: 0,
     volume: 0.9,
     playbackRate: 1.0,
     shuffle: false,
     repeatMode: 'all',
+
+    isRightSidebarOpen: false,
+    activeRightSidebarTab: 'queue',
+    activeFilterPill: 'all',
 
     automixEnabled: true,
     automixDuration: 5,
@@ -341,7 +360,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     sleepTimerRemaining: null,
     sleepTimerSetting: null,
 
-    activeTab: 'library',
+    activeTab: 'home',
     isLyricsOpen: false,
     isEqualizerOpen: false,
     isQueueOpen: false,
@@ -850,16 +869,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         queue: updatedQueue,
         currentTime: 0,
         duration: playableTrack.duration || 0,
+        playbackState: 'buffering',
       });
 
       // Launch audio playback asynchronously
       djAudioEngine.playTrack(playableTrack).then((success) => {
         if (!success) {
-          set({ isPlaying: false });
+          set({ isPlaying: false, playbackState: 'error' });
+        } else {
+          set({ isPlaying: true, playbackState: 'playing' });
         }
       }).catch((err) => {
         console.warn('Play track notice:', err);
-        set({ isPlaying: false });
+        set({ isPlaying: false, playbackState: 'error' });
       });
 
       // Background cover art enrichment if track has fallback cover
@@ -1089,7 +1111,36 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     toggleShuffle: () => {
-      set((state) => ({ shuffle: !state.shuffle }));
+      const state = get();
+      const nextShuffle = !state.shuffle;
+      if (nextShuffle) {
+        const origQueue = [...state.queue];
+        const current = state.currentTrack;
+        let pool = [...state.queue];
+        if (current) {
+          pool = pool.filter((t) => t.id !== current.id);
+        }
+        // Fisher-Yates shuffle algorithm
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        const shuffledQueue = current ? [current, ...pool] : pool;
+        set({
+          shuffle: true,
+          originalQueue: origQueue,
+          queue: shuffledQueue,
+        });
+        get().addToast('تم تفعيل الخلط العشوائي الذكي (Smart Shuffle)', undefined, 'info');
+      } else {
+        const restored = state.originalQueue && state.originalQueue.length > 0 ? state.originalQueue : state.queue;
+        set({
+          shuffle: false,
+          queue: restored,
+          originalQueue: [],
+        });
+        get().addToast('تم استعادة الترتيب الأصلي لقائمة الانتظار', undefined, 'info');
+      }
     },
 
     cycleRepeat: () => {
@@ -1221,6 +1272,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     setActiveTab: (tab: ViewTab) => set({ activeTab: tab }),
+    setPlaybackState: (state: PlaybackState) => set({ playbackState: state }),
+    toggleRightSidebar: () => set((state) => ({ isRightSidebarOpen: !state.isRightSidebarOpen })),
+    setRightSidebarOpen: (open: boolean) => set({ isRightSidebarOpen: open }),
+    setActiveRightSidebarTab: (tab: 'queue' | 'now_playing') => set({ activeRightSidebarTab: tab }),
+    setActiveFilterPill: (pill: 'all' | 'music' | 'podcasts') => set({ activeFilterPill: pill }),
+    clearQueue: () => set({ queue: [], originalQueue: [] }),
     setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') =>
       set({ expandedPlayerTab: tab }),
     setLyricsOpen: (open: boolean) => set({ isLyricsOpen: open }),

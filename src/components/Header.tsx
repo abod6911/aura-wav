@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { FolderOpen, Download, Disc, Clock, Music, Moon, Keyboard, Sliders, Sparkles, Wifi, WifiOff, Settings } from 'lucide-react';
+import { FolderOpen, Download, Disc, Clock, Music, Moon, Keyboard, Sliders, Sparkles, Wifi, WifiOff, Settings, Bell, User } from 'lucide-react';
 
 interface HeaderProps {
   onOpenImport: () => void;
@@ -15,6 +15,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const isOnline = usePlayerStore((state) => state.isOnline);
+  const addToast = usePlayerStore((state) => state.addToast);
+  const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
+  const setActiveFilterPill = usePlayerStore((state) => state.setActiveFilterPill);
 
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
 
@@ -52,70 +55,98 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
 
   return (
     <header className="py-2 sm:py-3 border-b border-white/5 select-none mb-3 sm:mb-4 w-full min-w-0">
-      {/* Mobile Bar: Sleek, compact Apple Music style */}
-      <div className="flex sm:hidden items-center justify-between w-full gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] flex-shrink-0 shadow-md shadow-[#FA243C]/20">
-            <div className="w-full h-full bg-[#09090b] rounded-[10px] flex items-center justify-center">
-              <Disc className="w-4 h-4 text-[#FA243C] animate-spin-slow" />
-            </div>
+      {/* Mobile Bar: Spotify Caliber Top Bar with Avatar, Pills & Bell */}
+      <div className="flex flex-col sm:hidden w-full gap-2.5">
+        <div className="flex items-center justify-between w-full">
+          {/* Profile Avatar & Brand */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1DB954] to-[#1ed760] p-[1.5px] shadow-md flex-shrink-0"
+              title="الملف الشخصي والإعدادات"
+            >
+              <div className="w-full h-full bg-[#181818] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                A
+              </div>
+            </button>
+            <span className="font-black text-white text-base tracking-tight">
+              Spotify <span className="text-[#1DB954] font-medium text-xs">AURA</span>
+            </span>
           </div>
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="font-black text-white text-base tracking-tight">AURA<span className="text-[#FA243C]">.WAV</span></span>
+
+          {/* Quick Icons */}
+          <div className="flex items-center gap-1.5">
+            {/* Notification Bell */}
+            <button
+              onClick={() => addToast('لا توجد إشعارات جديدة حالياً', undefined, 'info')}
+              className="p-2 rounded-full text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+              title="الإشعارات"
+            >
+              <Bell className="w-4 h-4" />
+            </button>
+
+            {/* Sleep Timer */}
+            <button
+              onClick={() => setSleepTimerOpen(true)}
+              className={`p-2 rounded-full text-xs font-bold flex items-center gap-1 transition-all ${
+                sleepTimerRemaining !== null
+                  ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/5'
+              }`}
+              title="مؤقت النوم الذكي"
+            >
+              <Moon className="w-4 h-4" />
+              {sleepTimerRemaining !== null && (
+                <span className="font-mono text-[10px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
+              )}
+            </button>
+
+            {/* Folder Import Button */}
             <button
               onClick={onOpenImport}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold truncate max-w-[110px]"
-              title="مجلد الأغاني المحفوظ"
+              className="px-2.5 py-1 rounded-full bg-[#1DB954] active:bg-[#1ed760] text-black text-xs font-bold flex items-center gap-1 shadow-md shadow-[#1DB954]/25"
+              title="استيراد أغانيك"
             >
-              <FolderOpen className="w-2.5 h-2.5 text-emerald-400 flex-shrink-0" />
-              <span className="truncate">{savedFolderName || 'Liked_Songs'}</span>
+              <FolderOpen className="w-3.5 h-3.5" />
+              <span className="text-[10px]">استيراد</span>
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Sleep Timer */}
+        {/* Filtering Pills: All, Music, Podcasts */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
           <button
-            onClick={() => setSleepTimerOpen(true)}
-            className={`p-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all border ${
-              sleepTimerRemaining !== null
-                ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
-                : 'bg-white/[0.04] active:bg-white/[0.1] border-white/[0.06] text-zinc-300'
+            onClick={() => setActiveFilterPill('all')}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+              activeFilterPill === 'all'
+                ? 'bg-[#1DB954] text-black shadow-sm'
+                : 'bg-white/10 text-white hover:bg-white/15'
             }`}
-            title="مؤقت النوم الذكي"
           >
-            <Moon className="w-3.5 h-3.5 text-[#FF456E]" />
-            {sleepTimerRemaining !== null && (
-              <span className="font-mono text-[10px] text-white">{formatTimerRemaining(sleepTimerRemaining)}</span>
-            )}
+            الكل
           </button>
-
-          {/* Welcome Screen */}
           <button
-            onClick={() => setWelcomeOpen(true)}
-            className="p-2 rounded-xl bg-white/[0.04] active:bg-white/[0.1] border border-white/[0.06] text-amber-400"
-            title="شاشة الترحيب"
+            onClick={() => setActiveFilterPill('music')}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+              activeFilterPill === 'music'
+                ? 'bg-[#1DB954] text-black shadow-sm'
+                : 'bg-white/10 text-white hover:bg-white/15'
+            }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            الموسيقى
           </button>
-
-          {/* Settings / Storage Manager */}
           <button
-            onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-xl bg-white/[0.04] active:bg-white/[0.1] border border-white/[0.06] text-zinc-300 hover:text-white"
-            title="إدارة التخزين والمكتبة المحلية"
+            onClick={() => {
+              setActiveFilterPill('podcasts');
+              addToast('قسم البودكاست قيد التحديث', undefined, 'info');
+            }}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+              activeFilterPill === 'podcasts'
+                ? 'bg-[#1DB954] text-black shadow-sm'
+                : 'bg-white/10 text-white hover:bg-white/15'
+            }`}
           >
-            <Settings className="w-3.5 h-3.5 text-[#FA243C]" />
-          </button>
-
-          {/* Import Folder Button */}
-          <button
-            onClick={onOpenImport}
-            className="px-2.5 py-1.5 rounded-xl bg-[#FA243C] active:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-[#FA243C]/25"
-            title="استيراد أغانيك"
-          >
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span className="text-[11px]">استيراد</span>
+            البودكاست
           </button>
         </div>
       </div>

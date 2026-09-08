@@ -18,7 +18,7 @@ import {
   Sparkles,
   Moon,
   Flame,
-  Disc3,
+  Maximize2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -52,6 +52,9 @@ export const PlayerBar: React.FC = () => {
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const isQueueOpen = usePlayerStore((state) => state.isQueueOpen);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
+  const isRightSidebarOpen = usePlayerStore((state) => state.isRightSidebarOpen);
+  const toggleRightSidebar = usePlayerStore((state) => state.toggleRightSidebar);
+  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const isSleepTimerOpen = usePlayerStore((state) => state.isSleepTimerOpen);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
@@ -75,13 +78,13 @@ export const PlayerBar: React.FC = () => {
   return (
     <footer
       dir="ltr"
-      className="hidden md:flex fixed bottom-0 left-0 right-0 h-24 z-40 bg-[#0a0a0f]/90 backdrop-blur-3xl px-6 items-center justify-between border-t border-white/[0.08] select-none shadow-[0_-8px_32px_rgba(0,0,0,0.6)] contain-paint-layout gpu-accelerated"
+      className="hidden md:flex fixed bottom-0 left-0 right-0 h-24 z-40 bg-[#181818]/95 backdrop-blur-2xl px-6 items-center justify-between border-t border-white/10 select-none shadow-[0_-8px_32px_rgba(0,0,0,0.6)] contain-paint-layout gpu-accelerated"
     >
       {/* 1. Track Info (Left) */}
       <div className="flex items-center gap-3.5 w-1/4 min-w-0">
-        <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-lg flex-shrink-0 group">
+        <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-black/60 border border-white/10 shadow-lg flex-shrink-0 group">
           <img
-            src={currentTrack?.artworkUrl || '/logo.svg'}
+            src={currentTrack?.coverUrl || currentTrack?.artworkUrl || '/logo.svg'}
             alt={currentTrack?.title || 'No Track'}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -92,15 +95,15 @@ export const PlayerBar: React.FC = () => {
             {currentTrack?.title || 'Select a track'}
           </h4>
           <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
-            {currentTrack?.artist || 'AURA.WAV'}
+            {currentTrack?.artist || 'Spotify AURA'}
           </p>
           {currentTrack && (
             <div className="flex items-center gap-1.5 mt-1">
               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-white/[0.08] text-zinc-300 border border-white/10 tracking-wider uppercase font-mono">
                 Lossless
               </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#FA243C]/15 text-[#FF456E] border border-[#FA243C]/30 tracking-wider uppercase font-mono">
-                Spatial
+              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#1DB954]/15 text-[#1ed760] border border-[#1DB954]/30 tracking-wider uppercase font-mono">
+                Hi-Fi
               </span>
             </div>
           )}
@@ -109,12 +112,12 @@ export const PlayerBar: React.FC = () => {
         {currentTrack && (
           <button
             onClick={() => toggleFavorite(currentTrack.id)}
-            className="p-2 rounded-full hover:bg-white/10 text-zinc-500 hover:text-[#FA243C] transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 text-zinc-500 hover:text-[#1DB954] transition-colors"
             aria-label="Favorite"
           >
             <Heart
               className={`w-4 h-4 transition-transform active:scale-125 ${
-                isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-500'
+                isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-500'
               }`}
             />
           </button>
@@ -128,11 +131,11 @@ export const PlayerBar: React.FC = () => {
           {/* Shuffle */}
           <button
             onClick={toggleShuffle}
-            title="خلط الأغاني"
+            title="خلط الأغاني الذكي (Smart Shuffle)"
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               shuffle 
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_12px_rgba(250,36,60,0.35)]' 
-                : 'satin-metal-button text-zinc-400'
+                ? 'bg-[#1DB954]/20 border border-[#1DB954]/50 text-[#1ed760] shadow-[0_0_12px_rgba(29,185,84,0.35)]' 
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Shuffle className="w-3.5 h-3.5" />
@@ -142,12 +145,12 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={previousTrack}
             title="السابق"
-            className="w-10 h-10 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer transition-colors"
           >
             <SkipBack className="w-4 h-4 fill-current" />
           </button>
 
-          {/* Large Luxury Hi-Fi Play/Pause Button */}
+          {/* Large Spotify Play/Pause Button */}
           <motion.button
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.90 }}
@@ -158,22 +161,13 @@ export const PlayerBar: React.FC = () => {
               }
               togglePlayPause();
             }}
-            style={{ 
-              touchAction: 'manipulation',
-              ['--aura-glow' as any]: currentTrack?.dominantColor || 'rgba(250, 36, 60, 0.45)'
-            }}
             title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-            className="w-12 h-12 rounded-full hi-fi-play-button text-black flex items-center justify-center relative group cursor-pointer select-none"
+            className="w-10 h-10 rounded-full bg-white hover:bg-zinc-100 text-black flex items-center justify-center cursor-pointer select-none shadow-lg hover:scale-105 transition-transform"
           >
-            {/* Dynamic artwork aura backlight */}
-            <div 
-              className="absolute inset-0 rounded-full blur-md opacity-40 group-hover:opacity-75 transition-opacity pointer-events-none -z-10"
-              style={{ backgroundColor: currentTrack?.dominantColor || '#FA243C' }}
-            />
             {isPlaying ? (
-              <Pause className="w-5 h-5 fill-zinc-900 text-zinc-900" />
+              <Pause className="w-4 h-4 fill-black text-black" />
             ) : (
-              <Play className="w-5 h-5 fill-zinc-900 text-zinc-900 translate-x-0.5" />
+              <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
             )}
           </motion.button>
 
@@ -181,7 +175,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => nextTrack({ forceImmediate: true })}
             title="التالي"
-            className="w-10 h-10 rounded-full satin-metal-button flex items-center justify-center text-white/90 hover:text-white cursor-pointer"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer transition-colors"
           >
             <SkipForward className="w-4 h-4 fill-current" />
           </button>
@@ -192,8 +186,8 @@ export const PlayerBar: React.FC = () => {
             title="تكرار"
             className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               repeatMode !== 'off'
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/50 text-[#FF456E] shadow-[0_0_12px_rgba(250,36,60,0.35)]'
-                : 'satin-metal-button text-zinc-400'
+                ? 'bg-[#1DB954]/20 border border-[#1DB954]/50 text-[#1ed760] shadow-[0_0_12px_rgba(29,185,84,0.35)]'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             {repeatMode === 'one' ? (
@@ -277,20 +271,26 @@ export const PlayerBar: React.FC = () => {
           title="المعادل الصوتي و AutoMix"
           className={`p-2 rounded-xl transition-all cursor-pointer ${
             isEqualizerOpen
-              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+              ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
           <Sliders className="w-4 h-4" />
         </button>
 
-        {/* Queue Drawer Toggle */}
+        {/* Queue Toggle (Right Sidebar on Desktop / Drawer on Mobile) */}
         <button
-          onClick={() => setQueueOpen(!isQueueOpen)}
+          onClick={() => {
+            if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
+              toggleRightSidebar();
+            } else {
+              setQueueOpen(!isQueueOpen);
+            }
+          }}
           title="قائمة الانتظار"
           className={`p-2 rounded-xl transition-all cursor-pointer ${
-            isQueueOpen
-              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+            isRightSidebarOpen || isQueueOpen
+              ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
@@ -303,13 +303,13 @@ export const PlayerBar: React.FC = () => {
           title="مؤقت النوم الذكي"
           className={`relative p-2 rounded-xl transition-all cursor-pointer ${
             isSleepTimerOpen || sleepTimerRemaining !== null
-              ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+              ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
               : 'hover:bg-white/[0.08] text-zinc-400 hover:text-white'
           }`}
         >
           <Moon className="w-4 h-4" />
           {sleepTimerRemaining !== null && (
-            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-white text-[#FA243C] text-[9px] font-bold rounded-full">
+            <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-black text-[#1DB954] text-[9px] font-bold rounded-full border border-[#1DB954]/40">
               {Math.ceil(sleepTimerRemaining / 60)}m
             </span>
           )}
@@ -319,7 +319,7 @@ export const PlayerBar: React.FC = () => {
         <div className="flex items-center gap-2 pl-2">
           <button
             onClick={() => setVolume(volume === 0 ? 0.9 : 0)}
-            className="text-zinc-500 hover:text-white transition-colors cursor-pointer"
+            className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -330,9 +330,18 @@ export const PlayerBar: React.FC = () => {
             step={0.01}
             value={volume}
             onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-20 accent-[#FA243C] cursor-pointer"
+            className="w-20 accent-[#1DB954] cursor-pointer"
           />
         </div>
+
+        {/* Fullscreen Expand Toggle */}
+        <button
+          onClick={() => setMobilePlayerOpen(true)}
+          title="عرض كامل الشاشة"
+          className="p-2 rounded-xl hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer"
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
       </div>
     </footer>
   );
