@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { Play, Pause, Heart, Clock, FolderPlus } from 'lucide-react';
+import { Play, Pause, Heart, Clock, FolderPlus, Sparkles, Music2, Disc3, Radio, ChevronLeft } from 'lucide-react';
+import { Track } from '../types';
 
 interface SpotifyHomeViewProps {
   onOpenImport?: () => void;
@@ -15,6 +16,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
+  const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
+
+  const [visibleTableCount, setVisibleTableCount] = useState(40);
 
   // Dynamic Arabic greeting based on time of day
   const greeting = useMemo(() => {
@@ -24,7 +28,6 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
     return 'ليلة سعيدة وموسيقى هادئة';
   }, []);
 
-  // Format track duration
   const formatDuration = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
     const m = Math.floor(seconds / 60);
@@ -32,13 +35,61 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Top 5 tracks for Quick Access Grid
-  const quickAccessTracks = useMemo(() => tracks.slice(0, 5), [tracks]);
+  // Helper: Get unique tracks by artist to prevent ANY repetitive images
+  const getUniqueByArtist = (trackList: Track[], maxCount: number): Track[] => {
+    const seen = new Set<string>();
+    const result: Track[] = [];
+    for (const t of trackList) {
+      const art = (t.artist || '').toLowerCase().trim();
+      if (!seen.has(art)) {
+        seen.add(art);
+        result.push(t);
+        if (result.length >= maxCount) break;
+      }
+    }
+    return result;
+  };
 
-  // Carousels
-  const recentTracks = useMemo(() => tracks.slice(0, 10), [tracks]);
-  const popularReleases = useMemo(() => tracks.slice(5, 15), [tracks]);
-  const topMixes = useMemo(() => tracks.slice(10, 20), [tracks]);
+  // 1. Quick Access (5 diverse tracks from top legends across different genres)
+  const quickAccessTracks = useMemo(() => {
+    return getUniqueByArtist(tracks, 5);
+  }, [tracks]);
+
+  // 2. Curated Today's Top Hits (10 diverse artists)
+  const featuredHits = useMemo(() => {
+    return getUniqueByArtist(tracks, 12);
+  }, [tracks]);
+
+  // 3. Top Artists (Circular Avatars for 14 global legends)
+  const topArtists = useMemo(() => {
+    const uniqueArtists = getUniqueByArtist(tracks, 15);
+    return uniqueArtists.map((t) => ({
+      name: t.artist,
+      avatarUrl: t.coverUrl || t.artworkUrl || '/logo.svg',
+      track: t,
+    }));
+  }, [tracks]);
+
+  // 4. Genre Specific Carousels (Each showing 10 distinct artists per genre!)
+  const hipHopHits = useMemo(() => {
+    const hiphop = tracks.filter((t) => (t.genre || '').includes('Hip-Hop'));
+    return getUniqueByArtist(hiphop, 10);
+  }, [tracks]);
+
+  const rockClassics = useMemo(() => {
+    const rock = tracks.filter((t) => (t.genre || '').includes('Rock'));
+    return getUniqueByArtist(rock, 10);
+  }, [tracks]);
+
+  const edmParty = useMemo(() => {
+    const edm = tracks.filter((t) => (t.genre || '').includes('EDM'));
+    return getUniqueByArtist(edm, 10);
+  }, [tracks]);
+
+  const rnbSoul = useMemo(() => {
+    const rnb = tracks.filter((t) => (t.genre || '').includes('R&B'));
+    return getUniqueByArtist(rnb, 10);
+  }, [tracks]);
 
   // Liked tracks
   const likedTracks = useMemo(
@@ -48,17 +99,25 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
 
   const heroAccentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#1DB954';
 
+  const GENRES_LIST = [
+    { name: 'بوب عالمي', genre: 'Pop', color: 'from-[#E1306C] to-[#833AB4]', tracksCount: 350 },
+    { name: 'هيب هوب وراب', genre: 'Hip-Hop & Trap', color: 'from-[#BA5D07] to-[#E65100]', tracksCount: 350 },
+    { name: 'روك وبديل', genre: 'Rock & Alternative', color: 'from-[#E91429] to-[#800C17]', tracksCount: 350 },
+    { name: 'إلكترونيك و EDM', genre: 'EDM & Dance', color: 'from-[#0D72EA] to-[#003882]', tracksCount: 350 },
+    { name: 'آر آند بي وسول', genre: 'R&B & Soul', color: 'from-[#8D67AB] to-[#4A154B]', tracksCount: 350 },
+  ];
+
   return (
-    <div className="w-full min-h-screen text-white pb-32">
+    <div className="w-full min-h-screen text-white pb-36 select-none">
       {/* Dynamic Hero Gradient Header */}
       <div
         className="px-4 sm:px-6 md:px-8 pt-6 pb-8 transition-colors duration-700 ease-out"
         style={{
-          background: `linear-gradient(180deg, ${heroAccentColor}44 0%, #121212 100%)`,
+          background: `linear-gradient(180deg, ${heroAccentColor}33 0%, #121212 100%)`,
         }}
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
             {greeting}
           </h1>
           {onOpenImport && (
@@ -72,7 +131,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           )}
         </div>
 
-        {/* 6 Quick Access Grid Tiles */}
+        {/* 6 Quick Access Grid Tiles (100% DIVERSE ARTISTS & COVERS) */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
           {/* Tile 1: Pinned Liked Songs */}
           <div
@@ -110,7 +169,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             </button>
           </div>
 
-          {/* Tiles 2-6: Top Library Tracks */}
+          {/* Tiles 2-6: Top Distinct Artists */}
           {quickAccessTracks.map((t) => {
             const isCur = currentTrack?.id === t.id;
             return (
@@ -122,7 +181,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 <img
                   src={t.coverUrl || t.artworkUrl || '/logo.svg'}
                   alt={t.title}
-                  className="w-14 sm:w-16 h-14 sm:h-16 object-cover flex-shrink-0"
+                  className="w-14 sm:w-16 h-14 sm:h-16 object-cover flex-shrink-0 shadow-md"
                 />
                 <div className="min-w-0 flex-1">
                   <p
@@ -161,29 +220,29 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
       </div>
 
       {/* Main Content Sections & Carousels */}
-      <div className="px-4 sm:px-6 md:px-8 space-y-8 mt-4">
-        {/* CAROUSEL 1: Recently Played */}
-        {recentTracks.length > 0 && (
-          <section className="space-y-4">
+      <div className="px-4 sm:px-6 md:px-8 space-y-9 mt-4">
+        {/* CAROUSEL 1: Featured Hits (Diverse Superstars) */}
+        {featuredHits.length > 0 && (
+          <section className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  تم تشغيلها مؤخراً
+                  مختارات مميزة لك اليوم
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">بناءً على نشاط استماعك الأخير</p>
+                <p className="text-xs text-zinc-400 mt-0.5">أشهر المسارات العالمية من كبار الفنانين</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {recentTracks.map((t) => {
+              {featuredHits.map((t) => {
                 const isCur = currentTrack?.id === t.id;
                 return (
                   <div
                     key={t.id}
                     onClick={() => playTrack(t)}
-                    className="group spotify-card p-3.5 flex-shrink-0 w-40 sm:w-44 md:w-48 cursor-pointer relative"
+                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
                   >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-3 shadow-md">
+                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
                       <img
                         src={t.coverUrl || t.artworkUrl || '/logo.svg'}
                         alt={t.title}
@@ -196,7 +255,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           if (isCur) togglePlayPause();
                           else playTrack(t);
                         }}
-                        className={`absolute bottom-2 left-2 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
                           isCur && isPlaying
                             ? 'opacity-100 scale-100'
                             : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
@@ -210,10 +269,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       </button>
                     </div>
 
-                    <h4 className={`text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                       {t.title}
                     </h4>
-                    <p className="text-xs text-zinc-400 truncate mt-1">
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
                       {t.artist}
                     </p>
                   </div>
@@ -223,28 +282,92 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           </section>
         )}
 
-        {/* CAROUSEL 2: Popular Releases */}
-        {popularReleases.length > 0 && (
-          <section className="space-y-4">
+        {/* SECTION 2: Popular Artists (Circular Avatars) */}
+        {topArtists.length > 0 && (
+          <section className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  إصدارات شائعة
+                  أشهر الفنانين
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">مختارات موسيقية ذات تقييم عالٍ</p>
+                <p className="text-xs text-zinc-400 mt-0.5">كبار النجوم العالميين في مكتبتك الموسيقية</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {topArtists.map((art) => (
+                <div
+                  key={art.name}
+                  onClick={() => {
+                    setSearchQuery(art.name);
+                    setActiveTab('search');
+                  }}
+                  className="group flex-shrink-0 w-28 sm:w-32 text-center cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-all"
+                >
+                  <div className="relative aspect-square w-full rounded-full overflow-hidden mb-2.5 shadow-xl border border-white/10 group-hover:border-[#1DB954] transition-colors">
+                    <img
+                      src={art.avatarUrl}
+                      alt={art.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#1DB954] transition-colors">
+                    {art.name}
+                  </h4>
+                  <span className="text-[10px] text-zinc-400 block mt-0.5">فنان</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* SECTION 3: Browse by Genre Bento Cards */}
+        <section className="space-y-3.5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl sm:text-2xl font-black text-white">
+              تصفح حسب النمط الموسيقي
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {GENRES_LIST.map((g) => (
+              <div
+                key={g.genre}
+                onClick={() => {
+                  setSearchQuery(g.genre);
+                  setActiveTab('search');
+                }}
+                className={`p-4 rounded-xl bg-gradient-to-br ${g.color} cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg relative overflow-hidden group min-h-[90px] flex flex-col justify-between`}
+              >
+                <h3 className="text-sm sm:text-base font-black text-white">{g.name}</h3>
+                <span className="text-[11px] text-white/80 font-medium">350 أغنية</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* CAROUSEL 4: Hip-Hop & Rap */}
+        {hipHopHits.length > 0 && (
+          <section className="space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
+                  هيب هوب وراب عالمي
+                </h2>
+                <p className="text-xs text-zinc-400 mt-0.5">أفضل إيقاعات الـ Trap و Rap المعاصرة</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {popularReleases.map((t) => {
+              {hipHopHits.map((t) => {
                 const isCur = currentTrack?.id === t.id;
                 return (
                   <div
                     key={t.id}
                     onClick={() => playTrack(t)}
-                    className="group spotify-card p-3.5 flex-shrink-0 w-40 sm:w-44 md:w-48 cursor-pointer relative"
+                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
                   >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-3 shadow-md">
+                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
                       <img
                         src={t.coverUrl || t.artworkUrl || '/logo.svg'}
                         alt={t.title}
@@ -257,7 +380,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           if (isCur) togglePlayPause();
                           else playTrack(t);
                         }}
-                        className={`absolute bottom-2 left-2 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
                           isCur && isPlaying
                             ? 'opacity-100 scale-100'
                             : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
@@ -271,10 +394,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       </button>
                     </div>
 
-                    <h4 className={`text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                       {t.title}
                     </h4>
-                    <p className="text-xs text-zinc-400 truncate mt-1">
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
                       {t.artist}
                     </p>
                   </div>
@@ -284,28 +407,28 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           </section>
         )}
 
-        {/* CAROUSEL 3: Top Mixes */}
-        {topMixes.length > 0 && (
-          <section className="space-y-4">
+        {/* CAROUSEL 5: Rock & Alternative */}
+        {rockClassics.length > 0 && (
+          <section className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  أفضل الميكسات والمجموعات
+                  روك وكلاسيكيات أسطورية
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">توليفات مصممة خصيصاً لذوقك</p>
+                <p className="text-xs text-zinc-400 mt-0.5">أيقونات الروك الكلاسيكي والبديل</p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {topMixes.map((t) => {
+              {rockClassics.map((t) => {
                 const isCur = currentTrack?.id === t.id;
                 return (
                   <div
                     key={t.id}
                     onClick={() => playTrack(t)}
-                    className="group spotify-card p-3.5 flex-shrink-0 w-40 sm:w-44 md:w-48 cursor-pointer relative"
+                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
                   >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-3 shadow-md">
+                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
                       <img
                         src={t.coverUrl || t.artworkUrl || '/logo.svg'}
                         alt={t.title}
@@ -318,7 +441,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           if (isCur) togglePlayPause();
                           else playTrack(t);
                         }}
-                        className={`absolute bottom-2 left-2 w-11 h-11 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
                           isCur && isPlaying
                             ? 'opacity-100 scale-100'
                             : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
@@ -332,10 +455,132 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       </button>
                     </div>
 
-                    <h4 className={`text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                       {t.title}
                     </h4>
-                    <p className="text-xs text-zinc-400 truncate mt-1">
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {t.artist}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* CAROUSEL 6: EDM & Dance Party */}
+        {edmParty.length > 0 && (
+          <section className="space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
+                  حفلات الـ EDM والموسيقى الإلكترونية
+                </h2>
+                <p className="text-xs text-zinc-400 mt-0.5">إيقاعات ونغمات المهرجانات والحفلات الحماسية</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {edmParty.map((t) => {
+                const isCur = currentTrack?.id === t.id;
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => playTrack(t)}
+                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
+                  >
+                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
+                      <img
+                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
+                        alt={t.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isCur) togglePlayPause();
+                          else playTrack(t);
+                        }}
+                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                          isCur && isPlaying
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        }`}
+                      >
+                        {isCur && isPlaying ? (
+                          <Pause className="w-5 h-5 fill-black text-black" />
+                        ) : (
+                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                      {t.title}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {t.artist}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* CAROUSEL 7: Chill R&B & Soul */}
+        {rnbSoul.length > 0 && (
+          <section className="space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
+                  أجواء هادئة • آر آند بي وسول
+                </h2>
+                <p className="text-xs text-zinc-400 mt-0.5">أعذب الألحان والموسيقى الاسترخائية</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {rnbSoul.map((t) => {
+                const isCur = currentTrack?.id === t.id;
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => playTrack(t)}
+                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
+                  >
+                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
+                      <img
+                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
+                        alt={t.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isCur) togglePlayPause();
+                          else playTrack(t);
+                        }}
+                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                          isCur && isPlaying
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        }`}
+                      >
+                        {isCur && isPlaying ? (
+                          <Pause className="w-5 h-5 fill-black text-black" />
+                        ) : (
+                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                      {t.title}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
                       {t.artist}
                     </p>
                   </div>
@@ -348,9 +593,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
         {/* FULL TABLE VIEW: Spotify Track Listing */}
         <section className="pt-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-black text-white">
-              جميع الأغاني في مكتبتك ({tracks.length})
-            </h2>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                جميع الأغاني في مكتبتك ({tracks.length})
+              </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">1750 أغنية منسقة بدقة فائقة</p>
+            </div>
           </div>
 
           {/* Table Header */}
@@ -366,7 +614,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
 
           {/* Table Rows */}
           <div className="divide-y divide-white/5">
-            {tracks.map((track, idx) => {
+            {tracks.slice(0, visibleTableCount).map((track, idx) => {
               const isCur = currentTrack?.id === track.id;
               const isFav = favorites.includes(track.id);
 
@@ -397,7 +645,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                     <img
                       src={track.coverUrl || track.artworkUrl || '/logo.svg'}
                       alt={track.title}
-                      className="w-10 h-10 rounded object-cover flex-shrink-0"
+                      className="w-10 h-10 rounded object-cover flex-shrink-0 shadow"
                       loading="lazy"
                     />
                     <div className="min-w-0 flex-1">
@@ -450,6 +698,18 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
               );
             })}
           </div>
+
+          {/* Load More Button */}
+          {visibleTableCount < tracks.length && (
+            <div className="text-center pt-4 pb-8">
+              <button
+                onClick={() => setVisibleTableCount((prev) => Math.min(prev + 50, tracks.length))}
+                className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                عرض 50 مساراً إضافياً ({tracks.length - visibleTableCount} متبقية)
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </div>
