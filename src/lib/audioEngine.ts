@@ -224,6 +224,18 @@ export class DJAudioEngine {
     audio.preload = 'auto';
     audio.crossOrigin = 'anonymous';
 
+    const channel: Channel = {
+      name,
+      audio,
+      source: null,
+      gain: null,
+      filter: null,
+      track: null,
+      objectUrl: null,
+      isPreloaded: false,
+      gainValue: name === 'A' ? 1.0 : 0.0,
+    };
+
     // Attach to DOM so WebKit registers audio output pipeline for MediaSession & NowPlaying
     if (typeof document !== 'undefined' && document.body) {
       audio.style.position = 'fixed';
@@ -240,6 +252,11 @@ export class DJAudioEngine {
     }
 
     audio.addEventListener('ended', () => {
+      // PREVENT ACCIDENTAL AUTOPLAY: Ignore ended events if channel has no real user track (e.g. silent priming)
+      if (!channel.track) {
+        return;
+      }
+
       if (this.activeChannelName === name && !this.isCrossfading) {
         if (this.onPlaybackStateChangeCallback) {
           this.onPlaybackStateChangeCallback(false);
@@ -264,6 +281,10 @@ export class DJAudioEngine {
     });
 
     audio.addEventListener('play', () => {
+      // Ignore silent priming events
+      if (!channel.track) {
+        return;
+      }
       if (this.activeChannelName === name && this.onPlaybackStateChangeCallback) {
         this.onPlaybackStateChangeCallback(true);
       }
@@ -271,12 +292,18 @@ export class DJAudioEngine {
     });
 
     audio.addEventListener('playing', () => {
+      if (!channel.track) {
+        return;
+      }
       if (this.activeChannelName === name && this.onPlaybackStateChangeCallback) {
         this.onPlaybackStateChangeCallback(true);
       }
     });
 
     audio.addEventListener('pause', () => {
+      if (!channel.track) {
+        return;
+      }
       if (this.activeChannelName === name && !this.isCrossfading && this.onPlaybackStateChangeCallback) {
         this.onPlaybackStateChangeCallback(false);
       }
@@ -293,17 +320,7 @@ export class DJAudioEngine {
       this.timerWorker?.stop();
     });
 
-    return {
-      name,
-      audio,
-      source: null,
-      gain: null,
-      filter: null,
-      track: null,
-      objectUrl: null,
-      isPreloaded: false,
-      gainValue: name === 'A' ? 1.0 : 0.0,
-    };
+    return channel;
   }
 
   public async initContext(): Promise<AudioContext | null> {

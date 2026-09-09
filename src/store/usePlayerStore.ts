@@ -220,6 +220,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     onTrackEnded: () => {
       const { repeatMode, currentTrack, sleepTimerSetting, addToast, volume } = get();
 
+      // Guard: Never advance or play if no track was actively playing
+      if (!currentTrack) {
+        return;
+      }
+
       // YouTube Music Sleep Timer: Stop at end of current track
       if (sleepTimerSetting === 'end_of_track') {
         djAudioEngine.fadeVolume(0, 2);
