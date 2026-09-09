@@ -50,8 +50,8 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
         greeting: 'مساء الخير والهدوء',
         subtitle: 'استرخِ واستمتع بموسيقاك الفاخرة بدون انقطاع',
         Icon: Moon,
-        color: 'text-[#FA243C]',
-        glow: 'rgba(250, 36, 60, 0.25)',
+        color: 'text-[#1DB954]',
+        glow: 'rgba(29, 185, 84, 0.25)',
       };
     }
   };
@@ -75,8 +75,8 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[75vw] max-w-[600px] max-h-[600px] rounded-full filter blur-[140px] transition-all duration-1000"
             style={{ backgroundColor: glow }}
           />
-          <div className="absolute top-[20%] right-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[#FA243C]/15 rounded-full filter blur-[100px]" />
-          <div className="absolute bottom-[20%] left-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[#FF2D55]/10 rounded-full filter blur-[110px]" />
+          <div className="absolute top-[20%] right-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[#1DB954]/15 rounded-full filter blur-[100px]" />
+          <div className="absolute bottom-[20%] left-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[#10B981]/10 rounded-full filter blur-[110px]" />
         </div>
 
         {/* Center Animated Aperture & Vinyl Pulse */}
@@ -94,7 +94,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="absolute w-36 h-36 md:w-44 md:h-44 rounded-full border border-[#FA243C]/30"
+              className="absolute w-36 h-36 md:w-44 md:h-44 rounded-full border border-[#1DB954]/30"
             />
             <motion.div
               animate={{
@@ -107,7 +107,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                 delay: 0.5,
                 ease: 'easeInOut',
               }}
-              className="absolute w-48 h-48 md:w-56 md:h-56 rounded-full border border-[#FF2D55]/20"
+              className="absolute w-48 h-48 md:w-56 md:h-56 rounded-full border border-[#10B981]/20"
             />
 
             {/* Glowing Center Badge */}
@@ -115,11 +115,11 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
               initial={{ scale: 0.6, rotate: -20, opacity: 0 }}
               animate={{ scale: 1, rotate: 0, opacity: 1 }}
               transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
-              className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-tr from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] p-[2px] shadow-[0_0_50px_rgba(250,36,60,0.5)]"
+              className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-tr from-[#1DB954] via-[#10B981] to-[#34D399] p-[2px] shadow-[0_0_50px_rgba(29, 185, 84,0.5)]"
             >
               <div className="w-full h-full bg-[#09090e] rounded-[22px] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#FA243C]/10 to-transparent" />
-                <Disc className="w-12 h-12 md:w-14 md:h-14 text-[#FA243C] animate-spin-slow" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#1DB954]/10 to-transparent" />
+                <Disc className="w-12 h-12 md:w-14 md:h-14 text-[#1DB954] animate-spin-slow" />
               </div>
             </motion.div>
           </div>
@@ -144,7 +144,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           >
             <h1 dir="ltr" className="text-3xl md:text-4xl font-black text-white tracking-wider flex items-center justify-center gap-1.5">
               <span>AURA</span>
-              <span className="bg-gradient-to-r from-[#FA243C] via-[#FF2D55] to-[#FF5E7E] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#1DB954] via-[#10B981] to-[#34D399] bg-clip-text text-transparent">
                 .WAV
               </span>
             </h1>
@@ -171,7 +171,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="w-1 h-6 rounded-full bg-gradient-to-t from-[#FA243C] to-[#FF2D55]"
+                className="w-1 h-6 rounded-full bg-gradient-to-t from-[#1DB954] to-[#10B981]"
               />
             ))}
           </motion.div>
@@ -184,7 +184,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
             className="flex items-center justify-center gap-4 text-xs font-semibold text-zinc-400"
           >
             <span className="flex items-center gap-1.5 text-zinc-300">
-              <Music className="w-3.5 h-3.5 text-[#FA243C]" />
+              <Music className="w-3.5 h-3.5 text-[#1DB954]" />
               <span>{tracks.length > 0 ? `${tracks.length} مساراً جاهزاً` : '261 مساراً جاهزاً'}</span>
             </span>
             <span>•</span>

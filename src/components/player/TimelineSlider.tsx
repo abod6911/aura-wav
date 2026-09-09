@@ -27,7 +27,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   onSeek,
   className = '',
   showTimestamps = true,
-  accentColor = '#FA243C',
+  accentColor = '#1DB954',
 }) => {
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubTime, setScrubTime] = useState(0);
@@ -133,7 +133,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
             className="h-full rounded-full relative transition-[width] duration-75"
             style={{
               width: `${progressPercent}%`,
-              background: `linear-gradient(90deg, ${accentColor}, #FF375F)`,
+              background: `linear-gradient(90deg, ${accentColor}, #1ed760)`,
               boxShadow: `0 0 14px ${accentColor}`,
             }}
           >

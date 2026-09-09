@@ -175,7 +175,7 @@ export async function processAudioFiles(
 
       const palette = artworkUrl && !artworkUrl.startsWith('data:image/svg')
         ? await extractPaletteFromImage(artworkUrl)
-        : { primary: '#FA243C', secondary: '#FF2D55' };
+        : { primary: '#1DB954', secondary: '#10B981' };
 
       // Convert File to pure Blob via ArrayBuffer to prevent iOS Safari DataCloneError in IndexedDB
       const arrayBuf = await file.arrayBuffer();

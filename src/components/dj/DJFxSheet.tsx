@@ -35,9 +35,9 @@ const SOUND_PADS: SoundPad[] = [
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
     icon: Disc,
-    color: '#FA243C',
-    gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
-    glowColor: 'rgba(250, 36, 60, 0.45)',
+    color: '#1DB954',
+    gradient: 'from-[#1DB954]/25 via-[#1DB954]/10 to-transparent',
+    glowColor: 'rgba(29, 185, 84, 0.45)',
   },
   {
     id: 'airhorn',
@@ -189,15 +189,15 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] shadow-lg shadow-[#FA243C]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1DB954] to-[#34D399] p-[1.5px] shadow-lg shadow-[#1DB954]/20 flex items-center justify-center">
                 <div className="w-full h-full bg-[#0c0c14] rounded-[14px] flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-[#FA243C]" />
+                  <Flame className="w-5 h-5 text-[#1DB954]" />
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <span>أدوات ومؤثرات الـ DJ الحية</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF456E] border border-[#FA243C]/30 font-mono">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
                     LIVE FX
                   </span>
                 </h3>
@@ -296,7 +296,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-[#FA243C]" />
+                <Gauge className="w-4 h-4 text-[#1DB954]" />
                 <span className="text-xs font-bold text-white">سرعة ونغمة القرص (Turntable Pitch)</span>
               </div>
 
@@ -305,7 +305,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   className={`text-xs font-mono font-black px-2 py-0.5 rounded-full border ${
                     playbackRate === 1.0
                       ? 'bg-white/10 text-zinc-300 border-white/10'
-                      : 'bg-[#FA243C]/20 text-[#FF456E] border-[#FA243C]/30'
+                      : 'bg-[#1DB954]/20 text-[#1ed760] border-[#1DB954]/30'
                   }`}
                 >
                   {playbackRate.toFixed(2)}x {pitchDiffPercent !== 0 && `(${pitchDiffPercent > 0 ? '+' : ''}${pitchDiffPercent}%)`}
@@ -335,7 +335,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                 onChange={(e) => {
                   setPlaybackRate(parseFloat(e.target.value));
                 }}
-                className="flex-1 accent-[#FA243C] cursor-pointer h-2 bg-white/10 rounded-full"
+                className="flex-1 accent-[#1DB954] cursor-pointer h-2 bg-white/10 rounded-full"
               />
               <span className="text-[10px] font-mono text-zinc-500">1.5x</span>
             </div>
@@ -350,7 +350,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   }}
                   className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer ${
                     Math.abs(playbackRate - rate) < 0.01
-                      ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                      ? 'bg-[#1DB954] text-white shadow-md shadow-[#1DB954]/30'
                       : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
@@ -401,12 +401,12 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                     }}
                     className={`p-2.5 rounded-xl border text-right transition-all cursor-pointer flex flex-col gap-1 ${
                       isSelected
-                        ? 'bg-gradient-to-r from-purple-500/25 to-[#FA243C]/20 border-purple-500/50 shadow-md shadow-purple-500/20'
+                        ? 'bg-gradient-to-r from-purple-500/25 to-[#1DB954]/20 border-purple-500/50 shadow-md shadow-purple-500/20'
                         : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-zinc-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <StyleIcon className={`w-4 h-4 ${isSelected ? 'text-[#FF456E]' : 'text-zinc-400'}`} />
+                      <StyleIcon className={`w-4 h-4 ${isSelected ? 'text-[#1ed760]' : 'text-zinc-400'}`} />
                       {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />}
                     </div>
                     <span className="text-xs font-bold text-white leading-tight">{style.nameAr}</span>

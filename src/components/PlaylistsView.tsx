@@ -111,19 +111,19 @@ export const PlaylistsView: React.FC = () => {
                   onClick={() => (isCur ? togglePlayPause() : playTrack(track, playlistTracks))}
                   className={`group grid grid-cols-[36px_48px_1fr_40px_55px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 rounded-2xl cursor-pointer transition-all duration-150 select-none ${
                     isCur
-                      ? 'bg-gradient-to-r from-[#FA243C]/20 via-[#FF2D55]/10 to-transparent border border-[#FA243C]/35 shadow-[0_4px_24px_rgba(250,36,60,0.2)]'
+                      ? 'bg-gradient-to-r from-[#1DB954]/20 via-[#1DB954]/10 to-transparent border border-[#1DB954]/35 shadow-[0_4px_24px_rgba(29,185,84,0.18)]'
                       : 'hover:bg-white/[0.05] border border-transparent'
                   }`}
                 >
                   <div className="text-center flex items-center justify-center">
                     {isCur && isPlaying ? (
                       <div className="flex items-end gap-[2px] h-3.5">
-                        <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-                        <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-                        <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+                        <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+                        <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+                        <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_1s_infinite] h-4/5" />
                       </div>
                     ) : (
-                      <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#FA243C] font-bold' : 'text-zinc-500'}`}>
+                      <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#1DB954] font-bold' : 'text-zinc-500'}`}>
                         {idx + 1}
                       </span>
                     )}
@@ -135,7 +135,7 @@ export const PlaylistsView: React.FC = () => {
                   </div>
 
                   <div className="min-w-0 pr-2">
-                    <h4 dir="auto" className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#FF456E]' : 'text-white'}`}>
+                    <h4 dir="auto" className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                       {track.title}
                     </h4>
                     <p dir="auto" className="text-xs text-zinc-400 truncate mt-0.5">{track.artist}</p>
@@ -148,7 +148,7 @@ export const PlaylistsView: React.FC = () => {
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id); }}
                       className="p-2 rounded-full hover:bg-white/10"
                     >
-                      <Heart className={`w-4 h-4 ${isFav ? 'text-red-500 fill-red-500' : 'text-zinc-600'}`} />
+                      <Heart className={`w-4 h-4 ${isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-600'}`} />
                     </button>
                   </div>
 
@@ -158,13 +158,13 @@ export const PlaylistsView: React.FC = () => {
                     <button onClick={(e) => e.stopPropagation()} className="p-2 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100">
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
-                    <div className="hidden group-hover/menu:block absolute right-0 top-8 z-30 w-44 bg-[#12121a] border border-white/10 rounded-2xl p-1.5 shadow-2xl space-y-1">
+                    <div className="hidden group-hover/menu:block absolute right-0 top-8 z-30 w-44 bg-[#181818] border border-white/10 rounded-2xl p-1.5 shadow-2xl space-y-1">
                       <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left">
-                        <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
+                        <Radio className="w-3.5 h-3.5 text-[#1DB954]" />
                         <span>تشغيل التالي</span>
                       </button>
                       <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left">
-                        <ListPlus className="w-3.5 h-3.5 text-[#FF2D55]" />
+                        <ListPlus className="w-3.5 h-3.5 text-[#1DB954]" />
                         <span>إضافة للانتظار</span>
                       </button>
                     </div>
@@ -193,7 +193,7 @@ export const PlaylistsView: React.FC = () => {
 
         <button
           onClick={() => setIsCreating(!isCreating)}
-          className="px-5 py-2.5 rounded-2xl bg-white text-black font-extrabold text-xs flex items-center gap-2 hover:bg-zinc-200 transition-all shadow-lg"
+          className="px-5 py-2.5 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs flex items-center gap-2 transition-all shadow-lg cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>قائمة جديدة</span>
@@ -204,17 +204,17 @@ export const PlaylistsView: React.FC = () => {
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="p-4 rounded-2xl bg-white/[0.04] border border-[#FA243C]/30 flex items-center gap-3 animate-fadeIn"
+          className="p-4 rounded-2xl bg-white/[0.04] border border-[#1DB954]/30 flex items-center gap-3 animate-fadeIn"
         >
           <input
             type="text"
             placeholder="اسم قائمة التشغيل (مثال: أغاني الخط السريع، ليلية...)"
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C]"
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#1DB954]"
             autoFocus
           />
-          <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold transition-all shadow-md shadow-[#FA243C]/30 cursor-pointer">
+          <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black text-xs font-extrabold transition-all shadow-md shadow-[#1DB954]/30 cursor-pointer">
             إنشاء
           </button>
           <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2.5 rounded-xl bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer">
@@ -230,10 +230,10 @@ export const PlaylistsView: React.FC = () => {
             <div
               key={pl.id}
               onClick={() => setSelectedPlaylistId(pl.id)}
-              className="group p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] hover:border-[#FA243C]/40 hover:bg-white/[0.06] transition-all cursor-pointer space-y-3 shadow-xl"
+              className="group p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] hover:border-[#1DB954]/40 hover:bg-white/[0.06] transition-all cursor-pointer space-y-3 shadow-xl"
             >
-              <div className="w-full aspect-square rounded-2xl bg-gradient-to-tr from-[#FA243C]/20 to-[#FF2D55]/10 border border-white/10 flex items-center justify-center group-hover:scale-[1.03] transition-transform">
-                <ListMusic className="w-10 h-10 text-[#FA243C] group-hover:scale-110 transition-transform" />
+              <div className="w-full aspect-square rounded-2xl bg-gradient-to-tr from-[#1DB954]/20 to-[#10B981]/10 border border-white/10 flex items-center justify-center group-hover:scale-[1.03] transition-transform">
+                <ListMusic className="w-10 h-10 text-[#1DB954] group-hover:scale-110 transition-transform" />
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm truncate">{pl.name}</h4>

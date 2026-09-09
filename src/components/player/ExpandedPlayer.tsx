@@ -328,7 +328,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                       key={`${t.id}_${idx}`}
                       onClick={() => playTrack(t)}
                       className={`flex items-center justify-between p-2 rounded-2xl cursor-pointer transition-colors ${
-                        isCur ? 'bg-[#FA243C]/20 border border-[#FA243C]/35' : 'hover:bg-white/[0.04]'
+                        isCur ? 'bg-[#1DB954]/20 border border-[#1DB954]/35' : 'hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -338,7 +338,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                           className="w-10 h-10 rounded-xl object-cover"
                         />
                         <div className="min-w-0 text-left">
-                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#FF456E]' : 'text-white'}`}>
+                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                             {t.title}
                           </h5>
                           <p className="text-[11px] text-zinc-400 truncate">{t.artist}</p>
@@ -351,7 +351,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                             e.stopPropagation();
                             removeFromQueue(idx);
                           }}
-                          className="p-1.5 text-zinc-500 hover:text-[#FA243C]"
+                          className="p-1.5 text-zinc-500 hover:text-[#1DB954]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -374,7 +374,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             >
               <div className="flex items-center justify-between pb-2 border-b border-white/[0.06] flex-shrink-0">
                 <span className="text-sm font-bold text-white flex items-center gap-2">
-                  <Mic2 className="w-4 h-4 text-[#FA243C]" />
+                  <Mic2 className="w-4 h-4 text-[#1DB954]" />
                   <span>الكلمات المتزامنة</span>
                 </span>
                 <span className="text-[11px] text-zinc-400">انقر على أي سطر للانتقال</span>
@@ -495,7 +495,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   }}
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
                     spatialAudio
-                      ? 'bg-gradient-to-r from-[#FA243C]/30 to-[#FF2D55]/30 border-[#FA243C]/50 text-[#FF456E] shadow-[#FA243C]/20'
+                      ? 'bg-gradient-to-r from-[#1DB954]/30 to-[#10B981]/30 border-[#1DB954]/50 text-[#1ed760] shadow-[#1DB954]/20'
                       : 'bg-white/[0.05] border-white/10 text-zinc-400 hover:text-white'
                   }`}
                   title="انقر لتفعيل أو تعطيل الصوت المكاني ثلاثي الأبعاد"
@@ -504,7 +504,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                   <span>Lossless 24-bit</span>
                   <span className="text-white/20">|</span>
                   <Headphones className="w-3 h-3 text-current" />
-                  <span className={spatialAudio ? 'text-[#FF456E] font-extrabold' : ''}>
+                  <span className={spatialAudio ? 'text-[#1ed760] font-extrabold' : ''}>
                     Spatial 3D
                   </span>
                 </motion.button>
@@ -684,23 +684,23 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             className="luxury-capsule h-11 px-5 rounded-full text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:text-white"
             title="أدوات ومؤثرات الـ DJ"
           >
-            <Disc3 className={`w-4 h-4 text-[#FA243C] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+            <Disc3 className={`w-4 h-4 text-[#1DB954] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
             <span>DJ Tools</span>
             {playbackRate !== 1.0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-[#FA243C] text-[10px] font-mono text-white">
+              <span className="px-1.5 py-0.5 rounded-full bg-[#1DB954] text-[10px] font-mono text-black font-extrabold">
                 {playbackRate}x
               </span>
             )}
           </motion.button>
         </div>
 
-        {/* 5. Apple Music 3 Tabs Selector */}
+        {/* 5. 3 Tabs Selector */}
         <div className="flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
             onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'up_next'
-                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -712,7 +712,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             onClick={() => setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'lyrics'
-                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -724,7 +724,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
             onClick={() => setActiveTab(activeTab === 'related' ? 'player' : 'related')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'related'
-                ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -788,7 +788,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                     className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <SlidersHorizontal className="w-5 h-5 text-[#FA243C]" />
+                      <SlidersHorizontal className="w-5 h-5 text-[#1DB954]" />
                       <span>المعادل الصوتي (Equalizer)</span>
                     </div>
                   </button>
@@ -866,7 +866,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
                           }}
                           className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                             playbackRate === rate
-                              ? 'bg-[#FA243C] text-white'
+                              ? 'bg-[#1DB954] text-black font-extrabold'
                               : 'bg-white/[0.06] text-zinc-400 hover:text-white'
                           }`}
                         >

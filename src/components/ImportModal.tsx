@@ -146,7 +146,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-[#FA243C]/20 text-[#FA243C]">
+            <div className="p-2.5 rounded-2xl bg-[#1DB954]/20 text-[#1DB954]">
               <FolderOpen className="w-6 h-6" />
             </div>
             <div>
@@ -170,9 +170,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             {/* Primary Action Card */}
             <div
               onClick={handlePrimaryClick}
-              className="p-6 sm:p-8 rounded-2xl border-2 border-dashed border-[#FA243C]/35 hover:border-[#FA243C]/70 bg-[#FA243C]/[0.04] hover:bg-[#FA243C]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
+              className="p-6 sm:p-8 rounded-2xl border-2 border-dashed border-[#1DB954]/35 hover:border-[#1DB954]/70 bg-[#1DB954]/[0.04] hover:bg-[#1DB954]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
             >
-              <div className="p-4 rounded-full bg-[#FA243C]/20 text-[#FA243C] group-hover:scale-110 transition-transform mb-3">
+              <div className="p-4 rounded-full bg-[#1DB954]/20 text-[#1DB954] group-hover:scale-110 transition-transform mb-3">
                 <UploadCloud className="w-8 h-8" />
               </div>
               <h4 className="text-base font-extrabold text-white mb-1">
@@ -190,7 +190,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 onClick={() => filesInputRef.current?.click()}
                 className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <FileAudio className="w-4 h-4 text-[#FA243C]" />
+                <FileAudio className="w-4 h-4 text-[#1DB954]" />
                 <span>اختيار ملفات متعددة (هاتف / آيفون)</span>
               </button>
               <button
@@ -258,8 +258,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {isScanning && (
           <div className="py-8 space-y-5 text-center">
             <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
-              <FolderOpen className="w-7 h-7 text-[#FA243C] absolute inset-0 m-auto" />
+              <div className="absolute inset-0 rounded-full border-4 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
+              <FolderOpen className="w-7 h-7 text-[#1DB954] absolute inset-0 m-auto" />
             </div>
 
             <div className="space-y-1">
@@ -273,7 +273,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <div className="space-y-2 max-w-xs mx-auto">
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-[#FA243C] h-full rounded-full transition-all duration-150"
+                    className="bg-[#1DB954] h-full rounded-full transition-all duration-150"
                     style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                   />
                 </div>
@@ -301,7 +301,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 
             <button
               onClick={onClose}
-              className="w-full py-3 rounded-2xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold transition-all shadow-lg shadow-[#FA243C]/30 cursor-pointer"
+              className="w-full py-3 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold transition-all shadow-lg shadow-[#1DB954]/30 cursor-pointer"
             >
               بدء الاستماع الآن
             </button>

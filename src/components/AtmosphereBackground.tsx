@@ -7,10 +7,10 @@ export const AtmosphereBackground: React.FC = () => {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
 
   const [palette, setPalette] = useState({
-    c1: 'rgba(250, 36, 60, 0.45)',
-    c2: 'rgba(255, 45, 85, 0.38)',
-    c3: 'rgba(147, 51, 234, 0.32)',
-    c4: 'rgba(59, 130, 246, 0.28)',
+    c1: 'rgba(29, 185, 84, 0.25)',
+    c2: 'rgba(16, 185, 129, 0.20)',
+    c3: 'rgba(30, 41, 59, 0.22)',
+    c4: 'rgba(24, 24, 27, 0.20)',
   });
 
   useEffect(() => {
@@ -19,9 +19,9 @@ export const AtmosphereBackground: React.FC = () => {
         // Format colors cleanly with appropriate alpha for dark backgrounds
         const formatRgba = (colorStr: string, alpha: number) => {
           if (colorStr.startsWith('#')) {
-            const r = parseInt(colorStr.slice(1, 3), 16) || 250;
-            const g = parseInt(colorStr.slice(3, 5), 16) || 36;
-            const b = parseInt(colorStr.slice(5, 7), 16) || 60;
+            const r = parseInt(colorStr.slice(1, 3), 16) || 29;
+            const g = parseInt(colorStr.slice(3, 5), 16) || 185;
+            const b = parseInt(colorStr.slice(5, 7), 16) || 84;
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
           }
           if (colorStr.includes('rgb(')) {

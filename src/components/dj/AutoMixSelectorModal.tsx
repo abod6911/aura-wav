@@ -91,13 +91,13 @@ export const AutoMixSelectorModal: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-[#FA243C]/20 border border-[#FA243C]/40 flex items-center justify-center text-[#FA243C]">
+              <div className="w-9 h-9 rounded-2xl bg-[#1DB954]/20 border border-[#1DB954]/40 flex items-center justify-center text-[#1DB954]">
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                   <span>أنماط انتقال الـ AutoMix الذكي</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF456E] border border-[#FA243C]/30 font-mono">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
                     PRO DJ
                   </span>
                 </h3>
@@ -130,7 +130,7 @@ export const AutoMixSelectorModal: React.FC = () => {
             <button
               onClick={() => setAutoMix(!automixEnabled)}
               className={`relative w-12 h-6.5 rounded-full transition-colors p-0.5 cursor-pointer ${
-                automixEnabled ? 'bg-[#FA243C]' : 'bg-white/20'
+                automixEnabled ? 'bg-[#1DB954]' : 'bg-white/20'
               }`}
             >
               <div
@@ -146,7 +146,7 @@ export const AutoMixSelectorModal: React.FC = () => {
             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300 font-semibold">مدة الانتقال والخلط:</span>
-                <span className="text-[#FF456E] font-mono font-bold bg-[#FA243C]/15 px-2 py-0.5 rounded-lg border border-[#FA243C]/30">
+                <span className="text-[#1ed760] font-mono font-bold bg-[#1DB954]/15 px-2 py-0.5 rounded-lg border border-[#1DB954]/30">
                   {automixDuration} ثوانٍ
                 </span>
               </div>
@@ -157,7 +157,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 step={1}
                 value={automixDuration}
                 onChange={(e) => setAutoMix(true, Number(e.target.value))}
-                className="w-full accent-[#FA243C] cursor-pointer"
+                className="w-full accent-[#1DB954] cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
                 <span>سريع (2s)</span>
@@ -179,12 +179,12 @@ export const AutoMixSelectorModal: React.FC = () => {
                   style={{ touchAction: 'manipulation' }}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-start justify-between gap-3 ${
                     isSelected
-                      ? 'bg-[#FA243C]/15 border-[#FA243C]/40 shadow-lg shadow-[#FA243C]/10'
+                      ? 'bg-[#1DB954]/15 border-[#1DB954]/40 shadow-lg shadow-[#1DB954]/10'
                       : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.08]'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? 'bg-[#FA243C]/20 text-white' : 'bg-white/[0.06] text-zinc-400'}`}>
+                    <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? 'bg-[#1DB954]/20 text-white' : 'bg-white/[0.06] text-zinc-400'}`}>
                       <OptIcon className="w-5 h-5" />
                     </div>
                     <div className="space-y-1">
@@ -209,7 +209,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                   <div
                     className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-1 transition-colors ${
                       isSelected
-                        ? 'bg-[#FA243C] border-[#FA243C] text-white'
+                        ? 'bg-[#1DB954] border-[#1DB954] text-white'
                         : 'border-white/20 text-transparent'
                     }`}
                   >
@@ -233,7 +233,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 store.nextTrack(false);
                 setAutoMixModalOpen(false);
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF2D55] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#FA243C]/25 active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#1DB954] to-[#10B981] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#1DB954]/25 active:scale-[0.98] transition-all cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
               <span>تجربة انتقال فوري بهذا النمط الآن</span>

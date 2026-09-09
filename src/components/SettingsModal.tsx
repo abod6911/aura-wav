@@ -85,15 +85,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           dir="rtl"
         >
           {/* Subtle Dynamic Ambient Backlight */}
-          <div className="absolute -top-24 -right-24 w-60 h-60 rounded-full bg-[#FA243C]/20 filter blur-[90px] pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-60 h-60 rounded-full bg-[#1DB954]/20 filter blur-[90px] pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-60 h-60 rounded-full bg-purple-600/15 filter blur-[90px] pointer-events-none" />
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF5E7E] p-[1.5px] shadow-lg shadow-[#FA243C]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1DB954] to-[#34D399] p-[1.5px] shadow-lg shadow-[#1DB954]/20 flex items-center justify-center">
                 <div className="w-full h-full bg-[#0b0b12] rounded-[14px] flex items-center justify-center">
-                  <HardDrive className="w-5 h-5 text-[#FA243C]" />
+                  <HardDrive className="w-5 h-5 text-[#1DB954]" />
                 </div>
               </div>
               <div>
@@ -118,7 +118,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-[#FF456E]" />
+                <Database className="w-3.5 h-3.5 text-[#1ed760]" />
                 <span>المساحة المستهلكة محلياً</span>
               </span>
               <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/25">
@@ -134,7 +134,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   ) : (
                     <span>
                       {tracks.length} مساراً •{' '}
-                      <span className="text-[#FF456E]">{storageStats?.formattedSize || '0 ميجابايت'}</span>
+                      <span className="text-[#1ed760]">{storageStats?.formattedSize || '0 ميجابايت'}</span>
                     </span>
                   )}
                 </h4>
@@ -148,7 +148,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {/* Progress bar */}
               <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#FA243C] to-[#FF5E7E] rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(250,36,60,0.5)]"
+                  className="h-full bg-gradient-to-r from-[#1DB954] to-[#34D399] rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(29, 185, 84,0.5)]"
                   style={{ width: `${Math.max(5, storageStats?.usagePercentage || 12)}%` }}
                 />
               </div>
@@ -173,9 +173,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 onClose();
                 onOpenImport();
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-[#FA243C]/20 hover:bg-[#FA243C]/30 border border-[#FA243C]/40 hover:border-[#FA243C]/70 text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-[#FA243C]/10"
+              className="w-full py-3 px-4 rounded-2xl bg-[#1DB954]/20 hover:bg-[#1DB954]/30 border border-[#1DB954]/40 hover:border-[#1DB954]/70 text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-[#1DB954]/10"
             >
-              <FolderPlus className="w-4 h-4 text-[#FF456E]" />
+              <FolderPlus className="w-4 h-4 text-[#1ed760]" />
               <span>إضافة مسارات جديدة إلى المكتبة (Add More Tracks)</span>
             </button>
 

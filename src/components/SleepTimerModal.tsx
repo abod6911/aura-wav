@@ -37,7 +37,7 @@ export const SleepTimerModal: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C]">
+              <div className="w-10 h-10 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/30 flex items-center justify-center text-[#1DB954]">
                 <Moon className="w-5 h-5" />
               </div>
               <div>
@@ -56,12 +56,12 @@ export const SleepTimerModal: React.FC = () => {
 
           {/* Active Countdown Indicator */}
           {sleepTimerRemaining !== null && (
-            <div className="p-4 rounded-2xl bg-[#FA243C]/10 border border-[#FA243C]/30 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#1DB954]/10 border border-[#1DB954]/30 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Clock className="w-5 h-5 text-[#FA243C] animate-pulse" />
+                <Clock className="w-5 h-5 text-[#1DB954] animate-pulse" />
                 <div>
                   <span className="text-xs text-zinc-400 font-medium">الوقت المتبقي حتى الإيقاف:</span>
-                  <p className="text-lg font-mono font-bold text-[#FF456E]">
+                  <p className="text-lg font-mono font-bold text-[#1ed760]">
                     {formatRemaining(sleepTimerRemaining)}
                   </p>
                 </div>
@@ -94,7 +94,7 @@ export const SleepTimerModal: React.FC = () => {
                     }}
                     className={`px-4 py-3.5 rounded-2xl text-xs font-bold flex items-center justify-between transition-all border ${
                       isActive
-                        ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
+                        ? 'bg-[#1DB954] border-[#1DB954] text-white shadow-lg shadow-[#1DB954]/30'
                         : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
                     }`}
                   >
@@ -113,7 +113,7 @@ export const SleepTimerModal: React.FC = () => {
               }}
               className={`w-full px-4 py-3.5 mt-2 rounded-2xl text-xs font-bold flex items-center justify-between transition-all border ${
                 sleepTimerSetting === 'end_of_track'
-                  ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-lg shadow-[#FA243C]/30'
+                  ? 'bg-[#1DB954] border-[#1DB954] text-white shadow-lg shadow-[#1DB954]/30'
                   : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
               }`}
             >
@@ -124,7 +124,7 @@ export const SleepTimerModal: React.FC = () => {
 
           {/* Gentle Fade Out Explanation Note */}
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center gap-2.5 text-[11px] text-zinc-400">
-            <Volume2 className="w-4 h-4 text-[#FA243C] flex-shrink-0" />
+            <Volume2 className="w-4 h-4 text-[#1DB954] flex-shrink-0" />
             <span>يتم خفض الصوت تدريجياً خلال آخر 3 ثوانٍ لتوفير تجربة نوم هادئة دون مفاجأة.</span>
           </div>
         </motion.div>

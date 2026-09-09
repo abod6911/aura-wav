@@ -59,8 +59,8 @@ export const SyncedLyricsView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-xs font-medium text-[#FF456E]">
-            <Sparkles className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-xs font-medium text-[#1ed760]">
+            <Sparkles className="w-3.5 h-3.5 text-[#1DB954] animate-pulse" />
             <span>كلمات متزامنة حية</span>
           </div>
           <button
@@ -90,7 +90,7 @@ export const SyncedLyricsView: React.FC = () => {
                 onClick={() => seek(line.time)}
                 className={`cursor-pointer transition-all duration-300 transform origin-right ${
                   isActive
-                    ? 'text-white font-extrabold text-2xl md:text-4xl scale-105 drop-shadow-[0_4px_24px_rgba(250,36,60,0.5)]'
+                    ? 'text-white font-extrabold text-2xl md:text-4xl scale-105 drop-shadow-[0_4px_24px_rgba(29, 185, 84,0.5)]'
                     : isPast
                     ? 'text-white/45 font-medium text-lg md:text-2xl hover:text-white/80'
                     : 'text-white/30 font-medium text-lg md:text-2xl hover:text-white/70'
@@ -104,13 +104,13 @@ export const SyncedLyricsView: React.FC = () => {
           })
         ) : currentTrack?.lyrics ? (
           <div className="text-center py-20 text-aura-textSecondary space-y-4 whitespace-pre-line text-lg leading-loose">
-            <Music2 className="w-12 h-12 mx-auto text-[#FA243C] opacity-60" />
+            <Music2 className="w-12 h-12 mx-auto text-[#1DB954] opacity-60" />
             <p className="text-white text-xl font-semibold">كلمات الأغنية غير متزامنة</p>
             <div className="max-w-lg mx-auto text-white/70">{currentTrack.lyrics}</div>
           </div>
         ) : (
           <div className="text-center py-24 text-aura-textSecondary space-y-4">
-            <Music2 className="w-14 h-14 mx-auto text-[#FA243C] animate-pulse opacity-50" />
+            <Music2 className="w-14 h-14 mx-auto text-[#1DB954] animate-pulse opacity-50" />
             <p className="text-white text-xl font-semibold">لا توجد كلمات متزامنة متاحة لهذا المسار</p>
             <p className="text-sm text-aura-muted max-w-sm mx-auto">
               جاري البحث التلقائي عبر مكتبة الكلمات المفتوحة أو يمكنك تضمين ملف .lrc بنفس اسم الأغنية.

@@ -19,9 +19,9 @@ const SOUND_PADS: SoundPad[] = [
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
     icon: Disc,
-    color: '#FA243C',
-    gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
-    glowColor: 'rgba(250, 36, 60, 0.45)',
+    color: '#1DB954',
+    gradient: 'from-[#1DB954]/25 via-[#1DB954]/10 to-transparent',
+    glowColor: 'rgba(29, 185, 84, 0.45)',
   },
   {
     id: 'airhorn',
@@ -119,13 +119,13 @@ export const DJSoundboard: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-[#FA243C]/20 border border-[#FA243C]/40 flex items-center justify-center text-[#FA243C]">
+              <div className="w-9 h-9 rounded-2xl bg-[#1DB954]/20 border border-[#1DB954]/40 flex items-center justify-center text-[#1DB954]">
                 <Flame className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                   <span>لوحة مؤثرات الـ DJ الحية</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF456E] border border-[#FA243C]/30 font-mono">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
                     LIVE
                   </span>
                 </h3>
@@ -206,12 +206,12 @@ export const DJSoundboard: React.FC = () => {
               style={{ touchAction: 'manipulation' }}
               className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
             >
-              <SlidersHorizontal className="w-6 h-6 text-[#FA243C]" />
+              <SlidersHorizontal className="w-6 h-6 text-[#1DB954]" />
               <div className="text-center">
                 <span className="block text-xs sm:text-sm font-extrabold text-white">
                   نمط الانتقال
                 </span>
-                <span className="block text-[10px] text-[#FF456E] font-medium mt-0.5">
+                <span className="block text-[10px] text-[#1ed760] font-medium mt-0.5">
                   {getStyleLabel()}
                 </span>
               </div>
@@ -229,7 +229,7 @@ export const DJSoundboard: React.FC = () => {
                 setSoundboardOpen(false);
                 setAutoMixModalOpen(true);
               }}
-              className="text-[#FF456E] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+              className="text-[#1ed760] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>تغيير نمط الانتقال</span>

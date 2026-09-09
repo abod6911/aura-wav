@@ -74,7 +74,7 @@ export const MobilePlayerSheet: React.FC = () => {
           {/* Top Progress Line */}
           <div className="absolute top-0 left-3 right-3 h-[2px] bg-white/10 rounded-full overflow-hidden">
             <div
-              className="bg-[#FA243C] h-full rounded-full"
+              className="bg-[#1DB954] h-full rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -138,7 +138,7 @@ export const MobilePlayerSheet: React.FC = () => {
             </button>
 
             <div className="text-center">
-              <span className="text-[10px] uppercase tracking-wider text-[#FA243C] font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-[#1DB954] font-bold">
                 مشغل AURA.WAV • APPLE MUSIC
               </span>
               <h5 className="text-xs text-aura-textSecondary truncate max-w-[200px]">
@@ -149,7 +149,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={() => setVisualizerMode(!visualizerMode)}
               className={`p-2 rounded-full transition-colors ${
-                visualizerMode ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30' : 'bg-white/10 text-white/70'
+                visualizerMode ? 'bg-[#1DB954] text-white shadow-md shadow-[#1DB954]/30' : 'bg-white/10 text-white/70'
               }`}
               title="محلل الصوت"
             >
@@ -162,7 +162,7 @@ export const MobilePlayerSheet: React.FC = () => {
             {visualizerMode ? (
               <div className="w-full max-w-xs h-64 glass-panel rounded-3xl p-4 flex flex-col justify-center items-center border border-white/15">
                 <AudioVisualizer height={160} bars={32} mode="bars" />
-                <span className="text-xs text-[#FF456E] font-mono mt-4">Real-Time Waveform</span>
+                <span className="text-xs text-[#1ed760] font-mono mt-4">Real-Time Waveform</span>
               </div>
             ) : (
               <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group">
@@ -172,7 +172,7 @@ export const MobilePlayerSheet: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
                 {automixEnabled && isCrossfadingSoon && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#FA243C]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#1DB954]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
                     <span>
                       {automixStyle === 'vinyl_brake'
                         ? 'AutoMix: فرملة فينيل'
@@ -221,7 +221,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={toggleShuffle}
               className={`p-2 transition-colors ${
-                shuffle ? 'text-[#FA243C]' : 'text-white/40'
+                shuffle ? 'text-[#1DB954]' : 'text-white/40'
               }`}
             >
               <Shuffle className="w-5 h-5" />
@@ -255,7 +255,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={cycleRepeat}
               className={`p-2 transition-colors ${
-                repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-white/40'
+                repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-white/40'
               }`}
             >
               {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
@@ -271,7 +271,7 @@ export const MobilePlayerSheet: React.FC = () => {
               }}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Mic2 className="w-5 h-5 text-[#FA243C]" />
+              <Mic2 className="w-5 h-5 text-[#1DB954]" />
               <span>الكلمات</span>
             </button>
 
@@ -279,7 +279,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setEqualizerOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Sliders className="w-5 h-5 text-[#FF2D55]" />
+              <Sliders className="w-5 h-5 text-[#10B981]" />
               <span>المعادل & AutoMix</span>
             </button>
 
@@ -287,7 +287,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setQueueOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <ListMusic className="w-5 h-5 text-[#FF456E]" />
+              <ListMusic className="w-5 h-5 text-[#1ed760]" />
               <span>الانتظار</span>
             </button>
           </div>
