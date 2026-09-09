@@ -48,6 +48,7 @@ interface PlayerState {
 
   // Playback State
   currentTrack: Track | null;
+  nextUpTrackId: string | null;
   queue: Track[];
   originalQueue: Track[];
   history: Track[];
@@ -295,8 +296,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     onMidpointReached: (incomingTrack) => {
       // Exactly at 50% power crossing point, switch MediaSession & UI metadata
       const current = get().currentTrack;
+      const nextUpCleared = get().nextUpTrackId === incomingTrack.id ? null : get().nextUpTrackId;
       set({
         currentTrack: incomingTrack,
+        nextUpTrackId: nextUpCleared,
         currentTime: 0,
         duration: incomingTrack.duration || 0,
         history: current ? [...get().history, current] : get().history,
@@ -336,6 +339,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isLoadingLibrary: true,
 
     currentTrack: null,
+    nextUpTrackId: null,
     queue: [],
     originalQueue: [],
     history: [],
@@ -1078,15 +1082,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
 
+        const nextUpCleared = get().nextUpTrackId === targetTrack.id ? null : get().nextUpTrackId;
         if (shouldUseAutoMix) {
           set({
             queue: effectiveQueue,
+            nextUpTrackId: nextUpCleared,
           });
           await djAudioEngine.transitionTo(targetTrack, automixStyle);
         } else {
           djAudioEngine.cancelActiveTransitions(true);
           set({
             currentTrack: targetTrack,
+            nextUpTrackId: nextUpCleared,
             queue: effectiveQueue,
             history: [...get().history, currentTrack],
             currentTime: 0,
@@ -1317,15 +1324,57 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playNextInQueue: (track: Track) => {
-      const { queue, currentTrack } = get();
-      const newQueue = [...queue];
-      const curIdx = currentTrack ? newQueue.findIndex((t) => t.id === currentTrack.id) : -1;
-      if (curIdx >= 0) {
-        newQueue.splice(curIdx + 1, 0, track);
-      } else {
-        newQueue.unshift(track);
+      const { queue, tracks, currentTrack } = get();
+      if (!currentTrack) {
+        get().playTrack(track);
+        return;
       }
-      set({ queue: newQueue });
+
+      // Ensure a robust working queue (fallback to current tracks catalog if empty)
+      const baseQueue = queue.length > 0 ? [...queue] : [...tracks];
+
+      // Remove track if already in baseQueue so it doesn't appear twice
+      const existingIdx = baseQueue.findIndex((t) => t.id === track.id);
+      if (existingIdx !== -1) {
+        baseQueue.splice(existingIdx, 1);
+      }
+
+      // Find current track position
+      let curIdx = baseQueue.findIndex((t) => t.id === currentTrack.id);
+      if (curIdx === -1 && currentTrack.trackNumber) {
+        curIdx = baseQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
+      }
+      if (curIdx === -1) {
+        const curTitle = currentTrack.title.toLowerCase().trim();
+        curIdx = baseQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
+      }
+
+      if (curIdx >= 0) {
+        baseQueue.splice(curIdx + 1, 0, track);
+      } else {
+        baseQueue.unshift(track);
+      }
+
+      set({
+        queue: baseQueue,
+        nextUpTrackId: track.id,
+      });
+
+      // Immediately preload the next track into the audio engine
+      resolveTrackAudioSource(track).then((resolved) => {
+        if (resolved.file || resolved.blob || resolved.audioUrl) {
+          djAudioEngine.preloadNextTrack(resolved);
+        }
+      });
+
+      // Provide responsive haptic feedback on touch devices
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([20, 30, 20]);
+        } catch {}
+      }
+
+      get().addToast(`تم تحديد "${track.title}" لتكون الأغنية التالية بعد الحالية`, undefined, 'success');
     },
 
     setActiveTab: (tab: ViewTab) => set({ activeTab: tab }),

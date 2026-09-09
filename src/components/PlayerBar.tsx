@@ -88,7 +88,7 @@ export const PlayerBar: React.FC = () => {
               {currentTrack?.title || 'اختر أغنية للتشغيل'}
             </h4>
             <p className="text-xs text-zinc-400 truncate mt-0.5 hover:underline cursor-pointer">
-              {currentTrack?.artist || 'Spotify AURA'}
+              {currentTrack?.artist || 'AURA.WAV'}
             </p>
           </div>
 

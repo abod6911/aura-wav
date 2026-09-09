@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
               </svg>
             </div>
             <span className="text-base font-black tracking-tight text-white">
-              Spotify <span className="text-[#1DB954] font-medium text-xs">AURA</span>
+              AURA<span className="text-[#1DB954]">.WAV</span>
             </span>
           </div>
 

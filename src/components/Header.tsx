@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
               </div>
             </button>
             <span className="font-black text-white text-base tracking-tight">
-              Spotify <span className="text-[#1DB954] font-medium text-xs">AURA</span>
+              AURA<span className="text-[#1DB954]">.WAV</span>
             </span>
           </div>
 
