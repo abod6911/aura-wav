@@ -20,7 +20,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { extractPaletteFromImage } from '../../lib/colorSampler';
 
 export const SyncedLyrics: React.FC = () => {
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
+  const hasTrack = usePlayerStore((state) => !!state.currentTrack);
+
+  if (!isLyricsOpen || !hasTrack) return null;
+
+  return <SyncedLyricsModal />;
+};
+
+const SyncedLyricsModal: React.FC = () => {
+  const currentTrack = usePlayerStore((state) => state.currentTrack!);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -38,7 +47,6 @@ export const SyncedLyrics: React.FC = () => {
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
 
-  const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
   const setLyricsOpen = usePlayerStore((state) => state.setLyricsOpen);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -46,20 +54,20 @@ export const SyncedLyrics: React.FC = () => {
   const [userIsScrolling, setUserIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<any>(null);
 
-  const lyrics = currentTrack?.syncedLyrics || [];
+  const lyrics = currentTrack.syncedLyrics || [];
   const activeIndex = getActiveLyricIndex(lyrics, currentTime);
   const isAutoMixing =
     automixEnabled && duration > 15 && duration - currentTime <= automixDuration;
 
   // Auto-scroll active line to optical center unless user is manually dragging/scrolling
   useEffect(() => {
-    if (activeLineRef.current && isLyricsOpen && !userIsScrolling) {
+    if (activeLineRef.current && !userIsScrolling) {
       activeLineRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
     }
-  }, [activeIndex, isLyricsOpen, userIsScrolling]);
+  }, [activeIndex, userIsScrolling]);
 
   const handleUserScroll = () => {
     setUserIsScrolling(true);
@@ -76,14 +84,12 @@ export const SyncedLyrics: React.FC = () => {
   });
 
   useEffect(() => {
-    if (currentTrack?.artworkUrl) {
+    if (currentTrack.artworkUrl) {
       extractPaletteFromImage(currentTrack.artworkUrl).then((p) => {
         setPalette(p);
       });
     }
-  }, [currentTrack?.artworkUrl]);
-
-  if (!isLyricsOpen || !currentTrack) return null;
+  }, [currentTrack.artworkUrl]);
 
   // Helper to detect if a lyric line is Arabic for text direction
   const isArabicText = (text: string) => /[\u0600-\u06FF]/.test(text);

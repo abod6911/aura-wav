@@ -30,8 +30,23 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 
     let isRunning = typeof document === 'undefined' ? true : !document.hidden;
 
+    if (!isPlaying) {
+      // Draw resting calm baseline once without running continuous requestAnimationFrame loop
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = canvas.width / bars;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+      for (let i = 0; i < bars; i++) {
+        const x = i * barWidth + barWidth * 0.15;
+        const w = Math.max(2, barWidth * 0.7);
+        ctx.beginPath();
+        ctx.roundRect(x, canvas.height - 3, w, 3, [1.5, 1.5, 0, 0]);
+        ctx.fill();
+      }
+      return;
+    }
+
     const render = () => {
-      if (!isRunning) return;
+      if (!isRunning || !isPlaying) return;
       animationId = requestAnimationFrame(render);
 
       djAudioEngine.getVisualizerData(dataArray);
@@ -52,11 +67,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         const step = Math.floor(dataArray.length / bars);
 
         for (let i = 0; i < bars; i++) {
-          let rawVal = dataArray[i * step] || 0;
-          if (!isPlaying) {
-            // Gentle ambient wave when idle
-            rawVal = Math.sin(Date.now() / 300 + i * 0.2) * 8 + 12;
-          }
+          const rawVal = dataArray[i * step] || 0;
 
           const percent = Math.min(1, rawVal / 240);
           const barHeight = Math.max(3, percent * (canvas.height - 4));

@@ -42,7 +42,19 @@ interface ExpandedPlayerProps {
 type TabType = 'player' | 'up_next' | 'lyrics' | 'related';
 
 export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose }) => {
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
+  const effectiveOpen = isOpen || isMobilePlayerOpen;
+  const hasTrack = usePlayerStore((state) => !!state.currentTrack);
+
+  return (
+    <AnimatePresence>
+      {effectiveOpen && hasTrack && <ExpandedPlayerSheet onClose={onClose} />}
+    </AnimatePresence>
+  );
+};
+
+const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const currentTrack = usePlayerStore((state) => state.currentTrack!);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
@@ -85,7 +97,6 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   const automixStyle = usePlayerStore((state) => state.automixStyle);
   const playDJSound = usePlayerStore((state) => state.playDJSound);
   const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
-  const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
@@ -130,8 +141,6 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
     }).slice(0, 6);
   }, [currentTrack?.id, tracks.length]);
 
-  const effectiveOpen = isOpen || isMobilePlayerOpen;
-
   const handleClose = () => {
     setMobilePlayerOpen(false);
     onClose?.();
@@ -142,13 +151,13 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 
   // Auto-scroll active lyric in Expanded Player inline view
   useEffect(() => {
-    if (effectiveOpen && activeTab === 'lyrics' && inlineActiveLineRef.current) {
+    if (activeTab === 'lyrics' && inlineActiveLineRef.current) {
       inlineActiveLineRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
     }
-  }, [effectiveOpen, activeTab, activeLyricIndex]);
+  }, [activeTab, activeLyricIndex]);
 
   const isFav = currentTrack ? favorites.includes(currentTrack.id) : false;
   const isAutoMixing =
@@ -162,14 +171,12 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   };
 
   return (
-    <AnimatePresence>
-      {effectiveOpen && currentTrack && (
-        <motion.div
-          key="expanded-player-sheet"
-          data-testid="expanded-player-sheet"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
+    <motion.div
+      key="expanded-player-sheet"
+      data-testid="expanded-player-sheet"
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 260 }}
         drag="y"
         dragConstraints={{ top: 0 }}
@@ -889,7 +896,5 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
           )}
         </AnimatePresence>
         </motion.div>
-      )}
-    </AnimatePresence>
   );
 };

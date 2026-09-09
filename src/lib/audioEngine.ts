@@ -80,6 +80,7 @@ export class DJAudioEngine {
   private volume: number = 0.9;
   private playbackRate: number = 1.0;
   private currentEqGains: [number, number, number, number, number] = [0, 0, 0, 0, 0];
+  private lastUiTimeUpdate: number = 0;
 
   // Callbacks
   private onTimeUpdateCallback?: (currentTime: number, duration: number) => void;
@@ -148,11 +149,12 @@ export class DJAudioEngine {
 
     if (!isFinite(cur) || !isFinite(dur) || dur <= 0) return;
 
-    // 1. High-frequency UI timeupdate callback with lockscreen scrubber sync
-    // CRITICAL: Gate UI callbacks when document is hidden (background/lock screen)
-    // This prevents React state update thrashing and background CPU starvation on mobile WebKit.
+    // 1. High-efficiency UI timeupdate callback with lockscreen scrubber sync
+    // Throttled to ~120ms (~8 updates/sec) to avoid React state re-render thrashing and ensure 60fps UI fluidity
     const isHidden = typeof document !== 'undefined' && document.hidden;
-    if (!isHidden && this.onTimeUpdateCallback) {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (!isHidden && this.onTimeUpdateCallback && (now - this.lastUiTimeUpdate >= 120)) {
+      this.lastUiTimeUpdate = now;
       if (this.isCrossfading && this.midpointFired) {
         const inactive = this.getInactive();
         const inCur = inactive.audio.currentTime;
@@ -1449,6 +1451,7 @@ export class DJAudioEngine {
   }
 
   public seek(time: number): void {
+    this.lastUiTimeUpdate = 0;
     if (this.isCrossfading) {
       this.cancelActiveTransitions(true);
     }

@@ -53,13 +53,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const [sortBy, setSortBy] = useState<SortOption>('number');
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 350);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+
 
   const readyOfflineCount = useMemo(() => {
     return tracks.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id))).length;
@@ -120,6 +114,47 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
     return list;
   }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds]);
+
+  const [visibleLimit, setVisibleLimit] = useState(60);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset visible limit whenever search query, filter, range, or sorting changes
+  useEffect(() => {
+    setVisibleLimit(60);
+  }, [searchQuery, activeFilter, activeRange, sortBy]);
+
+  // High-performance IntersectionObserver for infinite scrolling (0 CPU overhead)
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleLimit((prev) => (prev < filtered.length ? Math.min(prev + 60, filtered.length) : prev));
+        }
+      },
+      { rootMargin: '600px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [filtered.length, visibleLimit]);
+
+  // Scroll to top listener capturing scroll from <main> container
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement | Document;
+      const scrollTop = target instanceof HTMLElement ? target.scrollTop : (window.scrollY || 0);
+      setShowScrollTop(scrollTop > 350);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    return () => window.removeEventListener('scroll', handleScroll, { capture: true } as any);
+  }, []);
+
+  const visibleTracks = useMemo(() => {
+    return filtered.slice(0, visibleLimit);
+  }, [filtered, visibleLimit]);
 
   // Handle Play All
   const handlePlayAll = () => {
@@ -553,13 +588,28 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           {/* Track Rows List */}
           {filtered.length > 0 ? (
             <div className="divide-y divide-white/[0.02] pt-1">
-              {filtered.map((track, idx) => (
+              {visibleTracks.map((track, idx) => (
                 <TrackTableRow
                   key={track.id}
                   track={track}
                   index={idx}
                 />
               ))}
+
+              {/* Progressive Load More Action & Sentinel */}
+              {visibleLimit < filtered.length && (
+                <div ref={sentinelRef} className="pt-6 pb-4 text-center">
+                  <button
+                    onClick={() => setVisibleLimit((prev) => Math.min(prev + 100, filtered.length))}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/[0.05] hover:bg-[#1DB954]/20 hover:border-[#1DB954]/50 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                  >
+                    <span>عرض المزيد من المسارات ({visibleLimit} من أصل {filtered.length})</span>
+                  </button>
+                  <p className="text-[10px] text-zinc-500 mt-2 font-mono">
+                    يتم التحميل تلقائياً عند التمرير للأسفل
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
@@ -581,7 +631,11 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           initial={{ opacity: 0, y: 15, scale: 0.85 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 15, scale: 0.85 }}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => {
+            const main = document.querySelector('main');
+            if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           className="fixed bottom-24 right-4 z-40 px-4 py-2.5 rounded-full bg-[#12121c]/90 border border-white/20 text-white shadow-[0_8px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl flex items-center gap-2 text-xs font-bold hover:bg-white/20 active:scale-95 transition-all cursor-pointer select-none"
           title="العودة للأعلى"
         >
@@ -640,7 +694,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const displayIndex = track.trackNumber !== undefined ? track.trackNumber : index + 1;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
+    <div className="track-row-optimized relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
       {/* Swipe Action Revealed on Left Drag (Underneath on the right side) */}
       <div className="absolute inset-y-0 right-0 w-32 sm:w-40 bg-[#1DB954] rounded-2xl flex items-center justify-center gap-2 text-black font-black text-xs sm:text-sm px-3 shadow-inner pointer-events-none">
         <ListPlus className="w-4 h-4 sm:w-5 sm:h-5 text-black stroke-[2.5]" />

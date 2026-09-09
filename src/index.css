@@ -133,7 +133,8 @@ input[type=range]::-webkit-slider-thumb:hover {
   -webkit-tap-highlight-color: transparent;
 }
 
-.track-item-contained {
+.track-item-contained,
+.track-row-optimized {
   content-visibility: auto;
   contain-intrinsic-size: 64px;
 }
