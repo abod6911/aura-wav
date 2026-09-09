@@ -633,15 +633,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             console.warn('Could not persist default library to IndexedDB:', err);
           }
         } else {
-          // Ensure every catalog track has its audioUrl and fileName
+          // Ensure every catalog track has its local audioUrl and fileName
           finalTracks = finalTracks.map((tr) => {
-            if (!tr.audioUrl) {
+            if (!tr.audioUrl || tr.audioUrl.startsWith('/api/stream')) {
               const num = tr.trackNumber || (tr.id.startsWith('track_catalog_') ? parseInt(tr.id.replace('track_catalog_', ''), 10) : undefined);
               if (num && num >= 1 && num <= TRACKS_CATALOG.length) {
                 const catItem = TRACKS_CATALOG[num - 1];
                 if (catItem) {
                   return { ...tr, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
                 }
+              }
+              const matched = resolveCatalogTrackItem(tr.title, tr.artist, tr.fileName, tr.trackNumber);
+              if (matched) {
+                return { ...tr, audioUrl: matched.audioUrl, fileName: matched.fileName };
               }
             }
             return tr;
@@ -847,13 +851,21 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }
 
+      // 3.5 Check local catalog for direct /songs/ local audioUrl
+      if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
+        const catItem = resolveCatalogTrackItem(playableTrack.title, playableTrack.artist, playableTrack.fileName, playableTrack.trackNumber);
+        if (catItem && catItem.audioUrl) {
+          playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
+        }
+      }
+
       // 4. If offline and no local file/blob saved, warn user clearly
-      if (typeof navigator !== 'undefined' && !navigator.onLine && !playableTrack.file && !playableTrack.blob) {
+      if (typeof navigator !== 'undefined' && !navigator.onLine && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
         get().addToast(`المسار "${track.title}" غير محفوظ بدون نت - يمكنك حفظه للأوفلاين عند توفر النت`, undefined, 'warning');
         return;
       }
 
-      // 4. Resolve stream URL if online track without file/blob
+      // 4. Resolve stream URL if online track without file/blob/audioUrl
       if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
         try {
           const resolvedStream = await resolvePlayableStream(playableTrack);

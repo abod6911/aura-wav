@@ -148,8 +148,8 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
  * Supports auto-retry and multi-instance failover.
  */
 export async function resolvePlayableStream(track: Track): Promise<string | null> {
-  // If track already has a valid local blob or URL, return it directly
-  if (track.audioUrl && (track.audioUrl.startsWith('blob:') || track.audioUrl.startsWith('http'))) {
+  // If track already has a valid local blob, absolute URL, or local path (/songs/...)
+  if (track.audioUrl && !track.audioUrl.startsWith('/api/stream') && (track.audioUrl.startsWith('/') || track.audioUrl.startsWith('blob:') || track.audioUrl.startsWith('http'))) {
     return track.audioUrl;
   }
 
