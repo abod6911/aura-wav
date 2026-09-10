@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import {
   Play,
@@ -72,11 +73,18 @@ export const PlayerBar: React.FC = () => {
             onClick={() => setMobilePlayerOpen(true)}
             className="relative w-14 h-14 rounded-md overflow-hidden bg-[#282828] border border-white/5 shadow-md flex-shrink-0 group cursor-pointer"
           >
-            <img
-              src={currentTrack?.coverUrl || currentTrack?.artworkUrl || '/logo.svg'}
-              alt={currentTrack?.title || 'No Track'}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentTrack?.id || 'none'}
+                src={currentTrack?.coverUrl || currentTrack?.artworkUrl || '/logo.svg'}
+                alt={currentTrack?.title || 'No Track'}
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.04 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            </AnimatePresence>
           </div>
 
           <div className="min-w-0 flex-1">

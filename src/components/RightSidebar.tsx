@@ -1,6 +1,6 @@
 import React from 'react';
-import { usePlayerStore } from '../store/usePlayerStore';
-import { X, Trash2, ListMusic, Heart, Play, Radio, Sparkles, Disc } from 'lucide-react';
+import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
+import { X, Trash2, ListMusic, Heart, Play, Radio, Sparkles, Disc, ArrowUp, ArrowDown } from 'lucide-react';
 
 export const RightSidebar: React.FC = () => {
   const isRightSidebarOpen = usePlayerStore((state) => state.isRightSidebarOpen);
@@ -9,6 +9,10 @@ export const RightSidebar: React.FC = () => {
   const setActiveRightSidebarTab = usePlayerStore((state) => state.setActiveRightSidebarTab);
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const userQueue = usePlayerStore((state) => state.userQueue);
+  const removeFromUserQueue = usePlayerStore((state) => state.removeFromUserQueue);
+  const reorderUserQueue = usePlayerStore((state) => state.reorderUserQueue);
+  const clearUserQueue = usePlayerStore((state) => state.clearUserQueue);
   const queue = usePlayerStore((state) => state.queue);
   const removeFromQueue = usePlayerStore((state) => state.removeFromQueue);
   const clearQueue = usePlayerStore((state) => state.clearQueue);
@@ -108,75 +112,172 @@ export const RightSidebar: React.FC = () => {
             </div>
           )}
 
-          {/* Up Next List */}
-          <div className="flex items-center justify-between mb-2 flex-shrink-0">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-              التالي في القائمة ({queue.length})
-            </span>
-            {queue.length > 0 && (
-              <button
-                onClick={clearQueue}
-                className="text-[11px] font-bold text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                مسح
-              </button>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 no-scrollbar min-h-0">
-            {queue.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500">
-                <ListMusic className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                <p className="text-xs font-medium">قائمة الانتظار فارغة</p>
-                <p className="text-[10px] mt-1 text-zinc-600">
-                  اسحب أي أغنية لليسار لإضافتها هنا
-                </p>
-              </div>
-            ) : (
-              queue.map((track, idx) => (
-                <div
-                  key={`${track.id}-${idx}`}
-                  className="group flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                  onClick={() => playTrack(track)}
-                >
-                  <span className="w-4 text-center text-[10px] text-zinc-500 group-hover:hidden">
-                    {idx + 1}
+          <div className="flex-1 overflow-y-auto pr-1 no-scrollbar min-h-0 space-y-4">
+            {/* 1. Dynamic User Queue (Up Next) */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider">
+                    قائمة الانتظار المباشرة
                   </span>
-                  <Play className="w-4 h-4 text-white hidden group-hover:block fill-current" />
-
-                  <img
-                    src={track.coverUrl || track.artworkUrl || '/logo.svg'}
-                    alt={track.title}
-                    className="w-9 h-9 rounded object-cover flex-shrink-0"
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-white truncate">
-                      {track.title}
-                    </p>
-                    <p className="text-[10px] text-zinc-400 truncate">
-                      {track.artist}
-                    </p>
-                  </div>
-
-                  <span className="text-[10px] text-zinc-500 flex-shrink-0 group-hover:hidden">
-                    {formatDuration(track.duration)}
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30">
+                    {userQueue.length}/{MAX_USER_QUEUE}
                   </span>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromQueue(idx);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-400 transition-opacity cursor-pointer"
-                    title="إزالة من القائمة"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              ))
-            )}
+                {userQueue.length > 0 && (
+                  <button
+                    onClick={clearUserQueue}
+                    className="text-[10px] font-bold text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    مسح
+                  </button>
+                )}
+              </div>
+
+              {userQueue.length === 0 ? (
+                <div className="py-4 px-3 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-center">
+                  <p className="text-[11px] text-zinc-400">قائمة الانتظار المباشرة فارغة</p>
+                  <p className="text-[9px] mt-0.5 text-zinc-600">اسحب أي أغنية لليسار لإضافتها هنا</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {userQueue.map((track, idx) => (
+                    <div
+                      key={`sidebar_user_${track.id}_${idx}`}
+                      className="group flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors cursor-pointer"
+                      onClick={() => playTrack(track)}
+                    >
+                      <span className="w-4 text-center text-[10px] font-bold text-[#1DB954] font-mono">
+                        {idx + 1}
+                      </span>
+
+                      <img
+                        src={track.coverUrl || track.artworkUrl || '/logo.svg'}
+                        alt={track.title}
+                        className="w-9 h-9 rounded object-cover flex-shrink-0"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-white truncate">
+                          {track.title}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate">
+                          {track.artist}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {idx > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              reorderUserQueue(idx, idx - 1);
+                            }}
+                            className="p-1 text-zinc-400 hover:text-white cursor-pointer"
+                            title="تقديم"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                        )}
+                        {idx < userQueue.length - 1 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              reorderUserQueue(idx, idx + 1);
+                            }}
+                            className="p-1 text-zinc-400 hover:text-white cursor-pointer"
+                            title="تأخير"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromUserQueue(idx);
+                          }}
+                          className="p-1 text-zinc-400 hover:text-red-400 transition-opacity cursor-pointer"
+                          title="إزالة من القائمة"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Sequential Playlist Context */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                  التالي من القائمة ({queue.length})
+                </span>
+                {queue.length > 0 && (
+                  <button
+                    onClick={clearQueue}
+                    className="text-[10px] font-bold text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    مسح
+                  </button>
+                )}
+              </div>
+
+              {queue.length === 0 ? (
+                <div className="py-6 text-center text-zinc-500">
+                  <ListMusic className="w-7 h-7 mx-auto mb-1.5 opacity-40" />
+                  <p className="text-xs font-medium">لا توجد مسارات متبقية</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {queue.slice(0, 40).map((track, idx) => (
+                    <div
+                      key={`sidebar_playlist_${track.id}_${idx}`}
+                      className="group flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => playTrack(track)}
+                    >
+                      <span className="w-4 text-center text-[10px] text-zinc-500 group-hover:hidden">
+                        {idx + 1}
+                      </span>
+                      <Play className="w-3.5 h-3.5 text-white hidden group-hover:block fill-current" />
+
+                      <img
+                        src={track.coverUrl || track.artworkUrl || '/logo.svg'}
+                        alt={track.title}
+                        className="w-8 h-8 rounded object-cover flex-shrink-0"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-white group-hover:text-[#1DB954] truncate transition-colors">
+                          {track.title}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 truncate">
+                          {track.artist}
+                        </p>
+                      </div>
+
+                      <span className="text-[10px] text-zinc-500 flex-shrink-0 group-hover:hidden">
+                        {formatDuration(track.duration)}
+                      </span>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromQueue(idx);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-400 transition-opacity cursor-pointer"
+                        title="إزالة من القائمة"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

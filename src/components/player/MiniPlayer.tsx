@@ -63,13 +63,18 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         onClick={handleExpand}
         className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-black/60 border border-white/10 shadow-md cursor-pointer"
       >
-        <img
-          src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
-          alt={currentTrack.title}
-          className={`w-full h-full object-cover transition-transform duration-500 ${
-            isPlaying ? 'scale-105' : 'scale-100 opacity-90'
-          }`}
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={currentTrack.id}
+            src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
+            alt={currentTrack.title}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="w-full h-full object-cover"
+          />
+        </AnimatePresence>
       </div>
 
       {/* Track Info */}

@@ -276,13 +276,18 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   setChangeArtworkModal(true, currentTrack);
                 }}
               >
-                <img
-                  src={currentTrack.artworkUrl || '/logo.svg'}
-                  alt={currentTrack.title}
-                  className={`w-full h-full object-cover transition-transform duration-700 ${
-                    isPlaying ? 'scale-105' : 'scale-100'
-                  }`}
-                />
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={currentTrack.id}
+                    src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                    alt={currentTrack.title}
+                    initial={{ opacity: 0, scale: 0.94 }}
+                    animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
+                    transition={{ duration: 0.28, ease: 'easeOut' }}
+                    className="w-full h-full object-cover"
+                  />
+                </AnimatePresence>
               </motion.div>
 
               {/* Real-time Current Lyric Line Snippet */}

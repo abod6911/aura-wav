@@ -35,6 +35,8 @@ export interface ToastItem {
 
 export type SleepTimerSetting = number | 'end_of_track' | null;
 
+export const MAX_USER_QUEUE = 9;
+
 interface PlayerState {
   // Library & Data
   tracks: Track[];
@@ -49,7 +51,8 @@ interface PlayerState {
   // Playback State
   currentTrack: Track | null;
   nextUpTrackId: string | null;
-  queue: Track[];
+  userQueue: Track[]; // Dedicated Spotify-style dynamic queue (Max 9 tracks)
+  queue: Track[]; // Sequential playlist / album context
   originalQueue: Track[];
   history: Track[];
   isPlaying: boolean;
@@ -135,6 +138,9 @@ interface PlayerState {
   removeFromQueue: (index: number) => void;
   addToQueue: (track: Track) => void;
   playNextInQueue: (track: Track) => void;
+  removeFromUserQueue: (index: number) => void;
+  reorderUserQueue: (startIndex: number, endIndex: number) => void;
+  clearUserQueue: () => void;
   setActiveTab: (tab: ViewTab) => void;
   setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') => void;
   setLyricsOpen: (open: boolean) => void;
@@ -246,7 +252,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
     onPreloadNeeded: async (currentTrack) => {
-      const { queue, tracks, shuffle, repeatMode } = get();
+      const { userQueue, queue, tracks, shuffle, repeatMode } = get();
+
+      // Dynamic Queue has highest lookahead priority
+      if (userQueue.length > 0) {
+        const candidate = await resolveTrackAudioSource(userQueue[0]);
+        if (candidate.file || candidate.blob || candidate.audioUrl) {
+          djAudioEngine.preloadNextTrack(candidate);
+        }
+        return;
+      }
+
       const effectiveQueue = queue.length > 0 ? queue : tracks;
       if (effectiveQueue.length === 0) return;
 
@@ -296,7 +312,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     onMidpointReached: (incomingTrack) => {
       // Exactly at 50% power crossing point, switch MediaSession & UI metadata
       const current = get().currentTrack;
-      const nextUpCleared = get().nextUpTrackId === incomingTrack.id ? null : get().nextUpTrackId;
+      const { userQueue } = get();
+      const nextUpCleared = userQueue.length > 0 ? userQueue[0].id : (get().nextUpTrackId === incomingTrack.id ? null : get().nextUpTrackId);
       set({
         currentTrack: incomingTrack,
         nextUpTrackId: nextUpCleared,
@@ -340,6 +357,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     currentTrack: null,
     nextUpTrackId: null,
+    userQueue: [],
     queue: [],
     originalQueue: [],
     history: [],
@@ -752,12 +770,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             ...baseList[targetIdx],
             id: targetId,
             trackNumber: targetNum || baseList[targetIdx].trackNumber,
+            title: (newT.title && newT.title !== newT.fileName) ? newT.title : baseList[targetIdx].title,
+            artist: (newT.artist && newT.artist !== 'Unknown Artist') ? newT.artist : baseList[targetIdx].artist,
             file: newT.file || baseList[targetIdx].file,
             blob: newT.blob || baseList[targetIdx].blob,
             duration: newT.duration > 0 ? newT.duration : baseList[targetIdx].duration,
             lyrics: newT.lyrics || baseList[targetIdx].lyrics,
             syncedLyrics: newT.syncedLyrics || baseList[targetIdx].syncedLyrics,
-            artworkUrl: catItem ? catItem.coverUrl : (newT.artworkUrl || baseList[targetIdx].artworkUrl),
+            artworkUrl: (newT.artworkUrl && !newT.artworkUrl.startsWith('data:image/svg') && newT.artworkUrl !== '/logo.svg')
+              ? newT.artworkUrl
+              : (catItem ? catItem.coverUrl : (newT.artworkUrl || baseList[targetIdx].artworkUrl)),
             fileName: newT.fileName || baseList[targetIdx].fileName,
             source: 'local',
           };
@@ -1013,21 +1035,68 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
       djAudioEngine.primeDecks();
-      const { queue, tracks, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying, automixStyle } = get();
+      const { userQueue, queue, tracks, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying, automixStyle } = get();
       if (!currentTrack) {
         if (tracks.length > 0) get().playTrack(tracks[0]);
         return;
       }
-
-      // Robust queue resolution: fallback to all tracks if queue is empty
-      const effectiveQueue = queue.length > 0 ? queue : tracks;
-      if (effectiveQueue.length === 0) return;
 
       const isEnginePlaying = isPlaying || djAudioEngine.isPlaying();
       // AutoMix is ONLY for scheduled natural song endings, NOT manual user button taps!
       const isAutoMixTrigger = typeof options === 'object' && !!options.isAutoMixTrigger;
       const forceImmediate = typeof options === 'object' ? (options.forceImmediate !== false) : true;
       const shouldUseAutoMix = isAutoMixTrigger && !forceImmediate && automixEnabled && isEnginePlaying;
+
+      // 1. DYNAMIC QUEUE PRIORITY (Spotify "Up Next" Queue)
+      if (userQueue.length > 0) {
+        const [nextUp, ...remainingUserQueue] = userQueue;
+        let targetTrack = await resolveTrackAudioSource(nextUp);
+        const nextUpCleared = remainingUserQueue[0]?.id || null;
+
+        set({
+          userQueue: remainingUserQueue,
+          nextUpTrackId: nextUpCleared,
+        });
+
+        if (shouldUseAutoMix) {
+          await djAudioEngine.transitionTo(targetTrack, automixStyle);
+        } else {
+          djAudioEngine.cancelActiveTransitions(true);
+          set({
+            currentTrack: targetTrack,
+            nextUpTrackId: nextUpCleared,
+            history: [...get().history, currentTrack],
+            currentTime: 0,
+            duration: targetTrack.duration || 0,
+          });
+          updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
+          const success = await djAudioEngine.playTrack(targetTrack);
+          if (!success) {
+            set({ isPlaying: false });
+          }
+        }
+
+        if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
+          fetchLyricsOnline(targetTrack.title, targetTrack.artist, targetTrack.duration).then((res) => {
+            if (res && (res.syncedLyrics || res.plainLyrics)) {
+              const updatedTrack: Track = {
+                ...targetTrack,
+                syncedLyrics: res.syncedLyrics,
+                lyrics: res.plainLyrics || targetTrack.lyrics,
+              };
+              if (get().currentTrack?.id === updatedTrack.id) {
+                set({ currentTrack: updatedTrack });
+              }
+            }
+          });
+        }
+        return;
+      }
+
+      // 2. Fallback to normal playlist / album sequence
+      // Robust queue resolution: fallback to all tracks if queue is empty
+      const effectiveQueue = queue.length > 0 ? queue : tracks;
+      if (effectiveQueue.length === 0) return;
 
       let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
       if (currentIndex === -1 && currentTrack.trackNumber) {
@@ -1320,61 +1389,96 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     addToQueue: (track: Track) => {
-      set((state) => ({ queue: [...state.queue, track] }));
+      const { userQueue } = get();
+      if (userQueue.length >= MAX_USER_QUEUE) {
+        get().addToast(`وصلت قائمة الانتظار للحد الأقصى (${MAX_USER_QUEUE} مسارات)`, undefined, 'warning');
+        return;
+      }
+      // Deduplicate if already present
+      const filtered = userQueue.filter((t) => t.id !== track.id);
+      const updated = [...filtered, track];
+      set({
+        userQueue: updated,
+        nextUpTrackId: updated[0]?.id || null,
+      });
+
+      // Preload if it's now next up
+      if (updated.length === 1) {
+        resolveTrackAudioSource(track).then((resolved) => {
+          if (resolved.file || resolved.blob || resolved.audioUrl) {
+            djAudioEngine.preloadNextTrack(resolved);
+          }
+        });
+      }
+
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(15); } catch {}
+      }
+
+      get().addToast(`تمت إضافة "${track.title}" إلى قائمة الانتظار (${updated.length}/${MAX_USER_QUEUE})`, undefined, 'success');
     },
 
     playNextInQueue: (track: Track) => {
-      const { queue, tracks, currentTrack } = get();
+      const { userQueue, currentTrack } = get();
       if (!currentTrack) {
         get().playTrack(track);
         return;
       }
 
-      // Ensure a robust working queue (fallback to current tracks catalog if empty)
-      const baseQueue = queue.length > 0 ? [...queue] : [...tracks];
-
-      // Remove track if already in baseQueue so it doesn't appear twice
-      const existingIdx = baseQueue.findIndex((t) => t.id === track.id);
-      if (existingIdx !== -1) {
-        baseQueue.splice(existingIdx, 1);
+      const filtered = userQueue.filter((t) => t.id !== track.id);
+      if (filtered.length >= MAX_USER_QUEUE) {
+        filtered.pop(); // Keep within MAX_USER_QUEUE limit
       }
-
-      // Find current track position
-      let curIdx = baseQueue.findIndex((t) => t.id === currentTrack.id);
-      if (curIdx === -1 && currentTrack.trackNumber) {
-        curIdx = baseQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
-      }
-      if (curIdx === -1) {
-        const curTitle = currentTrack.title.toLowerCase().trim();
-        curIdx = baseQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
-      }
-
-      if (curIdx >= 0) {
-        baseQueue.splice(curIdx + 1, 0, track);
-      } else {
-        baseQueue.unshift(track);
-      }
+      const updated = [track, ...filtered];
 
       set({
-        queue: baseQueue,
+        userQueue: updated,
         nextUpTrackId: track.id,
       });
 
-      // Immediately preload the next track into the audio engine
+      // Immediately preload this next track into the audio engine
       resolveTrackAudioSource(track).then((resolved) => {
         if (resolved.file || resolved.blob || resolved.audioUrl) {
           djAudioEngine.preloadNextTrack(resolved);
         }
       });
 
-      // Provide responsive haptic feedback on touch devices
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         try {
           navigator.vibrate([20, 30, 20]);
         } catch {}
       }
 
-      get().addToast(`تم تحديد "${track.title}" لتكون الأغنية التالية بعد الحالية`, undefined, 'success');
+      get().addToast(`تم تحديد "${track.title}" لتكون الأغنية التالية مباشرة`, undefined, 'success');
+    },
+
+    removeFromUserQueue: (index: number) => {
+      const { userQueue } = get();
+      const updated = [...userQueue];
+      updated.splice(index, 1);
+      set({
+        userQueue: updated,
+        nextUpTrackId: updated[0]?.id || null,
+      });
+    },
+
+    reorderUserQueue: (startIndex: number, endIndex: number) => {
+      const { userQueue } = get();
+      const updated = [...userQueue];
+      const [removed] = updated.splice(startIndex, 1);
+      updated.splice(endIndex, 0, removed);
+      set({
+        userQueue: updated,
+        nextUpTrackId: updated[0]?.id || null,
+      });
+    },
+
+    clearUserQueue: () => {
+      set({
+        userQueue: [],
+        nextUpTrackId: null,
+      });
+      get().addToast('تم تفريغ قائمة الانتظار', undefined, 'info');
     },
 
     setActiveTab: (tab: ViewTab) => set({ activeTab: tab }),
@@ -1383,7 +1487,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setRightSidebarOpen: (open: boolean) => set({ isRightSidebarOpen: open }),
     setActiveRightSidebarTab: (tab: 'queue' | 'now_playing') => set({ activeRightSidebarTab: tab }),
     setActiveFilterPill: (pill: 'all' | 'music' | 'podcasts') => set({ activeFilterPill: pill }),
-    clearQueue: () => set({ queue: [], originalQueue: [] }),
+    clearQueue: () => set({ queue: [], originalQueue: [], userQueue: [], nextUpTrackId: null }),
     setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') =>
       set({ expandedPlayerTab: tab }),
     setLyricsOpen: (open: boolean) => set({ isLyricsOpen: open }),

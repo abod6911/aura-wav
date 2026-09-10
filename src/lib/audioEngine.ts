@@ -695,6 +695,20 @@ export class DJAudioEngine {
     this.autoMixTriggered = false;
     this.preloadTriggered = false;
 
+    const active = this.getActive();
+    const inactive = this.getInactive();
+
+    // 50ms micro-fade out on currently active deck if playing to prevent speaker pops
+    if (this.ctx && this.isPlaying() && active.gain) {
+      try {
+        const now = this.ctx.currentTime;
+        active.gain.gain.cancelScheduledValues(now);
+        active.gain.gain.setValueAtTime(active.gain.gain.value, now);
+        active.gain.gain.linearRampToValueAtTime(0.001, now + 0.04);
+        await new Promise((r) => setTimeout(r, 42));
+      } catch {}
+    }
+
     // STRICT AUDIO ISOLATION: Explicitly pause and reset BOTH channels before playing new track
     this.channelA.audio.pause();
     this.channelB.audio.pause();
@@ -704,9 +718,6 @@ export class DJAudioEngine {
     this.channelB.audio.volume = 0.0;
     this.channelA.isPreloaded = false;
     this.channelB.isPreloaded = false;
-
-    const active = this.getActive();
-    const inactive = this.getInactive();
 
     // Reset progress tracking callback immediately so UI scrubber is at 0:00
     if (this.onTimeUpdateCallback) {
@@ -719,10 +730,13 @@ export class DJAudioEngine {
       return false;
     }
 
+    // 60ms micro-fade in to eliminate transient pop / audio click
     if (active.gain && this.ctx) {
       try {
-        active.gain.gain.cancelScheduledValues(this.ctx.currentTime);
-        active.gain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        const now = this.ctx.currentTime;
+        active.gain.gain.cancelScheduledValues(now);
+        active.gain.gain.setValueAtTime(0.001, now);
+        active.gain.gain.linearRampToValueAtTime(1.0, now + 0.06);
         active.gainValue = 1.0;
       } catch {}
     }
@@ -1433,9 +1447,24 @@ export class DJAudioEngine {
   }
 
   public pause(): void {
-    // Retain current gains for seamless un-pause mid-crossfade
-    this.channelA.audio.pause();
-    this.channelB.audio.pause();
+    // Micro-fade before pause to eliminate abrupt clicks
+    if (this.ctx && this.masterGain) {
+      try {
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+        this.masterGain.gain.linearRampToValueAtTime(0.001, now + 0.025);
+      } catch {}
+    }
+    setTimeout(() => {
+      this.channelA.audio.pause();
+      this.channelB.audio.pause();
+      if (this.ctx && this.masterGain) {
+        try {
+          this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+        } catch {}
+      }
+    }, 25);
     this.timerWorker?.stop();
 
     if (this.onPlaybackStateChangeCallback) {
@@ -1458,7 +1487,30 @@ export class DJAudioEngine {
     const active = this.getActive();
     if (isFinite(time)) {
       const dur = isFinite(active.audio.duration) ? active.audio.duration : 0;
-      active.audio.currentTime = dur > 0 ? Math.max(0, Math.min(time, dur)) : Math.max(0, time);
+      const targetTime = dur > 0 ? Math.max(0, Math.min(time, dur)) : Math.max(0, time);
+
+      // Micro-ramp volume to eliminate pops during seeks
+      if (this.ctx && active.gain) {
+        try {
+          const now = this.ctx.currentTime;
+          active.gain.gain.cancelScheduledValues(now);
+          active.gain.gain.setValueAtTime(active.gain.gain.value, now);
+          active.gain.gain.linearRampToValueAtTime(0.001, now + 0.015);
+          setTimeout(() => {
+            active.audio.currentTime = targetTime;
+            if (this.ctx && active.gain) {
+              const rNow = this.ctx.currentTime;
+              active.gain.gain.setValueAtTime(0.001, rNow);
+              active.gain.gain.linearRampToValueAtTime(1.0, rNow + 0.035);
+            }
+          }, 18);
+        } catch {
+          active.audio.currentTime = targetTime;
+        }
+      } else {
+        active.audio.currentTime = targetTime;
+      }
+
       if (dur > 0 && dur - time > this.automixDuration + 2) {
         this.autoMixTriggered = false;
         this.preloadTriggered = false;
