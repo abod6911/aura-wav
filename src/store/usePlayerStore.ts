@@ -484,7 +484,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         const resolvedFolderName = savedFolderNameVal || savedDirNameVal || 'Liked_Songs';
 
-        const favIds = (favs || []).map((f) => f.id);
+        let favIds = (favs || []).map((f) => f.id);
+        // If favorites is empty, auto-populate with the 261 Liked Songs!
+        if (favIds.length === 0) {
+          favIds = Array.from({ length: 261 }, (_, i) => `track_catalog_${i + 1}`);
+          try {
+            const fTx = db.transaction('favorites', 'readwrite');
+            for (const fid of favIds) {
+              await fTx.store.put({ id: fid, addedAt: Date.now() });
+            }
+            await fTx.done;
+          } catch {}
+        }
+
         const automix = automixSetting || { enabled: true, duration: 5 };
         const vol = volSetting !== undefined ? volSetting : 0.9;
 
@@ -660,23 +672,33 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             console.warn('Could not persist default library to IndexedDB:', err);
           }
         } else {
-          // Ensure every catalog track has its local audioUrl and fileName
-          finalTracks = finalTracks.map((tr) => {
-            if (!tr.audioUrl || tr.audioUrl.startsWith('/api/stream')) {
+          // Ensure every catalog track has its canonical title, artist, album, cover, audioUrl and fileName
+          finalTracks = await Promise.all(
+            finalTracks.map(async (tr) => {
               const num = tr.trackNumber || (tr.id.startsWith('track_catalog_') ? parseInt(tr.id.replace('track_catalog_', ''), 10) : undefined);
               if (num && num >= 1 && num <= TRACKS_CATALOG.length) {
                 const catItem = TRACKS_CATALOG[num - 1];
                 if (catItem) {
-                  return { ...tr, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
+                  const updated: Track = {
+                    ...tr,
+                    title: catItem.title,
+                    artist: catItem.artists,
+                    album: catItem.album,
+                    artworkUrl: catItem.coverUrl,
+                    audioUrl: catItem.audioUrl,
+                    fileName: catItem.fileName,
+                  };
+                  if (updated.title !== tr.title || updated.artworkUrl !== tr.artworkUrl || updated.audioUrl !== tr.audioUrl) {
+                    try {
+                      await db.put('tracks', updated);
+                    } catch {}
+                  }
+                  return updated;
                 }
               }
-              const matched = resolveCatalogTrackItem(tr.title, tr.artist, tr.fileName, tr.trackNumber);
-              if (matched) {
-                return { ...tr, audioUrl: matched.audioUrl, fileName: matched.fileName };
-              }
-            }
-            return tr;
-          });
+              return tr;
+            })
+          );
         }
 
         const finalFolderCount = savedFolderTrackCountVal || finalTracks.length;

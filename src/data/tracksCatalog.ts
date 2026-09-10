@@ -21,7 +21,7 @@ export const TRACKS_CATALOG: CatalogItem[] = catalogData1750 as CatalogItem[];
 function cleanStr(s: string): string {
   return s
     .toLowerCase()
-    .replace(/[^ws؀-ۿ]/g, ' ')
+    .replace(/[^\w\s\u0600-\u06FF]/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -35,12 +35,23 @@ export function resolveCatalogCover(
   filename?: string,
   trackNumber?: number
 ): string | null {
-  // 1. Check direct track number (1 to 1750)
+  // 1. Check exact filename match in catalog
+  if (filename) {
+    const cleanF = filename.toLowerCase().replace(/\.[^/.]+$/, '').trim();
+    for (const item of TRACKS_CATALOG) {
+      const itemF = item.fileName.toLowerCase().replace(/\.[^/.]+$/, '').trim();
+      if (cleanF === itemF || cleanF.includes(itemF) || itemF.includes(cleanF)) {
+        return item.coverUrl;
+      }
+    }
+  }
+
+  // 2. Direct track number
   if (trackNumber && trackNumber >= 1 && trackNumber <= TRACKS_CATALOG.length) {
     return TRACKS_CATALOG[trackNumber - 1].coverUrl;
   }
 
-  // 2. Check filename prefix (e.g. "0001 - ...", "01 - ...")
+  // 3. Check filename prefix (e.g. "001 - ...", "0001 - ...")
   if (filename) {
     const match = filename.match(/^(\d+)\s*[-_.]/);
     if (match) {
@@ -51,7 +62,7 @@ export function resolveCatalogCover(
     }
   }
 
-  // 3. Match by clean title and artist
+  // 4. Match by clean title and artist
   if (title) {
     const cleanT = cleanStr(title);
     const cleanA = artist ? cleanStr(artist) : '';
@@ -84,32 +95,18 @@ export function resolveCatalogTrackItem(
   artist?: string,
   trackNumber?: number
 ): CatalogItem | null {
-  // 1. Check direct track number
-  if (trackNumber && trackNumber >= 1 && trackNumber <= TRACKS_CATALOG.length) {
-    return TRACKS_CATALOG[trackNumber - 1];
-  }
-
-  // 2. Check filename prefix (e.g. "0001 - ...", "01 - ...", "1. ...")
+  // 1. Check exact or normalized filename
   if (filename) {
-    const match = filename.match(/^(?:track\s*[-_.]?\s*)?0*(\d{1,4})(?:[-_.\s]|$)/i) || filename.match(/^(\d+)\s*[-_.]/);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      if (num >= 1 && num <= TRACKS_CATALOG.length) {
-        return TRACKS_CATALOG[num - 1];
-      }
-    }
-
-    // Check exact or normalized filename
     const cleanF = filename.toLowerCase().replace(/\.[^/.]+$/, '').trim();
     for (const item of TRACKS_CATALOG) {
       const itemF = item.fileName.toLowerCase().replace(/\.[^/.]+$/, '').trim();
-      if (cleanF === itemF) {
+      if (cleanF === itemF || cleanF.includes(itemF) || itemF.includes(cleanF)) {
         return item;
       }
     }
   }
 
-  // 3. Match by clean title and artist
+  // 2. Match by clean title and artist
   if (title) {
     const cleanT = cleanStr(title);
     const cleanA = artist ? cleanStr(artist) : '';
@@ -126,6 +123,22 @@ export function resolveCatalogTrackItem(
         if (!cleanA || itemA.includes(primaryA) || cleanA.includes(itemA.split(' ')[0])) {
           return item;
         }
+      }
+    }
+  }
+
+  // 3. Check direct track number
+  if (trackNumber && trackNumber >= 1 && trackNumber <= TRACKS_CATALOG.length) {
+    return TRACKS_CATALOG[trackNumber - 1];
+  }
+
+  // 4. Check filename prefix (e.g. "001 - ...", "0001 - ...", "1. ...")
+  if (filename) {
+    const match = filename.match(/^(?:track\s*[-_.]?\s*)?0*(\d{1,4})(?:[-_.\s]|$)/i) || filename.match(/^(\d+)\s*[-_.]/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num >= 1 && num <= TRACKS_CATALOG.length) {
+        return TRACKS_CATALOG[num - 1];
       }
     }
   }
