@@ -9,17 +9,8 @@ interface TimelineSliderProps {
   accentColor?: string;
 }
 
-/**
- * Bulletproof time formatter avoiding NaN:NaN
- */
-export function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds) || !isFinite(seconds) || seconds < 0) {
-    return '0:00';
-  }
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
+import { formatTime } from '../../utils/formatters';
+export { formatTime };
 
 export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   currentTime,

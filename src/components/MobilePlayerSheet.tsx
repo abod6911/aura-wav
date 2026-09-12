@@ -16,7 +16,11 @@ import {
   Sliders,
   ListMusic,
   Sparkles,
+  MicOff,
+  Flame,
+  Waves,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const MobilePlayerSheet: React.FC = () => {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
@@ -46,6 +50,12 @@ export const MobilePlayerSheet: React.FC = () => {
   const automixStyle = usePlayerStore((state) => state.automixStyle);
   const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
 
+  // Pro DSP states
+  const karaokeMode = usePlayerStore((state) => state.karaokeMode);
+  const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
+  const analogWarmth = usePlayerStore((state) => state.analogWarmth);
+  const reverbSpace = usePlayerStore((state) => state.reverbSpace);
+
   const [visualizerMode, setVisualizerMode] = useState(false);
 
   if (!currentTrack) return null;
@@ -55,13 +65,6 @@ export const MobilePlayerSheet: React.FC = () => {
   const isCrossfadingSoon =
     isAutoMixingLive ||
     (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
-
-  const formatTime = (secs: number) => {
-    if (!secs || isNaN(secs)) return '0:00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
 
   return (
     <>
@@ -157,33 +160,77 @@ export const MobilePlayerSheet: React.FC = () => {
             </button>
           </div>
 
-          {/* Center: Large Artwork or Visualizer */}
-          <div className="flex-1 flex flex-col items-center justify-center my-4 relative">
+          {/* Center: Large Draggable Artwork with Fluid Gestures or Visualizer */}
+          <div className="flex-1 flex flex-col items-center justify-center my-3 relative">
             {visualizerMode ? (
               <div className="w-full max-w-xs h-64 glass-panel rounded-3xl p-4 flex flex-col justify-center items-center border border-white/15">
                 <AudioVisualizer height={160} bars={32} mode="bars" />
                 <span className="text-xs text-[#1ed760] font-mono mt-4">Real-Time Waveform</span>
               </div>
             ) : (
-              <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group">
-                <img
-                  src={currentTrack.artworkUrl || '/logo.svg'}
-                  alt={currentTrack.title}
-                  className="w-full h-full object-cover"
-                />
-                {automixEnabled && isCrossfadingSoon && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#1DB954]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
-                    <span>
-                      {automixStyle === 'vinyl_brake'
-                        ? 'AutoMix: فرملة فينيل'
-                        : automixStyle === 'echo_out'
-                        ? 'AutoMix: صدى متلاشٍ'
-                        : automixStyle === 'filter_sweep'
-                        ? 'AutoMix: فلتر كلوب'
-                        : 'AutoMix: تلاشٍ انسيابي'}
-                    </span>
+              <div className="flex flex-col items-center space-y-2">
+                <motion.div
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.35}
+                  onDragEnd={(_e, info) => {
+                    // Swipe threshold: 55px
+                    if (info.offset.x < -55) {
+                      nextTrack(false);
+                    } else if (info.offset.x > 55) {
+                      previousTrack();
+                    }
+                  }}
+                  whileTap={{ cursor: 'grabbing' }}
+                  className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-3xl overflow-hidden shadow-2xl border border-white/15 group cursor-grab touch-pan-y select-none"
+                >
+                  <img
+                    src={currentTrack.artworkUrl || '/logo.svg'}
+                    alt={currentTrack.title}
+                    draggable={false}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+
+                  {/* AutoMix In-Flight Badge */}
+                  {automixEnabled && isCrossfadingSoon && (
+                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#1DB954]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
+                      <span>
+                        {automixStyle === 'vinyl_brake'
+                          ? 'AutoMix: فرملة فينيل'
+                          : automixStyle === 'echo_out'
+                          ? 'AutoMix: صدى متلاشٍ'
+                          : automixStyle === 'filter_sweep'
+                          ? 'AutoMix: فلتر كلوب'
+                          : 'AutoMix: تلاشٍ انسيابي'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Active DSP Status Badges */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                    {karaokeMode && (
+                      <span className="px-2 py-0.5 rounded-full bg-purple-600/90 text-white text-[9px] font-bold shadow-md backdrop-blur-md border border-purple-400/30 flex items-center gap-1">
+                        <MicOff className="w-2.5 h-2.5" />
+                        <span>كاريوكي</span>
+                      </span>
+                    )}
+                    {analogWarmth > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-600/90 text-white text-[9px] font-bold shadow-md backdrop-blur-md border border-amber-400/30 flex items-center gap-1 mr-auto">
+                        <Flame className="w-2.5 h-2.5" />
+                        <span>{analogWarmth}% دافئ</span>
+                      </span>
+                    )}
+                    {reverbSpace !== 'off' && (
+                      <span className="px-2 py-0.5 rounded-full bg-cyan-600/90 text-white text-[9px] font-bold shadow-md backdrop-blur-md border border-cyan-400/30 flex items-center gap-1">
+                        <Waves className="w-2.5 h-2.5" />
+                        <span>3D Space</span>
+                      </span>
+                    )}
                   </div>
-                )}
+                </motion.div>
+                <span className="text-[10px] text-zinc-500 font-medium">
+                  اسحب الغلاف يميناً أو يساراً للتخطي
+                </span>
               </div>
             )}
           </div>
@@ -217,7 +264,7 @@ export const MobilePlayerSheet: React.FC = () => {
           </div>
 
           {/* Main Controls: Apple Music Style Big Center Play */}
-          <div className="flex items-center justify-between px-2 mb-6" dir="ltr">
+          <div className="flex items-center justify-between px-2 mb-5" dir="ltr">
             <button
               onClick={toggleShuffle}
               className={`p-2 transition-colors ${
@@ -262,7 +309,7 @@ export const MobilePlayerSheet: React.FC = () => {
             </button>
           </div>
 
-          {/* Quick Actions Footer */}
+          {/* Quick Actions Footer with Instant Karaoke Shortcut */}
           <div className="flex items-center justify-around pt-3 border-t border-white/10">
             <button
               onClick={() => {
@@ -275,12 +322,23 @@ export const MobilePlayerSheet: React.FC = () => {
               <span>الكلمات</span>
             </button>
 
+            {/* Quick Karaoke Toggle Shortcut */}
+            <button
+              onClick={() => setKaraokeMode(!karaokeMode)}
+              className={`flex flex-col items-center gap-1 text-[11px] transition-colors ${
+                karaokeMode ? 'text-purple-400 font-bold' : 'text-aura-textSecondary hover:text-white'
+              }`}
+            >
+              {karaokeMode ? <MicOff className="w-5 h-5 text-purple-400" /> : <Mic2 className="w-5 h-5" />}
+              <span>{karaokeMode ? 'عزل الفوكال: ON' : 'كاريوكي'}</span>
+            </button>
+
             <button
               onClick={() => setEqualizerOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
               <Sliders className="w-5 h-5 text-[#10B981]" />
-              <span>المعادل & AutoMix</span>
+              <span>المعادل & DSP</span>
             </button>
 
             <button

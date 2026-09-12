@@ -10,6 +10,83 @@ export const EQ_BANDS = [
 ] as const;
 
 export type AutoMixStyle = 'crossfade' | 'vinyl_brake' | 'echo_out' | 'filter_sweep';
+export type ReverbSpace = 'off' | 'studio' | 'arena' | 'car' | 'vinyl_lounge';
+
+/**
+ * Procedural Analog Tube / Tape Warmth Curve
+ * Soft hyperbolic tangent saturation curve introducing warm even/odd harmonic presence
+ */
+export function generateTubeWarmthCurve(samples = 2048): Float32Array {
+  const curve = new Float32Array(samples);
+  const drive = 2.2;
+  for (let i = 0; i < samples; ++i) {
+    const x = (i * 2) / (samples - 1) - 1;
+    curve[i] = Math.tanh(x * drive);
+  }
+  return curve;
+}
+
+/**
+ * Procedural Convolver Impulse Response Generator
+ * Generates natural acoustic spaces without downloading external audio files (100% offline)
+ */
+export function generateImpulseResponse(
+  ctx: AudioContext,
+  space: ReverbSpace
+): AudioBuffer | null {
+  if (space === 'off') return null;
+
+  let durationSec = 1.5;
+  let decay = 2.5;
+  let dampFreq = 6000;
+
+  switch (space) {
+    case 'studio':
+      durationSec = 0.6;
+      decay = 3.8;
+      dampFreq = 8500;
+      break;
+    case 'arena':
+      durationSec = 3.2;
+      decay = 1.8;
+      dampFreq = 5000;
+      break;
+    case 'car':
+      durationSec = 0.35;
+      decay = 5.2;
+      dampFreq = 4200;
+      break;
+    case 'vinyl_lounge':
+      durationSec = 1.4;
+      decay = 2.8;
+      dampFreq = 5500;
+      break;
+  }
+
+  const sampleRate = ctx.sampleRate;
+  const length = Math.max(1, Math.floor(sampleRate * durationSec));
+  const impulse = ctx.createBuffer(2, length, sampleRate);
+  const left = impulse.getChannelData(0);
+  const right = impulse.getChannelData(1);
+
+  const dampFactor = Math.exp(-2 * Math.PI * (dampFreq / sampleRate));
+  let prevL = 0;
+  let prevR = 0;
+
+  for (let i = 0; i < length; i++) {
+    const progress = i / length;
+    const envelope = Math.pow(1 - progress, decay);
+    const whiteL = (Math.random() * 2 - 1) * envelope;
+    const whiteR = (Math.random() * 2 - 1) * envelope;
+
+    prevL = whiteL * (1 - dampFactor) + prevL * dampFactor;
+    prevR = whiteR * (1 - dampFactor) + prevR * dampFactor;
+
+    left[i] = prevL;
+    right[i] = prevR;
+  }
+  return impulse;
+}
 
 /**
  * Mathematical Equal-Power Crossfade Curve Generator
@@ -56,6 +133,31 @@ export class DJAudioEngine {
   private currentBassBoost: number = 0; // 0 to 18 dB
   private spatialCrossGain: GainNode | null = null;
   private spatialAudioEnabled: boolean = false;
+
+  // Pro Studio DSP Nodes & States
+  private channelPreBus: GainNode | null = null;
+  private karaokeDryGain: GainNode | null = null;
+  private karaokeWetGain: GainNode | null = null;
+  private karaokeBassFilter: BiquadFilterNode | null = null;
+  private karaokeEnabled: boolean = false;
+
+  private warmthDryGain: GainNode | null = null;
+  private warmthWetGain: GainNode | null = null;
+  private warmthShaper: WaveShaperNode | null = null;
+  private warmthPostBus: GainNode | null = null;
+  private currentWarmth: number = 0; // 0 to 100%
+
+  private convolverNode: ConvolverNode | null = null;
+  private reverbDryGain: GainNode | null = null;
+  private reverbWetGain: GainNode | null = null;
+  private currentReverbSpace: ReverbSpace = 'off';
+
+  private normGain: GainNode | null = null;
+  private loudnessNormEnabled: boolean = true;
+
+  private hapticsEnabled: boolean = false;
+  private lastHapticTime: number = 0;
+  private bassFreqData: Uint8Array = new Uint8Array(8);
 
   // Unthrottled Background Timer Worker
   private timerWorker: TimerWorkerController | null = null;
@@ -219,6 +321,11 @@ export class DJAudioEngine {
         this.finalizeTransition();
       }
     }
+
+    // 5. Low-end Haptic Bass Feedback Trigger
+    if (this.hapticsEnabled && this.isPlaying()) {
+      this.checkBassHaptics();
+    }
   }
 
   private createChannel(name: 'A' | 'B'): Channel {
@@ -256,6 +363,12 @@ export class DJAudioEngine {
     audio.addEventListener('ended', () => {
       // PREVENT ACCIDENTAL AUTOPLAY: Ignore ended events if channel has no real user track (e.g. silent priming)
       if (!channel.track) {
+        return;
+      }
+
+      // If outgoing track finished while crossfading, finalize immediately to prevent transition stall
+      if (this.isCrossfading && this.activeChannelName === name) {
+        this.finalizeTransition();
         return;
       }
 
@@ -329,7 +442,22 @@ export class DJAudioEngine {
     if (!this.ctx) {
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        this.ctx = new AudioCtx();
+        if (AudioCtx) {
+          this.ctx = new AudioCtx();
+        }
+      } catch (err) {
+        console.warn('[DJAudioEngine] AudioContext creation error:', err);
+      }
+    }
+
+    if (this.ctx && !this.masterGain) {
+      try {
+        // Auto-resume audio graph if mobile browser or power-saving suspends it while playing
+        this.ctx.addEventListener('statechange', () => {
+          if (this.ctx && this.ctx.state === 'suspended' && this.isPlaying()) {
+            this.ctx.resume().catch(() => {});
+          }
+        });
 
         // Master output gain
         this.masterGain = this.ctx.createGain();
@@ -340,11 +468,71 @@ export class DJAudioEngine {
         this.analyser.fftSize = 256;
         this.analyser.smoothingTimeConstant = 0.82;
 
+        // Dedicated Pre-Bus summing both deck channels
+        this.channelPreBus = this.ctx.createGain();
+        this.channelPreBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+        // 1. Real-Time Vocal Remover / Karaoke Mode (Mid-Side Cancellation with Bass Bypass)
+        this.karaokeDryGain = this.ctx.createGain();
+        this.karaokeDryGain.gain.setValueAtTime(this.karaokeEnabled ? 0 : 1.0, this.ctx.currentTime);
+        this.channelPreBus.connect(this.karaokeDryGain);
+
+        this.karaokeWetGain = this.ctx.createGain();
+        this.karaokeWetGain.gain.setValueAtTime(this.karaokeEnabled ? 1.0 : 0, this.ctx.currentTime);
+
+        // Bass preservation filter (<180Hz) to keep centered punchy kicks & basslines
+        this.karaokeBassFilter = this.ctx.createBiquadFilter();
+        this.karaokeBassFilter.type = 'lowpass';
+        this.karaokeBassFilter.frequency.setValueAtTime(180, this.ctx.currentTime);
+        this.karaokeBassFilter.Q.setValueAtTime(0.707, this.ctx.currentTime);
+        this.channelPreBus.connect(this.karaokeBassFilter);
+
+        // High-pass filter (>180Hz) for mid/side lead vocal subtraction
+        const kHighFilter = this.ctx.createBiquadFilter();
+        kHighFilter.type = 'highpass';
+        kHighFilter.frequency.setValueAtTime(180, this.ctx.currentTime);
+        kHighFilter.Q.setValueAtTime(0.707, this.ctx.currentTime);
+        this.channelPreBus.connect(kHighFilter);
+
+        const kSplitter = this.ctx.createChannelSplitter(2);
+        const kMerger = this.ctx.createChannelMerger(2);
+        kHighFilter.connect(kSplitter);
+
+        const kGainL = this.ctx.createGain();
+        kGainL.gain.setValueAtTime(0.707, this.ctx.currentTime);
+        const kGainRInv = this.ctx.createGain();
+        kGainRInv.gain.setValueAtTime(-0.707, this.ctx.currentTime);
+
+        kSplitter.connect(kGainL, 0);
+        kSplitter.connect(kGainRInv, 1);
+
+        const kSubSum = this.ctx.createGain();
+        kGainL.connect(kSubSum);
+        kGainRInv.connect(kSubSum);
+
+        const kSubSumInv = this.ctx.createGain();
+        kSubSumInv.gain.setValueAtTime(-1.0, this.ctx.currentTime);
+        kSubSum.connect(kSubSumInv);
+
+        kSubSum.connect(kMerger, 0, 0);       // Left channel: + (L - R)
+        kSubSumInv.connect(kMerger, 0, 1);    // Right channel: - (L - R) = (R - L)
+
+        this.karaokeBassFilter.connect(kMerger, 0, 0);
+        this.karaokeBassFilter.connect(kMerger, 0, 1);
+
+        kMerger.connect(this.karaokeWetGain);
+
+        // Sum Dry & Wet Karaoke into the Bass Boost & Equalizer
+        const preEqSum = this.ctx.createGain();
+        this.karaokeDryGain.connect(preEqSum);
+        this.karaokeWetGain.connect(preEqSum);
+
         // Dedicated Mega Bass Boost Filter (LowShelf @ 80Hz)
         this.bassBoostFilter = this.ctx.createBiquadFilter();
         this.bassBoostFilter.type = 'lowshelf';
         this.bassBoostFilter.frequency.setValueAtTime(80, this.ctx.currentTime);
         this.bassBoostFilter.gain.setValueAtTime(this.currentBassBoost, this.ctx.currentTime);
+        preEqSum.connect(this.bassBoostFilter);
 
         // 5-Band Equalizer Filters with stored initial gains
         this.eqFilters = EQ_BANDS.map((band, idx) => {
@@ -359,16 +547,6 @@ export class DJAudioEngine {
           return filter;
         });
 
-        // Studio Dynamics Compressor (Prevents clipping when bass/EQ are boosted)
-        this.compressor = this.ctx.createDynamicsCompressor();
-        this.compressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
-        this.compressor.knee.setValueAtTime(30, this.ctx.currentTime);
-        this.compressor.ratio.setValueAtTime(6, this.ctx.currentTime);
-        this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
-        this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
-
-        // Complete Studio Audio Processing Chain:
-        // Channel Gains -> Channel Filters -> BassBoost -> EQ[0] -> ... -> EQ[4] -> Compressor -> Spatial -> Analyser -> MasterGain -> Destination
         this.bassBoostFilter.connect(this.eqFilters[0]);
 
         let prevNode: AudioNode = this.eqFilters[0];
@@ -376,9 +554,73 @@ export class DJAudioEngine {
           prevNode.connect(this.eqFilters[i]);
           prevNode = this.eqFilters[i];
         }
-        prevNode.connect(this.compressor);
 
-        // Apple Music Style Spatial Audio Expander (Binaural 3D Haas processor)
+        // 2. Analog Tape & Tube Warmth Stage (WaveShaper with Soft Sigmoid Distortion)
+        const warmthDry = 1.0 - (this.currentWarmth / 100) * 0.25;
+        const warmthWet = (this.currentWarmth / 100) * 0.65;
+
+        this.warmthDryGain = this.ctx.createGain();
+        this.warmthDryGain.gain.setValueAtTime(warmthDry, this.ctx.currentTime);
+
+        this.warmthWetGain = this.ctx.createGain();
+        this.warmthWetGain.gain.setValueAtTime(warmthWet, this.ctx.currentTime);
+
+        this.warmthShaper = this.ctx.createWaveShaper();
+        this.warmthShaper.curve = generateTubeWarmthCurve() as any;
+        this.warmthShaper.oversample = '2x';
+
+        prevNode.connect(this.warmthDryGain);
+        prevNode.connect(this.warmthShaper);
+        this.warmthShaper.connect(this.warmthWetGain);
+
+        this.warmthPostBus = this.ctx.createGain();
+        this.warmthDryGain.connect(this.warmthPostBus);
+        this.warmthWetGain.connect(this.warmthPostBus);
+
+        // 3. 3D Convolver Reverb Spaces (Acoustic IR generator)
+        this.reverbDryGain = this.ctx.createGain();
+        this.reverbWetGain = this.ctx.createGain();
+        this.convolverNode = this.ctx.createConvolver();
+
+        if (this.currentReverbSpace !== 'off') {
+          const ir = generateImpulseResponse(this.ctx, this.currentReverbSpace);
+          if (ir) this.convolverNode.buffer = ir;
+          this.reverbDryGain.gain.setValueAtTime(0.9, this.ctx.currentTime);
+          this.reverbWetGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        } else {
+          this.reverbDryGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+          this.reverbWetGain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+        }
+
+        this.warmthPostBus.connect(this.reverbDryGain);
+        this.warmthPostBus.connect(this.convolverNode);
+        this.convolverNode.connect(this.reverbWetGain);
+
+        // 4. Studio Dynamics Compressor & Smart Loudness Normalization (EBU R128)
+        this.compressor = this.ctx.createDynamicsCompressor();
+        this.normGain = this.ctx.createGain();
+
+        if (this.loudnessNormEnabled) {
+          this.compressor.threshold.setValueAtTime(-18, this.ctx.currentTime);
+          this.compressor.knee.setValueAtTime(24, this.ctx.currentTime);
+          this.compressor.ratio.setValueAtTime(4.5, this.ctx.currentTime);
+          this.compressor.attack.setValueAtTime(0.005, this.ctx.currentTime);
+          this.compressor.release.setValueAtTime(0.20, this.ctx.currentTime);
+          this.normGain.gain.setValueAtTime(1.32, this.ctx.currentTime);
+        } else {
+          this.compressor.threshold.setValueAtTime(-6, this.ctx.currentTime);
+          this.compressor.knee.setValueAtTime(30, this.ctx.currentTime);
+          this.compressor.ratio.setValueAtTime(2.0, this.ctx.currentTime);
+          this.compressor.attack.setValueAtTime(0.01, this.ctx.currentTime);
+          this.compressor.release.setValueAtTime(0.25, this.ctx.currentTime);
+          this.normGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        }
+
+        this.reverbDryGain.connect(this.compressor);
+        this.reverbWetGain.connect(this.compressor);
+        this.compressor.connect(this.normGain);
+
+        // 5. Apple Music Style Spatial Audio Expander (Binaural 3D Haas processor)
         const splitter = this.ctx.createChannelSplitter(2);
         const merger = this.ctx.createChannelMerger(2);
         const delayL = this.ctx.createDelay();
@@ -389,10 +631,10 @@ export class DJAudioEngine {
         this.spatialCrossGain = this.ctx.createGain();
         this.spatialCrossGain.gain.setValueAtTime(this.spatialAudioEnabled ? 0.45 : 0, this.ctx.currentTime);
 
-        this.compressor.connect(merger, 0, 0);
-        this.compressor.connect(merger, 0, 1);
+        this.normGain.connect(merger, 0, 0);
+        this.normGain.connect(merger, 1, 1);
 
-        this.compressor.connect(splitter);
+        this.normGain.connect(splitter);
         splitter.connect(delayL, 0);
         splitter.connect(delayR, 1);
 
@@ -413,6 +655,30 @@ export class DJAudioEngine {
         merger.connect(this.analyser);
         this.analyser.connect(this.masterGain);
         this.masterGain.connect(this.ctx.destination);
+
+        // MediaStreamDestination Bridge to prevent background audio throttling on iOS/Android
+        if (this.ctx.createMediaStreamDestination && typeof document !== 'undefined') {
+          try {
+            const streamDest = this.ctx.createMediaStreamDestination();
+            this.masterGain.connect(streamDest);
+            let bridgeAudio = document.getElementById('aura-background-bridge') as HTMLAudioElement;
+            if (!bridgeAudio) {
+              bridgeAudio = document.createElement('audio');
+              bridgeAudio.id = 'aura-background-bridge';
+              bridgeAudio.setAttribute('playsinline', 'true');
+              bridgeAudio.setAttribute('webkit-playsinline', 'true');
+              bridgeAudio.style.position = 'fixed';
+              bridgeAudio.style.left = '-9999px';
+              bridgeAudio.style.opacity = '0.001';
+              bridgeAudio.style.pointerEvents = 'none';
+              document.body.appendChild(bridgeAudio);
+            }
+            bridgeAudio.srcObject = streamDest.stream;
+            bridgeAudio.play().catch(() => {});
+          } catch (bridgeErr) {
+            console.warn('[DJAudioEngine] MediaStream bridge warning:', bridgeErr);
+          }
+        }
 
         // Bind both Ping-Pong channels to the audio graph
         this.bindChannelToGraph(this.channelA, 1.0);
@@ -463,13 +729,8 @@ export class DJAudioEngine {
   public primeDecks(): void {
     try {
       this.ensureChannelsAttached();
+      this.initContext().catch(() => {});
 
-      if (!this.ctx) {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioCtx) {
-          this.ctx = new AudioCtx();
-        }
-      }
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
@@ -510,6 +771,7 @@ export class DJAudioEngine {
   }
 
   public async unlockEngines(): Promise<void> {
+    await this.initContext();
     this.primeDecks();
     if (this.ctx && this.ctx.state === 'suspended') {
       try {
@@ -534,7 +796,9 @@ export class DJAudioEngine {
       channel.source.connect(channel.gain);
       channel.gain.connect(channel.filter);
 
-      if (this.bassBoostFilter) {
+      if (this.channelPreBus) {
+        channel.filter.connect(this.channelPreBus);
+      } else if (this.bassBoostFilter) {
         channel.filter.connect(this.bassBoostFilter);
       } else if (this.eqFilters[0]) {
         channel.filter.connect(this.eqFilters[0]);
@@ -1569,11 +1833,17 @@ export class DJAudioEngine {
 
   public setEqGains(gains: [number, number, number, number, number]): void {
     this.currentEqGains = [...gains];
-    if (!this.ctx) return;
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
+    if (!this.ctx || this.eqFilters.length === 0) return;
     this.eqFilters.forEach((filter, idx) => {
-      const val = Math.max(-15, Math.min(15, gains[idx]));
+      const rawVal = gains[idx];
+      const val = Math.max(-15, Math.min(15, isNaN(rawVal) ? 0 : rawVal));
       try {
-        filter.gain.setTargetAtTime(val, this.ctx!.currentTime, 0.05);
+        filter.gain.cancelScheduledValues(this.ctx!.currentTime);
+        filter.gain.setValueAtTime(filter.gain.value, this.ctx!.currentTime);
+        filter.gain.setTargetAtTime(val, this.ctx!.currentTime, 0.04);
       } catch {
         filter.gain.setValueAtTime(val, this.ctx!.currentTime);
       }
@@ -1581,10 +1851,16 @@ export class DJAudioEngine {
   }
 
   public setBassBoost(gain: number): void {
-    this.currentBassBoost = Math.max(0, Math.min(18, gain));
+    const rawVal = isNaN(gain) ? 0 : gain;
+    this.currentBassBoost = Math.max(0, Math.min(18, rawVal));
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
     if (!this.ctx || !this.bassBoostFilter) return;
     try {
-      this.bassBoostFilter.gain.setTargetAtTime(this.currentBassBoost, this.ctx.currentTime, 0.05);
+      this.bassBoostFilter.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.bassBoostFilter.gain.setValueAtTime(this.bassBoostFilter.gain.value, this.ctx.currentTime);
+      this.bassBoostFilter.gain.setTargetAtTime(this.currentBassBoost, this.ctx.currentTime, 0.04);
     } catch {
       this.bassBoostFilter.gain.setValueAtTime(this.currentBassBoost, this.ctx.currentTime);
     }
@@ -1606,6 +1882,172 @@ export class DJAudioEngine {
 
   public isSpatialAudioEnabled(): boolean {
     return this.spatialAudioEnabled;
+  }
+
+  // --- Pro Web Audio & DSP Control Methods ---
+
+  public setAnalogWarmth(level: number): void {
+    this.currentWarmth = Math.max(0, Math.min(100, isNaN(level) ? 0 : level));
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
+    if (!this.ctx || !this.warmthDryGain || !this.warmthWetGain) return;
+    const wet = (this.currentWarmth / 100) * 0.65;
+    const dry = 1.0 - (this.currentWarmth / 100) * 0.25;
+    try {
+      this.warmthDryGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.warmthWetGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.warmthDryGain.gain.setValueAtTime(this.warmthDryGain.gain.value, this.ctx.currentTime);
+      this.warmthWetGain.gain.setValueAtTime(this.warmthWetGain.gain.value, this.ctx.currentTime);
+      this.warmthDryGain.gain.setTargetAtTime(dry, this.ctx.currentTime, 0.04);
+      this.warmthWetGain.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.04);
+    } catch {
+      this.warmthDryGain.gain.setValueAtTime(dry, this.ctx.currentTime);
+      this.warmthWetGain.gain.setValueAtTime(wet, this.ctx.currentTime);
+    }
+  }
+
+  public getAnalogWarmth(): number {
+    return this.currentWarmth;
+  }
+
+  public setKaraokeMode(enabled: boolean): void {
+    this.karaokeEnabled = enabled;
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
+    if (!this.ctx || !this.karaokeDryGain || !this.karaokeWetGain) return;
+    const dry = enabled ? 0.0 : 1.0;
+    const wet = enabled ? 1.0 : 0.0;
+    try {
+      this.karaokeDryGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.karaokeWetGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.karaokeDryGain.gain.setValueAtTime(this.karaokeDryGain.gain.value, this.ctx.currentTime);
+      this.karaokeWetGain.gain.setValueAtTime(this.karaokeWetGain.gain.value, this.ctx.currentTime);
+      this.karaokeDryGain.gain.setTargetAtTime(dry, this.ctx.currentTime, 0.05);
+      this.karaokeWetGain.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.05);
+    } catch {
+      this.karaokeDryGain.gain.setValueAtTime(dry, this.ctx.currentTime);
+      this.karaokeWetGain.gain.setValueAtTime(wet, this.ctx.currentTime);
+    }
+  }
+
+  public isKaraokeModeEnabled(): boolean {
+    return this.karaokeEnabled;
+  }
+
+  public setReverbSpace(space: ReverbSpace): void {
+    this.currentReverbSpace = space;
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
+    if (!this.ctx || !this.convolverNode || !this.reverbDryGain || !this.reverbWetGain) return;
+
+    if (space === 'off') {
+      try {
+        this.reverbDryGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.reverbWetGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.reverbDryGain.gain.setTargetAtTime(1.0, this.ctx.currentTime, 0.04);
+        this.reverbWetGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.04);
+      } catch {
+        this.reverbDryGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+        this.reverbWetGain.gain.setValueAtTime(0.0, this.ctx.currentTime);
+      }
+      return;
+    }
+
+    try {
+      const irBuffer = generateImpulseResponse(this.ctx, space);
+      if (irBuffer) {
+        this.convolverNode.buffer = irBuffer;
+      }
+      let wet = 0.25;
+      let dry = 0.92;
+      if (space === 'studio') {
+        wet = 0.20;
+        dry = 0.95;
+      } else if (space === 'arena') {
+        wet = 0.38;
+        dry = 0.82;
+      } else if (space === 'car') {
+        wet = 0.16;
+        dry = 0.98;
+      } else if (space === 'vinyl_lounge') {
+        wet = 0.28;
+        dry = 0.90;
+      }
+
+      this.reverbDryGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.reverbWetGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.reverbDryGain.gain.setTargetAtTime(dry, this.ctx.currentTime, 0.05);
+      this.reverbWetGain.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.05);
+    } catch (e) {
+      console.warn('[DJAudioEngine] Reverb space switch error:', e);
+    }
+  }
+
+  public getReverbSpace(): ReverbSpace {
+    return this.currentReverbSpace;
+  }
+
+  public setLoudnessNormalization(enabled: boolean): void {
+    this.loudnessNormEnabled = enabled;
+    if (!this.masterGain || !this.ctx) {
+      this.initContext().catch(() => {});
+    }
+    if (!this.ctx || !this.compressor || !this.normGain) return;
+    try {
+      const time = this.ctx.currentTime;
+      if (enabled) {
+        this.compressor.threshold.setTargetAtTime(-18, time, 0.05);
+        this.compressor.knee.setTargetAtTime(24, time, 0.05);
+        this.compressor.ratio.setTargetAtTime(4.5, time, 0.05);
+        this.compressor.attack.setTargetAtTime(0.005, time, 0.05);
+        this.compressor.release.setTargetAtTime(0.20, time, 0.05);
+        this.normGain.gain.setTargetAtTime(1.32, time, 0.05);
+      } else {
+        this.compressor.threshold.setTargetAtTime(-6, time, 0.05);
+        this.compressor.knee.setTargetAtTime(30, time, 0.05);
+        this.compressor.ratio.setTargetAtTime(2.0, time, 0.05);
+        this.compressor.attack.setTargetAtTime(0.01, time, 0.05);
+        this.compressor.release.setTargetAtTime(0.25, time, 0.05);
+        this.normGain.gain.setTargetAtTime(1.0, time, 0.05);
+      }
+    } catch {
+      if (enabled) {
+        this.normGain.gain.setValueAtTime(1.32, this.ctx.currentTime);
+      } else {
+        this.normGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      }
+    }
+  }
+
+  public isLoudnessNormalizationEnabled(): boolean {
+    return this.loudnessNormEnabled;
+  }
+
+  public setHapticFeedback(enabled: boolean): void {
+    this.hapticsEnabled = enabled;
+  }
+
+  public isHapticFeedbackEnabled(): boolean {
+    return this.hapticsEnabled;
+  }
+
+  private checkBassHaptics(): void {
+    if (!this.analyser || !this.hapticsEnabled) return;
+    this.analyser.getByteFrequencyData(this.bassFreqData as any);
+    const subBass = this.bassFreqData[0];
+    const kickPunch = (this.bassFreqData[0] + this.bassFreqData[1]) * 0.5;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if ((subBass > 215 || kickPunch > 200) && now - this.lastHapticTime > 190) {
+      this.lastHapticTime = now;
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate(15);
+        } catch {}
+      }
+    }
   }
 
   public getVisualizerData(arr: Uint8Array): void {

@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { extractPaletteFromImage } from '../lib/colorSampler';
+import { AudioReactiveBackground } from './AudioReactiveBackground';
 
 export const AtmosphereBackground: React.FC = () => {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const reactiveVisualsEnabled = usePlayerStore((state) => state.reactiveVisualsEnabled);
+
+  const [rawColors, setRawColors] = useState({
+    p: '#1DB954',
+    s: '#10B981',
+    a: '#065F46',
+  });
 
   const [palette, setPalette] = useState({
     c1: 'rgba(29, 185, 84, 0.25)',
@@ -16,6 +24,12 @@ export const AtmosphereBackground: React.FC = () => {
   useEffect(() => {
     if (currentTrack?.artworkUrl) {
       extractPaletteFromImage(currentTrack.artworkUrl).then((p) => {
+        setRawColors({
+          p: p.primary,
+          s: p.secondary,
+          a: p.accent,
+        });
+
         // Format colors cleanly with appropriate alpha for dark backgrounds
         const formatRgba = (colorStr: string, alpha: number) => {
           if (colorStr.startsWith('#')) {
@@ -45,11 +59,20 @@ export const AtmosphereBackground: React.FC = () => {
       {/* Deep Obsidian Base Foundation */}
       <div className="absolute inset-0 bg-[#06060a]" />
 
+      {/* Real-Time Frequency-Reactive Canvas Mesh */}
+      {reactiveVisualsEnabled && (
+        <AudioReactiveBackground
+          primaryColor={rawColors.p}
+          secondaryColor={rawColors.s}
+          accentColor={rawColors.a}
+        />
+      )}
+
       {/* Hardware-Accelerated High-Performance Aurora Radial Mesh */}
       <div
         className="absolute inset-0 transition-opacity duration-1000 ease-out will-change-[opacity]"
         style={{
-          opacity: isPlaying ? 0.9 : 0.4,
+          opacity: isPlaying ? (reactiveVisualsEnabled ? 0.35 : 0.9) : 0.4,
           backgroundImage: `
             radial-gradient(circle 50vw at 15% 15%, ${palette.c1} 0%, transparent 70%),
             radial-gradient(circle 45vw at 85% 20%, ${palette.c2} 0%, transparent 65%),

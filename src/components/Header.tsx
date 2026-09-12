@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { formatTimerRemaining } from '../utils/formatters';
 import {
   ChevronLeft,
   ChevronRight,
@@ -42,11 +43,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const totalHours = Math.floor(totalDurationSecs / 3600);
   const totalMins = Math.floor((totalDurationSecs % 3600) / 60);
 
-  const formatTimerRemaining = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
+
 
   return (
     <header className="py-2 sm:py-3 border-b border-white/5 select-none mb-3 sm:mb-4 w-full min-w-0">

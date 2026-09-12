@@ -20,6 +20,7 @@ function buildArtworkObjects(url: string) {
 }
 
 let activeCallbacks: MediaSessionCallbacks | null = null;
+let isHandlersBound = false;
 let lastPositionUpdate = 0;
 let lastReportedTime = 0;
 
@@ -27,10 +28,11 @@ let lastReportedTime = 0;
  * Register global MediaSession action handlers early so iOS WebKit binds the standalone window.
  */
 export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks) {
+  activeCallbacks = callbacks;
+
   if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
     return;
   }
-  activeCallbacks = callbacks;
 
   // Declare audio intent on iOS 16.4+
   if ('audioSession' in navigator) {
@@ -38,6 +40,12 @@ export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks) {
       (navigator as any).audioSession.type = 'playback';
     } catch {}
   }
+
+  // Only bind OS action handlers once to prevent memory churn and redundant IPC calls
+  if (isHandlersBound) {
+    return;
+  }
+  isHandlersBound = true;
 
   const actions: [MediaSessionAction, (details: any) => void][] = [
     ['play', () => activeCallbacks?.onPlay()],
@@ -142,7 +150,7 @@ export function updateMediaSession(
   initMediaSessionHandlers(callbacks);
 }
 
-export function updateMediaSessionPosition(duration: number, currentTime: number) {
+export function updateMediaSessionPosition(duration: number, currentTime: number, playbackRate = 1) {
   if (
     typeof navigator === 'undefined' ||
     !('mediaSession' in navigator) ||
@@ -163,7 +171,7 @@ export function updateMediaSessionPosition(duration: number, currentTime: number
     try {
       navigator.mediaSession.setPositionState({
         duration: Math.max(duration, 0.1),
-        playbackRate: 1,
+        playbackRate: playbackRate > 0 ? playbackRate : 1,
         position: Math.max(0, Math.min(currentTime, duration)),
       });
     } catch {

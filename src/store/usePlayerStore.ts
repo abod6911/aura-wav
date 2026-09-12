@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset, PlaybackState } from '../types';
-import { djAudioEngine, EQ_BANDS, AutoMixStyle } from '../lib/audioEngine';
+import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
@@ -78,6 +78,12 @@ interface PlayerState {
   activeEqPreset: string;
   bassBoost: number;
   spatialAudio: boolean;
+  loudnessNormalization: boolean;
+  analogWarmth: number; // 0 to 100
+  karaokeMode: boolean;
+  reverbSpace: ReverbSpace;
+  hapticFeedbackEnabled: boolean;
+  reactiveVisualsEnabled: boolean;
 
   // YouTube Music Sleep Timer
   sleepTimerRemaining: number | null; // seconds countdown
@@ -132,6 +138,12 @@ interface PlayerState {
   setBassBoost: (level: number) => void;
   toggleSpatialAudio: () => void;
   setSpatialAudio: (enabled: boolean) => void;
+  setLoudnessNormalization: (enabled: boolean) => void;
+  setAnalogWarmth: (level: number) => void;
+  setKaraokeMode: (enabled: boolean) => void;
+  setReverbSpace: (space: ReverbSpace) => void;
+  setHapticFeedbackEnabled: (enabled: boolean) => void;
+  setReactiveVisualsEnabled: (enabled: boolean) => void;
   setEqGain: (index: number, gain: number) => void;
   applyEqPreset: (preset: EqualizerPreset) => void;
   reorderQueue: (startIndex: number, endIndex: number) => void;
@@ -206,6 +218,122 @@ export const resolveTrackAudioSource = async (tr: Track): Promise<Track> => {
   return resolved;
 };
 
+export interface NextTrackResolution {
+  targetTrack: Track;
+  fromUserQueue: boolean;
+  remainingUserQueue?: Track[];
+  effectiveQueue: Track[];
+  nextIndex: number;
+}
+
+/**
+ * Pure queue resolution helper (DRY principle).
+ * Resolves the next candidate track from user dynamic queue or playlist context,
+ * handling shuffle, repeat modes, smart autoplay, and automatic lookahead skipping of unplayable items.
+ */
+export const resolveNextQueueTrack = async (state: {
+  currentTrack: Track | null;
+  userQueue: Track[];
+  queue: Track[];
+  tracks: Track[];
+  shuffle: boolean;
+  repeatMode: RepeatMode;
+  smartAutoplay?: boolean;
+}): Promise<NextTrackResolution | null> => {
+  const { userQueue, queue, tracks, currentTrack, shuffle, repeatMode, smartAutoplay } = state;
+  if (!currentTrack) {
+    if (tracks.length > 0) {
+      const target = await resolveTrackAudioSource(tracks[0]);
+      return {
+        targetTrack: target,
+        fromUserQueue: false,
+        effectiveQueue: tracks,
+        nextIndex: 0,
+      };
+    }
+    return null;
+  }
+
+  // 1. Dynamic User Queue Priority (Spotify "Up Next")
+  if (userQueue.length > 0) {
+    const [nextUp, ...remainingUserQueue] = userQueue;
+    const targetTrack = await resolveTrackAudioSource(nextUp);
+    return {
+      targetTrack,
+      fromUserQueue: true,
+      remainingUserQueue,
+      effectiveQueue: queue.length > 0 ? queue : tracks,
+      nextIndex: 0,
+    };
+  }
+
+  // 2. Playlist / Album Sequential Queue
+  const effectiveQueue = queue.length > 0 ? [...queue] : [...tracks];
+  if (effectiveQueue.length === 0) return null;
+
+  let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
+  if (currentIndex === -1 && currentTrack.trackNumber) {
+    currentIndex = effectiveQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
+  }
+  if (currentIndex === -1) {
+    const curTitle = currentTrack.title.toLowerCase().trim();
+    currentIndex = effectiveQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
+  }
+
+  let nextIndex = -1;
+  if (shuffle) {
+    nextIndex = Math.floor(Math.random() * effectiveQueue.length);
+  } else if (currentIndex >= 0 && currentIndex < effectiveQueue.length - 1) {
+    nextIndex = currentIndex + 1;
+  } else if (repeatMode === 'all' || currentIndex === -1) {
+    nextIndex = 0;
+  } else if (repeatMode === 'one') {
+    nextIndex = currentIndex >= 0 ? currentIndex : 0;
+  }
+
+  if (nextIndex < 0 || nextIndex >= effectiveQueue.length) {
+    if (smartAutoplay && tracks.length > 0) {
+      const currentA = currentTrack.artist.toLowerCase();
+      const candidate =
+        tracks.find((t) => t.id !== currentTrack.id && t.artist.toLowerCase().includes(currentA)) ||
+        tracks[Math.floor(Math.random() * tracks.length)];
+      if (candidate) {
+        nextIndex = effectiveQueue.findIndex((t) => t.id === candidate.id);
+        if (nextIndex === -1) {
+          effectiveQueue.push(candidate);
+          nextIndex = effectiveQueue.length - 1;
+        }
+      }
+    }
+  }
+
+  if (nextIndex >= 0 && nextIndex < effectiveQueue.length) {
+    let targetTrack = await resolveTrackAudioSource(effectiveQueue[nextIndex]);
+
+    // Auto-skip unplayable tracks forward up to 10 slots
+    if (!targetTrack.file && !targetTrack.blob && !targetTrack.audioUrl) {
+      for (let offset = 1; offset <= Math.min(10, effectiveQueue.length); offset++) {
+        const candIdx = (nextIndex + offset) % effectiveQueue.length;
+        const cand = await resolveTrackAudioSource(effectiveQueue[candIdx]);
+        if (cand.file || cand.blob || cand.audioUrl) {
+          targetTrack = cand;
+          nextIndex = candIdx;
+          break;
+        }
+      }
+    }
+
+    return {
+      targetTrack,
+      fromUserQueue: false,
+      effectiveQueue,
+      nextIndex,
+    };
+  }
+
+  return null;
+};
+
 export const usePlayerStore = create<PlayerState>((set, get) => {
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
@@ -251,56 +379,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         get().nextTrack({ forceImmediate: true });
       }
     },
-    onPreloadNeeded: async (currentTrack) => {
-      const { userQueue, queue, tracks, shuffle, repeatMode } = get();
-
-      // Dynamic Queue has highest lookahead priority
-      if (userQueue.length > 0) {
-        const candidate = await resolveTrackAudioSource(userQueue[0]);
-        if (candidate.file || candidate.blob || candidate.audioUrl) {
-          djAudioEngine.preloadNextTrack(candidate);
-        }
-        return;
-      }
-
-      const effectiveQueue = queue.length > 0 ? queue : tracks;
-      if (effectiveQueue.length === 0) return;
-
-      let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
-      if (currentIndex === -1 && currentTrack.trackNumber) {
-        currentIndex = effectiveQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
-      }
-      if (currentIndex === -1) {
-        const curTitle = currentTrack.title.toLowerCase().trim();
-        currentIndex = effectiveQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
-      }
-
-      let nextIndex = -1;
-      if (shuffle) {
-        nextIndex = Math.floor(Math.random() * effectiveQueue.length);
-      } else if (currentIndex >= 0 && currentIndex < effectiveQueue.length - 1) {
-        nextIndex = currentIndex + 1;
-      } else if (repeatMode === 'all' || currentIndex === -1) {
-        nextIndex = 0;
-      } else if (repeatMode === 'one') {
-        nextIndex = currentIndex >= 0 ? currentIndex : 0;
-      }
-
-      if (nextIndex >= 0 && nextIndex < effectiveQueue.length) {
-        let candidate = await resolveTrackAudioSource(effectiveQueue[nextIndex]);
-        if (!candidate.file && !candidate.blob && !candidate.audioUrl) {
-          for (let offset = 1; offset <= Math.min(10, effectiveQueue.length); offset++) {
-            const candIdx = (nextIndex + offset) % effectiveQueue.length;
-            const cand = await resolveTrackAudioSource(effectiveQueue[candIdx]);
-            if (cand.file || cand.blob || cand.audioUrl) {
-              candidate = cand;
-              break;
-            }
-          }
-        }
-        if (candidate.file || candidate.blob || candidate.audioUrl) {
-          djAudioEngine.preloadNextTrack(candidate);
-        }
+    onPreloadNeeded: async () => {
+      const resolution = await resolveNextQueueTrack(get());
+      if (resolution && (resolution.targetTrack.file || resolution.targetTrack.blob || resolution.targetTrack.audioUrl)) {
+        djAudioEngine.preloadNextTrack(resolution.targetTrack);
       }
     },
     onAutoMixNeeded: () => {
@@ -382,6 +464,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     activeEqPreset: 'Flat',
     bassBoost: 0,
     spatialAudio: false,
+    loudnessNormalization: true,
+    analogWarmth: 0,
+    karaokeMode: false,
+    reverbSpace: 'off' as ReverbSpace,
+    hapticFeedbackEnabled: false,
+    reactiveVisualsEnabled: true,
 
     activeMood: null,
     smartAutoplay: true,
@@ -1057,9 +1145,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
       djAudioEngine.primeDecks();
-      const { userQueue, queue, tracks, currentTrack, shuffle, repeatMode, automixEnabled, isPlaying, automixStyle } = get();
+      const state = get();
+      const { currentTrack, automixEnabled, isPlaying, automixStyle } = state;
       if (!currentTrack) {
-        if (tracks.length > 0) get().playTrack(tracks[0]);
+        if (state.tracks.length > 0) get().playTrack(state.tracks[0]);
         return;
       }
 
@@ -1069,151 +1158,59 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const forceImmediate = typeof options === 'object' ? (options.forceImmediate !== false) : true;
       const shouldUseAutoMix = isAutoMixTrigger && !forceImmediate && automixEnabled && isEnginePlaying;
 
-      // 1. DYNAMIC QUEUE PRIORITY (Spotify "Up Next" Queue)
-      if (userQueue.length > 0) {
-        const [nextUp, ...remainingUserQueue] = userQueue;
-        let targetTrack = await resolveTrackAudioSource(nextUp);
-        const nextUpCleared = remainingUserQueue[0]?.id || null;
-
-        set({
-          userQueue: remainingUserQueue,
-          nextUpTrackId: nextUpCleared,
-        });
-
-        if (shouldUseAutoMix) {
-          await djAudioEngine.transitionTo(targetTrack, automixStyle);
-        } else {
-          djAudioEngine.cancelActiveTransitions(true);
-          set({
-            currentTrack: targetTrack,
-            nextUpTrackId: nextUpCleared,
-            history: [...get().history, currentTrack],
-            currentTime: 0,
-            duration: targetTrack.duration || 0,
-          });
-          updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
-          const success = await djAudioEngine.playTrack(targetTrack);
-          if (!success) {
-            set({ isPlaying: false });
-          }
-        }
-
-        if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
-          fetchLyricsOnline(targetTrack.title, targetTrack.artist, targetTrack.duration).then((res) => {
-            if (res && (res.syncedLyrics || res.plainLyrics)) {
-              const updatedTrack: Track = {
-                ...targetTrack,
-                syncedLyrics: res.syncedLyrics,
-                lyrics: res.plainLyrics || targetTrack.lyrics,
-              };
-              if (get().currentTrack?.id === updatedTrack.id) {
-                set({ currentTrack: updatedTrack });
-              }
-            }
-          });
-        }
+      const resolution = await resolveNextQueueTrack(state);
+      if (!resolution) {
+        djAudioEngine.pause();
+        set({ isPlaying: false });
         return;
       }
 
-      // 2. Fallback to normal playlist / album sequence
-      // Robust queue resolution: fallback to all tracks if queue is empty
-      const effectiveQueue = queue.length > 0 ? queue : tracks;
-      if (effectiveQueue.length === 0) return;
+      const { targetTrack, fromUserQueue, remainingUserQueue, effectiveQueue } = resolution;
 
-      let currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
-      if (currentIndex === -1 && currentTrack.trackNumber) {
-        currentIndex = effectiveQueue.findIndex((t) => t.trackNumber === currentTrack.trackNumber);
-      }
-      if (currentIndex === -1) {
-        const curTitle = currentTrack.title.toLowerCase().trim();
-        currentIndex = effectiveQueue.findIndex((t) => t.title.toLowerCase().trim() === curTitle);
-      }
-
-      let nextIndex = -1;
-      if (shuffle) {
-        nextIndex = Math.floor(Math.random() * effectiveQueue.length);
-      } else if (currentIndex >= 0 && currentIndex < effectiveQueue.length - 1) {
-        nextIndex = currentIndex + 1;
-      } else if (repeatMode === 'all' || currentIndex === -1) {
-        nextIndex = 0;
-      } else if (repeatMode === 'one') {
-        nextIndex = currentIndex >= 0 ? currentIndex : 0;
-      }
-
-      if (nextIndex < 0 || nextIndex >= effectiveQueue.length) {
-        // Smart YouTube Music Autoplay fallback
-        if (get().smartAutoplay && tracks.length > 0) {
-          const currentA = currentTrack.artist.toLowerCase();
-          const candidate =
-            tracks.find((t) => t.id !== currentTrack.id && t.artist.toLowerCase().includes(currentA)) ||
-            tracks[Math.floor(Math.random() * tracks.length)];
-          if (candidate) {
-            nextIndex = effectiveQueue.findIndex((t) => t.id === candidate.id);
-            if (nextIndex === -1) {
-              get().addToQueue(candidate);
-              effectiveQueue.push(candidate);
-              nextIndex = effectiveQueue.length - 1;
-            }
-          }
-        }
-      }
-
-      if (nextIndex >= 0 && nextIndex < effectiveQueue.length) {
-        let targetTrack = await resolveTrackAudioSource(effectiveQueue[nextIndex]);
-
-        // Auto-skip unplayable tracks: search forward up to 10 tracks if candidate is unplayable
-        if (!targetTrack.file && !targetTrack.blob && !targetTrack.audioUrl) {
-          for (let offset = 1; offset <= Math.min(10, effectiveQueue.length); offset++) {
-            const candIdx = (nextIndex + offset) % effectiveQueue.length;
-            const cand = await resolveTrackAudioSource(effectiveQueue[candIdx]);
-            if (cand.file || cand.blob || cand.audioUrl) {
-              targetTrack = cand;
-              break;
-            }
-          }
-        }
-
-        const nextUpCleared = get().nextUpTrackId === targetTrack.id ? null : get().nextUpTrackId;
-        if (shouldUseAutoMix) {
-          set({
-            queue: effectiveQueue,
-            nextUpTrackId: nextUpCleared,
-          });
-          await djAudioEngine.transitionTo(targetTrack, automixStyle);
-        } else {
-          djAudioEngine.cancelActiveTransitions(true);
-          set({
-            currentTrack: targetTrack,
-            nextUpTrackId: nextUpCleared,
-            queue: effectiveQueue,
-            history: [...get().history, currentTrack],
-            currentTime: 0,
-            duration: targetTrack.duration || 0,
-          });
-          updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
-          const success = await djAudioEngine.playTrack(targetTrack);
-          if (!success) {
-            set({ isPlaying: false });
-          }
-        }
-
-        if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
-          fetchLyricsOnline(targetTrack.title, targetTrack.artist, targetTrack.duration).then((res) => {
-            if (res && (res.syncedLyrics || res.plainLyrics)) {
-              const updatedTrack: Track = {
-                ...targetTrack,
-                syncedLyrics: res.syncedLyrics,
-                lyrics: res.plainLyrics || targetTrack.lyrics,
-              };
-              if (get().currentTrack?.id === updatedTrack.id) {
-                set({ currentTrack: updatedTrack });
-              }
-            }
-          });
-        }
+      if (fromUserQueue) {
+        const nextUpCleared = remainingUserQueue?.[0]?.id || null;
+        set({
+          userQueue: remainingUserQueue || [],
+          nextUpTrackId: nextUpCleared,
+        });
       } else {
-        djAudioEngine.pause();
-        set({ isPlaying: false });
+        const nextUpCleared = get().nextUpTrackId === targetTrack.id ? null : get().nextUpTrackId;
+        set({
+          queue: effectiveQueue,
+          nextUpTrackId: nextUpCleared,
+        });
+      }
+
+      if (shouldUseAutoMix) {
+        await djAudioEngine.transitionTo(targetTrack, automixStyle);
+      } else {
+        djAudioEngine.cancelActiveTransitions(true);
+        set({
+          currentTrack: targetTrack,
+          history: [...get().history, currentTrack],
+          currentTime: 0,
+          duration: targetTrack.duration || 0,
+        });
+        updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
+        const success = await djAudioEngine.playTrack(targetTrack);
+        if (!success) {
+          set({ isPlaying: false });
+        }
+      }
+
+      if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
+        fetchLyricsOnline(targetTrack.title, targetTrack.artist, targetTrack.duration).then((res) => {
+          if (res && (res.syncedLyrics || res.plainLyrics)) {
+            const updatedTrack: Track = {
+              ...targetTrack,
+              syncedLyrics: res.syncedLyrics,
+              lyrics: res.plainLyrics || targetTrack.lyrics,
+            };
+            if (get().currentTrack?.id === updatedTrack.id) {
+              set({ currentTrack: updatedTrack });
+            }
+          }
+        });
       }
     },
 
@@ -1348,13 +1345,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     setBassBoost: (level: number) => {
-      const clamped = Math.max(0, Math.min(18, level));
+      const clamped = Math.max(0, Math.min(18, isNaN(level) ? 0 : level));
+      djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setBassBoost(clamped);
       set({ bassBoost: clamped });
     },
 
     toggleSpatialAudio: () => {
       const next = !get().spatialAudio;
+      djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setSpatialAudio(next);
       set({ spatialAudio: next });
       get().addToast(
@@ -1367,18 +1366,87 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     setSpatialAudio: (enabled: boolean) => {
+      djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setSpatialAudio(enabled);
       set({ spatialAudio: enabled });
     },
 
+    setLoudnessNormalization: (enabled: boolean) => {
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setLoudnessNormalization(enabled);
+      set({ loudnessNormalization: enabled });
+      get().addToast(
+        enabled
+          ? 'تم تفعيل تطبيع الصوت الذكي (Smart Loudness EBU R128)'
+          : 'تم إيقاف تطبيع الصوت (Standard Dynamics)',
+        undefined,
+        'info'
+      );
+    },
+
+    setAnalogWarmth: (level: number) => {
+      const clamped = Math.max(0, Math.min(100, isNaN(level) ? 0 : level));
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setAnalogWarmth(clamped);
+      set({ analogWarmth: clamped });
+    },
+
+    setKaraokeMode: (enabled: boolean) => {
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setKaraokeMode(enabled);
+      set({ karaokeMode: enabled });
+      get().addToast(
+        enabled
+          ? 'تم تفعيل وضع الكاريوكي وعزل صوت المغني (Vocal Cut)'
+          : 'تم إيقاف وضع الكاريوكي والعودة للستيريو الأصلي',
+        undefined,
+        'info'
+      );
+    },
+
+    setReverbSpace: (space: ReverbSpace) => {
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setReverbSpace(space);
+      set({ reverbSpace: space });
+      const spaceNames: Record<ReverbSpace, string> = {
+        off: 'بدون صدى (Studio Direct)',
+        studio: 'استوديو صوتي هادئ (Acoustic Studio)',
+        arena: 'صالة حفلات ضخمة (Live Arena)',
+        car: 'داخل سيارة فاخرة (Luxury Car)',
+        vinyl_lounge: 'صالون الفينيل الدافئ (Vinyl Lounge)',
+      };
+      get().addToast(`بيئة الاستماع: ${spaceNames[space]}`, undefined, 'info');
+    },
+
+    setHapticFeedbackEnabled: (enabled: boolean) => {
+      djAudioEngine.setHapticFeedback(enabled);
+      set({ hapticFeedbackEnabled: enabled });
+      if (enabled && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate([25, 40, 25]);
+        } catch {}
+      }
+      get().addToast(
+        enabled ? 'تم تفعيل الاهتزاز اللمسي مع ضربات البيز' : 'تم إيقاف الاهتزاز اللمسي',
+        undefined,
+        'info'
+      );
+    },
+
+    setReactiveVisualsEnabled: (enabled: boolean) => {
+      set({ reactiveVisualsEnabled: enabled });
+    },
+
     setEqGain: (index: number, gain: number) => {
       const newGains = [...get().eqGains] as [number, number, number, number, number];
-      newGains[index] = gain;
+      newGains[index] = isNaN(gain) ? 0 : gain;
+      djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setEqGains(newGains);
       set({ eqGains: newGains, activeEqPreset: 'Custom' });
     },
 
     applyEqPreset: (preset: EqualizerPreset) => {
+      djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setEqGains(preset.gains);
       const extraBass =
         preset.name === 'Bass Boost'
@@ -1513,7 +1581,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') =>
       set({ expandedPlayerTab: tab }),
     setLyricsOpen: (open: boolean) => set({ isLyricsOpen: open }),
-    setEqualizerOpen: (open: boolean) => set({ isEqualizerOpen: open }),
+    setEqualizerOpen: (open: boolean) => {
+      if (open) {
+        djAudioEngine.initContext().catch(() => {});
+      }
+      set({ isEqualizerOpen: open });
+    },
     setQueueOpen: (open: boolean) => set({ isQueueOpen: open }),
     setMobilePlayerOpen: (open: boolean) => set({ isMobilePlayerOpen: open }),
     setSleepTimerOpen: (open: boolean) => set({ isSleepTimerOpen: open }),
