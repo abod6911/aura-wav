@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
+import { useTranslation } from '../../i18n/useTranslation';
 import { TimelineSlider } from './TimelineSlider';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import {
@@ -54,6 +55,7 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 };
 
 const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack!);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
@@ -186,7 +188,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             handleClose();
           }
         }}
-        className="fixed inset-0 z-50 bg-[#121212] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
+        className="fixed inset-0 z-50 bg-[#0c0c14] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
+        dir={dir}
       >
         {/* Drag Handle Pill */}
         <div
@@ -259,12 +262,20 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.25}
                 onDragEnd={(_, info) => {
-                  if (info.offset.x < -60 || info.velocity.x < -200) {
+                  if (info.offset.x < -55 || info.velocity.x < -200) {
                     triggerHaptic();
-                    nextTrack(false);
-                  } else if (info.offset.x > 60 || info.velocity.x > 200) {
+                    if (isRTL) {
+                      previousTrack();
+                    } else {
+                      nextTrack(false);
+                    }
+                  } else if (info.offset.x > 55 || info.velocity.x > 200) {
                     triggerHaptic();
-                    previousTrack();
+                    if (isRTL) {
+                      nextTrack(false);
+                    } else {
+                      previousTrack();
+                    }
                   }
                 }}
                 style={{
@@ -712,36 +723,36 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'up_next'
-                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <ListMusic className="w-4 h-4" />
-            <span>التالي</span>
+            <span>{t.queue}</span>
           </button>
 
           <button
             onClick={() => setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'lyrics'
-                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Mic2 className="w-4 h-4" />
-            <span>الكلمات</span>
+            <span>{t.syncedLyrics}</span>
           </button>
 
           <button
             onClick={() => setActiveTab(activeTab === 'related' ? 'player' : 'related')}
             className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'related'
-                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Compass className="w-4 h-4" />
-            <span>مشابهة</span>
+            <span>{isRTL ? 'مقترحة' : 'Related'}</span>
           </button>
         </div>
 

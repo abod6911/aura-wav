@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { formatTime } from '../../utils/formatters';
+export { formatTime };
 
 interface TimelineSliderProps {
   currentTime: number;
@@ -9,16 +11,13 @@ interface TimelineSliderProps {
   accentColor?: string;
 }
 
-import { formatTime } from '../../utils/formatters';
-export { formatTime };
-
 export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   currentTime,
   duration,
   onSeek,
   className = '',
   showTimestamps = true,
-  accentColor = '#1DB954',
+  accentColor = '#FA243C',
 }) => {
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubTime, setScrubTime] = useState(0);
@@ -26,7 +25,6 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   const [hoverTime, setHoverTime] = useState(0);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
-  // When not actively scrubbing, sync with audio playback
   useEffect(() => {
     if (!isScrubbing) {
       setScrubTime(currentTime);
@@ -77,14 +75,14 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   const activeBubbleTime = isScrubbing ? scrubTime : hoverTime;
 
   return (
-    <div className={`w-full flex items-center gap-3 select-none ${className}`} dir="ltr">
+    <div className={`w-full flex items-center gap-2.5 sm:gap-3 select-none ${className}`} dir="ltr">
       {showTimestamps && (
         <span className="text-[11px] font-mono font-medium text-zinc-400 w-10 text-right tabular-nums">
           {formatTime(displayTime)}
         </span>
       )}
 
-      {/* Interactive Track Container */}
+      {/* Interactive Track Container (Enlarged for thumb touch ergonomics) */}
       <div
         ref={trackRef}
         onPointerDown={handlePointerDown}
@@ -95,53 +93,51 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
           setHoverTime(calculateTimeFromPointer(e.clientX));
         }}
         onPointerLeave={() => setIsHovered(false)}
-        className="group relative flex-1 h-7 flex items-center cursor-pointer touch-none"
+        className="group relative flex-1 h-9 flex items-center cursor-pointer touch-none"
       >
         {/* Floating Time Bubble on Hover / Scrub */}
         {(isHovered || isScrubbing) && validDuration > 0 && (
           <div
-            className="absolute -top-7 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#0c0c14]/90 border border-white/20 backdrop-blur-md text-white text-[11px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.8)] pointer-events-none z-30 transition-all duration-75 animate-fadeIn"
+            className="absolute -top-7 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[#0c0c14]/95 border border-white/20 backdrop-blur-md text-white text-[11px] font-mono font-bold shadow-[0_4px_16px_rgba(0,0,0,0.85)] pointer-events-none z-30 transition-all duration-75 animate-fadeIn"
             style={{
-              left: `${Math.max(4, Math.min(96, activeTimeBubblePercent))}%`,
+              left: `${Math.max(5, Math.min(95, activeTimeBubblePercent))}%`,
             }}
           >
             {formatTime(activeBubbleTime)}
           </div>
         )}
 
-        {/* Dynamic Width Rail: 3.5px expanding to 6px on hover/scrub */}
-        <div className="w-full h-[3.5px] bg-white/[0.1] rounded-full overflow-hidden transition-[height] duration-200 group-hover:h-[6px] relative">
-          {/* Subtle Hover Target Track */}
+        {/* Dynamic Rail: 4px expanding to 7px on hover/scrub */}
+        <div className="w-full h-[4px] bg-white/[0.12] rounded-full overflow-hidden transition-[height] duration-200 group-hover:h-[6.5px] relative">
           {isHovered && !isScrubbing && (
             <div
-              className="absolute top-0 bottom-0 left-0 bg-white/15 rounded-full pointer-events-none"
+              className="absolute top-0 bottom-0 left-0 bg-white/20 rounded-full pointer-events-none"
               style={{ width: `${hoverPercent}%` }}
             />
           )}
 
-          {/* Glowing Filled Progress Bar with Dynamic Accent Hue */}
+          {/* Glowing Filled Progress Bar */}
           <div
             className="h-full rounded-full relative transition-[width] duration-75"
             style={{
               width: `${progressPercent}%`,
-              background: `linear-gradient(90deg, ${accentColor}, #1ed760)`,
-              boxShadow: `0 0 14px ${accentColor}`,
+              background: `linear-gradient(90deg, ${accentColor}, #FF375F)`,
+              boxShadow: `0 0 12px ${accentColor}80`,
             }}
           >
-            {/* Subtle light sheen highlight */}
-            <div className="absolute inset-0 bg-white/25 rounded-full" />
+            <div className="absolute inset-0 bg-white/20 rounded-full" />
           </div>
         </div>
 
-        {/* Apple-Grade Frosted Glass Thumb */}
+        {/* Apple-Grade Tactile Thumb */}
         <div
-          className={`absolute -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border border-white/70 pointer-events-none transition-transform duration-100 ${
-            isScrubbing ? 'scale-125 ring-4' : 'group-hover:scale-110'
+          className={`absolute -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border-2 pointer-events-none transition-transform duration-100 ${
+            isScrubbing ? 'scale-125 ring-4 ring-white/20' : 'group-hover:scale-110'
           }`}
           style={{
             left: `${progressPercent}%`,
             borderColor: accentColor,
-            boxShadow: `0 0 12px ${accentColor}`,
+            boxShadow: `0 0 12px ${accentColor}99`,
           }}
         />
       </div>
