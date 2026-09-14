@@ -172,6 +172,8 @@ interface PlayerState {
   downloadTrackForOffline: (trackId: string) => Promise<void>;
   cacheAllAvailableTracksOffline: () => Promise<void>;
   isSettingsOpen: boolean;
+  language: 'ar' | 'en';
+  setLanguage: (lang: 'ar' | 'en') => void;
   storageStats: StorageStats | null;
   setSettingsOpen: (open: boolean) => void;
   refreshStorageStats: () => Promise<StorageStats>;
@@ -498,6 +500,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     savedFolderTimestamp: null,
 
     isSettingsOpen: false,
+    language: (typeof localStorage !== 'undefined' && (localStorage.getItem('aura_lang') as 'ar' | 'en')) || 'ar',
+    setLanguage: (lang) => {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('aura_lang', lang);
+      }
+      set({ language: lang });
+    },
     storageStats: null,
     setSettingsOpen: (open) => set({ isSettingsOpen: open }),
     refreshStorageStats: async () => {

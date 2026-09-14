@@ -42,7 +42,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Readex Pro', 'Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        arabic: ['Readex Pro', 'sans-serif'],
+        latin: ['Plus Jakarta Sans', 'sans-serif'],
       },
       animation: {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
