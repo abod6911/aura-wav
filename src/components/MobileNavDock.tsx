@@ -31,7 +31,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0e0e16]/88 backdrop-blur-3xl border-t border-white/[0.12] px-2 pt-1.5 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.85)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0e0e16]/96 backdrop-blur-2xl border-t border-white/[0.12] px-2 pt-1.5 pb-[calc(env(safe-area-inset-bottom,8px)+6px)] flex items-center justify-around select-none shadow-[0_-8px_32px_rgba(0,0,0,0.92)]"
       dir={dir}
     >
       {tabs.map((tab) => {
