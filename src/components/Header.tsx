@@ -1,17 +1,18 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useTranslation } from '../i18n/useTranslation';
 import { formatTimerRemaining } from '../utils/formatters';
 import {
-  ChevronLeft,
-  ChevronRight,
   FolderPlus,
   FolderOpen,
   Moon,
   Sliders,
   Settings,
-  Bell,
   Search,
-  User,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -19,6 +20,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
+  const { t, language, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
@@ -28,63 +30,59 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
   const setActiveFilterPill = usePlayerStore((state) => state.setActiveFilterPill);
-  const addToast = usePlayerStore((state) => state.addToast);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+  const addToast = usePlayerStore((state) => state.addToast);
 
-  // Dynamic Arabic greeting
+  // Time-aware dynamic greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'صباح الخير';
-    if (hour >= 12 && hour < 18) return 'مساء الخير';
-    return 'ليلة سعيدة وموسيقى هادئة';
-  }, []);
+    if (hour >= 5 && hour < 12) return t.goodMorning;
+    if (hour >= 12 && hour < 17) return t.goodAfternoon;
+    if (hour >= 17 && hour < 22) return t.goodEvening;
+    return t.peacefulNight;
+  }, [t]);
 
   const totalDurationSecs = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
   const totalHours = Math.floor(totalDurationSecs / 3600);
   const totalMins = Math.floor((totalDurationSecs % 3600) / 60);
 
-
-
   return (
-    <header className="py-2 sm:py-3 border-b border-white/5 select-none mb-3 sm:mb-4 w-full min-w-0">
-      {/* Mobile Top Bar */}
+    <header className="py-2.5 sm:py-3.5 border-b border-white/[0.08] select-none mb-3 sm:mb-4 w-full min-w-0" dir={dir}>
+      {/* Mobile Header Bar */}
       <div className="flex flex-col sm:hidden w-full gap-2.5">
         <div className="flex items-center justify-between w-full">
-          {/* Profile Avatar & Brand */}
+          {/* Brand & Dynamic Greeting */}
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1DB954] to-[#1ed760] p-[1.5px] shadow-md flex-shrink-0"
-              title="الملف الشخصي والإعدادات"
+              className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/20 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+              title={t.settings}
+              aria-label={t.settings}
             >
-              <div className="w-full h-full bg-[#181818] rounded-full flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-full h-full bg-[#121218] rounded-full flex items-center justify-center text-white text-xs font-black">
                 A
               </div>
             </button>
-            <span className="font-black text-white text-base tracking-tight">
-              AURA<span className="text-[#1DB954]">.WAV</span>
-            </span>
+            <div className="flex flex-col">
+              <span className="font-black text-white text-base tracking-tight leading-none">
+                AURA<span className="text-[#FA243C]">.WAV</span>
+              </span>
+              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5">
+                {greeting}
+              </span>
+            </div>
           </div>
 
-          {/* Quick Action Icons */}
+          {/* Mobile Right Actions */}
           <div className="flex items-center gap-1.5">
-            {/* Import Button */}
+            {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-all cursor-pointer"
-              title="استيراد مجلد أو ملفات"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.08] text-xs font-bold text-white transition-all cursor-pointer active:scale-95"
+              title={t.importFolder}
             >
-              <FolderPlus className="w-3.5 h-3.5 text-[#1DB954]" />
-              <span className="text-[11px]">استيراد</span>
-            </button>
-
-            {/* Notification Bell */}
-            <button
-              onClick={() => addToast('لا توجد إشعارات جديدة حالياً', undefined, 'info')}
-              className="p-2 rounded-full text-zinc-300 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-              title="الإشعارات"
-            >
-              <Bell className="w-4 h-4" />
+              <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span className="text-[11px]">{t.importMusic}</span>
             </button>
 
             {/* Sleep Timer */}
@@ -92,121 +90,130 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
               onClick={() => setSleepTimerOpen(true)}
               className={`p-2 rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                 sleepTimerRemaining !== null
-                  ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
-                  : 'text-zinc-300 hover:text-white hover:bg-white/5'
+                  ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
-              title="مؤقت النوم الذكي"
+              title={t.sleepTimer}
             >
               <Moon className="w-4 h-4" />
               {sleepTimerRemaining !== null && (
                 <span className="font-mono text-[10px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
               )}
             </button>
+
+            {/* Settings Trigger */}
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="p-2 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title={t.settings}
+            >
+              <Settings className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
         {/* Mobile Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-0.5">
           <button
             onClick={() => setActiveFilterPill('all')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeFilterPill === 'all'
-                ? 'bg-[#1DB954] text-black shadow-sm'
-                : 'bg-white/10 text-white hover:bg-white/15'
+                ? 'bg-white text-black shadow-sm'
+                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
             }`}
           >
-            الكل
+            {t.all}
           </button>
           <button
             onClick={() => setActiveFilterPill('music')}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeFilterPill === 'music'
-                ? 'bg-[#1DB954] text-black shadow-sm'
-                : 'bg-white/10 text-white hover:bg-white/15'
+                ? 'bg-[#FA243C] text-white shadow-sm'
+                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
             }`}
           >
-            الموسيقى
+            {t.music}
           </button>
           <button
             onClick={() => {
               setActiveFilterPill('podcasts');
-              addToast('قسم البودكاست قيد التحديث', undefined, 'info');
+              addToast(isRTL ? 'قسم البودكاست قيد التطوير' : 'Podcasts section coming soon', undefined, 'info');
             }}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
               activeFilterPill === 'podcasts'
-                ? 'bg-[#1DB954] text-black shadow-sm'
-                : 'bg-white/10 text-white hover:bg-white/15'
+                ? 'bg-[#FA243C] text-white shadow-sm'
+                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
             }`}
           >
-            البودكاست
+            {t.podcasts}
           </button>
         </div>
       </div>
 
-      {/* Desktop Top Bar: Clean Spotify Aesthetic */}
+      {/* Desktop Header Bar */}
       <div className="hidden sm:flex items-center justify-between w-full min-w-0">
-        {/* Left: Navigation Arrows & Library Folder Badge */}
+        {/* Left: History Navigation & Saved Folder */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center gap-1.5" dir="ltr">
             <button
               onClick={() => setActiveTab('home')}
               className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              title="رجوع للرئيسية"
+              title={t.listenNow}
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setActiveTab('search')}
               className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-              title="الانتقال للبحث"
+              title={t.search}
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenImport}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
-              title="مجلد الموسيقى المحفوظ - انقر للتحديث أو إضافة مجلد جديد"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
+              title={t.importFolder}
             >
-              <FolderOpen className="w-3.5 h-3.5 text-[#1DB954]" />
+              <FolderOpen className="w-3.5 h-3.5 text-[#FA243C]" />
               <span className="font-bold text-white">{savedFolderName || 'Liked_Songs'}</span>
-              <span className="text-zinc-500 font-mono text-[11px]">({tracks.length} أغنية)</span>
+              <span className="text-zinc-500 font-mono text-[11px]">({tracks.length} {t.songs})</span>
             </button>
-            <span className="hidden lg:inline-flex items-center gap-1 text-[11px] text-zinc-400">
-              <span>{totalHours > 0 ? `${totalHours} س و ` : ''}{totalMins} د</span>
+            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-zinc-400">
+              <span>{totalHours > 0 ? `${totalHours}h ` : ''}{totalMins}m</span>
               <span>•</span>
-              <span className="text-[#1DB954] font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#1DB954] animate-pulse" />
-                أوفلاين 100%
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                {t.offlineReady}
               </span>
             </span>
           </div>
         </div>
 
-        {/* Right: Sleek Action Buttons (NO bright red buttons!) */}
+        {/* Right: Desktop Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Subtle Search Trigger */}
+          {/* Quick Search */}
           {activeTab !== 'search' && (
             <button
               onClick={() => setActiveTab('search')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-400 hover:text-white text-xs font-medium transition-all cursor-pointer"
-              title="البحث في كل الموسيقى"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-all cursor-pointer"
+              title={t.quickSearch}
             >
               <Search className="w-3.5 h-3.5 text-zinc-400" />
-              <span>بحث سريع</span>
+              <span>{t.quickSearch}</span>
             </button>
           )}
 
-          {/* Import Folder Action (Clean Spotify Green Accent) */}
+          {/* Import Folder Action */}
           <button
             onClick={onOpenImport}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1DB954] hover:bg-[#1ed760] text-black text-xs font-bold transition-all hover:scale-105 active:scale-95 shadow-md shadow-[#1DB954]/20 cursor-pointer"
-            title="استيراد مجلد أو ملفات أغانٍ جديدة"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:brightness-110 text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 shadow-md shadow-[#FA243C]/20 cursor-pointer"
+            title={t.importFolder}
           >
-            <FolderPlus className="w-4 h-4 fill-black text-black" />
-            <span>استيراد مجلد</span>
+            <FolderPlus className="w-4 h-4" />
+            <span>{t.importFolder}</span>
           </button>
 
           {/* Sleep Timer */}
@@ -214,44 +221,44 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             onClick={() => setSleepTimerOpen(true)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
               sleepTimerRemaining !== null
-                ? 'bg-[#1DB954] border-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
-                : 'bg-white/5 hover:bg-white/10 border-white/5 text-zinc-300 hover:text-white'
+                ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                : 'bg-white/[0.05] hover:bg-white/[0.1] border-white/[0.08] text-zinc-300 hover:text-white'
             }`}
-            title="مؤقت النوم الذكي"
+            title={t.sleepTimer}
           >
             <Moon className="w-3.5 h-3.5" />
             {sleepTimerRemaining !== null ? (
               <span className="font-mono text-xs">{formatTimerRemaining(sleepTimerRemaining)}</span>
             ) : (
-              <span className="hidden md:inline">مؤقت النوم</span>
+              <span className="hidden md:inline">{t.sleepTimer}</span>
             )}
           </button>
 
           {/* Equalizer */}
           <button
             onClick={() => setEqualizerOpen(true)}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-            title="المعادل الصوتي"
+            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            title={t.equalizer}
           >
             <Sliders className="w-4 h-4" />
           </button>
 
-          {/* Settings / Storage */}
+          {/* Settings Modal Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-            title="إدارة التخزين والمكتبة"
+            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            title={t.settings}
           >
             <Settings className="w-4 h-4" />
           </button>
 
-          {/* Profile Avatar */}
+          {/* Profile Avatar Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1DB954] to-[#1ed760] p-[1.5px] shadow-md flex-shrink-0 cursor-pointer"
-            title="الملف الشخصي"
+            className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/20 flex-shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            title={t.profile}
           >
-            <div className="w-full h-full bg-[#181818] rounded-full flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-full h-full bg-[#121218] rounded-full flex items-center justify-center text-white text-xs font-bold">
               A
             </div>
           </button>
