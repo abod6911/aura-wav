@@ -24,6 +24,7 @@ import { ChangeArtworkModal } from './components/ChangeArtworkModal';
 import { SettingsModal } from './components/SettingsModal';
 import { DJFxSheet } from './components/dj/DJFxSheet';
 import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
+import { useTranslation } from './i18n/useTranslation';
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -33,6 +34,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function App() {
+  const { t, isRTL, dir } = useTranslation();
   const initStore = usePlayerStore((state) => state.initStore);
   const activeTab = usePlayerStore((state) => state.activeTab);
   const isLoadingLibrary = usePlayerStore((state) => state.isLoadingLibrary);
@@ -271,7 +273,8 @@ export function App() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#121212] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#1DB954]/20"
+      dir={dir}
+      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#08080c] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#FA243C]/25"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (

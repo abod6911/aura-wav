@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useTranslation } from '../i18n/useTranslation';
 import {
   Play,
   Pause,
@@ -15,12 +16,13 @@ import {
   Heart,
   ListMusic,
   Mic2,
-  Sparkles,
+  Sliders,
 } from 'lucide-react';
 import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
 
 export const PlayerBar: React.FC = () => {
+  const { t, isRTL } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTime = usePlayerStore((state) => state.currentTime);
@@ -61,17 +63,19 @@ export const PlayerBar: React.FC = () => {
     }
   };
 
+  const accentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
+
   return (
     <>
       <footer
         dir="ltr"
-        className="hidden md:flex fixed bottom-0 left-0 right-0 h-20 z-40 bg-[#181818] px-4 sm:px-6 items-center justify-between border-t border-white/10 select-none shadow-[0_-8px_32px_rgba(0,0,0,0.7)]"
+        className="hidden md:flex fixed bottom-0 left-0 right-0 h-22 z-40 bg-[#0d0d14]/92 backdrop-blur-3xl px-4 sm:px-6 items-center justify-between border-t border-white/[0.12] select-none shadow-[0_-12px_40px_rgba(0,0,0,0.85)]"
       >
         {/* 1. Track Info (Left) */}
         <div className="flex items-center gap-3.5 w-1/4 min-w-0">
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className="relative w-14 h-14 rounded-md overflow-hidden bg-[#282828] border border-white/5 shadow-md flex-shrink-0 group cursor-pointer"
+            className="relative w-14 h-14 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-lg flex-shrink-0 group cursor-pointer"
           >
             <AnimatePresence mode="wait">
               <motion.img
@@ -93,7 +97,7 @@ export const PlayerBar: React.FC = () => {
               className="text-sm font-bold text-white truncate hover:underline cursor-pointer tracking-tight"
               title={currentTrack?.title}
             >
-              {currentTrack?.title || 'اختر أغنية للتشغيل'}
+              {currentTrack?.title || (isRTL ? 'اختر أغنية للتشغيل' : 'Select a track to play')}
             </h4>
             <p className="text-xs text-zinc-400 truncate mt-0.5 hover:underline cursor-pointer">
               {currentTrack?.artist || 'AURA.WAV'}
@@ -103,12 +107,12 @@ export const PlayerBar: React.FC = () => {
           {currentTrack && (
             <button
               onClick={() => toggleFavorite(currentTrack.id)}
-              className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
-              title={isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
+              className="p-2 text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer"
+              title={isFav ? t.favoriteRemoved : t.favoriteAdded}
             >
               <Heart
                 className={`w-4 h-4 transition-transform active:scale-125 ${
-                  isFav ? 'text-[#1DB954] fill-[#1DB954]' : ''
+                  isFav ? 'text-[#FA243C] fill-[#FA243C]' : ''
                 }`}
               />
             </button>
@@ -122,9 +126,9 @@ export const PlayerBar: React.FC = () => {
             {/* Shuffle */}
             <button
               onClick={toggleShuffle}
-              title="خلط الأغاني الذكي (Smart Shuffle)"
+              title={t.shuffle}
               className={`p-1.5 transition-colors cursor-pointer ${
-                shuffle ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+                shuffle ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <Shuffle className="w-4 h-4" />
@@ -133,17 +137,17 @@ export const PlayerBar: React.FC = () => {
             {/* Previous Track */}
             <button
               onClick={previousTrack}
-              title="السابق"
-              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              title={t.previous}
+              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
             >
               <SkipBack className="w-5 h-5 fill-current" />
             </button>
 
-            {/* Play/Pause Button (Spotify Iconic White Circle) */}
+            {/* Play/Pause Button (Apple Music Style High Contrast) */}
             <button
               onClick={togglePlayPause}
-              title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
-              className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+              title={isPlaying ? t.pause : t.play}
+              className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(250,36,60,0.3)] cursor-pointer"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-black text-black" />
@@ -155,8 +159,8 @@ export const PlayerBar: React.FC = () => {
             {/* Next Track */}
             <button
               onClick={() => nextTrack({ forceImmediate: true })}
-              title="التالي"
-              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              title={t.next}
+              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
             >
               <SkipForward className="w-5 h-5 fill-current" />
             </button>
@@ -164,9 +168,9 @@ export const PlayerBar: React.FC = () => {
             {/* Repeat */}
             <button
               onClick={cycleRepeat}
-              title="تكرار التشغيل"
+              title={repeatMode === 'one' ? t.repeatOne : t.repeatAll}
               className={`p-1.5 transition-colors cursor-pointer relative ${
-                repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+                repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
               }`}
             >
               {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
@@ -178,51 +182,55 @@ export const PlayerBar: React.FC = () => {
             currentTime={currentTime}
             duration={duration}
             onSeek={seek}
-            showTimestamps={true}
+            accentColor={accentColor}
+            className="w-full"
           />
         </div>
 
-        {/* 3. Utility Actions & Volume (Right) */}
-        <div className="flex items-center justify-end gap-3 w-1/4">
-          {/* Synced Lyrics */}
+        {/* 3. Utility Tools & Volume (Right) */}
+        <div className="flex items-center justify-end gap-2 w-1/4">
+          {/* Synced Lyrics Toggle */}
           <button
             onClick={() => setLyricsOpen(!isLyricsOpen)}
-            title="الكلمات المتزامنة"
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
-              isLyricsOpen ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+            title={t.syncedLyrics}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              isLyricsOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Mic2 className="w-4 h-4" />
+            <Mic2 className="w-4.5 h-4.5" />
           </button>
 
-          {/* Audio Settings & DJ Specs Modal */}
+          {/* Equalizer Quick Modal */}
           <button
             onClick={() => setIsAudioSettingsOpen(true)}
-            title="إعدادات الصوت المتقدمة ومواصفات DJ"
-            className="p-2 text-zinc-400 hover:text-[#1DB954] transition-colors cursor-pointer"
+            title={t.equalizer}
+            className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sliders className="w-4.5 h-4.5" />
           </button>
 
-          {/* Queue Drawer / Right Sidebar */}
+          {/* Right Sidebar Queue Toggle */}
           <button
             onClick={toggleRightSidebar}
-            title="قائمة الانتظار"
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
-              isRightSidebarOpen ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+            title={t.queue}
+            className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              isRightSidebarOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <ListMusic className="w-4 h-4" />
+            <ListMusic className="w-4.5 h-4.5" />
           </button>
 
           {/* Volume Control */}
-          <div className="flex items-center gap-2 group/vol">
+          <div className="flex items-center gap-2 ml-2">
             <button
               onClick={toggleMute}
               className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
-              title={isMuted ? 'إلغاء الكتم' : 'كتم الصوت'}
             >
-              {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {isMuted || volume === 0 ? (
+                <VolumeX className="w-4.5 h-4.5 text-red-400" />
+              ) : (
+                <Volume2 className="w-4.5 h-4.5" />
+              )}
             </button>
             <input
               type="range"
@@ -231,18 +239,18 @@ export const PlayerBar: React.FC = () => {
               step="0.01"
               value={isMuted ? 0 : volume}
               onChange={(e) => {
-                const newVol = parseFloat(e.target.value);
-                setVolume(newVol);
-                if (isMuted && newVol > 0) setIsMuted(false);
+                const val = parseFloat(e.target.value);
+                setVolume(val);
+                if (isMuted && val > 0) setIsMuted(false);
               }}
-              className="w-20 sm:w-24 h-1 bg-zinc-600 rounded-lg appearance-none cursor-pointer accent-white hover:accent-[#1DB954]"
+              className="w-20 accent-[#FA243C] cursor-pointer"
             />
           </div>
 
-          {/* Full-Screen Player Expander */}
+          {/* Full Screen Sheet Expand */}
           <button
             onClick={() => setMobilePlayerOpen(true)}
-            title="شاشة المشغل الكاملة"
+            title={isRTL ? 'تكبير المشغل' : 'Expand Player'}
             className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <Maximize2 className="w-4 h-4" />
@@ -250,11 +258,9 @@ export const PlayerBar: React.FC = () => {
         </div>
       </footer>
 
-      {/* Discrete Audio Settings & DJ Specs Modal */}
-      <AudioSettingsModal
-        isOpen={isAudioSettingsOpen}
-        onClose={() => setIsAudioSettingsOpen(false)}
-      />
+      {isAudioSettingsOpen && (
+        <AudioSettingsModal isOpen={isAudioSettingsOpen} onClose={() => setIsAudioSettingsOpen(false)} />
+      )}
     </>
   );
 };
