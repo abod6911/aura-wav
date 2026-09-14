@@ -1,32 +1,44 @@
 import React, { useMemo, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { Play, Pause, Heart, Clock, FolderPlus, Sparkles, Music2, Disc3, Radio, ChevronLeft } from 'lucide-react';
+import { useTranslation } from '../i18n/useTranslation';
+import {
+  Play,
+  Pause,
+  Heart,
+  Sparkles,
+  Radio,
+  FolderPlus,
+  Disc3,
+  Flame,
+  Music2,
+} from 'lucide-react';
 import { Track } from '../types';
+import { motion } from 'framer-motion';
 
 interface SpotifyHomeViewProps {
   onOpenImport?: () => void;
 }
 
 export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }) => {
+  const { t, language, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const favorites = usePlayerStore((state) => state.favorites);
-  const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
-  const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
 
-  const [visibleTableCount, setVisibleTableCount] = useState(40);
+  const [visibleTableCount, setVisibleTableCount] = useState(30);
 
-  // Dynamic Arabic greeting based on time of day
+  // Time-aware greeting
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'صباح الخير';
-    if (hour >= 12 && hour < 18) return 'مساء الخير';
-    return 'ليلة سعيدة وموسيقى هادئة';
-  }, []);
+    if (hour >= 5 && hour < 12) return t.goodMorning;
+    if (hour >= 12 && hour < 17) return t.goodAfternoon;
+    if (hour >= 17 && hour < 22) return t.goodEvening;
+    return t.peacefulNight;
+  }, [t]);
 
   const formatDuration = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -35,105 +47,166 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Helper: Get unique tracks by artist to prevent ANY repetitive images
+  // Helper: Get unique tracks by artist
   const getUniqueByArtist = (trackList: Track[], maxCount: number): Track[] => {
     const seen = new Set<string>();
     const result: Track[] = [];
-    for (const t of trackList) {
-      const art = (t.artist || '').toLowerCase().trim();
+    for (const trk of trackList) {
+      const art = (trk.artist || '').toLowerCase().trim();
       if (!seen.has(art)) {
         seen.add(art);
-        result.push(t);
+        result.push(trk);
         if (result.length >= maxCount) break;
       }
     }
     return result;
   };
 
-  // 1. Quick Access (5 diverse tracks from top legends across different genres)
-  const quickAccessTracks = useMemo(() => {
-    return getUniqueByArtist(tracks, 5);
-  }, [tracks]);
-
-  // 2. Curated Today's Top Hits (10 diverse artists)
-  const featuredHits = useMemo(() => {
-    return getUniqueByArtist(tracks, 12);
-  }, [tracks]);
-
-  // 3. Top Artists (Circular Avatars for 14 global legends)
+  const quickAccessTracks = useMemo(() => getUniqueByArtist(tracks, 5), [tracks]);
+  const featuredHits = useMemo(() => getUniqueByArtist(tracks, 12), [tracks]);
   const topArtists = useMemo(() => {
-    const uniqueArtists = getUniqueByArtist(tracks, 15);
-    return uniqueArtists.map((t) => ({
-      name: t.artist,
-      avatarUrl: t.coverUrl || t.artworkUrl || '/logo.svg',
-      track: t,
+    return getUniqueByArtist(tracks, 14).map((trk) => ({
+      name: trk.artist,
+      avatarUrl: trk.coverUrl || trk.artworkUrl || '/logo.svg',
+      track: trk,
     }));
   }, [tracks]);
 
-  // 4. Genre Specific Carousels (Each showing 10 distinct artists per genre!)
   const hipHopHits = useMemo(() => {
-    const hiphop = tracks.filter((t) => (t.genre || '').includes('Hip-Hop'));
+    const hiphop = tracks.filter((trk) => (trk.genre || '').includes('Hip-Hop'));
     return getUniqueByArtist(hiphop, 10);
   }, [tracks]);
 
   const rockClassics = useMemo(() => {
-    const rock = tracks.filter((t) => (t.genre || '').includes('Rock'));
+    const rock = tracks.filter((trk) => (trk.genre || '').includes('Rock'));
     return getUniqueByArtist(rock, 10);
   }, [tracks]);
 
   const edmParty = useMemo(() => {
-    const edm = tracks.filter((t) => (t.genre || '').includes('EDM'));
+    const edm = tracks.filter((trk) => (trk.genre || '').includes('EDM'));
     return getUniqueByArtist(edm, 10);
   }, [tracks]);
 
-  const rnbSoul = useMemo(() => {
-    const rnb = tracks.filter((t) => (t.genre || '').includes('R&B'));
-    return getUniqueByArtist(rnb, 10);
-  }, [tracks]);
+  const likedTracks = useMemo(() => tracks.filter((trk) => favorites.includes(trk.id)), [tracks, favorites]);
 
-  // Liked tracks
-  const likedTracks = useMemo(
-    () => tracks.filter((t) => favorites.includes(t.id)),
-    [tracks, favorites]
-  );
-
-  const heroAccentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#1DB954';
-
-  const GENRES_LIST = [
-    { name: 'بوب عالمي', genre: 'Pop', color: 'from-[#E1306C] to-[#833AB4]', tracksCount: 350 },
-    { name: 'هيب هوب وراب', genre: 'Hip-Hop & Trap', color: 'from-[#BA5D07] to-[#E65100]', tracksCount: 350 },
-    { name: 'روك وبديل', genre: 'Rock & Alternative', color: 'from-[#E91429] to-[#800C17]', tracksCount: 350 },
-    { name: 'إلكترونيك و EDM', genre: 'EDM & Dance', color: 'from-[#0D72EA] to-[#003882]', tracksCount: 350 },
-    { name: 'آر آند بي وسول', genre: 'R&B & Soul', color: 'from-[#8D67AB] to-[#4A154B]', tracksCount: 350 },
-  ];
+  // Spotlight Track (Current or first featured)
+  const spotlightTrack = currentTrack || (tracks.length > 0 ? tracks[0] : null);
+  const heroAccentColor = spotlightTrack?.dominantColor || spotlightTrack?.accentColor || '#FA243C';
 
   return (
-    <div className="w-full min-h-screen text-white pb-36 select-none">
-      {/* Dynamic Hero Gradient Header */}
-      <div
-        className="px-4 sm:px-6 md:px-8 pt-6 pb-8 transition-colors duration-700 ease-out"
-        style={{
-          background: `linear-gradient(180deg, ${heroAccentColor}33 0%, #121212 100%)`,
-        }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-            {greeting}
-          </h1>
+    <div className="w-full min-h-screen text-white pb-36 select-none overflow-x-hidden" dir={dir}>
+      {/* 1. Dynamic Apple Music Ambient Header & Hero Spotlight */}
+      <div className="relative px-3 sm:px-6 md:px-8 pt-4 pb-6 transition-colors duration-700">
+        {/* Soft Ambient Mesh Glow */}
+        <div
+          className="absolute inset-0 -z-10 opacity-30 filter blur-[90px] transition-all duration-700 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 50% 20%, ${heroAccentColor} 0%, transparent 70%)`,
+          }}
+        />
+
+        {/* Top Header Row */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <span className="text-[11px] font-bold text-[#FA243C] tracking-wider uppercase flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5" />
+              <span>{t.listenNow}</span>
+            </span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white mt-0.5">
+              {greeting}
+            </h1>
+          </div>
+
           {onOpenImport && (
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition-all cursor-pointer backdrop-blur-md"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.1] text-xs font-bold text-white transition-all cursor-pointer backdrop-blur-md active:scale-95 shadow-sm"
             >
-              <FolderPlus className="w-4 h-4 text-[#1DB954]" />
-              <span>إضافة مجلد</span>
+              <FolderPlus className="w-4 h-4 text-[#FA243C]" />
+              <span className="hidden xs:inline">{t.importFolder}</span>
             </button>
           )}
         </div>
 
-        {/* 6 Quick Access Grid Tiles (100% DIVERSE ARTISTS & COVERS) */}
+        {/* 2. Hero Spotlight Card (Apple Music Editorial Showcase) */}
+        {spotlightTrack && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            onClick={() => playTrack(spotlightTrack)}
+            className="relative w-full rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.12] backdrop-blur-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] cursor-pointer group mb-6"
+          >
+            {/* Background Blur Artwork */}
+            <div
+              className="absolute inset-0 -z-10 opacity-25 filter blur-[60px] bg-cover bg-center scale-125 transition-transform duration-700 group-hover:scale-130"
+              style={{ backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})` }}
+            />
+
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+              {/* Grand Rounded Squircle Artwork */}
+              <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-[1.02] transition-transform duration-300">
+                <img
+                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
+                  alt={spotlightTrack.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+              </div>
+
+              {/* Editorial Details */}
+              <div className="flex-1 min-w-0 text-center sm:text-start flex flex-col justify-between h-full">
+                <div>
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/30 text-[#FF375F] text-[10px] font-extrabold uppercase tracking-wide mb-2">
+                    <Sparkles className="w-3 h-3" />
+                    <span>{t.heroListenNow}</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white truncate tracking-tight">
+                    {spotlightTrack.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-zinc-300 font-medium truncate mt-1">
+                    {spotlightTrack.artist}
+                  </p>
+                  <p className="text-xs text-zinc-400 truncate mt-0.5">
+                    {spotlightTrack.album || 'Lossless Audio'}
+                  </p>
+                </div>
+
+                {/* Instant Play Action Button */}
+                <div className="pt-4 flex items-center justify-center sm:justify-start gap-3">
+                  <motion.button
+                    whileTap={{ scale: 0.94 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (currentTrack?.id === spotlightTrack.id) {
+                        togglePlayPause();
+                      } else {
+                        playTrack(spotlightTrack);
+                      }
+                    }}
+                    className="flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-white text-black font-extrabold text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    {isPlaying && currentTrack?.id === spotlightTrack.id ? (
+                      <>
+                        <Pause className="w-4 h-4 fill-black text-black" />
+                        <span>{t.pause}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                        <span>{t.heroPlayNow}</span>
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* 3. Quick Access 2-Column Mobile Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-          {/* Tile 1: Pinned Liked Songs */}
+          {/* Liked Songs Tile */}
           <div
             onClick={() => {
               if (likedTracks.length > 0) {
@@ -142,110 +215,76 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 setActiveTab('favorites');
               }
             }}
-            className="group flex items-center gap-3 bg-white/5 hover:bg-white/15 backdrop-blur-md rounded-md overflow-hidden transition-all cursor-pointer relative shadow-sm hover:shadow-md pr-3"
+            className="group flex items-center gap-2.5 sm:gap-3 bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.08] backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
           >
-            <div className="w-14 sm:w-16 h-14 sm:h-16 flex-shrink-0 bg-gradient-to-br from-[#450af5] to-[#8e8ee5] flex items-center justify-center shadow-lg">
-              <Heart className="w-6 h-6 text-white fill-white" />
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 bg-gradient-to-br from-[#FA243C] to-[#FF375F] flex items-center justify-center shadow-lg shadow-[#FA243C]/25">
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-bold text-white truncate">
-                الأغاني المعجب بها
+                {t.likedSongsCard}
               </p>
               <p className="text-[11px] text-zinc-400 truncate">
-                {favorites.length} أغنية
+                {favorites.length} {t.songs}
               </p>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (likedTracks.length > 0) {
-                  playTrack(likedTracks[0], likedTracks);
-                }
-              }}
-              className="w-10 h-10 rounded-full bg-[#1DB954] text-black shadow-xl flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105 transition-all duration-200 flex-shrink-0 cursor-pointer"
-              title="تشغيل الأغاني المعجب بها"
-            >
-              <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-            </button>
           </div>
 
-          {/* Tiles 2-6: Top Distinct Artists */}
-          {quickAccessTracks.map((t) => {
-            const isCur = currentTrack?.id === t.id;
+          {/* Quick Access Distinct Tracks */}
+          {quickAccessTracks.map((trk) => {
+            const isCur = currentTrack?.id === trk.id;
             return (
               <div
-                key={t.id}
-                onClick={() => playTrack(t)}
-                className="group flex items-center gap-3 bg-white/5 hover:bg-white/15 backdrop-blur-md rounded-md overflow-hidden transition-all cursor-pointer relative shadow-sm hover:shadow-md pr-3"
+                key={trk.id}
+                onClick={() => playTrack(trk)}
+                className="group flex items-center gap-2.5 sm:gap-3 bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.08] backdrop-blur-xl rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
               >
                 <img
-                  src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                  alt={t.title}
-                  className="w-14 sm:w-16 h-14 sm:h-16 object-cover flex-shrink-0 shadow-md"
+                  src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                  alt={trk.title}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 shadow-md"
                 />
                 <div className="min-w-0 flex-1">
-                  <p
-                    className={`text-xs sm:text-sm font-bold truncate ${
-                      isCur ? 'text-[#1DB954]' : 'text-white'
-                    }`}
-                  >
-                    {t.title}
+                  <p className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                    {trk.title}
                   </p>
                   <p className="text-[11px] text-zinc-400 truncate">
-                    {t.artist}
+                    {trk.artist}
                   </p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isCur) togglePlayPause();
-                    else playTrack(t);
-                  }}
-                  className={`w-10 h-10 rounded-full bg-[#1DB954] text-black shadow-xl flex items-center justify-center transition-all duration-200 flex-shrink-0 cursor-pointer ${
-                    isCur && isPlaying
-                      ? 'opacity-100 scale-100'
-                      : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
-                  }`}
-                >
-                  {isCur && isPlaying ? (
-                    <Pause className="w-5 h-5 fill-black text-black" />
-                  ) : (
-                    <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-                  )}
-                </button>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Main Content Sections & Carousels */}
-      <div className="px-4 sm:px-6 md:px-8 space-y-9 mt-4">
-        {/* CAROUSEL 1: Featured Hits (Diverse Superstars) */}
+      {/* 4. Horizontal Snap Carousels */}
+      <div className="px-3 sm:px-6 md:px-8 space-y-8 mt-4">
+        {/* CAROUSEL A: Featured Hits */}
         {featuredHits.length > 0 && (
-          <section className="space-y-3.5">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  مختارات مميزة لك اليوم
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+                  {t.madeForYou}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">أشهر المسارات العالمية من كبار الفنانين</p>
+                <p className="text-xs text-zinc-400">{t.swipeToExplore}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {featuredHits.map((t) => {
-                const isCur = currentTrack?.id === t.id;
+            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {featuredHits.map((trk) => {
+                const isCur = currentTrack?.id === trk.id;
                 return (
                   <div
-                    key={t.id}
-                    onClick={() => playTrack(t)}
-                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
+                    key={trk.id}
+                    onClick={() => playTrack(trk)}
+                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
+                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
                       <img
-                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                        alt={t.title}
+                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                        alt={trk.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
@@ -253,27 +292,27 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isCur) togglePlayPause();
-                          else playTrack(t);
+                          else playTrack(trk);
                         }}
-                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
                           isCur && isPlaying
                             ? 'opacity-100 scale-100'
                             : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
                         }`}
                       >
                         {isCur && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-black text-black" />
+                          <Pause className="w-4 h-4 fill-black text-black" />
                         ) : (
-                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
+                          <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
                         )}
                       </button>
                     </div>
 
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
-                      {t.title}
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                      {trk.title}
                     </h4>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {t.artist}
+                      {trk.artist}
                     </p>
                   </div>
                 );
@@ -282,416 +321,144 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           </section>
         )}
 
-        {/* SECTION 2: Popular Artists (Circular Avatars) */}
+        {/* CAROUSEL B: Top Artists (Circular Avatars with Gradient Rings) */}
         {topArtists.length > 0 && (
-          <section className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  أشهر الفنانين
-                </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">كبار النجوم العالميين في مكتبتك الموسيقية</p>
-              </div>
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+                {t.topArtists}
+              </h2>
             </div>
 
-            <div className="flex items-center gap-5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
               {topArtists.map((art) => (
                 <div
                   key={art.name}
-                  onClick={() => {
-                    setSearchQuery(art.name);
-                    setActiveTab('search');
-                  }}
-                  className="group flex-shrink-0 w-28 sm:w-32 text-center cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-all"
+                  onClick={() => playTrack(art.track)}
+                  className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer group text-center w-24 sm:w-28"
                 >
-                  <div className="relative aspect-square w-full rounded-full overflow-hidden mb-2.5 shadow-xl border border-white/10 group-hover:border-[#1DB954] transition-colors">
-                    <img
-                      src={art.avatarUrl}
-                      alt={art.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      loading="lazy"
-                    />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-black/60">
+                      <img
+                        src={art.avatarUrl}
+                        alt={art.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#1DB954] transition-colors">
+                  <span className="text-xs font-bold text-zinc-200 truncate w-full group-hover:text-white">
                     {art.name}
-                  </h4>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">فنان</span>
+                  </span>
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* SECTION 3: Browse by Genre Bento Cards */}
-        <section className="space-y-3.5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-black text-white">
-              تصفح حسب النمط الموسيقي
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {GENRES_LIST.map((g) => (
-              <div
-                key={g.genre}
-                onClick={() => {
-                  setSearchQuery(g.genre);
-                  setActiveTab('search');
-                }}
-                className={`p-4 rounded-xl bg-gradient-to-br ${g.color} cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg relative overflow-hidden group min-h-[90px] flex flex-col justify-between`}
-              >
-                <h3 className="text-sm sm:text-base font-black text-white">{g.name}</h3>
-                <span className="text-[11px] text-white/80 font-medium">350 أغنية</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CAROUSEL 4: Hip-Hop & Rap */}
+        {/* CAROUSEL C: Hip-Hop & Rap Hits */}
         {hipHopHits.length > 0 && (
-          <section className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  هيب هوب وراب عالمي
-                </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">أفضل إيقاعات الـ Trap و Rap المعاصرة</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {hipHopHits.map((t) => {
-                const isCur = currentTrack?.id === t.id;
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => playTrack(t)}
-                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
-                  >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
-                      <img
-                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                        alt={t.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isCur) togglePlayPause();
-                          else playTrack(t);
-                        }}
-                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
-                        }`}
-                      >
-                        {isCur && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-black text-black" />
-                        ) : (
-                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-                        )}
-                      </button>
-                    </div>
-
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
-                      {t.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {t.artist}
-                    </p>
+          <section className="space-y-3">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+              {isRTL ? 'هيب هوب وراب' : 'Hip-Hop & Rap'}
+            </h2>
+            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {hipHopHits.map((trk) => (
+                <div
+                  key={trk.id}
+                  onClick={() => playTrack(trk)}
+                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-2xl p-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all"
+                >
+                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2">
+                    <img src={trk.coverUrl || trk.artworkUrl || '/logo.svg'} alt={trk.title} className="w-full h-full object-cover" />
                   </div>
-                );
-              })}
+                  <h4 className="text-xs font-bold text-white truncate">{trk.title}</h4>
+                  <p className="text-[11px] text-zinc-400 truncate">{trk.artist}</p>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {/* CAROUSEL 5: Rock & Alternative */}
+        {/* CAROUSEL D: Rock & Alternative */}
         {rockClassics.length > 0 && (
-          <section className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  روك وكلاسيكيات أسطورية
-                </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">أيقونات الروك الكلاسيكي والبديل</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {rockClassics.map((t) => {
-                const isCur = currentTrack?.id === t.id;
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => playTrack(t)}
-                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
-                  >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
-                      <img
-                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                        alt={t.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isCur) togglePlayPause();
-                          else playTrack(t);
-                        }}
-                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
-                        }`}
-                      >
-                        {isCur && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-black text-black" />
-                        ) : (
-                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-                        )}
-                      </button>
-                    </div>
-
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
-                      {t.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {t.artist}
-                    </p>
+          <section className="space-y-3">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+              {isRTL ? 'روك وبديل' : 'Rock & Alternative'}
+            </h2>
+            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {rockClassics.map((trk) => (
+                <div
+                  key={trk.id}
+                  onClick={() => playTrack(trk)}
+                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-2xl p-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all"
+                >
+                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2">
+                    <img src={trk.coverUrl || trk.artworkUrl || '/logo.svg'} alt={trk.title} className="w-full h-full object-cover" />
                   </div>
-                );
-              })}
+                  <h4 className="text-xs font-bold text-white truncate">{trk.title}</h4>
+                  <p className="text-[11px] text-zinc-400 truncate">{trk.artist}</p>
+                </div>
+              ))}
             </div>
           </section>
         )}
 
-        {/* CAROUSEL 6: EDM & Dance Party */}
-        {edmParty.length > 0 && (
-          <section className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  حفلات الـ EDM والموسيقى الإلكترونية
-                </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">إيقاعات ونغمات المهرجانات والحفلات الحماسية</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {edmParty.map((t) => {
-                const isCur = currentTrack?.id === t.id;
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => playTrack(t)}
-                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
-                  >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
-                      <img
-                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                        alt={t.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isCur) togglePlayPause();
-                          else playTrack(t);
-                        }}
-                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
-                        }`}
-                      >
-                        {isCur && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-black text-black" />
-                        ) : (
-                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-                        )}
-                      </button>
-                    </div>
-
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
-                      {t.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {t.artist}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* CAROUSEL 7: Chill R&B & Soul */}
-        {rnbSoul.length > 0 && (
-          <section className="space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white hover:underline cursor-pointer">
-                  أجواء هادئة • آر آند بي وسول
-                </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">أعذب الألحان والموسيقى الاسترخائية</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {rnbSoul.map((t) => {
-                const isCur = currentTrack?.id === t.id;
-                return (
-                  <div
-                    key={t.id}
-                    onClick={() => playTrack(t)}
-                    className="group spotify-card p-3 flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors"
-                  >
-                    <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-[#242424] mb-2.5 shadow-lg">
-                      <img
-                        src={t.coverUrl || t.artworkUrl || '/logo.svg'}
-                        alt={t.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isCur) togglePlayPause();
-                          else playTrack(t);
-                        }}
-                        className={`absolute bottom-2 left-2 w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
-                        }`}
-                      >
-                        {isCur && isPlaying ? (
-                          <Pause className="w-5 h-5 fill-black text-black" />
-                        ) : (
-                          <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
-                        )}
-                      </button>
-                    </div>
-
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
-                      {t.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {t.artist}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* FULL TABLE VIEW: Spotify Track Listing */}
-        <section className="pt-4 space-y-3">
+        {/* 5. Library Track Rows (Thumb-friendly 60px touch height) */}
+        <section className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white">
-                جميع الأغاني في مكتبتك ({tracks.length})
-              </h2>
-              <p className="text-xs text-zinc-400 mt-0.5">1750 أغنية منسقة بدقة فائقة</p>
-            </div>
-          </div>
-
-          {/* Table Header */}
-          <div className="grid grid-cols-[16px_1fr_auto] md:grid-cols-[16px_4fr_3fr_1fr_auto] gap-4 px-4 py-2 border-b border-white/10 text-xs font-semibold text-zinc-400">
-            <span className="text-center">#</span>
-            <span>العنوان</span>
-            <span className="hidden md:block">الألبوم</span>
-            <span className="hidden md:flex items-center justify-end gap-1">
-              <Clock className="w-3.5 h-3.5" />
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+              {isRTL ? 'أحدث المسارات في مكتبتك' : 'Latest Tracks in Library'}
+            </h2>
+            <span className="text-xs text-zinc-400 font-mono">
+              {tracks.length} {t.songs}
             </span>
-            <span className="w-8"></span>
           </div>
 
-          {/* Table Rows */}
-          <div className="divide-y divide-white/5">
-            {tracks.slice(0, visibleTableCount).map((track, idx) => {
-              const isCur = currentTrack?.id === track.id;
-              const isFav = favorites.includes(track.id);
-
+          <div className="divide-y divide-white/[0.06] rounded-2xl bg-white/[0.03] border border-white/[0.08] overflow-hidden">
+            {tracks.slice(0, visibleTableCount).map((trk, idx) => {
+              const isCur = currentTrack?.id === trk.id;
               return (
                 <div
-                  key={track.id}
-                  onClick={() => playTrack(track)}
-                  className={`group grid grid-cols-[16px_1fr_auto] md:grid-cols-[16px_4fr_3fr_1fr_auto] gap-4 px-4 py-2.5 rounded-lg items-center hover:bg-white/10 transition-colors cursor-pointer ${
-                    isCur ? 'bg-white/5' : ''
+                  key={`${trk.id}_${idx}`}
+                  onClick={() => playTrack(trk)}
+                  className={`flex items-center justify-between p-3 cursor-pointer transition-colors ${
+                    isCur ? 'bg-[#FA243C]/15' : 'hover:bg-white/[0.05]'
                   }`}
                 >
-                  {/* # or Play button */}
-                  <div className="flex items-center justify-center text-xs">
-                    {isCur && isPlaying ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#1DB954] animate-ping" />
-                    ) : (
-                      <>
-                        <span className={`group-hover:hidden ${isCur ? 'text-[#1DB954] font-bold' : 'text-zinc-400'}`}>
-                          {idx + 1}
-                        </span>
-                        <Play className="w-3.5 h-3.5 text-white fill-white hidden group-hover:block translate-x-0.5" />
-                      </>
-                    )}
-                  </div>
-
-                  {/* Title & Artist with artwork */}
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <img
-                      src={track.coverUrl || track.artworkUrl || '/logo.svg'}
-                      alt={track.title}
-                      className="w-10 h-10 rounded object-cover flex-shrink-0 shadow"
-                      loading="lazy"
+                      src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                      alt={trk.title}
+                      className="w-11 h-11 rounded-xl object-cover flex-shrink-0 shadow-md"
                     />
                     <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-sm font-semibold truncate ${
-                          isCur ? 'text-[#1DB954]' : 'text-white'
-                        }`}
-                      >
-                        {track.title}
-                      </p>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5">
-                        {track.artist}
+                      <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                        {trk.title}
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                        {trk.artist}
                       </p>
                     </div>
                   </div>
 
-                  {/* Album */}
-                  <div className="hidden md:block min-w-0">
-                    <p className="text-xs text-zinc-400 truncate">
-                      {track.album || 'ألبوم فردي'}
-                    </p>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="hidden md:block text-left text-xs text-zinc-400 font-mono">
-                    {formatDuration(track.duration)}
-                  </div>
-
-                  {/* Favorite button */}
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-xs text-zinc-400 font-mono">
+                      {formatDuration(trk.duration)}
+                    </span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleFavorite(track.id);
+                        if (isCur) togglePlayPause();
+                        else playTrack(trk);
                       }}
-                      className={`p-1.5 transition-colors cursor-pointer ${
-                        isFav
-                          ? 'text-[#1DB954]'
-                          : 'text-zinc-500 opacity-0 group-hover:opacity-100 hover:text-white'
-                      }`}
+                      className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.16] flex items-center justify-center text-white cursor-pointer"
                     >
-                      <Heart
-                        className={`w-4 h-4 ${
-                          isFav ? 'fill-[#1DB954]' : ''
-                        }`}
-                      />
+                      {isCur && isPlaying ? (
+                        <Pause className="w-3.5 h-3.5 fill-current" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -699,14 +466,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             })}
           </div>
 
-          {/* Load More Button */}
           {visibleTableCount < tracks.length && (
-            <div className="text-center pt-4 pb-8">
+            <div className="pt-2 text-center">
               <button
-                onClick={() => setVisibleTableCount((prev) => Math.min(prev + 50, tracks.length))}
-                className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                onClick={() => setVisibleTableCount((prev) => prev + 30)}
+                className="px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-bold text-white transition-all cursor-pointer"
               >
-                عرض 50 مساراً إضافياً ({tracks.length - visibleTableCount} متبقية)
+                {isRTL ? 'عرض المزيد من المسارات...' : 'Show More Tracks...'}
               </button>
             </div>
           )}
