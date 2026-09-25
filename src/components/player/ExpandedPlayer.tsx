@@ -31,9 +31,11 @@ import {
   Disc3,
   MoreVertical,
   Palette,
-  Headphones
+  Headphones,
+  Tag
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { VisualizerCanvas } from './VisualizerCanvas';
 
 interface ExpandedPlayerProps {
   isOpen: boolean;
@@ -90,6 +92,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
+  const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
+  const [show3dVisualizer, setShow3dVisualizer] = useState(false);
   const spatialAudio = usePlayerStore((state) => state.spatialAudio);
   const toggleSpatialAudio = usePlayerStore((state) => state.toggleSpatialAudio);
 
@@ -287,18 +291,39 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   setChangeArtworkModal(true, currentTrack);
                 }}
               >
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentTrack.id}
-                    src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
-                    alt={currentTrack.title}
-                    initial={{ opacity: 0, scale: 0.94 }}
-                    animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
-                    exit={{ opacity: 0, scale: 1.05 }}
-                    transition={{ duration: 0.28, ease: 'easeOut' }}
-                    className="w-full h-full object-cover"
-                  />
-                </AnimatePresence>
+                {show3dVisualizer ? (
+                  <div className="w-full h-full bg-black/60">
+                    <VisualizerCanvas className="w-full h-full" />
+                  </div>
+                ) : (
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentTrack.id}
+                      src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                      alt={currentTrack.title}
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
+                      exit={{ opacity: 0, scale: 1.05 }}
+                      transition={{ duration: 0.28, ease: 'easeOut' }}
+                      className="w-full h-full object-cover"
+                    />
+                  </AnimatePresence>
+                )}
+
+                {/* 3D Visualizer Toggle Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic();
+                    setShow3dVisualizer(!show3dVisualizer);
+                  }}
+                  className="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold flex items-center gap-1.5 transition-all shadow-md z-20 cursor-pointer"
+                  title="تبديل العارض ثلاثي الأبعاد 3D WebGL"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${show3dVisualizer ? 'text-[#1DB954]' : 'text-zinc-400'}`} />
+                  <span>{show3dVisualizer ? '3D شغال' : 'عرض 3D'}</span>
+                </button>
               </motion.div>
 
               {/* Real-time Current Lyric Line Snippet */}
@@ -531,6 +556,24 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     Spatial 3D
                   </span>
                 </motion.button>
+
+                {/* BPM & Camelot Key Badges */}
+                {currentTrack.key && (
+                  <span
+                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-purple-500/15 border-purple-500/30 text-purple-300 shadow-sm"
+                    title={`مفتاح Camelot: ${currentTrack.key}`}
+                  >
+                    🎵 {currentTrack.key}
+                  </span>
+                )}
+                {currentTrack.bpm && (
+                  <span
+                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/15 border-amber-500/30 text-amber-300 shadow-sm tabular-nums"
+                    title={`سرعة الإيقاع: ${currentTrack.bpm} BPM`}
+                  >
+                    ⚡ {currentTrack.bpm} BPM
+                  </span>
+                )}
               </div>
             </div>
 
@@ -848,6 +891,21 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     <div className="flex items-center gap-3">
                       <Palette className="w-5 h-5 text-amber-400" />
                       <span>تغيير غلاف الأغنية</span>
+                    </div>
+                  </button>
+
+                  {/* Edit ID3 Metadata */}
+                  <button
+                    onClick={() => {
+                      triggerHaptic();
+                      setIsOptionsSheetOpen(false);
+                      setMetadataEditorModal(true, currentTrack);
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Tag className="w-5 h-5 text-[#1DB954]" />
+                      <span>تعديل بيانات الأغنية (ID3 Tags)</span>
                     </div>
                   </button>
 

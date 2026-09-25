@@ -36,7 +36,7 @@ export class HapticsEngine {
       this.tempFreqBuffer = new Uint8Array(analyser.frequencyBinCount);
     }
 
-    analyser.getByteFrequencyData(this.tempFreqBuffer);
+    analyser.getByteFrequencyData(this.tempFreqBuffer as any);
 
     // Map 60Hz to 120Hz frequency band to FFT bins
     const binWidth = sampleRate / fftSize;

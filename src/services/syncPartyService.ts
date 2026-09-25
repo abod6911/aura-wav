@@ -96,8 +96,9 @@ export class SyncPartyService {
 
     if (supabaseClient) {
       try {
-        this.realtimeChannel = supabaseClient.channel(`listening-room:${id}`);
-        this.realtimeChannel.subscribe();
+        const channel = supabaseClient.channel(`listening-room:${id}`);
+        this.realtimeChannel = channel;
+        channel.subscribe();
       } catch (err) {
         console.warn('[SyncParty] Realtime subscription notice:', err);
       }
@@ -123,11 +124,12 @@ export class SyncPartyService {
 
     if (supabaseClient) {
       try {
-        this.realtimeChannel = supabaseClient.channel(`listening-room:${this.currentRoomId}`);
-        this.realtimeChannel.on('broadcast', { event: 'host_sync' }, ({ payload }: { payload: RoomSyncPayload }) => {
+        const channel = supabaseClient.channel(`listening-room:${this.currentRoomId}`);
+        this.realtimeChannel = channel;
+        channel.on('broadcast', { event: 'host_sync' }, ({ payload }: { payload: RoomSyncPayload }) => {
           this.handleIncomingHostSync(payload);
         });
-        this.realtimeChannel.subscribe();
+        channel.subscribe();
       } catch (err) {
         console.warn('[SyncParty] Join room error:', err);
       }
@@ -190,8 +192,9 @@ export class SyncPartyService {
     };
 
     // 1. Supabase Realtime broadcast
-    if (this.realtimeChannel) {
-      this.realtimeChannel.send({
+    const ch = this.realtimeChannel;
+    if (ch) {
+      ch.send({
         type: 'broadcast',
         event: 'host_sync',
         payload,

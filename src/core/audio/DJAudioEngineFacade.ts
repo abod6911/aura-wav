@@ -448,7 +448,7 @@ export class DJAudioEngineFacade {
 
   public getVisualizerData(dataArray: Uint8Array): void {
     if (this.analyser) {
-      this.analyser.getByteFrequencyData(dataArray);
+      this.analyser.getByteFrequencyData(dataArray as any);
     } else {
       dataArray.fill(0);
     }

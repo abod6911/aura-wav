@@ -21,6 +21,7 @@ import { SleepTimerModal } from './components/SleepTimerModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { WelcomeSplash } from './components/WelcomeSplash';
 import { ChangeArtworkModal } from './components/ChangeArtworkModal';
+import { MetadataEditorModal } from './components/library/MetadataEditorModal';
 import { SettingsModal } from './components/SettingsModal';
 import { DJFxSheet } from './components/dj/DJFxSheet';
 import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
@@ -363,6 +364,7 @@ export function App() {
         onOpenImport={() => setIsImportModalOpen(true)}
       />
       <ChangeArtworkModal />
+      <MetadataEditorModal />
       <DJFxSheet />
       <AutoMixSelectorModal />
     </div>

@@ -16,13 +16,13 @@ import {
   ListPlus,
   Shuffle,
   Clock,
-  ArrowUpDown,
   Mic2,
   HardDrive,
   Download,
   CheckCircle2,
   Image as ImageIcon,
-  ArrowUp
+  ArrowUp,
+  Tag
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -791,6 +791,16 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
                 LYRICS
               </span>
             )}
+            {track.key && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 flex-shrink-0">
+                {track.key}
+              </span>
+            )}
+            {track.bpm && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 flex-shrink-0 tabular-nums">
+                {track.bpm} BPM
+              </span>
+            )}
           </div>
         </div>
 
@@ -891,6 +901,17 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             >
               <ImageIcon className="w-3.5 h-3.5 text-[#1DB954]" />
               <span>تغيير الغلاف والبحث أونلاين</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                usePlayerStore.getState().setMetadataEditorModal(true, track);
+                setIsMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+            >
+              <Tag className="w-3.5 h-3.5 text-[#1DB954]" />
+              <span>تعديل بيانات الأغنية (ID3 Tags)</span>
             </button>
             <button
               onClick={(e) => {

@@ -15,7 +15,7 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream } from '../services/streamingEngine';
-import { bulkSaveTracksToDexie, getAllTracksFromDexie } from '../db/dexieDB';
+import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -496,6 +496,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isMetadataEditorOpen: false,
     metadataTargetTrack: null,
     isSoundboardOpen: false,
+    isAutoMixModalOpen: false,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
     downloadAllProgress: null,

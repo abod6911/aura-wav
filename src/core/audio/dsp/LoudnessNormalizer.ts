@@ -1,4 +1,4 @@
-import { Track } from '../../types';
+import { Track } from '../../../types';
 
 /**
  * LoudnessNormalizer: EBU R128 / ReplayGain Volume Normalization Engine.
