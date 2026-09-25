@@ -1015,22 +1015,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }
 
-      // 3.5 Check local catalog for direct /songs/ local audioUrl
-      if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
+      // 3.5 Check local catalog for direct /songs/ local audioUrl (only on localhost where local files exist)
+      const isLocalHost = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.')
+      );
+
+      if (isLocalHost && !playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
         const catItem = resolveCatalogTrackItem(playableTrack.title, playableTrack.artist, playableTrack.fileName, playableTrack.trackNumber);
         if (catItem && catItem.audioUrl) {
           playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
         }
       }
 
-      // 4. If offline and no local file/blob saved, warn user clearly
-      if (typeof navigator !== 'undefined' && !navigator.onLine && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
-        get().addToast(`المسار "${track.title}" غير محفوظ بدون نت - يمكنك حفظه للأوفلاين عند توفر النت`, undefined, 'warning');
-        return;
-      }
-
-      // 4. Resolve stream URL if online track without file/blob/audioUrl
-      if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
+      // 4. Ensure we have a valid playable stream (local blob, verified local path, or high-speed online stream)
+      if (!playableTrack.file && !playableTrack.blob) {
         try {
           const resolvedStream = await resolvePlayableStream(playableTrack);
           if (resolvedStream) {

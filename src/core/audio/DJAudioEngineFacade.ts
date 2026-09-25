@@ -7,6 +7,7 @@ import { LoudnessNormalizer } from './dsp/LoudnessNormalizer';
 import { createAudioTimerWorker, AudioTimerController } from './workers/audioTimer.worker';
 import { AutoMixStyle, DeckChannelName, ReverbSpace, EQ_BANDS } from './types';
 import { getAudioFileFromStorage } from '../../services/storageManager';
+import { resolvePlayableStream } from '../../services/streamingEngine';
 
 export interface DJEngineCallbacks {
   onTrackEnded?: () => void;
@@ -822,11 +823,14 @@ export class DJAudioEngineFacade {
   }
 
   private async resolveTrackUrl(track: Track): Promise<string> {
-    if (track.audioUrl) return track.audioUrl;
-    const blob = await getAudioFileFromStorage(track.id);
-    if (blob) {
-      return URL.createObjectURL(blob);
+    if (track.blob) return URL.createObjectURL(track.blob);
+    const storedBlob = await getAudioFileFromStorage(track.id);
+    if (storedBlob) {
+      return URL.createObjectURL(storedBlob);
     }
+    const stream = await resolvePlayableStream(track);
+    if (stream) return stream;
+    if (track.audioUrl) return track.audioUrl;
     return '';
   }
 }

@@ -164,6 +164,7 @@ export class DeckChannel {
     this.isBufferPlayback = false;
     this.isPreloaded = false;
 
+    this.audio.crossOrigin = 'anonymous';
     this.audio.src = url;
     this.audio.load();
   }
@@ -270,7 +271,22 @@ export class DeckChannel {
       return;
     }
 
-    await this.audio.play();
+    try {
+      await this.audio.play();
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError') {
+        console.warn(`[DeckChannel ${this.name}] Autoplay blocked: user gesture required`);
+        throw err;
+      }
+      if (this.audio.crossOrigin) {
+        console.warn(`[DeckChannel ${this.name}] Play failed with crossOrigin, retrying direct...`);
+        this.audio.crossOrigin = null;
+        this.audio.load();
+        await this.audio.play();
+      } else {
+        throw err;
+      }
+    }
   }
 
   /**
