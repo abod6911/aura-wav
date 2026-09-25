@@ -344,12 +344,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
     onTimeUpdate: (cur, dur) => {
-      // Gate React state re-renders when app is hidden to prevent background CPU choking
+      // Synchronize lockscreen & MediaSession position even when in background
+      updateMediaSessionPosition(dur, cur);
+
+      // Gate React state re-renders when app is hidden to eliminate background CPU/battery drain
       if (typeof document !== 'undefined' && document.hidden) {
         return;
       }
       set({ currentTime: cur, duration: dur });
-      updateMediaSessionPosition(dur, cur);
     },
     onPlaybackStateChange: (isPlaying) => {
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
@@ -1264,6 +1266,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     seek: (time: number) => {
       djAudioEngine.seek(time);
       set({ currentTime: time });
+      const { duration } = get();
+      updateMediaSessionPosition(duration, time);
     },
 
     setVolume: (vol: number) => {

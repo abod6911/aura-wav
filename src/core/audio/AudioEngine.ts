@@ -48,6 +48,7 @@ export class AudioEngine {
     // Initialize Haptics Engine on Master Output
     this.hapticsEngine = new HapticsEngine(this.ctx, this.masterBus);
 
+    this.setupBackgroundMediaStreamBridge();
     this.setupContextResilience();
     this.initTimerWorker();
   }
@@ -59,8 +60,38 @@ export class AudioEngine {
     return AudioEngine.instance;
   }
 
+  private setupBackgroundMediaStreamBridge(): void {
+    if (!this.ctx || !this.ctx.createMediaStreamDestination || typeof document === 'undefined') return;
+    try {
+      const streamDest = this.ctx.createMediaStreamDestination();
+      if (this.masterBus) {
+        this.masterBus.connect(streamDest);
+      }
+      let bridgeAudio = document.getElementById('aura-core-background-bridge') as HTMLAudioElement;
+      if (!bridgeAudio) {
+        bridgeAudio = document.createElement('audio');
+        bridgeAudio.id = 'aura-core-background-bridge';
+        bridgeAudio.setAttribute('playsinline', 'true');
+        bridgeAudio.setAttribute('webkit-playsinline', 'true');
+        bridgeAudio.style.position = 'fixed';
+        bridgeAudio.style.left = '-9999px';
+        bridgeAudio.style.opacity = '0.001';
+        bridgeAudio.style.pointerEvents = 'none';
+        document.body.appendChild(bridgeAudio);
+      }
+      bridgeAudio.srcObject = streamDest.stream;
+      bridgeAudio.play().catch(() => {});
+    } catch {}
+  }
+
   private setupContextResilience(): void {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+    if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+      try {
+        (navigator as unknown as { audioSession: { type: string } }).audioSession.type = 'playback';
+      } catch {}
+    }
 
     const resumeContext = async () => {
       if (this.ctx && this.ctx.state === 'suspended') {
@@ -68,10 +99,15 @@ export class AudioEngine {
           await this.ctx.resume();
         } catch {}
       }
+      const bridge = document.getElementById('aura-core-background-bridge') as HTMLAudioElement;
+      if (bridge && bridge.paused && this.isPlaying()) {
+        bridge.play().catch(() => {});
+      }
     };
 
     window.addEventListener('click', resumeContext, { once: true });
     window.addEventListener('touchstart', resumeContext, { once: true });
+    window.addEventListener('focus', resumeContext);
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) resumeContext();
     });
@@ -121,6 +157,23 @@ export class AudioEngine {
     }
   }
 
+  private ensureBridgePlayback(playing: boolean): void {
+    if (typeof document === 'undefined') return;
+    try {
+      const bridge = document.getElementById('aura-core-background-bridge') as HTMLAudioElement;
+      if (!bridge) return;
+      if (playing) {
+        if (bridge.paused) {
+          bridge.play().catch(() => {});
+        }
+      } else {
+        if (!bridge.paused) {
+          bridge.pause();
+        }
+      }
+    } catch {}
+  }
+
   public async playTrack(track: TrackMetadata, arrayBuffer?: ArrayBuffer): Promise<void> {
     await this.ensureContextActive();
     this.currentTrack = track;
@@ -141,6 +194,7 @@ export class AudioEngine {
     }
 
     activeDeck.play(0);
+    this.ensureBridgePlayback(true);
   }
 
   public setUpcomingTrack(track: TrackMetadata): void {
@@ -184,19 +238,21 @@ export class AudioEngine {
   public togglePlay(): void {
     const activeDeck = this.getActiveDeck();
     if (activeDeck.isPlaying()) {
-      activeDeck.pause();
+      this.pause();
     } else {
-      activeDeck.play(activeDeck.getCurrentTime());
+      this.resume();
     }
   }
 
   public pause(): void {
     this.getActiveDeck().pause();
+    this.ensureBridgePlayback(false);
   }
 
   public resume(): void {
     const active = this.getActiveDeck();
     active.play(active.getCurrentTime());
+    this.ensureBridgePlayback(true);
   }
 
   public isPlaying(): boolean {
@@ -297,6 +353,14 @@ export class AudioEngine {
     this.deckA?.destroy();
     this.deckB?.destroy();
     this.masterBus?.disconnect();
+    if (typeof document !== 'undefined') {
+      const bridge = document.getElementById('aura-core-background-bridge') as HTMLAudioElement;
+      if (bridge) {
+        bridge.pause();
+        bridge.srcObject = null;
+        bridge.remove();
+      }
+    }
     if (this.ctx && this.ctx.state !== 'closed') {
       this.ctx.close().catch(() => {});
     }

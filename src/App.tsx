@@ -78,6 +78,13 @@ export function App() {
   useEffect(() => {
     initStore();
 
+    // Enable system background playback session for iOS 16.4+ / iPadOS / macOS / Android
+    if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+      try {
+        (navigator as unknown as { audioSession: { type: string } }).audioSession.type = 'playback';
+      } catch {}
+    }
+
     // Register Service Worker for PWA with automatic instant updates
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker

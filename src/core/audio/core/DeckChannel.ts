@@ -50,6 +50,22 @@ export class DeckChannel {
     this.disposeSource();
     this.loadedMetadata = metadata;
     this.audioElement = element;
+    element.setAttribute('playsinline', 'true');
+    element.setAttribute('webkit-playsinline', 'true');
+    (element as any).playsInline = true;
+
+    if (typeof document !== 'undefined' && document.body && !document.body.contains(element)) {
+      element.style.position = 'fixed';
+      element.style.bottom = '0';
+      element.style.left = '0';
+      element.style.width = '1px';
+      element.style.height = '1px';
+      element.style.opacity = '0.001';
+      element.style.pointerEvents = 'none';
+      element.style.zIndex = '-1';
+      document.body.appendChild(element);
+    }
+
     this.sourceNode = this.ctx.createMediaElementSource(element);
     this.sourceNode.connect(this.preampGainNode);
     this.applyLoudnessNormalization(metadata.lufs);
@@ -154,6 +170,9 @@ export class DeckChannel {
       this.audioElement.pause();
       this.audioElement.src = '';
       this.audioElement.load();
+      if (this.audioElement.parentNode) {
+        this.audioElement.parentNode.removeChild(this.audioElement);
+      }
       if (this.sourceNode) {
         this.sourceNode.disconnect();
         this.sourceNode = null;

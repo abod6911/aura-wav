@@ -141,11 +141,24 @@ export class DJAudioEngineFacade {
    */
   public primeDecks(): void {
     try {
+      if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
+        try {
+          (navigator as unknown as { audioSession: { type: string } }).audioSession.type = 'playback';
+        } catch {}
+      }
+
       this.ensureChannelsAttached();
       this.initContext().catch(() => {});
 
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
+      }
+
+      if (typeof document !== 'undefined') {
+        const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
+        if (bridge && bridge.paused) {
+          bridge.play().catch(() => {});
+        }
       }
 
       if (this.isUnlocked) return;
@@ -239,6 +252,12 @@ export class DJAudioEngineFacade {
   public pause(): void {
     this.getActiveDeck().pause();
     this.getInactiveDeck().pause();
+    if (typeof document !== 'undefined') {
+      const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
+      if (bridge && !bridge.paused) {
+        bridge.pause();
+      }
+    }
     this.notifyPlaybackState(false);
   }
 
@@ -247,6 +266,12 @@ export class DJAudioEngineFacade {
     this.channelA.stop();
     this.channelB.stop();
     this.timerWorker.stop();
+    if (typeof document !== 'undefined') {
+      const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
+      if (bridge && !bridge.paused) {
+        bridge.pause();
+      }
+    }
     this.notifyPlaybackState(false);
   }
 
@@ -651,7 +676,25 @@ export class DJAudioEngineFacade {
     this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
   }
 
+  private syncBridgePlayback(isPlaying: boolean): void {
+    if (typeof document === 'undefined') return;
+    try {
+      const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
+      if (!bridge) return;
+      if (isPlaying) {
+        if (bridge.paused) {
+          bridge.play().catch(() => {});
+        }
+      } else {
+        if (!bridge.paused) {
+          bridge.pause();
+        }
+      }
+    } catch {}
+  }
+
   private notifyPlaybackState(isPlaying: boolean): void {
+    this.syncBridgePlayback(isPlaying);
     if (this.callbacks.onPlaybackStateChange) {
       try {
         this.callbacks.onPlaybackStateChange(isPlaying);

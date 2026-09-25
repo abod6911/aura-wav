@@ -95,14 +95,10 @@ export const AudioReactiveBackground: React.FC<{
     let smoothBass = 0;
     let smoothMid = 0;
     let phase = 0;
+    let isRunning = typeof document === 'undefined' ? true : !document.hidden;
 
     const render = () => {
-      if (!canvas || !ctx) return;
-
-      if (document.hidden) {
-        animId = requestAnimationFrame(render);
-        return;
-      }
+      if (!isRunning || !canvas || !ctx) return;
 
       if (isPlaying) {
         djAudioEngine.getVisualizerData(freqData);
@@ -160,10 +156,32 @@ export const AudioReactiveBackground: React.FC<{
       animId = requestAnimationFrame(render);
     };
 
-    animId = requestAnimationFrame(render);
+    if (isRunning) {
+      animId = requestAnimationFrame(render);
+    }
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        isRunning = false;
+        cancelAnimationFrame(animId);
+      } else {
+        if (!isRunning) {
+          isRunning = true;
+          animId = requestAnimationFrame(render);
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
 
     return () => {
+      isRunning = false;
       cancelAnimationFrame(animId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
       window.removeEventListener('resize', handleResize);
     };
   }, [isPlaying, reactiveVisualsEnabled, primaryColor, secondaryColor, accentColor]);

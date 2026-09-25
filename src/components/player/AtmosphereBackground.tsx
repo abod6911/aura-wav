@@ -123,8 +123,11 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
 
     let animId: number;
     const startTime = performance.now();
+    let isRunning = typeof document === 'undefined' ? true : !document.hidden;
 
     const render = () => {
+      if (!isRunning) return;
+
       const elapsed = (performance.now() - startTime) * 0.001;
 
       // Color lerp (decay factor = 0.04 for slow organic transition)
@@ -142,10 +145,31 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
       animId = requestAnimationFrame(render);
     };
 
-    render();
+    if (isRunning) {
+      animId = requestAnimationFrame(render);
+    }
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        isRunning = false;
+        cancelAnimationFrame(animId);
+      } else {
+        if (!isRunning) {
+          isRunning = true;
+          animId = requestAnimationFrame(render);
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
 
     return () => {
       window.removeEventListener('resize', resize);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
       cancelAnimationFrame(animId);
       gl.deleteProgram(program);
       gl.deleteBuffer(buffer);
