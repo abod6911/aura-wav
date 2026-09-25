@@ -198,12 +198,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
   return (
     <div className="space-y-8 pb-32 md:pb-32 w-full max-w-full">
-      {/* 1. Grand Editorial Hero Banner (Spotify Modern Aesthetic) */}
+      {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-[#1c1c1c] via-[#141414] to-[#121212] border border-white/[0.08] backdrop-blur-2xl shadow-2xl">
-          {/* Subtle Spotify Ambient Glow */}
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#1DB954]/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-[#10B981]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#FA243C]/15 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-3.5 sm:gap-6 md:gap-8">
             {/* Mosaic 4-Art Cover */}
@@ -525,9 +525,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
         {/* Active Mood Radio Banner */}
         {activeMood && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 via-[#1DB954]/10 to-[#121212] border border-[#1DB954]/30 animate-fadeIn">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#FA243C]/20 via-[#FA243C]/10 to-[#08080c] border border-[#FA243C]/30 animate-fadeIn">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-[#1DB954] animate-pulse" />
+              <Sparkles className="w-4 h-4 text-[#FA243C] animate-pulse" />
               <span className="text-xs font-bold text-white">
                 تم تفعيل وضع المزاج: {filtered.length} مسار متوافق
               </span>
@@ -553,15 +553,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div className="bg-[#0b0b12]/80 border border-white/[0.08] rounded-3xl p-2 sm:p-5 backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
-        {/* Swipe Left Tip Banner */}
+      <div className="bg-[#08080c]/85 border border-white/[0.08] rounded-3xl p-2 sm:p-5 backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
+        {/* Swipe Gestures Tip Banner */}
         <div className="flex items-center justify-between px-2 sm:px-3 pb-3 border-b border-white/[0.05] mb-2 text-[11px] text-zinc-400 select-none">
           <span className="inline-flex items-center gap-1.5 text-zinc-300 font-medium">
-            <ListPlus className="w-3.5 h-3.5 text-[#1DB954]" />
-            <span>اسحب أي أغنية لليسار لتحديدها كأغنية تالية تلقائياً بعد الأغنية الحالية</span>
+            <ListPlus className="w-3.5 h-3.5 text-purple-400" />
+            <span>اسحب لليمين للتشغيل التالي • اسحب لليسار للمفضلة</span>
           </span>
           <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
-            Swipe left to play next
+            Swipe Right: Next • Swipe Left: Like
           </span>
         </div>
 
@@ -663,9 +663,19 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const hasDraggedRef = useRef(false);
 
   const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-    // Swiped left towards negative x
-    if (info.offset.x < -40 || info.velocity.x < -150) {
+    // Swipe Right (towards positive x): Add to Next in Queue (violet)
+    if (info.offset.x > 45 || info.velocity.x > 160) {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(12); } catch {}
+      }
       usePlayerStore.getState().playNextInQueue(track);
+    }
+    // Swipe Left (towards negative x): Like / Add to Favorites (crimson)
+    else if (info.offset.x < -45 || info.velocity.x < -160) {
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(12); } catch {}
+      }
+      usePlayerStore.getState().toggleFavorite(track.id);
     }
     setTimeout(() => {
       hasDraggedRef.current = false;
@@ -694,18 +704,24 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const displayIndex = track.trackNumber !== undefined ? track.trackNumber : index + 1;
 
   return (
-    <div className="track-row-optimized relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
-      {/* Swipe Action Revealed on Left Drag (Underneath on the right side) */}
-      <div className="absolute inset-y-0 right-0 w-32 sm:w-40 bg-[#1DB954] rounded-2xl flex items-center justify-center gap-2 text-black font-black text-xs sm:text-sm px-3 shadow-inner pointer-events-none">
-        <ListPlus className="w-4 h-4 sm:w-5 sm:h-5 text-black stroke-[2.5]" />
-        <span>الأغنية التالية</span>
+    <div className="track-row-optimized relative overflow-hidden rounded-2xl select-none group/swipe my-1">
+      {/* Swipe Action Revealed on Right Drag (Violet: Add to Next) */}
+      <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 rounded-2xl flex items-center gap-2 text-white font-black text-xs px-4 shadow-inner pointer-events-none z-0">
+        <ListPlus className="w-4 h-4 stroke-[2.5]" />
+        <span>التالي في القائمة</span>
+      </div>
+
+      {/* Swipe Action Revealed on Left Drag (Crimson: Favorite) */}
+      <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#FA243C] via-[#FF375F] to-rose-600 rounded-2xl flex items-center justify-end gap-2 text-white font-black text-xs px-4 shadow-inner pointer-events-none z-0">
+        <span>{isFav ? 'إزالة المفضلة' : 'إضافة للمفضلة'}</span>
+        <Heart className="w-4 h-4 fill-white stroke-[2.5]" />
       </div>
 
       <motion.div
         drag="x"
         dragDirectionLock
-        dragConstraints={{ left: -110, right: 0 }}
-        dragElastic={0.2}
+        dragConstraints={{ left: -90, right: 90 }}
+        dragElastic={0.22}
         onDragStart={() => {
           hasDraggedRef.current = true;
         }}
@@ -714,26 +730,26 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
         transition={{ type: 'spring', stiffness: 450, damping: 35 }}
         style={{ touchAction: 'pan-y' }}
         onClick={handleRowClick}
-        className={`track-item-contained group grid grid-cols-[26px_44px_1fr_32px_40px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-2xl cursor-pointer transition-colors duration-150 select-none active:scale-[0.99] relative z-10 ${
+        className={`track-item-contained group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_32px_40px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-2.5 sm:gap-4 px-3 sm:px-4 rounded-2xl cursor-pointer transition-all duration-200 select-none active:scale-[0.99] relative z-10 ${
           isCurrent
-            ? 'bg-[#181818] border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(29,185,84,0.18)]'
+            ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
             : isNextUp
-            ? 'bg-[#162219] border border-[#1DB954]/50 shadow-md'
-            : 'bg-[#121212] hover:bg-[#1c1c1c] border border-white/[0.04]'
+            ? 'bg-purple-500/10 border border-purple-500/40 shadow-sm'
+            : 'bg-transparent hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08]'
         }`}
       >
         {/* 1. Track Index # or Live Equalizer */}
         <div className="text-center flex items-center justify-center">
           {isCurrent && isPlaying ? (
-            <div className="flex items-end gap-[2px] h-3.5">
-              <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-              <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-              <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+            <div className="flex items-end gap-[2px] h-4">
+              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+              <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
             </div>
           ) : (
             <span
-              className={`text-xs font-mono md:group-hover:hidden transition-colors ${
-                isCurrent ? 'text-[#1DB954] font-black' : 'text-zinc-500'
+              className={`text-xs font-mono tabular-nums md:group-hover:hidden transition-colors ${
+                isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
               }`}
             >
               {displayIndex}
@@ -742,8 +758,8 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           <Play className="w-3.5 h-3.5 text-white hidden md:group-hover:block fill-white" />
         </div>
 
-        {/* 2. High-Res Official Album Artwork */}
-        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+        {/* 2. High-Res Official Album Artwork (48x48px) */}
+        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
           <img
             src={track.artworkUrl || '/logo.svg'}
             alt={track.title}
@@ -828,37 +844,41 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           </button>
         </div>
 
-        {/* 6. Favorite Heart Button */}
+        {/* 6. Favorite Heart Button with Micro-Explosion */}
         <div className="text-center">
-          <button
+          <motion.button
+            whileTap={{ scale: 1.35 }}
             onClick={(e) => {
               e.stopPropagation();
+              if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                try { navigator.vibrate(10); } catch {}
+              }
               usePlayerStore.getState().toggleFavorite(track.id);
             }}
-            className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125"
+            className="p-1.5 sm:p-2 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
             aria-label="Toggle favorite"
           >
             <Heart
-              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${
-                isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-600 hover:text-zinc-300'
+              className={`w-4 h-4 transition-colors ${
+                isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
               }`}
             />
-          </button>
+          </motion.button>
         </div>
 
-        {/* 7. Duration */}
-        <div className="text-[11px] sm:text-xs font-mono text-zinc-400 text-right tabular-nums">
+        {/* 7. Monospace Tabular Duration */}
+        <div className="text-xs font-mono tabular-nums text-white/50 text-right">
           {formatTime(track.duration)}
         </div>
 
-        {/* 8. Context Menu (Touch & Desktop) */}
+        {/* 8. Glass Context Menu (Touch & Desktop) */}
         <div className="relative group/menu">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
-            className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 text-zinc-500 hover:text-white opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+            className="p-2 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all cursor-pointer"
             aria-label="Track options"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -867,7 +887,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           <div
             className={`${
               isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
-            } absolute right-0 top-8 z-30 w-52 bg-[#181818] border border-white/[0.12] rounded-2xl p-1.5 shadow-2xl space-y-1 backdrop-blur-xl`}
+            } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/95 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
           >
             <button
               onClick={(e) => {

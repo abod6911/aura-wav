@@ -77,46 +77,61 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
       className={`w-full flex flex-col select-none touch-none py-2 ${className}`} 
       dir="ltr" // Guarantees global temporal linearity regardless of RTL mode
     >
-      {/* Visual & Hit Area Container (44px touch ergonomics) */}
+      {/* Visual & Hit Area Container (Enlarged 44px touch ergonomics) */}
       <div
         ref={trackRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={() => setIsDragging(false)}
-        className="relative h-9 flex items-center cursor-pointer group"
+        className="relative h-11 flex items-center cursor-pointer group"
       >
         {/* Track Background */}
-        <div className="w-full h-1.5 group-hover:h-2 transition-all duration-150 rounded-full bg-white/10 overflow-hidden relative">
+        <div className="w-full h-1.5 group-hover:h-2.5 transition-all duration-200 rounded-full bg-white/[0.08] border border-white/[0.04] overflow-hidden relative backdrop-blur-sm">
           {/* Buffer Bar */}
           <div
-            className="absolute left-0 top-0 bottom-0 bg-white/20 transition-all duration-300"
+            className="absolute left-0 top-0 bottom-0 bg-white/20 transition-all duration-300 rounded-full"
             style={{ width: `${bufferPercent}%` }}
           />
           {/* Playback Progress Bar */}
           <div
-            className="absolute left-0 top-0 bottom-0 bg-white rounded-full"
+            className="absolute left-0 top-0 bottom-0 rounded-full transition-all duration-75"
             style={{ 
               width: `${progressPercent}%`,
-              backgroundColor: accentColor || undefined,
+              background: accentColor 
+                ? `linear-gradient(90deg, ${accentColor}cc, ${accentColor})` 
+                : 'linear-gradient(90deg, rgba(255,255,255,0.8), #ffffff)',
+              boxShadow: accentColor ? `0 0 10px ${accentColor}80` : '0 0 10px rgba(255,255,255,0.5)',
             }}
           />
         </div>
 
-        {/* Thumb Knob */}
+        {/* Glowing Playhead Thumb Knob */}
         <div
-          className={`absolute -ml-2.5 w-5 h-5 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.5)] border border-black/10 transition-transform duration-100 ${
-            isDragging ? 'scale-125 ring-4 ring-white/30' : 'scale-0 group-hover:scale-100'
+          className={`absolute -ml-3 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-150 pointer-events-none ${
+            isDragging 
+              ? 'scale-125' 
+              : 'scale-75 opacity-80 group-hover:scale-100 group-hover:opacity-100'
           }`}
           style={{ left: `${progressPercent}%` }}
-        />
+        >
+          <div 
+            className="w-4 h-4 rounded-full bg-white border border-black/20 shadow-[0_2px_10px_rgba(0,0,0,0.6),0_0_14px_rgba(255,255,255,0.85)]"
+            style={{
+              backgroundColor: isDragging ? '#ffffff' : (accentColor || '#ffffff'),
+              boxShadow: isDragging 
+                ? '0 0 16px rgba(255,255,255,1), 0 2px 8px rgba(0,0,0,0.8)' 
+                : (accentColor ? `0 0 12px ${accentColor}` : '0 0 12px rgba(255,255,255,0.8)'),
+            }}
+          />
+        </div>
       </div>
 
       {/* Timestamp Indicators */}
       {showTimestamps && (
-        <div className="flex justify-between items-center text-[11px] font-mono tracking-tight font-medium text-white/50 -mt-1 px-0.5">
+        <div className="flex justify-between items-center text-xs font-mono tabular-nums tracking-tight font-semibold text-white/50 -mt-1 px-1 select-none">
           <span>{formatDuration(effectiveTime)}</span>
-          <span>-{formatDuration(Math.max(0, duration - effectiveTime))}</span>
+          <span className="text-white/40">-{formatDuration(Math.max(0, duration - effectiveTime))}</span>
         </div>
       )}
     </div>

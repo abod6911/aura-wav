@@ -114,6 +114,14 @@ export class DJAudioEngineFacade {
       } catch {}
     }
 
+    if (this.ctx) {
+      this.ctx.onstatechange = () => {
+        if (this.ctx?.state === 'suspended' && this.isPlaying()) {
+          this.ctx.resume().catch(() => {});
+        }
+      };
+    }
+
     return this.ctx;
   }
 
@@ -783,9 +791,7 @@ export class DJAudioEngineFacade {
     window.addEventListener('pageshow', handleResume);
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          handleResume();
-        }
+        handleResume();
       });
     }
   }
@@ -809,6 +815,7 @@ export class DJAudioEngineFacade {
         bridgeAudio.style.pointerEvents = 'none';
         document.body.appendChild(bridgeAudio);
       }
+      bridgeAudio.volume = 0.001;
       bridgeAudio.srcObject = streamDest.stream;
       bridgeAudio.play().catch(() => {});
     } catch {}

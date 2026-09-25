@@ -7,7 +7,6 @@ export interface Translations {
   library: string;
   favorites: string;
   settings: string;
-  premium: string;
   all: string;
   music: string;
   podcasts: string;
@@ -124,7 +123,6 @@ export const translations: Record<Language, Translations> = {
     library: 'مكتبتك',
     favorites: 'المفضلة',
     settings: 'الإعدادات',
-    premium: 'بريميوم',
     all: 'الكل',
     music: 'الموسيقى',
     podcasts: 'البودكاست',
@@ -240,7 +238,6 @@ export const translations: Record<Language, Translations> = {
     library: 'Library',
     favorites: 'Favorites',
     settings: 'Settings',
-    premium: 'Premium',
     all: 'All',
     music: 'Music',
     podcasts: 'Podcasts',

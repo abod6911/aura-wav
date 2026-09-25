@@ -16,6 +16,7 @@ import {
 } from '../services/storageManager';
 import { resolvePlayableStream } from '../services/streamingEngine';
 import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
+import { wakeLockManager } from '../services/wakeLockManager';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -355,6 +356,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
     onPlaybackStateChange: (isPlaying) => {
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
+      if (isPlaying) {
+        wakeLockManager.request().catch(() => {});
+      } else {
+        wakeLockManager.release().catch(() => {});
+      }
       const current = get().currentTrack;
       if (current) {
         updateMediaSession(current, isPlaying, getMediaSessionCallbacks(get));

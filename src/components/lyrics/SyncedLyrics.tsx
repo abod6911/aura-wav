@@ -284,21 +284,23 @@ const SyncedLyricsModal: React.FC = () => {
                     }}
                     initial={false}
                     animate={{
-                      scale: isActive ? 1.04 : 1.0,
-                      opacity: isActive ? 1 : 0.35,
-                      filter: isActive ? 'blur(0px)' : 'blur(0.6px)',
+                      scale: isActive ? 1.05 : 0.98,
+                      opacity: isActive ? 1 : 0.22,
+                      filter: isActive ? 'blur(0px)' : 'blur(0.5px)',
                     }}
-                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                    className={`cursor-pointer transition-all duration-300 py-3 px-4 rounded-2xl overflow-visible origin-right ${
-                      isActive ? 'bg-white/[0.06]' : 'hover:bg-white/[0.03]'
-                    } ${isArabic ? 'text-right' : 'text-left'}`}
+                    transition={{ type: 'spring', stiffness: 350, damping: 32 }}
+                    className={`cursor-pointer transition-all duration-300 py-3.5 px-5 rounded-2xl overflow-visible origin-left ${
+                      isActive 
+                        ? 'bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] border border-white/[0.08]' 
+                        : 'hover:bg-white/[0.02]'
+                    } ${isArabic ? 'text-right origin-right' : 'text-left origin-left'}`}
                     dir={isArabic ? 'rtl' : 'ltr'}
                   >
                     <p
                       className={`tracking-tight font-sans transition-all duration-300 ${
                         isActive
-                          ? 'text-white font-black text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.85)]'
-                          : 'text-white hover:text-white/90 font-bold text-lg sm:text-xl md:text-2xl'
+                          ? 'text-white font-black text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_30px_rgba(255,255,255,0.85)]'
+                          : 'text-white/20 hover:text-white/45 font-bold text-lg sm:text-xl md:text-2xl'
                       }`}
                     >
                       {line.text}

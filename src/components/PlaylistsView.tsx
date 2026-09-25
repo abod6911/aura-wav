@@ -131,21 +131,21 @@ export const PlaylistsView: React.FC = () => {
                     onClick={() => (isCur ? togglePlayPause() : playTrack(track, playlistTracks))}
                     className={`group grid grid-cols-[36px_48px_1fr_40px_55px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 rounded-2xl cursor-pointer transition-colors duration-150 select-none relative z-10 ${
                       isCur
-                        ? 'bg-[#181818] border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(29,185,84,0.18)]'
+                        ? 'bg-white/[0.08] border border-[#FA243C]/40 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
                         : isNextUp
-                        ? 'bg-[#162219] border border-[#1DB954]/50 shadow-md'
-                        : 'bg-[#121212] hover:bg-[#1c1c1c] border border-white/[0.04]'
+                        ? 'bg-[#FA243C]/10 border border-[#FA243C]/50 shadow-md'
+                        : 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06]'
                     }`}
                   >
                     <div className="text-center flex items-center justify-center">
                       {isCur && isPlaying ? (
                         <div className="flex items-end gap-[2px] h-3.5">
-                          <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-                          <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-                          <span className="w-1 bg-[#1DB954] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
                         </div>
                       ) : (
-                        <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#1DB954] font-bold' : 'text-zinc-500'}`}>
+                        <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#FA243C] font-bold' : 'text-zinc-500'}`}>
                           {idx + 1}
                         </span>
                       )}
@@ -158,11 +158,11 @@ export const PlaylistsView: React.FC = () => {
 
                     <div className="min-w-0 pr-2">
                       <div className="flex items-center gap-2">
-                        <h4 dir="auto" className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                        <h4 dir="auto" className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
                           {track.title}
                         </h4>
                         {isNextUp && (
-                          <span className="inline-flex items-center gap-1 text-[9px] text-[#1DB954] bg-[#1DB954]/15 px-2 py-0.5 rounded-full border border-[#1DB954]/35 font-bold flex-shrink-0 animate-pulse">
+                          <span className="inline-flex items-center gap-1 text-[9px] text-[#FA243C] bg-[#FA243C]/15 px-2 py-0.5 rounded-full border border-[#FA243C]/35 font-bold flex-shrink-0 animate-pulse">
                             <ListPlus className="w-2.5 h-2.5" />
                             <span>التالية</span>
                           </span>
@@ -176,25 +176,25 @@ export const PlaylistsView: React.FC = () => {
                     <div className="text-center">
                       <button
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id); }}
-                        className="p-2 rounded-full hover:bg-white/10"
+                        className="p-2 rounded-full hover:bg-white/10 cursor-pointer"
                       >
-                        <Heart className={`w-4 h-4 ${isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-600'}`} />
+                        <Heart className={`w-4 h-4 ${isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-600'}`} />
                       </button>
                     </div>
 
                     <div className="text-xs font-mono text-zinc-400 text-right tabular-nums">{formatTime(track.duration)}</div>
 
                     <div className="relative hidden md:block group/menu">
-                      <button onClick={(e) => e.stopPropagation()} className="p-2 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100">
+                      <button onClick={(e) => e.stopPropagation()} className="p-2 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100 cursor-pointer">
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <div className="hidden group-hover/menu:block absolute right-0 top-8 z-30 w-44 bg-[#181818] border border-white/10 rounded-2xl p-1.5 shadow-2xl space-y-1">
-                        <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left">
-                          <ListPlus className="w-3.5 h-3.5 text-[#1DB954]" />
+                      <div className="hidden group-hover/menu:block absolute right-0 top-8 z-30 w-44 bg-[#0d0d14]/95 border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-1.5 shadow-2xl space-y-1">
+                        <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left cursor-pointer">
+                          <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
                           <span>تشغيل التالي مباشرة</span>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left">
-                          <Radio className="w-3.5 h-3.5 text-[#1DB954]" />
+                        <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left cursor-pointer">
+                          <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
                           <span>إضافة للانتظار</span>
                         </button>
                       </div>

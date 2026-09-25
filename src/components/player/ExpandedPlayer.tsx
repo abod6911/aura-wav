@@ -110,6 +110,18 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [activeDJPHand, setActiveDJPHand] = useState<string | null>(null);
   const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
 
+  // 3D Artwork Tilt Reaction
+  const [artworkTilt, setArtworkTilt] = useState({ x: 0, y: 0 });
+  const handleArtworkPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    setArtworkTilt({ x: -(py * 16), y: px * 16 });
+  };
+  const handleArtworkPointerLeave = () => {
+    setArtworkTilt({ x: 0, y: 0 });
+  };
+
   // Trigger subtle mobile haptic feedback if available
   const triggerHaptic = () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -205,11 +217,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         <div
           className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-40"
           style={{
-            background: `radial-gradient(circle at 50% 25%, ${currentTrack.accentColor || currentTrack.dominantColor || '#1DB954'} 0%, transparent 60%), radial-gradient(circle at 80% 75%, ${currentTrack.secondaryColor || '#1ed760'} 0%, transparent 55%), #121212`,
+            background: `radial-gradient(circle at 50% 25%, ${currentTrack.accentColor || currentTrack.dominantColor || '#FA243C'} 0%, transparent 60%), radial-gradient(circle at 80% 75%, ${currentTrack.secondaryColor || '#FF375F'} 0%, transparent 55%), #08080c`,
             transform: 'translateZ(0)',
           }}
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#121212]/50 via-[#121212]/85 to-[#121212] pointer-events-none" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#08080c]/50 via-[#08080c]/85 to-[#08080c] pointer-events-none" />
 
         {/* 1. Top Header Bar (Ergonomic Minimalist Top 15%) */}
         <div className="flex items-center justify-between pt-1 px-1 flex-shrink-0">
@@ -265,6 +277,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.25}
+                onPointerMove={handleArtworkPointerMove}
+                onPointerLeave={handleArtworkPointerLeave}
+                animate={{
+                  rotateX: artworkTilt.x,
+                  rotateY: artworkTilt.y,
+                  scale: isPlaying ? 1.03 : 1,
+                }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                 onDragEnd={(_, info) => {
                   if (info.offset.x < -55 || info.velocity.x < -200) {
                     triggerHaptic();
@@ -283,14 +303,27 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   }
                 }}
                 style={{
-                  boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'}`,
+                  perspective: 1000,
+                  transformStyle: 'preserve-3d',
+                  boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`,
                 }}
-                className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/[0.12] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
+                className="group relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)]"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setChangeArtworkModal(true, currentTrack);
                 }}
               >
+                {/* Glossy Glass Light Sheen Sweep */}
+                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-3xl">
+                  <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/15 to-transparent transform -rotate-45 translate-x-[-150%] group-hover:translate-x-[250%] transition-transform duration-1000 ease-in-out" />
+                </div>
+
+                {/* Vinyl Spin Status Badge */}
+                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center gap-1.5 z-20 pointer-events-none shadow-md">
+                  <Disc3 className={`w-3.5 h-3.5 text-white/90 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+                  <span className="text-[10px] font-mono text-white/80 font-bold uppercase tracking-wider">{isPlaying ? 'Vinyl 33' : 'Paused'}</span>
+                </div>
+
                 {show3dVisualizer ? (
                   <div className="w-full h-full bg-black/60">
                     <VisualizerCanvas className="w-full h-full" />
@@ -624,7 +657,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               toggleShuffle();
             }}
             style={{ touchAction: 'manipulation' }}
-            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               shuffle 
                 ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
@@ -633,6 +666,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             aria-label="Shuffle"
           >
             <Shuffle className="w-5 h-5" />
+            {shuffle && (
+              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1ed760] shadow-[0_0_6px_#10B981]" />
+            )}
           </motion.button>
 
           {/* 2. Previous Track Button (Left of Play -> |<<) */}
@@ -645,17 +681,17 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               previousTrack();
             }}
             style={{ touchAction: 'manipulation' }}
-            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all"
+            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
             title="السابق (Previous)"
             aria-label="Previous track"
           >
             <SkipBack className="w-6 h-6 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
           </motion.button>
 
-          {/* 3. Master Luxury Hi-Fi Play/Pause Button (Center) */}
+          {/* 3. Master Luxury Hi-Fi Play/Pause Button (Center with Dynamic Depth) */}
           <motion.button
             data-testid="expanded-play-pause-btn"
-            whileTap={{ scale: 0.91 }}
+            whileTap={{ scale: 0.90 }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               triggerHaptic();
@@ -665,7 +701,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               touchAction: 'manipulation',
               ['--aura-glow' as any]: currentTrack.accentColor || currentTrack.dominantColor || 'rgba(29, 185, 84, 0.45)'
             }}
-            className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_25px_rgba(255,255,255,0.4)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform"
+            className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90 duration-150"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {/* Dynamic artwork aura backlight */}
@@ -690,7 +726,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               nextTrack({ forceImmediate: true });
             }}
             style={{ touchAction: 'manipulation' }}
-            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all"
+            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
             title="التالي (Next)"
             aria-label="Next track"
           >
@@ -707,7 +743,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               cycleRepeat();
             }}
             style={{ touchAction: 'manipulation' }}
-            className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               repeatMode !== 'off' 
                 ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
@@ -716,46 +752,82 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             aria-label="Repeat"
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
+            {repeatMode !== 'off' && (
+              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1ed760] shadow-[0_0_6px_#10B981]" />
+            )}
           </motion.button>
         </div>
 
-        {/* 4.5 Balanced Mobile Thumb-Zone Pills: AutoMix & DJ Tools */}
-        <div className="flex items-center justify-center gap-3 flex-shrink-0 select-none py-1">
+        {/* 4.5 Frosted Micro-Capsules Cluster (AutoMix, DJ Tools, EQ, Sleep Timer with Glowing Dots) */}
+        <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-shrink-0 select-none py-1.5 flex-wrap">
+          {/* AutoMix Capsule */}
           <motion.button
             data-testid="automix-pill"
-            whileTap={{ scale: 0.94 }}
+            whileTap={{ scale: 0.92 }}
             onClick={() => {
               triggerHaptic();
               setAutoMixModalOpen(true);
             }}
-            className={`luxury-capsule h-11 px-5 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+            className={`luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
               automixEnabled ? 'luxury-capsule-active text-purple-300' : 'text-zinc-400 hover:text-white'
             }`}
-            title="إعدادات الـ AutoMix"
+            title="AutoMix"
           >
-            <SlidersHorizontal className="w-4 h-4 text-purple-400" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-purple-400" />
             <span>AutoMix</span>
             {automixEnabled && (
-              <span className={`w-2 h-2 rounded-full ${isAutoMixingLive ? 'bg-emerald-400 animate-ping' : 'bg-purple-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isAutoMixingLive ? 'bg-emerald-400 animate-ping' : 'bg-purple-400'} drop-shadow-[0_0_6px_#A855F7]`} />
             )}
           </motion.button>
 
+          {/* DJ Tools Capsule */}
           <motion.button
             data-testid="dj-tools-pill"
-            whileTap={{ scale: 0.94 }}
+            whileTap={{ scale: 0.92 }}
             onClick={() => {
               triggerHaptic();
               setSoundboardOpen(true);
             }}
-            className="luxury-capsule h-11 px-5 rounded-full text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:text-white"
-            title="أدوات ومؤثرات الـ DJ"
+            className="luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:text-white"
+            title="DJ Tools"
           >
-            <Disc3 className={`w-4 h-4 text-[#1DB954] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
-            <span>DJ Tools</span>
+            <Disc3 className={`w-3.5 h-3.5 text-[#1DB954] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+            <span>DJ FX</span>
             {playbackRate !== 1.0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-[#1DB954] text-[10px] font-mono text-black font-extrabold">
-                {playbackRate}x
-              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 drop-shadow-[0_0_6px_#10B981]" />
+            )}
+          </motion.button>
+
+          {/* Equalizer Capsule */}
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={() => {
+              triggerHaptic();
+              setEqualizerOpen(true);
+            }}
+            className="luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all"
+            title="Equalizer & Pro DSP"
+          >
+            <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>EQ</span>
+          </motion.button>
+
+          {/* Sleep Timer Capsule */}
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={() => {
+              triggerHaptic();
+              setSleepTimerOpen(true);
+            }}
+            className={`luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+              sleepTimerRemaining !== null ? 'luxury-capsule-active text-white' : 'text-zinc-400 hover:text-white'
+            }`}
+            title="Sleep Timer"
+          >
+            <Moon className="w-3.5 h-3.5 text-zinc-300" />
+            <span>{sleepTimerRemaining !== null ? 'Timer' : 'Sleep'}</span>
+            {sleepTimerRemaining !== null && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 drop-shadow-[0_0_6px_#10B981]" />
             )}
           </motion.button>
         </div>

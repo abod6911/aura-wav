@@ -6,8 +6,8 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay"],
-  "background_color": "#121212",
-  "theme_color": "#121212",
+  "background_color": "#08080c",
+  "theme_color": "#08080c",
   "description": "مشغل موسيقى متطور بدون إنترنت، يدعم AutoMix الذكي، الكلمات المتزامنة والمعادل الصوتي",
   "orientation": "portrait-primary",
   "icons": [

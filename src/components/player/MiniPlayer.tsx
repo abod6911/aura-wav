@@ -73,7 +73,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         }
       }}
       data-testid="mini-player"
-      className="md:hidden fixed bottom-[calc(66px+env(safe-area-inset-bottom,0px))] left-2.5 right-2.5 z-40 bg-[#181824] border border-white/[0.14] rounded-2xl p-2 sm:p-2.5 shadow-[0_16px_45px_rgba(0,0,0,0.95)] flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform"
+      className="md:hidden fixed bottom-[calc(88px+env(safe-area-inset-bottom,0px))] inset-x-4 max-w-md mx-auto z-30 bg-[#12121a]/85 backdrop-blur-3xl border border-white/[0.12] rounded-3xl p-2 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform"
       dir={dir}
     >
       {/* Top Hairline Progress Line with Dynamic Glowing Color */}
@@ -82,8 +82,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           className="h-full transition-all duration-150 rounded-full"
           style={{
             width: `${progressPercent}%`,
-            backgroundColor: accentColor,
-            boxShadow: `0 0 8px ${accentColor}80`,
+            background: `linear-gradient(90deg, ${accentColor}cc, ${accentColor})`,
+            boxShadow: `0 0 10px ${accentColor}90`,
           }}
         />
       </div>
@@ -91,7 +91,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* Album Artwork with Ambient Shadow */}
       <div
         onClick={handleExpand}
-        className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/10 shadow-md"
+        className="relative w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/10 shadow-md"
       >
         <AnimatePresence mode="wait">
           <motion.img
