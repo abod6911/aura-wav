@@ -428,56 +428,37 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       </div>
 
-      {/* Quick Numeric Range Jump Bar & Bulk Cache Offline Action */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 select-none scrollbar-none">
-          <span className="text-[11px] sm:text-xs font-bold text-zinc-400 flex-shrink-0 pl-1">
-            تصفح سريع:
-          </span>
-          {[
-            { id: 'all', label: `الكل (${tracks.length})` },
-            { id: '1-100', label: '#1 - 100' },
-            { id: '101-250', label: '#101 - 250' },
-            { id: '251-500', label: '#251 - 500' },
-            { id: '501-1000', label: '#501 - 1000' },
-            { id: '1001-1750', label: '#1001 - 1750' },
-          ].map((r) => {
-            const isSel = activeRange === r.id;
-            return (
-              <button
-                key={r.id}
-                onClick={() => {
-                  setActiveRange(r.id as RangeOption);
-                  if (searchQuery) setSearchQuery('');
-                }}
-                className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-all border cursor-pointer ${
-                  isSel
-                    ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1DB954] shadow-sm'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
-                }`}
-              >
-                {r.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 1-Click Offline Caching CTA */}
-        <button
-          onClick={() => cacheAllAvailableTracksOffline()}
-          disabled={!!downloadAllProgress || (tracks.length > 0 && readyOfflineCount === tracks.length)}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] sm:text-xs font-bold transition-all flex-shrink-0 cursor-pointer disabled:opacity-50"
-          title="حفظ كافة الأغاني المتوفرة في ذاكرة المتصفح لتعمل بدون نت للأبد"
-        >
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>
-            {downloadAllProgress
-              ? `جاري حفظ الأغاني: ${downloadAllProgress.current}/${downloadAllProgress.total}`
-              : tracks.length > 0 && readyOfflineCount === tracks.length
-              ? 'كل الأغاني محفوظة أوفلاين'
-              : `حفظ الكل أوفلاين (${readyOfflineCount}/${tracks.length})`}
-          </span>
-        </button>
+      {/* Quick Numeric Range Jump Bar */}
+      <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto select-none scrollbar-none">
+        <span className="text-[11px] sm:text-xs font-bold text-zinc-400 flex-shrink-0 pl-1">
+          تصفح سريع:
+        </span>
+        {[
+          { id: 'all', label: `الكل (${tracks.length})` },
+          { id: '1-100', label: '#1 - 100' },
+          { id: '101-250', label: '#101 - 250' },
+          { id: '251-500', label: '#251 - 500' },
+          { id: '501-1000', label: '#501 - 1000' },
+          { id: '1001-1750', label: '#1001 - 1750' },
+        ].map((r) => {
+          const isSel = activeRange === r.id;
+          return (
+            <button
+              key={r.id}
+              onClick={() => {
+                setActiveRange(r.id as RangeOption);
+                if (searchQuery) setSearchQuery('');
+              }}
+              className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-all border cursor-pointer ${
+                isSel
+                  ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1DB954] shadow-sm'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
+              }`}
+            >
+              {r.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* 2.5 YouTube Music Mood & Activity Bar */}

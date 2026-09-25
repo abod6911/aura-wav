@@ -93,7 +93,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 select-none" dir={dir}>
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-36 md:pb-24 space-y-6 select-none" dir={dir}>
       {/* 1. Hero Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FA243C]/25 via-red-950/20 to-black/60 border border-white/[0.1] p-6 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-[#FA243C]/20 rounded-full blur-3xl pointer-events-none" />
@@ -193,7 +193,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
       ) : (
         <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-[36px_48px_1fr_48px_44px_36px] items-center gap-3 px-4 py-3 border-b border-white/[0.06] text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+          <div className="grid grid-cols-[28px_48px_1fr_36px_36px] sm:grid-cols-[36px_48px_1fr_60px_44px_36px] items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-3 border-b border-white/[0.06] text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
             <span className="text-center">#</span>
             <span></span>
             <span>{isRTL ? 'العنوان والفنان' : 'Title & Artist'}</span>
@@ -221,7 +221,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                       playTrack(track, favoriteTracks);
                     }
                   }}
-                  className={`group grid grid-cols-[36px_48px_1fr_48px_44px_36px] items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer select-none ${
+                  className={`group grid grid-cols-[28px_48px_1fr_36px_36px] sm:grid-cols-[36px_48px_1fr_60px_44px_36px] items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-2.5 transition-colors cursor-pointer select-none ${
                     isCurrent
                       ? 'bg-gradient-to-r from-[#FA243C]/20 via-[#FA243C]/10 to-transparent border-l-2 border-[#FA243C]'
                       : 'hover:bg-white/[0.05]'
