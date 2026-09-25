@@ -18,6 +18,7 @@ import {
   Flame,
   Check,
   Zap,
+  Volume2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -88,6 +89,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const setReactiveVisualsEnabled = usePlayerStore((state) => state.setReactiveVisualsEnabled);
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
   const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
+  const bassBoost = usePlayerStore((state) => state.bassBoost);
+  const setBassBoost = usePlayerStore((state) => state.setBassBoost);
 
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
@@ -308,6 +311,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               />
             </div>
 
+            {/* Mega Bass Boost Control */}
+            <div className="pt-2 border-t border-white/[0.06] space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Volume2 className="w-3.5 h-3.5 text-[#1DB954] flex-shrink-0" />
+                    <span>{isRTL ? 'مضخم البيس الخارق (Mega Bass Boost)' : 'Mega Bass Boost'}</span>
+                  </h5>
+                  <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
+                    {isRTL ? 'تعزيز الترددات تحت المنخفضة مع حماية من التشويش' : 'Deep sub-bass amplification without distortion'}
+                  </p>
+                </div>
+                <span
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border transition-all ${
+                    bassBoost > 0
+                      ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1ed760]'
+                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-500'
+                  }`}
+                >
+                  {bassBoost > 0 ? `+${bassBoost}dB` : '0dB'}
+                </span>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { label: isRTL ? 'إيقاف' : '0dB', val: 0 },
+                  { label: '+6dB', val: 6 },
+                  { label: '+12dB', val: 12 },
+                  { label: isRTL ? '+18dB زلزال' : '+18dB MAX', val: 18 },
+                ].map((p) => (
+                  <button
+                    key={p.val}
+                    type="button"
+                    onClick={() => {
+                      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                        try { navigator.vibrate(15); } catch {}
+                      }
+                      setBassBoost(p.val);
+                    }}
+                    className={`py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                      bassBoost === p.val
+                        ? 'bg-[#1DB954] text-white shadow-md shadow-[#1DB954]/30'
+                        : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Range Slider */}
+              <div dir="ltr" className="pt-1">
+                <input
+                  type="range"
+                  min={0}
+                  max={18}
+                  step={0.5}
+                  value={bassBoost}
+                  onChange={(e) => setBassBoost(parseFloat(e.target.value))}
+                  className="w-full accent-[#1DB954] cursor-pointer h-1.5 bg-white/10 rounded-lg appearance-none"
+                />
+              </div>
+            </div>
+
             {/* Equalizer Quick Access Button */}
             <div className="pt-2 border-t border-white/[0.06]">
               <button
@@ -320,7 +388,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               >
                 <span className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-[#1DB954]" />
-                  <span>{isRTL ? 'فتح المعادل الصوتي و 3D Reverb' : 'Open 5-Band EQ & 3D Spaces'}</span>
+                  <span>{isRTL ? 'فتح المعادل الصوتي (5-Band EQ)' : 'Open 5-Band Equalizer'}</span>
                 </span>
                 <span className="text-[11px] text-zinc-400 font-mono">5-Band EQ →</span>
               </button>

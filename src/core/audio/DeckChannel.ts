@@ -70,11 +70,11 @@ export class DeckChannel {
       this.channelGainNode = ctx.createGain();
       this.channelGainNode.gain.setValueAtTime(this.volumeLevel, ctx.currentTime);
 
-      // 3. DJ Biquad Filter Node (Default neutral)
+      // 3. DJ Biquad Filter Node (Default neutral 20kHz pass-through)
       this.filterNode = ctx.createBiquadFilter();
-      this.filterNode.type = 'allpass';
-      this.filterNode.frequency.setValueAtTime(1000, ctx.currentTime);
-      this.filterNode.Q.setValueAtTime(1.0, ctx.currentTime);
+      this.filterNode.type = 'lowpass';
+      this.filterNode.frequency.setValueAtTime(20000, ctx.currentTime);
+      this.filterNode.Q.setValueAtTime(0.707, ctx.currentTime);
 
       // 4. Stereo Panner Node
       if (typeof ctx.createStereoPanner === 'function') {
@@ -243,9 +243,9 @@ export class DeckChannel {
   public resetFilter(): void {
     if (!this.filterNode || !this.ctx) return;
     const now = this.ctx.currentTime;
-    this.filterNode.type = 'allpass';
-    this.filterNode.frequency.setValueAtTime(1000, now);
-    this.filterNode.Q.setValueAtTime(1.0, now);
+    this.filterNode.type = 'lowpass';
+    this.filterNode.frequency.setValueAtTime(20000, now);
+    this.filterNode.Q.setValueAtTime(0.707, now);
   }
 
   /**
