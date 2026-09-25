@@ -13,6 +13,20 @@ import { create } from 'zustand';
 import { getDB } from '../db/indexedDB';
 import { dexieDB } from '../db/dexieDB';
 
+type StorageChangeCallback = () => void;
+const storageChangeListeners: Set<StorageChangeCallback> = new Set();
+
+export function onStorageChange(cb: StorageChangeCallback): () => void {
+  storageChangeListeners.add(cb);
+  return () => storageChangeListeners.delete(cb);
+}
+
+function notifyStorageChange(): void {
+  storageChangeListeners.forEach((cb) => {
+    try { cb(); } catch {}
+  });
+}
+
 const OPFS_DIR_NAME = 'aura_audio_vault';
 
 export interface StorageStats {
@@ -79,7 +93,7 @@ export async function saveAudioFileToStorage(
       const writable = await (fileHandle as any).createWritable();
       await writable.write(blobOrFile);
       await writable.close();
-      useStorageStore.getState().refreshStorageStats().catch(() => {});
+      notifyStorageChange();
       return 'opfs';
     } catch (opfsErr) {
       console.warn(`[StorageManager] OPFS write failed for ${trackId}, falling back to IndexedDB:`, opfsErr);
@@ -95,7 +109,7 @@ export async function saveAudioFileToStorage(
   const tx = db.transaction('audioBlobs', 'readwrite');
   await tx.store.put({ id: trackId, blob: blobOrFile });
   await tx.done;
-  useStorageStore.getState().refreshStorageStats().catch(() => {});
+  notifyStorageChange();
   return 'indexeddb';
 }
 
@@ -161,7 +175,7 @@ export async function deleteAudioFileFromStorage(trackId: string): Promise<void>
     await db.delete('audioBlobs', trackId);
   } catch {}
 
-  useStorageStore.getState().refreshStorageStats().catch(() => {});
+  notifyStorageChange();
 }
 
 /**
@@ -197,7 +211,7 @@ export async function clearAllLocalStorage(): Promise<void> {
     console.warn('[StorageManager] Clear IndexedDB error:', idbErr);
   }
 
-  useStorageStore.getState().refreshStorageStats().catch(() => {});
+  notifyStorageChange();
 }
 
 /**
@@ -263,43 +277,59 @@ export async function getStorageStatistics(): Promise<StorageStats> {
   };
 }
 
-/**
- * Reactive Zustand store for real-time Storage Health & Quota monitoring
- */
-export interface StorageStoreState extends StorageStats {
-  isLoading: boolean;
-  refreshStorageStats: () => Promise<void>;
+export interface StorageEstimateResult {
+  usageBytes: number;
+  quotaBytes: number;
+  percentUsed: number;
+  usageFormatted: string;
+  quotaFormatted: string;
+  isCritical: boolean; // True if > 90%
 }
 
-export const useStorageStore = create<StorageStoreState>((set) => ({
-  trackCount: 0,
-  totalSizeBytes: 0,
-  formattedSize: '0 ميجابايت',
-  quotaBytes: 0,
-  usageBytes: 0,
-  usagePercentage: 0,
-  engine: 'opfs',
-  isQuotaWarning: false,
-  isLoading: false,
+function formatBytesEstimate(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
 
-  refreshStorageStats: async () => {
-    set({ isLoading: true });
-    try {
-      const stats = await getStorageStatistics();
-      set({
-        ...stats,
-        isLoading: false,
-        isQuotaWarning: stats.usagePercentage >= 90,
-      });
-    } catch {
-      set({ isLoading: false });
+export class StorageManager {
+  public static async checkStorageHealth(): Promise<StorageEstimateResult> {
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+      try {
+        const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+        const percentUsed = quota > 0 ? (usage / quota) * 100 : 0;
+
+        return {
+          usageBytes: usage,
+          quotaBytes: quota,
+          percentUsed: Math.round(percentUsed),
+          usageFormatted: formatBytesEstimate(usage),
+          quotaFormatted: formatBytesEstimate(quota),
+          isCritical: percentUsed >= 90,
+        };
+      } catch (err) {
+        console.warn('Storage estimation error:', err);
+      }
     }
-  },
-}));
 
-// Auto-trigger storage estimate on load in browser
-if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    useStorageStore.getState().refreshStorageStats().catch(() => {});
-  }, 1000);
+    return {
+      usageBytes: 0,
+      quotaBytes: 0,
+      percentUsed: 0,
+      usageFormatted: 'Unknown',
+      quotaFormatted: 'Unknown',
+      isCritical: false,
+    };
+  }
+
+  public static async requestPersistence(): Promise<boolean> {
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+      return await navigator.storage.persist();
+    }
+    return false;
+  }
 }
+
+export { useStorageStore } from '../stores/useStorageStore';

@@ -18,6 +18,8 @@ export interface TrackMetadata {
   key?: string;
 }
 
+export type AudioTrackMetadata = TrackMetadata;
+
 export interface EQBands {
   sub: number;    // 60 Hz
   bass: number;   // 250 Hz
