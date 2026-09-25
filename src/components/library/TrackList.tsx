@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   ArrowUp,
-  Tag
+  Tag,
+  Sliders,
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -197,7 +198,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-8 pb-32 md:pb-32 w-full max-w-full">
+    <div className="space-y-6 pb-44 w-full max-w-full">
       {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
@@ -553,18 +554,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div className="bg-[#08080c]/85 border border-white/[0.08] rounded-3xl p-2 sm:p-5 backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
-        {/* Swipe Gestures Tip Banner */}
-        <div className="flex items-center justify-between px-2 sm:px-3 pb-3 border-b border-white/[0.05] mb-2 text-[11px] text-zinc-400 select-none">
-          <span className="inline-flex items-center gap-1.5 text-zinc-300 font-medium">
-            <ListPlus className="w-3.5 h-3.5 text-purple-400" />
-            <span>اسحب لليمين للتشغيل التالي • اسحب لليسار للمفضلة</span>
-          </span>
-          <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
-            Swipe Right: Next • Swipe Left: Like
-          </span>
-        </div>
-
+      <div className="bg-[#08080c]/85 border border-white/[0.08] rounded-2xl sm:rounded-3xl p-2 sm:p-5 backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
         <div dir="ltr" className="w-full max-w-full">
           {/* Table Column Headers (Desktop) */}
           <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">
@@ -660,30 +650,8 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const isNextUp = usePlayerStore((state) => state.nextUpTrackId === track.id);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const hasDraggedRef = useRef(false);
-
-  const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
-    // Swipe Right (towards positive x): Add to Next in Queue (violet)
-    if (info.offset.x > 45 || info.velocity.x > 160) {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(12); } catch {}
-      }
-      usePlayerStore.getState().playNextInQueue(track);
-    }
-    // Swipe Left (towards negative x): Like / Add to Favorites (crimson)
-    else if (info.offset.x < -45 || info.velocity.x < -160) {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(12); } catch {}
-      }
-      usePlayerStore.getState().toggleFavorite(track.id);
-    }
-    setTimeout(() => {
-      hasDraggedRef.current = false;
-    }, 120);
-  };
 
   const handleRowClick = () => {
-    if (hasDraggedRef.current) return;
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(8);
@@ -704,258 +672,204 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const displayIndex = track.trackNumber !== undefined ? track.trackNumber : index + 1;
 
   return (
-    <div className="track-row-optimized relative overflow-hidden rounded-2xl select-none group/swipe my-1">
-      {/* Swipe Action Revealed on Right Drag (Violet: Add to Next) */}
-      <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 rounded-2xl flex items-center gap-2 text-white font-black text-xs px-4 shadow-inner pointer-events-none z-0">
-        <ListPlus className="w-4 h-4 stroke-[2.5]" />
-        <span>التالي في القائمة</span>
+    <div
+      onClick={handleRowClick}
+      className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[40px_48px_minmax(200px,2fr)_minmax(120px,1.2fr)_40px_40px_65px_40px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+        isCurrent
+          ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
+          : isNextUp
+          ? 'bg-purple-500/10 border border-purple-500/35'
+          : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
+      }`}
+    >
+      {/* 1. Track Index # or Live Equalizer */}
+      <div className="text-center flex items-center justify-center">
+        {isCurrent && isPlaying ? (
+          <div className="flex items-end gap-[2px] h-4">
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+            <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+          </div>
+        ) : (
+          <span
+            className={`text-xs font-mono tabular-nums md:group-hover:hidden transition-colors ${
+              isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
+            }`}
+          >
+            {displayIndex}
+          </span>
+        )}
+        <Play className="w-3.5 h-3.5 text-white hidden md:group-hover:block fill-white" />
       </div>
 
-      {/* Swipe Action Revealed on Left Drag (Crimson: Favorite) */}
-      <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#FA243C] via-[#FF375F] to-rose-600 rounded-2xl flex items-center justify-end gap-2 text-white font-black text-xs px-4 shadow-inner pointer-events-none z-0">
-        <span>{isFav ? 'إزالة المفضلة' : 'إضافة للمفضلة'}</span>
-        <Heart className="w-4 h-4 fill-white stroke-[2.5]" />
+      {/* 2. Official Album Artwork (48x48px) */}
+      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+        <img
+          src={track.artworkUrl || '/logo.svg'}
+          alt={track.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/logo.svg';
+          }}
+        />
+        {isCurrent && isPlaying && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
+            <Pause className="w-4 h-4 text-white fill-white" />
+          </div>
+        )}
       </div>
 
-      <motion.div
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: -90, right: 90 }}
-        dragElastic={0.22}
-        onDragStart={() => {
-          hasDraggedRef.current = true;
-        }}
-        onDragEnd={handleDragEnd}
-        animate={{ x: 0 }}
-        transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-        style={{ touchAction: 'pan-y' }}
-        onClick={handleRowClick}
-        className={`track-item-contained group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_32px_40px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-2.5 sm:gap-4 px-3 sm:px-4 rounded-2xl cursor-pointer transition-all duration-200 select-none active:scale-[0.99] relative z-10 ${
-          isCurrent
-            ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
-            : isNextUp
-            ? 'bg-purple-500/10 border border-purple-500/40 shadow-sm'
-            : 'bg-transparent hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08]'
-        }`}
-      >
-        {/* 1. Track Index # or Live Equalizer */}
-        <div className="text-center flex items-center justify-center">
-          {isCurrent && isPlaying ? (
-            <div className="flex items-end gap-[2px] h-4">
-              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-              <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
-            </div>
-          ) : (
-            <span
-              className={`text-xs font-mono tabular-nums md:group-hover:hidden transition-colors ${
-                isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
-              }`}
-            >
-              {displayIndex}
+      {/* 3. Title & Artist */}
+      <div className="min-w-0 pr-1 sm:pr-2">
+        <div className="flex items-center gap-2">
+          <h4
+            dir="auto"
+            className={`text-xs sm:text-[15px] font-bold truncate tracking-tight ${
+              isCurrent ? 'text-[#FA243C]' : 'text-white group-hover:text-white'
+            }`}
+          >
+            {track.title}
+          </h4>
+          {isNextUp && (
+            <span className="inline-flex items-center gap-1 text-[9px] text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/35 font-bold flex-shrink-0 animate-pulse">
+              <ListPlus className="w-2.5 h-2.5" />
+              <span>التالية</span>
             </span>
           )}
-          <Play className="w-3.5 h-3.5 text-white hidden md:group-hover:block fill-white" />
         </div>
-
-        {/* 2. High-Res Official Album Artwork (48x48px) */}
-        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
-          <img
-            src={track.artworkUrl || '/logo.svg'}
-            alt={track.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/logo.svg';
-            }}
-          />
-          {isCurrent && isPlaying && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-              <Pause className="w-4 h-4 text-white fill-white" />
-            </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">
+          <span dir="auto" className="truncate font-medium">{track.artist}</span>
+          <span className="md:hidden text-zinc-500 font-mono tabular-nums">• {formatTime(track.duration)}</span>
+          {isDownloaded && (
+            <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30 font-bold flex-shrink-0">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              <span>أوفلاين</span>
+            </span>
+          )}
+          {track.syncedLyrics && track.syncedLyrics.length > 0 && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
+              LYRICS
+            </span>
           )}
         </div>
+      </div>
 
-        {/* 3. Title & Artist (Clean LTR Flow) */}
-        <div className="min-w-0 pr-1 sm:pr-2">
-          <div className="flex items-center gap-2">
-            <h4
-              dir="auto"
-              className={`text-xs sm:text-[15px] font-bold truncate tracking-tight ${
-                isCurrent ? 'text-[#1DB954]' : 'text-white group-hover:text-white'
-              }`}
-            >
-              {track.title}
-            </h4>
-            {isNextUp && (
-              <span className="inline-flex items-center gap-1 text-[9px] text-[#1DB954] bg-[#1DB954]/15 px-2 py-0.5 rounded-full border border-[#1DB954]/35 font-bold flex-shrink-0 animate-pulse">
-                <ListPlus className="w-2.5 h-2.5" />
-                <span>التالية بعد الحالية</span>
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">
-            <span dir="auto" className="truncate">{track.artist}</span>
-            {isDownloaded && (
-              <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30 font-bold flex-shrink-0">
-                <CheckCircle2 className="w-2.5 h-2.5" />
-                <span>أوفلاين</span>
-              </span>
-            )}
-            {track.syncedLyrics && track.syncedLyrics.length > 0 && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#1DB954]/20 text-[#1DB954] font-bold tracking-wider uppercase flex-shrink-0 border border-[#1DB954]/30">
-                LYRICS
-              </span>
-            )}
-            {track.key && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 flex-shrink-0">
-                {track.key}
-              </span>
-            )}
-            {track.bpm && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 flex-shrink-0 tabular-nums">
-                {track.bpm} BPM
-              </span>
-            )}
-          </div>
-        </div>
+      {/* 4. Album (Desktop Only) */}
+      <div dir="auto" className="hidden md:block text-xs text-zinc-400 truncate">
+        {track.album || 'Single'}
+      </div>
 
-        {/* 4. Album (Desktop Only) */}
-        <div dir="auto" className="hidden md:block text-xs text-zinc-400 truncate">
-          {track.album || 'Single'}
-        </div>
+      {/* 5. Offline Download Button (Desktop) */}
+      <div className="text-center hidden md:block">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            usePlayerStore.getState().downloadTrackForOffline(track.id);
+          }}
+          className="p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125 cursor-pointer"
+          title={isDownloaded ? 'محفوظ أوفلاين' : 'حفظ للتشغيل بدون إنترنت'}
+          aria-label="Download track offline"
+        >
+          {isDownloaded ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <Download className="w-4 h-4 text-zinc-600 hover:text-white transition-colors" />
+          )}
+        </button>
+      </div>
 
-        {/* 5. Offline Download Button (Desktop) */}
-        <div className="text-center hidden md:block">
+      {/* 6. Favorite Heart Button */}
+      <div className="text-center flex items-center justify-center">
+        <motion.button
+          whileTap={{ scale: 1.35 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try { navigator.vibrate(10); } catch {}
+            }
+            usePlayerStore.getState().toggleFavorite(track.id);
+          }}
+          className="p-1.5 sm:p-2 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
+          aria-label="Toggle favorite"
+        >
+          <Heart
+            className={`w-4 h-4 transition-colors ${
+              isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
+            }`}
+          />
+        </motion.button>
+      </div>
+
+      {/* 7. Monospace Tabular Duration (Desktop) */}
+      <div className="hidden md:block text-xs font-mono tabular-nums text-white/50 text-right">
+        {formatTime(track.duration)}
+      </div>
+
+      {/* 8. Glass Context Menu */}
+      <div className="relative group/menu flex items-center justify-center">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMenuOpen(!isMenuOpen);
+          }}
+          className="w-8 h-8 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+          aria-label="Track options"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+
+        <div
+          className={`${
+            isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
+          } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/98 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
+        >
           <button
             onClick={(e) => {
               e.stopPropagation();
-              usePlayerStore.getState().downloadTrackForOffline(track.id);
+              usePlayerStore.getState().playNextInQueue(track);
+              setIsMenuOpen(false);
             }}
-            className="p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125"
-            title={isDownloaded ? 'محفوظ أوفلاين' : 'حفظ للتشغيل بدون إنترنت'}
-            aria-label="Download track offline"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            {isDownloaded ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            ) : (
-              <Download className="w-4 h-4 text-zinc-600 hover:text-[#1DB954] transition-colors" />
-            )}
+            <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>تشغيل كأغنية تالية</span>
           </button>
-        </div>
-
-        {/* 6. Favorite Heart Button with Micro-Explosion */}
-        <div className="text-center">
-          <motion.button
-            whileTap={{ scale: 1.35 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                try { navigator.vibrate(10); } catch {}
-              }
-              usePlayerStore.getState().toggleFavorite(track.id);
-            }}
-            className="p-1.5 sm:p-2 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
-            aria-label="Toggle favorite"
-          >
-            <Heart
-              className={`w-4 h-4 transition-colors ${
-                isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
-              }`}
-            />
-          </motion.button>
-        </div>
-
-        {/* 7. Monospace Tabular Duration */}
-        <div className="text-xs font-mono tabular-nums text-white/50 text-right">
-          {formatTime(track.duration)}
-        </div>
-
-        {/* 8. Glass Context Menu (Touch & Desktop) */}
-        <div className="relative group/menu">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsMenuOpen(!isMenuOpen);
+              usePlayerStore.getState().addToQueue(track);
+              setIsMenuOpen(false);
             }}
-            className="p-2 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all cursor-pointer"
-            aria-label="Track options"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            <MoreHorizontal className="w-4 h-4" />
+            <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>إضافة لقائمة الانتظار</span>
           </button>
-
-          <div
-            className={`${
-              isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
-            } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/95 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              usePlayerStore.getState().setChangeArtworkModal(true, track);
+              setIsMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
           >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().playNextInQueue(track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <ListPlus className="w-3.5 h-3.5 text-[#1DB954]" />
-              <span>تشغيل كأغنية تالية بعد الحالية</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().addToQueue(track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <Radio className="w-3.5 h-3.5 text-[#1DB954]" />
-              <span>إضافة لآخر قائمة الانتظار</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().setChangeArtworkModal(true, track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <ImageIcon className="w-3.5 h-3.5 text-[#1DB954]" />
-              <span>تغيير الغلاف والبحث أونلاين</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().setMetadataEditorModal(true, track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <Tag className="w-3.5 h-3.5 text-[#1DB954]" />
-              <span>تعديل بيانات الأغنية (ID3 Tags)</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().downloadTrackForOffline(track.id);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              {isDownloaded ? (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>محفوظ أوفلاين في الذاكرة</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>حفظ للتشغيل بدون إنترنت</span>
-                </>
-              )}
-            </button>
-          </div>
+            <ImageIcon className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>تغيير الغلاف والبحث أونلاين</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              usePlayerStore.getState().setMetadataEditorModal(true, track);
+              setIsMenuOpen(false);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+          >
+            <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>تعديل وسوم ID3 والبيانات</span>
+          </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 });

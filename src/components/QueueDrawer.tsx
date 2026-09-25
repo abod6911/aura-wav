@@ -27,7 +27,7 @@ export const QueueDrawer: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-start bg-black/60 backdrop-blur-md animate-fadeIn select-none">
-      <div className="w-full max-w-md h-full bg-[#121218]/95 border-l border-white/10 p-5 sm:p-6 flex flex-col justify-between shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md h-full bg-[#121218]/95 border-l border-white/10 p-5 sm:p-6 pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] flex flex-col justify-between shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4 flex-shrink-0">
           <div className="flex items-center gap-3">

@@ -27,13 +27,19 @@ export const SleepTimerModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl animate-fadeIn select-none">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl select-none">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-md bg-[#0f0f16]/95 border border-white/[0.12] rounded-3xl p-6 shadow-[0_24px_64px_rgba(0,0,0,0.85)] space-y-6"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 40 }}
+          className="relative w-full max-w-md bg-[#0f0f16]/98 border-t sm:border border-white/[0.12] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_24px_64px_rgba(0,0,0,0.85)] space-y-5"
         >
+          {/* iOS Top Drag Pill */}
+          <div
+            onClick={() => setSleepTimerOpen(false)}
+            className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+          />
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">

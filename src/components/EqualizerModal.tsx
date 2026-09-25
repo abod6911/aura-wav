@@ -134,14 +134,20 @@ export const EqualizerModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-2xl select-none overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 40 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="w-full max-w-2xl bg-[#09090e]/95 border border-white/[0.1] rounded-3xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-5 relative overflow-hidden my-auto max-h-[92vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
+          className="w-full sm:max-w-2xl bg-[#09090e]/95 border-t sm:border border-white/[0.1] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 sm:space-y-5 relative overflow-hidden max-h-[88vh] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
         >
+          {/* iOS Mobile Drag Pill */}
+          <div
+            onClick={() => setEqualizerOpen(false)}
+            className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+          />
+
           {/* Top Ambient Glow */}
           <div className="absolute top-0 right-1/4 w-80 h-80 bg-[#1DB954]/10 rounded-full blur-3xl pointer-events-none" />
 

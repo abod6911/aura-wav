@@ -118,8 +118,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fadeIn select-none">
-      <div className="w-full max-w-lg bg-[#121218]/95 border border-white/10 rounded-3xl p-5 sm:p-8 shadow-2xl space-y-5 sm:space-y-6 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-xl animate-fadeIn select-none">
+      <div className="w-full max-w-lg bg-[#121218]/98 border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-8 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl space-y-5 sm:space-y-6 relative overflow-hidden">
+        {/* iOS Top Drag Pill */}
+        <div
+          onClick={onClose}
+          className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+        />
         {/* Hidden Folder Input (Desktop) */}
         <input
           ref={folderInputRef}
