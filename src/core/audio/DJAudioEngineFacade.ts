@@ -45,6 +45,7 @@ export class DJAudioEngineFacade {
   private autoMixTriggered = false;
   private preloadTriggered = false;
   private isUnlocked = false;
+  private isSwitchingTrack = false;
 
   // Master Volume & Fade
   private masterVolume = 1.0;
@@ -191,40 +192,44 @@ export class DJAudioEngineFacade {
   // --- Playback Controls ---
 
   public async playTrack(track: Track): Promise<boolean> {
+    this.isSwitchingTrack = true;
     await this.initContext();
     this.primeDecks();
-
-    const active = this.getActiveDeck();
-    const inactive = this.getInactiveDeck();
 
     this.autoMix.cancelTransition(this.channelA, this.channelB);
     this.isAutoMixing = false;
     this.autoMixTriggered = false;
     this.preloadTriggered = false;
 
-    // Normalization
-    const targetGain = this.normalizer.computeLinearGain(track);
-    active.setPreampGain(targetGain);
+    const active = this.getActiveDeck();
+    const inactive = this.getInactiveDeck();
 
-    // Stop inactive deck
-    inactive.stop();
-    inactive.setVolume(0);
+    // Check if track is already preloaded and ready in inactive deck
+    if (inactive.track?.id === track.id && inactive.audio.src) {
+      active.stop();
+      active.setVolume(0);
 
-    // Check if track is already preloaded in active deck or inactive deck
-    if (inactive.track?.id === track.id && (inactive.isPreloaded || inactive.decodedBuffer)) {
-      // Hot-swap decks
       this.swapActiveDecks();
       const newActive = this.getActiveDeck();
       newActive.setVolume(1.0);
+      newActive.setPreampGain(this.normalizer.computeLinearGain(track));
       try {
         await newActive.play();
         this.notifyPlaybackState(true);
         this.timerWorker.start(20);
+        this.isSwitchingTrack = false;
         return true;
       } catch (err) {
         console.warn('[DJAudioEngine] Hot-swap play error, falling back:', err);
       }
     }
+
+    // Direct playback path on current active deck
+    inactive.stop();
+    inactive.setVolume(0);
+
+    const targetGain = this.normalizer.computeLinearGain(track);
+    active.setPreampGain(targetGain);
 
     try {
       const audioUrl = await this.resolveTrackUrl(track);
@@ -234,10 +239,12 @@ export class DJAudioEngineFacade {
       await active.play();
       this.notifyPlaybackState(true);
       this.timerWorker.start(20);
+      this.isSwitchingTrack = false;
       return true;
     } catch (err) {
       console.warn('[DJAudioEngine] Playback error:', err);
       this.notifyPlaybackState(false);
+      this.isSwitchingTrack = false;
       return false;
     }
   }
@@ -406,35 +413,25 @@ export class DJAudioEngineFacade {
     const idleDeck = this.getInactiveDeck();
 
     // Skip if already preloaded
-    if (idleDeck.track?.id === track.id && (idleDeck.isPreloaded || idleDeck.decodedBuffer)) {
+    if (idleDeck.track?.id === track.id && idleDeck.audio.src) {
       return;
     }
 
     try {
       const blob = await getAudioFileFromStorage(track.id);
-      if (blob && this.ctx) {
-        // High-performance decodeAudioData preloading
-        const arrayBuffer = await blob.arrayBuffer();
-        this.ctx.decodeAudioData(
-          arrayBuffer,
-          (decodedBuffer) => {
-            idleDeck.loadPreloadedBuffer(track, decodedBuffer);
-            idleDeck.setVolume(0);
-          },
-          () => {
-            // Fallback to object URL
-            const url = URL.createObjectURL(blob);
-            idleDeck.loadTrackUrl(track, url, true);
-            idleDeck.setVolume(0);
-          }
-        );
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        idleDeck.loadTrackUrl(track, url, true);
+        idleDeck.setVolume(0);
       } else {
         const url = await this.resolveTrackUrl(track);
-        idleDeck.loadTrackUrl(track, url, url.startsWith('blob:'));
-        idleDeck.setVolume(0);
+        if (url) {
+          idleDeck.loadTrackUrl(track, url, url.startsWith('blob:'));
+          idleDeck.setVolume(0);
+        }
       }
     } catch (err) {
-      console.warn('[DJAudioEngine] Buffer preloading notice:', err);
+      console.warn('[DJAudioEngine] Preload notice:', err);
     }
   }
 
@@ -727,7 +724,7 @@ export class DJAudioEngineFacade {
     });
 
     channel.audio.addEventListener('pause', () => {
-      if (this.activeChannelName === channel.name && !this.isAutoMixing) {
+      if (this.activeChannelName === channel.name && !this.isAutoMixing && !this.isSwitchingTrack) {
         this.notifyPlaybackState(false);
       }
     });

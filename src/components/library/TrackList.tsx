@@ -18,7 +18,6 @@ import {
   Clock,
   Mic2,
   HardDrive,
-  Download,
   CheckCircle2,
   Image as ImageIcon,
   ArrowUp,
@@ -413,19 +412,6 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <span>بكلمات متزامنة</span>
           </button>
 
-          <button
-            onClick={() => setActiveFilter('offline')}
-            className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeFilter === 'offline'
-                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-            title="إظهار الأغاني الجاهزة للتشغيل أوفلاين في الذاكرة"
-          >
-            <HardDrive className="w-3.5 h-3.5 text-emerald-400" />
-            <span>أوفلاين ({readyOfflineCount})</span>
-          </button>
-
           {/* Sort Dropdown */}
           <div className="relative flex items-center">
             <select
@@ -557,14 +543,11 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       <div className="bg-[#08080c]/85 border border-white/[0.08] rounded-2xl sm:rounded-3xl p-2 sm:p-5 backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
         <div dir="ltr" className="w-full max-w-full">
           {/* Table Column Headers (Desktop) */}
-          <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">
             <span className="text-center font-mono">#</span>
             <span>Cover</span>
             <span>Title & Artist</span>
             <span>Album</span>
-            <span className="text-center" title="حفظ للتشغيل بدون إنترنت">
-              <Download className="w-3.5 h-3.5 mx-auto opacity-70" />
-            </span>
             <span className="text-center">
               <Heart className="w-3.5 h-3.5 mx-auto opacity-70" />
             </span>
@@ -646,7 +629,6 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
   const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
   const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
-  const isDownloaded = usePlayerStore((state) => state.downloadedTrackIds.includes(track.id));
   const isNextUp = usePlayerStore((state) => state.nextUpTrackId === track.id);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -674,7 +656,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
   return (
     <div
       onClick={handleRowClick}
-      className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[40px_48px_minmax(200px,2fr)_minmax(120px,1.2fr)_40px_40px_65px_40px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+      className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
         isCurrent
           ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
           : isNextUp
@@ -682,27 +664,38 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
       }`}
     >
-      {/* 1. Track Index # or Live Equalizer */}
+      {/* 1. Track Index # or Live Equalizer (Clean separation - never overlaps) */}
       <div className="text-center flex items-center justify-center">
-        {isCurrent && isPlaying ? (
-          <div className="flex items-end gap-[2px] h-4">
-            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-            <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-            <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
-          </div>
-        ) : (
-          <span
-            className={`text-xs font-mono tabular-nums md:group-hover:hidden transition-colors ${
-              isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
-            }`}
-          >
-            {displayIndex}
-          </span>
-        )}
-        <Play className="w-3.5 h-3.5 text-white hidden md:group-hover:block fill-white" />
+        {/* On Desktop Hover: Play or Pause Icon */}
+        <div className="hidden md:group-hover:flex items-center justify-center w-6 h-6 rounded-full text-white cursor-pointer active:scale-90">
+          {isCurrent && isPlaying ? (
+            <Pause className="w-3.5 h-3.5 fill-white text-white" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-white text-white translate-x-0.5" />
+          )}
+        </div>
+
+        {/* When NOT hovered: Animated Bars if playing, else Track Index */}
+        <div className="md:group-hover:hidden flex items-center justify-center">
+          {isCurrent && isPlaying ? (
+            <div className="flex items-end gap-[2px] h-3.5">
+              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
+              <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
+              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+            </div>
+          ) : (
+            <span
+              className={`text-xs font-mono tabular-nums transition-colors ${
+                isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
+              }`}
+            >
+              {displayIndex}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* 2. Official Album Artwork (48x48px) */}
+      {/* 2. Official Album Artwork (Clean & Unblocked) */}
       <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
         <img
           src={track.artworkUrl || '/logo.svg'}
@@ -713,11 +706,6 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
             (e.target as HTMLImageElement).src = '/logo.svg';
           }}
         />
-        {isCurrent && isPlaying && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-            <Pause className="w-4 h-4 text-white fill-white" />
-          </div>
-        )}
       </div>
 
       {/* 3. Title & Artist */}
@@ -741,12 +729,6 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
         <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">
           <span dir="auto" className="truncate font-medium">{track.artist}</span>
           <span className="md:hidden text-zinc-500 font-mono tabular-nums">• {formatTime(track.duration)}</span>
-          {isDownloaded && (
-            <span className="inline-flex items-center gap-0.5 text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.2 rounded border border-emerald-500/30 font-bold flex-shrink-0">
-              <CheckCircle2 className="w-2.5 h-2.5" />
-              <span>أوفلاين</span>
-            </span>
-          )}
           {track.syncedLyrics && track.syncedLyrics.length > 0 && (
             <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
               LYRICS
@@ -758,25 +740,6 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
       {/* 4. Album (Desktop Only) */}
       <div dir="auto" className="hidden md:block text-xs text-zinc-400 truncate">
         {track.album || 'Single'}
-      </div>
-
-      {/* 5. Offline Download Button (Desktop) */}
-      <div className="text-center hidden md:block">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            usePlayerStore.getState().downloadTrackForOffline(track.id);
-          }}
-          className="p-2 rounded-full hover:bg-white/10 transition-transform active:scale-125 cursor-pointer"
-          title={isDownloaded ? 'محفوظ أوفلاين' : 'حفظ للتشغيل بدون إنترنت'}
-          aria-label="Download track offline"
-        >
-          {isDownloaded ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          ) : (
-            <Download className="w-4 h-4 text-zinc-600 hover:text-white transition-colors" />
-          )}
-        </button>
       </div>
 
       {/* 6. Favorite Heart Button */}

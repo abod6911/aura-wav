@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { TrackList } from './components/library/TrackList';
 import { PlaylistsView } from './components/PlaylistsView';
+import { FavoritesView } from './components/FavoritesView';
 import { SpotifyHomeView } from './components/SpotifyHomeView';
 import { InfiniteSearchView } from './components/InfiniteSearchView';
 import { RightSidebar } from './components/RightSidebar';
@@ -324,7 +325,7 @@ export function App() {
                 <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
               )}
               {activeTab === 'favorites' && (
-                <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
+                <FavoritesView onExplore={() => usePlayerStore.getState().setActiveTab('library')} />
               )}
               {activeTab === 'playlists' && <PlaylistsView />}
             </div>

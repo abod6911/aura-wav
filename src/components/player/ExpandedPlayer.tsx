@@ -80,22 +80,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
-  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
-  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
-
+  const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
+  const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
+  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
-  const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
-  const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
-
-  const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
-  const setSoundboardOpen = usePlayerStore((state) => state.setSoundboardOpen);
-  const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
-  const automixStyle = usePlayerStore((state) => state.automixStyle);
   const playDJSound = usePlayerStore((state) => state.playDJSound);
   const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
-  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
@@ -539,14 +531,15 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               {/* Apple Music Style Hi-Res Lossless & Spatial Audio Badges (Monochromatic & Clean) */}
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <div
+                  dir="ltr"
                   className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 flex items-center gap-1.5 shadow-sm"
-                  title="صوت عالي الدقة نقي (Studio Master Lossless)"
+                  title="صوت استوديو نقي عالي الدقة (Studio Master Lossless)"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Lossless Hi-Fi</span>
                   <span className="text-white/20">|</span>
                   <Headphones className="w-3 h-3 text-emerald-400" />
-                  <span>24-bit / 96kHz</span>
+                  <span className="font-mono">24-bit / 96kHz</span>
                 </div>
 
                 {/* BPM & Camelot Key Badges */}
@@ -717,80 +710,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </motion.button>
         </div>
 
-        {/* 4.5 Frosted Micro-Capsules Cluster (AutoMix, DJ Tools, EQ, Sleep Timer with Glowing Dots) */}
-        <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-shrink-0 select-none py-1.5 flex-wrap">
-          {/* AutoMix Capsule */}
-          <motion.button
-            data-testid="automix-pill"
-            whileTap={{ scale: 0.92 }}
-            onClick={() => {
-              triggerHaptic();
-              setAutoMixModalOpen(true);
-            }}
-            className={`luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
-              automixEnabled ? 'luxury-capsule-active text-purple-300' : 'text-zinc-400 hover:text-white'
-            }`}
-            title="AutoMix"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-purple-400" />
-            <span>AutoMix</span>
-            {automixEnabled && (
-              <span className={`w-1.5 h-1.5 rounded-full ${isAutoMixingLive ? 'bg-emerald-400 animate-ping' : 'bg-purple-400'} drop-shadow-[0_0_6px_#A855F7]`} />
-            )}
-          </motion.button>
-
-          {/* DJ Tools Capsule */}
-          <motion.button
-            data-testid="dj-tools-pill"
-            whileTap={{ scale: 0.92 }}
-            onClick={() => {
-              triggerHaptic();
-              setSoundboardOpen(true);
-            }}
-            className="luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all hover:text-white"
-            title="DJ Tools"
-          >
-            <Disc3 className={`w-3.5 h-3.5 text-[#1DB954] ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
-            <span>DJ FX</span>
-            {playbackRate !== 1.0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 drop-shadow-[0_0_6px_#10B981]" />
-            )}
-          </motion.button>
-
-          {/* Equalizer Capsule */}
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            onClick={() => {
-              triggerHaptic();
-              setEqualizerOpen(true);
-            }}
-            className="luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-zinc-300 hover:text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-all"
-            title="Equalizer & Pro DSP"
-          >
-            <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span>EQ</span>
-          </motion.button>
-
-          {/* Sleep Timer Capsule */}
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            onClick={() => {
-              triggerHaptic();
-              setSleepTimerOpen(true);
-            }}
-            className={`luxury-capsule h-10 px-3.5 sm:px-4 rounded-full text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
-              sleepTimerRemaining !== null ? 'luxury-capsule-active text-white' : 'text-zinc-400 hover:text-white'
-            }`}
-            title="Sleep Timer"
-          >
-            <Moon className="w-3.5 h-3.5 text-zinc-300" />
-            <span>{sleepTimerRemaining !== null ? 'Timer' : 'Sleep'}</span>
-            {sleepTimerRemaining !== null && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 drop-shadow-[0_0_6px_#10B981]" />
-            )}
-          </motion.button>
-        </div>
-
         {/* 5. 3 Tabs Selector */}
         <div className="flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
@@ -937,28 +856,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     <div className="flex items-center gap-3">
                       <Tag className="w-5 h-5 text-[#1DB954]" />
                       <span>تعديل بيانات الأغنية (ID3 Tags)</span>
-                    </div>
-                  </button>
-
-                  {/* Download / Offline */}
-                  <button
-                    onClick={() => {
-                      triggerHaptic();
-                      downloadTrackForOffline(currentTrack.id);
-                    }}
-                    className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      {downloadedTrackIds.includes(currentTrack.id) ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                      ) : (
-                        <Download className="w-5 h-5 text-zinc-400" />
-                      )}
-                      <span>
-                        {downloadedTrackIds.includes(currentTrack.id)
-                          ? 'محفوظ للتشغيل بدون إنترنت'
-                          : 'حفظ للتشغيل بدون إنترنت'}
-                      </span>
                     </div>
                   </button>
 
