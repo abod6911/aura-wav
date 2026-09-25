@@ -9,6 +9,7 @@
  *    - Atomic per-track transactions avoiding single-transaction timeout/quota bugs
  */
 
+import { create } from 'zustand';
 import { getDB } from '../db/indexedDB';
 import { dexieDB } from '../db/dexieDB';
 
@@ -22,6 +23,7 @@ export interface StorageStats {
   usageBytes?: number;
   usagePercentage: number;
   engine: 'opfs' | 'indexeddb';
+  isQuotaWarning?: boolean;
 }
 
 /**
@@ -77,6 +79,7 @@ export async function saveAudioFileToStorage(
       const writable = await (fileHandle as any).createWritable();
       await writable.write(blobOrFile);
       await writable.close();
+      useStorageStore.getState().refreshStorageStats().catch(() => {});
       return 'opfs';
     } catch (opfsErr) {
       console.warn(`[StorageManager] OPFS write failed for ${trackId}, falling back to IndexedDB:`, opfsErr);
@@ -92,6 +95,7 @@ export async function saveAudioFileToStorage(
   const tx = db.transaction('audioBlobs', 'readwrite');
   await tx.store.put({ id: trackId, blob: blobOrFile });
   await tx.done;
+  useStorageStore.getState().refreshStorageStats().catch(() => {});
   return 'indexeddb';
 }
 
@@ -122,7 +126,7 @@ export async function getAudioFileFromStorage(trackId: string): Promise<Blob | n
     }
   } catch {}
 
-  // 2. Try IndexedDB audioBlobs
+  // 3. Try IndexedDB audioBlobs
   try {
     const db = await getDB();
     const item = await db.get('audioBlobs', trackId);
@@ -149,9 +153,15 @@ export async function deleteAudioFileFromStorage(trackId: string): Promise<void>
   }
 
   try {
+    await dexieDB.audioBlobs.delete(trackId);
+  } catch {}
+
+  try {
     const db = await getDB();
     await db.delete('audioBlobs', trackId);
   } catch {}
+
+  useStorageStore.getState().refreshStorageStats().catch(() => {});
 }
 
 /**
@@ -178,7 +188,6 @@ export async function clearAllLocalStorage(): Promise<void> {
     await tx.objectStore('playlists').clear();
     await tx.done;
 
-    // Reset saved folder metadata in settings
     await db.delete('settings', 'savedFolderName');
     await db.delete('settings', 'savedFolderTrackCount');
     await db.delete('settings', 'savedFolderTimestamp');
@@ -187,20 +196,26 @@ export async function clearAllLocalStorage(): Promise<void> {
   } catch (idbErr) {
     console.warn('[StorageManager] Clear IndexedDB error:', idbErr);
   }
+
+  useStorageStore.getState().refreshStorageStats().catch(() => {});
 }
 
 /**
  * Calculate comprehensive storage statistics
  */
 export async function getStorageStatistics(): Promise<StorageStats> {
-  const db = await getDB();
-  const allTracks = await db.getAll('tracks');
-  const trackCount = allTracks.length;
+  let trackCount = 0;
+  try {
+    const db = await getDB();
+    const allTracks = await db.getAll('tracks');
+    trackCount = allTracks.length;
+  } catch {}
 
   let totalSizeBytes = 0;
 
   // 1. Calculate actual sizes of stored blobs in IndexedDB
   try {
+    const db = await getDB();
     const allBlobs = await db.getAll('audioBlobs');
     for (const item of allBlobs) {
       if (item && item.blob) {
@@ -244,5 +259,47 @@ export async function getStorageStatistics(): Promise<StorageStats> {
     usageBytes,
     usagePercentage,
     engine: opfsDir ? 'opfs' : 'indexeddb',
+    isQuotaWarning: usagePercentage >= 90,
   };
+}
+
+/**
+ * Reactive Zustand store for real-time Storage Health & Quota monitoring
+ */
+export interface StorageStoreState extends StorageStats {
+  isLoading: boolean;
+  refreshStorageStats: () => Promise<void>;
+}
+
+export const useStorageStore = create<StorageStoreState>((set) => ({
+  trackCount: 0,
+  totalSizeBytes: 0,
+  formattedSize: '0 ميجابايت',
+  quotaBytes: 0,
+  usageBytes: 0,
+  usagePercentage: 0,
+  engine: 'opfs',
+  isQuotaWarning: false,
+  isLoading: false,
+
+  refreshStorageStats: async () => {
+    set({ isLoading: true });
+    try {
+      const stats = await getStorageStatistics();
+      set({
+        ...stats,
+        isLoading: false,
+        isQuotaWarning: stats.usagePercentage >= 90,
+      });
+    } catch {
+      set({ isLoading: false });
+    }
+  },
+}));
+
+// Auto-trigger storage estimate on load in browser
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    useStorageStore.getState().refreshStorageStats().catch(() => {});
+  }, 1000);
 }

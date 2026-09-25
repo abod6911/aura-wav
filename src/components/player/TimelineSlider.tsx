@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { formatTime } from '../../utils/formatters';
 export { formatTime };
 
@@ -23,51 +23,101 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
   const [scrubTime, setScrubTime] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [hoverTime, setHoverTime] = useState(0);
-  const trackRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (!isScrubbing) {
-      setScrubTime(currentTime);
-    }
-  }, [currentTime, isScrubbing]);
+  // Optimistic seek lock to prevent audio engine position bounce-back upon release
+  const [optimisticSeekTime, setOptimisticSeekTime] = useState<number | null>(null);
+
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
 
   const validDuration = isFinite(duration) && duration > 0 ? duration : 0;
-  const displayTime = isScrubbing ? scrubTime : currentTime;
-  const progressPercent = validDuration > 0 ? Math.min(100, Math.max(0, (displayTime / validDuration) * 100)) : 0;
-  const hoverPercent = validDuration > 0 ? Math.min(100, Math.max(0, (hoverTime / validDuration) * 100)) : 0;
 
-  const calculateTimeFromPointer = (clientX: number): number => {
-    if (!trackRef.current || validDuration <= 0) return 0;
-    const rect = trackRef.current.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return ratio * validDuration;
-  };
+  // Clear optimistic seek lock once audio engine time catches up to within 0.8s
+  useEffect(() => {
+    if (optimisticSeekTime !== null) {
+      if (Math.abs(currentTime - optimisticSeekTime) < 0.8) {
+        setOptimisticSeekTime(null);
+      }
+    }
+  }, [currentTime, optimisticSeekTime]);
+
+  // Sync currentTime to local state when NOT scrubbing and not in optimistic lock
+  useEffect(() => {
+    if (!isScrubbing && optimisticSeekTime === null) {
+      setScrubTime(currentTime);
+    }
+  }, [currentTime, isScrubbing, optimisticSeekTime]);
+
+  const displayTime = isScrubbing
+    ? scrubTime
+    : optimisticSeekTime !== null
+    ? optimisticSeekTime
+    : currentTime;
+
+  const progressPercent =
+    validDuration > 0
+      ? Math.min(100, Math.max(0, (displayTime / validDuration) * 100))
+      : 0;
+
+  const hoverPercent =
+    validDuration > 0
+      ? Math.min(100, Math.max(0, (hoverTime / validDuration) * 100))
+      : 0;
+
+  const calculateTimeFromPointer = useCallback(
+    (clientX: number): number => {
+      if (!trackRef.current || validDuration <= 0) return 0;
+      const rect = trackRef.current.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      return ratio * validDuration;
+    },
+    [validDuration]
+  );
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsScrubbing(true);
+
     const newTime = calculateTimeFromPointer(e.clientX);
+    setIsScrubbing(true);
     setScrubTime(newTime);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    activePointerIdRef.current = e.pointerId;
+
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const time = calculateTimeFromPointer(e.clientX);
     setHoverTime(time);
-    if (!isScrubbing) return;
-    setScrubTime(time);
+
+    if (isScrubbing) {
+      setScrubTime(time);
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (!isScrubbing) return;
     setIsScrubbing(false);
+
     const finalTime = calculateTimeFromPointer(e.clientX);
+    setOptimisticSeekTime(finalTime);
     onSeek(finalTime);
-    try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
+
+    if (activePointerIdRef.current !== null) {
+      try {
+        (e.currentTarget as HTMLElement).releasePointerCapture(activePointerIdRef.current);
+      } catch {}
+      activePointerIdRef.current = null;
+    }
+  };
+
+  const handlePointerCancel = () => {
+    if (isScrubbing) {
+      setIsScrubbing(false);
+      setOptimisticSeekTime(null);
+      activePointerIdRef.current = null;
     }
   };
 
@@ -82,12 +132,13 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
         </span>
       )}
 
-      {/* Interactive Track Container (Enlarged for thumb touch ergonomics) */}
+      {/* Interactive Track Container with Extended Ergonomic Hit Area */}
       <div
         ref={trackRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
         onPointerEnter={(e) => {
           setIsHovered(true);
           setHoverTime(calculateTimeFromPointer(e.clientX));
@@ -118,7 +169,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
 
           {/* Glowing Filled Progress Bar */}
           <div
-            className="h-full rounded-full relative transition-[width] duration-75"
+            className={`h-full rounded-full relative ${isScrubbing ? '' : 'transition-[width] duration-75'}`}
             style={{
               width: `${progressPercent}%`,
               background: `linear-gradient(90deg, ${accentColor}, #FF375F)`,
@@ -131,8 +182,10 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
 
         {/* Apple-Grade Tactile Thumb */}
         <div
-          className={`absolute -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border-2 pointer-events-none transition-transform duration-100 ${
-            isScrubbing ? 'scale-125 ring-4 ring-white/20' : 'group-hover:scale-110'
+          className={`absolute -translate-x-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.9)] border-2 pointer-events-none ${
+            isScrubbing
+              ? 'scale-125 ring-4 ring-white/25'
+              : 'group-hover:scale-110 transition-transform duration-100'
           }`}
           style={{
             left: `${progressPercent}%`,
