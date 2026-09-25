@@ -27,6 +27,11 @@ export interface Track {
   source: 'local' | 'demo';
   storageType?: 'opfs' | 'indexeddb';
   dateAdded: number;
+  // Professional DJ & Acoustic Metadata
+  bpm?: number;
+  key?: string; // Camelot standard (e.g. '8A', '8B')
+  lufs?: number; // Integrated loudness (e.g. -14.0)
+  gain?: number; // ReplayGain track gain in dB (e.g. -2.5)
 }
 
 export interface Playlist {
@@ -46,4 +51,3 @@ export interface EqualizerPreset {
 export type PlaybackState = 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
 export type RepeatMode = 'off' | 'all' | 'one';
 export type ViewTab = 'home' | 'search' | 'library' | 'favorites' | 'playlists' | 'settings' | 'premium';
-

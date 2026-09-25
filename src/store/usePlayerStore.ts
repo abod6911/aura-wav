@@ -100,9 +100,11 @@ interface PlayerState {
   isShortcutsOpen: boolean;
   isWelcomeOpen: boolean;
   isChangeArtworkOpen: boolean;
+  artworkTargetTrack: Track | null;
+  isMetadataEditorOpen: boolean;
+  metadataTargetTrack: Track | null;
   isSoundboardOpen: boolean;
   isAutoMixModalOpen: boolean;
-  artworkTargetTrack: Track | null;
   isOnline: boolean;
   downloadedTrackIds: string[];
   downloadAllProgress: { current: number; total: number } | null;
@@ -164,6 +166,8 @@ interface PlayerState {
   setWelcomeOpen: (open: boolean) => void;
   setChangeArtworkModal: (open: boolean, track?: Track | null) => void;
   updateTrackArtwork: (trackId: string, artworkBlob: Blob, artworkUrl: string) => Promise<void>;
+  setMetadataEditorModal: (open: boolean, track?: Track | null) => void;
+  updateTrackMetadata: (trackId: string, metadata: Partial<Track>, newArtworkBlob?: Blob, newArtworkUrl?: string) => Promise<void>;
   cleanAndRepairLibrary: () => Promise<void>;
   setIsOnline: (online: boolean) => void;
   setSleepTimer: (setting: SleepTimerSetting) => void;
@@ -488,9 +492,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isShortcutsOpen: false,
     isWelcomeOpen: false,
     isChangeArtworkOpen: false,
-    isSoundboardOpen: false,
-    isAutoMixModalOpen: false,
     artworkTargetTrack: null,
+    isMetadataEditorOpen: false,
+    metadataTargetTrack: null,
+    isSoundboardOpen: false,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
     downloadAllProgress: null,
@@ -1641,6 +1646,52 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
 
+    setMetadataEditorModal: (open: boolean, track?: Track | null) =>
+      set({
+        isMetadataEditorOpen: open,
+        metadataTargetTrack: track !== undefined ? track : get().currentTrack,
+      }),
+
+    updateTrackMetadata: async (trackId: string, metadata: Partial<Track>, newArtworkBlob?: Blob, newArtworkUrl?: string) => {
+      const { tracks, currentTrack } = get();
+      try {
+        const db = await getDB();
+        if (newArtworkBlob && newArtworkUrl) {
+          await db.put('artworkBlobs', { id: trackId, blob: newArtworkBlob });
+          await dexieDB.artworkBlobs.put({ id: trackId, blob: newArtworkBlob });
+          metadata.artworkUrl = newArtworkUrl;
+        }
+
+        const updatedTracks = tracks.map((t) => {
+          if (t.id === trackId) {
+            const updated = { ...t, ...metadata };
+            db.put('tracks', updated).catch(() => {});
+            dexieDB.tracks.put(updated).catch(() => {});
+            return updated;
+          }
+          return t;
+        });
+
+        const isCurrent = currentTrack?.id === trackId;
+        const newCurrent = isCurrent && currentTrack ? { ...currentTrack, ...metadata } : currentTrack;
+
+        set({
+          tracks: updatedTracks,
+          filteredTracks: updatedTracks,
+          currentTrack: newCurrent,
+        });
+
+        if (isCurrent && newCurrent) {
+          updateMediaSession(newCurrent, get().isPlaying, getMediaSessionCallbacks(get));
+        }
+
+        get().addToast('تم تحديث بيانات الأغنية بنجاح', undefined, 'success');
+      } catch (err) {
+        console.warn('Error updating track metadata:', err);
+        get().addToast('تعذر حفظ التعديلات', undefined, 'warning');
+      }
+    },
+
     cleanAndRepairLibrary: async () => {
       get().addToast('جارٍ فحص وتنظيف المكتبة...', undefined, 'info');
       await get().initStore();
@@ -1688,9 +1739,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
 
         const nextSecs = cur - 1;
-        if (nextSecs === 3) {
-          // Smooth 3-second fade out
-          djAudioEngine.fadeVolume(0, 3);
+        if (nextSecs === 60 || (cur > 60 && nextSecs <= 60)) {
+          // Smooth 60-second exponential audio volume fade-out
+          djAudioEngine.fadeVolume(0.0001, 60);
+        } else if (totalSecs < 60 && nextSecs === Math.floor(totalSecs * 0.2)) {
+          // Fallback fade for very short test timers
+          djAudioEngine.fadeVolume(0.0001, nextSecs);
         }
 
         if (nextSecs <= 0) {

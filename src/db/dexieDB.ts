@@ -17,12 +17,19 @@ export interface SettingRecord {
   value: any;
 }
 
+export interface LyricsRecord {
+  id: string;
+  lrc: string;
+  updatedAt: number;
+}
+
 export class SpotifyAuraDB extends Dexie {
   tracks!: Table<Track, string>;
   audioBlobs!: Table<AudioBlobRecord, string>;
   artworkBlobs!: Table<ArtworkBlobRecord, string>;
   playlists!: Table<Playlist, string>;
   settings!: Table<SettingRecord, string>;
+  lyrics!: Table<LyricsRecord, string>;
 
   constructor() {
     super('SpotifyAuraDexieDB');
@@ -32,6 +39,11 @@ export class SpotifyAuraDB extends Dexie {
       artworkBlobs: 'id',
       playlists: 'id, name, createdAt',
       settings: 'key',
+    });
+
+    this.version(2).stores({
+      tracks: 'id, title, artist, album, duration, trackNumber, genre, dateAdded, bpm, key',
+      lyrics: 'id, updatedAt',
     });
   }
 }
@@ -83,13 +95,41 @@ export async function getArtworkBlobFromDexie(id: string): Promise<Blob | null> 
 }
 
 /**
+ * Retrieve cached lyrics by track ID
+ */
+export async function getLyricsFromDexie(id: string): Promise<string | null> {
+  try {
+    const rec = await dexieDB.lyrics.get(id);
+    return rec ? rec.lrc : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save lyrics to Dexie cache
+ */
+export async function saveLyricsToDexie(id: string, lrc: string): Promise<void> {
+  try {
+    await dexieDB.lyrics.put({
+      id,
+      lrc,
+      updatedAt: Date.now(),
+    });
+  } catch (err) {
+    console.warn('[DexieDB] Failed to save lyrics:', err);
+  }
+}
+
+/**
  * Clear all local music library data
  */
 export async function clearDexieLibrary(): Promise<void> {
-  await dexieDB.transaction('rw', [dexieDB.tracks, dexieDB.audioBlobs, dexieDB.artworkBlobs], async () => {
+  await dexieDB.transaction('rw', [dexieDB.tracks, dexieDB.audioBlobs, dexieDB.artworkBlobs, dexieDB.lyrics], async () => {
     await dexieDB.tracks.clear();
     await dexieDB.audioBlobs.clear();
     await dexieDB.artworkBlobs.clear();
+    await dexieDB.lyrics.clear();
   });
 }
 
