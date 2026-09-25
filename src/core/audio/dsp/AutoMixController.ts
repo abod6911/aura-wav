@@ -37,11 +37,13 @@ export class AutoMixController {
       if (typeof deckA.resetFilter === 'function') deckA.resetFilter();
       if (typeof deckA.setPlaybackRate === 'function') deckA.setPlaybackRate(1.0);
       if (typeof deckA.setFaderGain === 'function') deckA.setFaderGain(1.0, 0);
+      if (typeof deckA.setVolume === 'function') deckA.setVolume(1.0, 0);
     }
     if (deckB) {
       if (typeof deckB.resetFilter === 'function') deckB.resetFilter();
       if (typeof deckB.setPlaybackRate === 'function') deckB.setPlaybackRate(1.0);
       if (typeof deckB.setFaderGain === 'function') deckB.setFaderGain(0, 0);
+      if (typeof deckB.setVolume === 'function') deckB.setVolume(0, 0);
     }
     this.teardownEchoNodes();
   }

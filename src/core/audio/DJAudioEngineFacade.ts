@@ -749,20 +749,22 @@ export class DJAudioEngineFacade {
         }
       }
 
-      // Check Preload Threshold: 15s remaining
+      // Check Preload Threshold: 15s remaining (only when playback is well underway)
       const remaining = dur - cur;
-      if (remaining <= 15 && !this.preloadTriggered && active.track) {
+      if (cur >= 3.0 && remaining <= 15 && !this.preloadTriggered && active.track) {
         this.preloadTriggered = true;
         if (this.callbacks.onPreloadNeeded) {
           this.callbacks.onPreloadNeeded(active.track);
         }
       }
 
-      // Check AutoMix Threshold
+      // Check AutoMix Threshold (Guard against false-positives at track start)
       if (
         this.automixEnabled &&
         !this.isAutoMixing &&
         !this.autoMixTriggered &&
+        cur >= 3.0 &&
+        dur > this.automixDuration + 2.0 &&
         remaining <= this.automixDuration &&
         remaining > 0.5
       ) {

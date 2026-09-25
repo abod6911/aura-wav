@@ -1209,16 +1209,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       } else {
         djAudioEngine.cancelActiveTransitions(true);
         set({
-          currentTrack: targetTrack,
-          history: [...get().history, currentTrack],
-          currentTime: 0,
-          duration: targetTrack.duration || 0,
+          history: currentTrack ? [...get().history, currentTrack] : get().history,
         });
-        updateMediaSession(targetTrack, true, getMediaSessionCallbacks(get));
-        const success = await djAudioEngine.playTrack(targetTrack);
-        if (!success) {
-          set({ isPlaying: false });
-        }
+        await get().playTrack(targetTrack);
       }
 
       if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {

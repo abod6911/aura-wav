@@ -182,7 +182,12 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
       window.location.hostname.startsWith('192.168.')
     );
     if (isLocalHost) {
-      return track.audioUrl;
+      try {
+        const decoded = decodeURIComponent(track.audioUrl);
+        return encodeURI(decoded);
+      } catch {
+        return track.audioUrl;
+      }
     }
     // On remote production (Vercel), local files are not bundled.
     // Proceed directly to instant high-speed online stream resolution!
@@ -257,5 +262,18 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
     }
   }
 
-  return track.audioUrl || null;
+  const isLocalHost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  );
+
+  if (track.audioUrl) {
+    if (track.audioUrl.startsWith('/songs/')) {
+      return isLocalHost ? encodeURI(decodeURIComponent(track.audioUrl)) : null;
+    }
+    return track.audioUrl;
+  }
+
+  return null;
 }

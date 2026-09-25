@@ -276,16 +276,8 @@ export class DeckChannel {
     } catch (err: any) {
       if (err.name === 'NotAllowedError') {
         console.warn(`[DeckChannel ${this.name}] Autoplay blocked: user gesture required`);
-        throw err;
       }
-      if (this.audio.crossOrigin) {
-        console.warn(`[DeckChannel ${this.name}] Play failed with crossOrigin, retrying direct...`);
-        this.audio.crossOrigin = null;
-        this.audio.load();
-        await this.audio.play();
-      } else {
-        throw err;
-      }
+      throw err;
     }
   }
 
