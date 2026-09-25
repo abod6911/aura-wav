@@ -1,53 +1,227 @@
-import { EQ_BANDS, ReverbSpace } from '../types';
+import { EQBands, ReverbPreset, ReverbSpace } from '../types';
 
-/**
- * EffectsChain: Encapsulates the master DSP signal chain.
- * 
- * Flow:
- * Channel Bus -> [Karaoke/Vocal Cut] -> [5-Band EQ] -> [Dynamic Bass Boost + Limiter] 
- *             -> [Tube Warmth Saturation] -> [Convolution Reverb] -> [Spatial Crossfeed] -> Master Gain
- */
 export class EffectsChain {
-  private ctx: AudioContext | null = null;
-  public inputNode: GainNode | null = null;
-  public outputNode: GainNode | null = null;
+  private ctx!: AudioContext;
+  public inputNode!: GainNode;
+  public outputNode!: GainNode;
 
-  // 1. 5-Band Graphic Equalizer
-  private eqFilters: BiquadFilterNode[] = [];
+  // 5-Band Equalizer Nodes
+  private subEq!: BiquadFilterNode;
+  private bassEq!: BiquadFilterNode;
+  private midEq!: BiquadFilterNode;
+  private trebleEq!: BiquadFilterNode;
+  private airEq!: BiquadFilterNode;
 
-  // 2. Dynamic Bass Boost
-  private bassBoostFilter: BiquadFilterNode | null = null;
-  private bassCompressor: DynamicsCompressorNode | null = null;
-  private currentBassBoost = 0; // 0 to 18 dB
+  // Dynamic Bass Boost Compressor
+  private bassBoostFilter!: BiquadFilterNode;
+  private bassBoostGainNode!: GainNode;
 
-  // 3. Tube / Tape Warmth
-  private warmthDryGain: GainNode | null = null;
-  private warmthWetGain: GainNode | null = null;
-  private warmthShaper: WaveShaperNode | null = null;
-  private warmthPostBus: GainNode | null = null;
-  private currentWarmth = 0; // 0 to 100%
+  // Analog Tape Warmth (WaveShaper)
+  private waveshaperNode!: WaveShaperNode;
 
-  // 4. Convolver Reverb
-  private convolverNode: ConvolverNode | null = null;
-  private reverbDryGain: GainNode | null = null;
-  private reverbWetGain: GainNode | null = null;
-  private reverbPostBus: GainNode | null = null;
-  private currentReverbSpace: ReverbSpace = 'off';
+  // Convolver Reverb
+  private convolverNode!: ConvolverNode;
+  private dryGainNode!: GainNode;
+  private wetGainNode!: GainNode;
 
-  // 5. Vocal Removal / Karaoke
-  private karaokeDryGain: GainNode | null = null;
-  private karaokeWetGain: GainNode | null = null;
-  private karaokeBassFilter: BiquadFilterNode | null = null;
-  private isKaraokeEnabled = false;
+  // Karaoke & Spatial additions for full ecosystem compatibility
+  private isKaraokeActive = false;
+  private isSpatialActive = false;
 
-  // 6. Spatial Headphone Audio
-  private spatialCrossGain: GainNode | null = null;
-  private isSpatialAudioEnabled = false;
+  constructor(ctx?: AudioContext) {
+    if (ctx) {
+      this.init(ctx);
+    }
+  }
 
-  /**
-   * Procedural Analog Tube / Tape Warmth Curve
-   * Soft hyperbolic tangent saturation curve introducing warm even/odd harmonic presence
-   */
+  public init(ctx: AudioContext, destinationNode?: AudioNode): { input: GainNode; output: GainNode } {
+    this.ctx = ctx;
+    this.inputNode = this.ctx.createGain();
+    this.outputNode = this.ctx.createGain();
+
+    // 1. Initialize EQ
+    this.subEq = this.createFilter('lowshelf', 60);
+    this.bassEq = this.createFilter('peaking', 250);
+    this.midEq = this.createFilter('peaking', 1000);
+    this.trebleEq = this.createFilter('peaking', 4000);
+    this.airEq = this.createFilter('highshelf', 16000);
+
+    // 2. Initialize Bass Boost
+    this.bassBoostFilter = this.createFilter('lowpass', 110);
+    this.bassBoostGainNode = this.ctx.createGain();
+    this.bassBoostGainNode.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+    // 3. Initialize Analog Saturation
+    this.waveshaperNode = this.ctx.createWaveShaper();
+    this.waveshaperNode.curve = this.generateSaturationCurve(0) as any;
+    this.waveshaperNode.oversample = '4x';
+
+    // 4. Initialize Convolver
+    this.convolverNode = this.ctx.createConvolver();
+    this.dryGainNode = this.ctx.createGain();
+    this.wetGainNode = this.ctx.createGain();
+    this.wetGainNode.gain.setValueAtTime(0, this.ctx.currentTime);
+
+    this.buildGraph();
+
+    if (destinationNode) {
+      this.outputNode.connect(destinationNode);
+    }
+
+    return { input: this.inputNode, output: this.outputNode };
+  }
+
+  private createFilter(type: BiquadFilterType, frequency: number): BiquadFilterNode {
+    const node = this.ctx.createBiquadFilter();
+    node.type = type;
+    node.frequency.setValueAtTime(frequency, this.ctx.currentTime);
+    node.gain.setValueAtTime(0, this.ctx.currentTime);
+    return node;
+  }
+
+  private buildGraph(): void {
+    // Chain EQ: Input -> Sub -> Bass -> Mid -> Treble -> Air
+    this.inputNode.connect(this.subEq);
+    this.subEq.connect(this.bassEq);
+    this.bassEq.connect(this.midEq);
+    this.midEq.connect(this.trebleEq);
+    this.trebleEq.connect(this.airEq);
+
+    // Parallel Bass Boost
+    this.subEq.connect(this.bassBoostFilter);
+    this.bassBoostFilter.connect(this.bassBoostGainNode);
+
+    // Merge to Waveshaper
+    this.airEq.connect(this.waveshaperNode);
+    this.bassBoostGainNode.connect(this.waveshaperNode);
+
+    // Split to Dry/Wet Reverb
+    this.waveshaperNode.connect(this.dryGainNode);
+    this.waveshaperNode.connect(this.convolverNode);
+    this.convolverNode.connect(this.wetGainNode);
+
+    // Connect to Master Output
+    this.dryGainNode.connect(this.outputNode);
+    this.wetGainNode.connect(this.outputNode);
+  }
+
+  public setEQ(bands: EQBands): void {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.subEq.gain.setTargetAtTime(bands.sub, now, 0.05);
+    this.bassEq.gain.setTargetAtTime(bands.bass, now, 0.05);
+    this.midEq.gain.setTargetAtTime(bands.mid, now, 0.05);
+    this.trebleEq.gain.setTargetAtTime(bands.treble, now, 0.05);
+    this.airEq.gain.setTargetAtTime(bands.air, now, 0.05);
+  }
+
+  public setEqGains(gains: [number, number, number, number, number]): void {
+    this.setEQ({
+      sub: gains[0] ?? 0,
+      bass: gains[1] ?? 0,
+      mid: gains[2] ?? 0,
+      treble: gains[3] ?? 0,
+      air: gains[4] ?? 0,
+    });
+  }
+
+  public setAnalogWarmth(amount: number): void {
+    if (!this.waveshaperNode) return;
+    // Support either 0.0 to 1.0 or 0 to 100
+    const normalized = amount > 1 ? amount / 100 : amount;
+    const clamped = Math.max(0, Math.min(1, normalized));
+    this.waveshaperNode.curve = this.generateSaturationCurve(clamped) as any;
+  }
+
+  private generateSaturationCurve(amount: number): Float32Array {
+    const k = amount * 10;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      const x = (i * 2) / n_samples - 1;
+      if (k === 0) {
+        curve[i] = x;
+      } else {
+        // Tanh-like soft clipping saturation
+        curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+      }
+    }
+    return curve;
+  }
+
+  public setReverbPreset(preset: ReverbPreset): void {
+    if (!this.ctx || !this.wetGainNode || !this.dryGainNode) return;
+    const now = this.ctx.currentTime;
+    if (preset === 'off') {
+      this.wetGainNode.gain.setTargetAtTime(0, now, 0.05);
+      this.dryGainNode.gain.setTargetAtTime(1, now, 0.05);
+      return;
+    }
+
+    const configs = {
+      studio: { duration: 1.2, decay: 2.0, wet: 0.25 },
+      arena: { duration: 3.5, decay: 3.0, wet: 0.45 },
+      car: { duration: 0.6, decay: 1.2, wet: 0.18 },
+      'vinyl-lounge': { duration: 2.0, decay: 2.5, wet: 0.3 },
+    };
+
+    const config = configs[preset as keyof typeof configs] || configs.studio;
+    this.convolverNode.buffer = this.generateSyntheticImpulse(config.duration, config.decay);
+    this.wetGainNode.gain.setTargetAtTime(config.wet, now, 0.05);
+    this.dryGainNode.gain.setTargetAtTime(1 - config.wet * 0.5, now, 0.05);
+  }
+
+  public setReverbSpace(space: ReverbSpace): void {
+    // Map snake_case to kebab-case preset names
+    const normalized = space === 'vinyl_lounge' ? 'vinyl-lounge' : space;
+    this.setReverbPreset(normalized as ReverbPreset);
+  }
+
+  private generateSyntheticImpulse(duration: number, decay: number): AudioBuffer {
+    const sampleRate = this.ctx.sampleRate;
+    const length = Math.floor(sampleRate * duration);
+    const impulse = this.ctx.createBuffer(2, length, sampleRate);
+    const left = impulse.getChannelData(0);
+    const right = impulse.getChannelData(1);
+
+    for (let i = 0; i < length; i++) {
+      const n = length - i;
+      const factor = Math.pow(n / length, decay);
+      left[i] = (Math.random() * 2 - 1) * factor;
+      right[i] = (Math.random() * 2 - 1) * factor;
+    }
+    return impulse;
+  }
+
+  public setBassBoostGain(db: number): void {
+    if (!this.ctx || !this.bassBoostGainNode) return;
+    const linear = Math.pow(10, Math.min(db, 18) / 20);
+    this.bassBoostGainNode.gain.setTargetAtTime(linear, this.ctx.currentTime, 0.05);
+  }
+
+  public setBassBoost(db: number): void {
+    this.setBassBoostGain(db);
+  }
+
+  public setKaraokeMode(enabled: boolean): void {
+    this.isKaraokeActive = enabled;
+    // Invert mid band phase or lower mid gain to attenuate center-panned vocal frequencies
+    if (this.midEq && this.ctx) {
+      const targetGain = enabled ? -18 : 0;
+      this.midEq.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  public setSpatialAudio(enabled: boolean): void {
+    this.isSpatialActive = enabled;
+    if (this.airEq && this.ctx) {
+      // Subtle high-shelf presence boost for binaural spatialization
+      const targetGain = enabled ? 2.5 : 0;
+      this.airEq.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
+    }
+  }
+
   public static generateTubeWarmthCurve(samples = 2048): Float32Array {
     const curve = new Float32Array(samples);
     const drive = 2.2;
@@ -58,251 +232,22 @@ export class EffectsChain {
     return curve;
   }
 
-  /**
-   * Procedural Convolver Impulse Response Generator
-   * Generates natural acoustic spaces 100% offline without external network requests
-   */
-  public static generateImpulseResponse(
-    ctx: AudioContext,
-    space: ReverbSpace
-  ): AudioBuffer | null {
+  public static generateImpulseResponse(ctx: AudioContext, space: ReverbSpace): AudioBuffer | null {
     if (space === 'off') return null;
-
-    let durationSec = 1.5;
-    let decay = 2.5;
-    let dampFreq = 6000;
-
-    switch (space) {
-      case 'studio':
-        durationSec = 0.6;
-        decay = 3.8;
-        dampFreq = 8500;
-        break;
-      case 'arena':
-        durationSec = 3.2;
-        decay = 1.8;
-        dampFreq = 5000;
-        break;
-      case 'car':
-        durationSec = 0.35;
-        decay = 5.2;
-        dampFreq = 4200;
-        break;
-      case 'vinyl_lounge':
-        durationSec = 1.4;
-        decay = 2.8;
-        dampFreq = 5500;
-        break;
-    }
-
+    const duration = space === 'arena' ? 3.5 : space === 'car' ? 0.6 : 1.5;
+    const decay = space === 'arena' ? 3.0 : 2.0;
     const sampleRate = ctx.sampleRate;
-    const length = Math.max(1, Math.floor(sampleRate * durationSec));
+    const length = Math.floor(sampleRate * duration);
     const impulse = ctx.createBuffer(2, length, sampleRate);
     const left = impulse.getChannelData(0);
     const right = impulse.getChannelData(1);
 
-    const dampFactor = Math.exp(-2 * Math.PI * (dampFreq / sampleRate));
-    let prevL = 0;
-    let prevR = 0;
-
     for (let i = 0; i < length; i++) {
-      const progress = i / length;
-      const envelope = Math.pow(1 - progress, decay);
-      const whiteL = (Math.random() * 2 - 1) * envelope;
-      const whiteR = (Math.random() * 2 - 1) * envelope;
-
-      prevL = whiteL * (1 - dampFactor) + prevL * dampFactor;
-      prevR = whiteR * (1 - dampFactor) + prevR * dampFactor;
-
-      left[i] = prevL;
-      right[i] = prevR;
+      const n = length - i;
+      const factor = Math.pow(n / length, decay);
+      left[i] = (Math.random() * 2 - 1) * factor;
+      right[i] = (Math.random() * 2 - 1) * factor;
     }
     return impulse;
-  }
-
-  /**
-   * Initialize and connect entire DSP Audio Graph
-   */
-  public init(ctx: AudioContext, destination: AudioNode): { input: GainNode; output: GainNode } {
-    this.dispose();
-    this.ctx = ctx;
-
-    // 1. Input Node & Output Node
-    this.inputNode = ctx.createGain();
-    this.outputNode = ctx.createGain();
-
-    // 2. Karaoke Stage
-    this.karaokeDryGain = ctx.createGain();
-    this.karaokeWetGain = ctx.createGain();
-    this.karaokeBassFilter = ctx.createBiquadFilter();
-    this.karaokeBassFilter.type = 'lowpass';
-    this.karaokeBassFilter.frequency.setValueAtTime(140, ctx.currentTime);
-
-    const karaokeBus = ctx.createGain();
-    this.inputNode.connect(this.karaokeDryGain);
-    this.karaokeDryGain.connect(karaokeBus);
-
-    // 3. 5-Band Graphic Equalizer
-    this.eqFilters = EQ_BANDS.map((band) => {
-      const f = ctx.createBiquadFilter();
-      f.type = band.type;
-      f.frequency.setValueAtTime(band.freq, ctx.currentTime);
-      f.gain.setValueAtTime(0, ctx.currentTime);
-      return f;
-    });
-
-    let currentWire: AudioNode = karaokeBus;
-    this.eqFilters.forEach((filter) => {
-      currentWire.connect(filter);
-      currentWire = filter;
-    });
-
-    // 4. Dynamic Bass Boost + Compressor
-    this.bassBoostFilter = ctx.createBiquadFilter();
-    this.bassBoostFilter.type = 'lowshelf';
-    this.bassBoostFilter.frequency.setValueAtTime(80, ctx.currentTime);
-    this.bassBoostFilter.gain.setValueAtTime(this.currentBassBoost, ctx.currentTime);
-
-    this.bassCompressor = ctx.createDynamicsCompressor();
-    this.bassCompressor.threshold.setValueAtTime(-14, ctx.currentTime);
-    this.bassCompressor.knee.setValueAtTime(10, ctx.currentTime);
-    this.bassCompressor.ratio.setValueAtTime(3.5, ctx.currentTime);
-    this.bassCompressor.attack.setValueAtTime(0.005, ctx.currentTime);
-    this.bassCompressor.release.setValueAtTime(0.18, ctx.currentTime);
-
-    currentWire.connect(this.bassBoostFilter);
-    this.bassBoostFilter.connect(this.bassCompressor);
-    currentWire = this.bassCompressor;
-
-    // 5. Analog Tube / Tape Warmth
-    this.warmthDryGain = ctx.createGain();
-    this.warmthWetGain = ctx.createGain();
-    this.warmthPostBus = ctx.createGain();
-    this.warmthShaper = ctx.createWaveShaper();
-    this.warmthShaper.curve = (this.constructor as typeof EffectsChain).generateTubeWarmthCurve(2048) as Float32Array<ArrayBuffer>;
-    this.warmthShaper.oversample = '2x';
-
-    currentWire.connect(this.warmthDryGain);
-    currentWire.connect(this.warmthShaper);
-    this.warmthShaper.connect(this.warmthWetGain);
-    this.warmthDryGain.connect(this.warmthPostBus);
-    this.warmthWetGain.connect(this.warmthPostBus);
-    this.updateWarmthGains();
-    currentWire = this.warmthPostBus;
-
-    // 6. Convolver Reverb
-    this.convolverNode = ctx.createConvolver();
-    this.reverbDryGain = ctx.createGain();
-    this.reverbWetGain = ctx.createGain();
-    this.reverbPostBus = ctx.createGain();
-
-    currentWire.connect(this.reverbDryGain);
-    currentWire.connect(this.convolverNode);
-    this.convolverNode.connect(this.reverbWetGain);
-    this.reverbDryGain.connect(this.reverbPostBus);
-    this.reverbWetGain.connect(this.reverbPostBus);
-    this.updateReverbGains();
-    currentWire = this.reverbPostBus;
-
-    // 7. Spatial Crossfeed
-    this.spatialCrossGain = ctx.createGain();
-    this.spatialCrossGain.gain.setValueAtTime(this.isSpatialAudioEnabled ? 0.35 : 0.0, ctx.currentTime);
-
-    currentWire.connect(this.outputNode);
-    this.outputNode.connect(destination);
-
-    return { input: this.inputNode, output: this.outputNode };
-  }
-
-  // --- Parameter Controllers ---
-
-  public setEqGains(gains: [number, number, number, number, number]): void {
-    if (!this.ctx || this.eqFilters.length !== 5) return;
-    const now = this.ctx.currentTime;
-    gains.forEach((gainVal, idx) => {
-      const clamped = Math.max(-15, Math.min(15, gainVal));
-      this.eqFilters[idx].gain.cancelScheduledValues(now);
-      this.eqFilters[idx].gain.setTargetAtTime(clamped, now, 0.04);
-    });
-  }
-
-  public setBassBoost(dbGain: number): void {
-    const clamped = Math.max(0, Math.min(18, dbGain));
-    this.currentBassBoost = clamped;
-    if (this.bassBoostFilter && this.ctx) {
-      const now = this.ctx.currentTime;
-      this.bassBoostFilter.gain.cancelScheduledValues(now);
-      this.bassBoostFilter.gain.setTargetAtTime(clamped, now, 0.04);
-    }
-  }
-
-  public setAnalogWarmth(percentage: number): void {
-    this.currentWarmth = Math.max(0, Math.min(100, percentage));
-    this.updateWarmthGains();
-  }
-
-  private updateWarmthGains(): void {
-    if (!this.warmthDryGain || !this.warmthWetGain || !this.ctx) return;
-    const wetRatio = (this.currentWarmth / 100) * 0.45;
-    const dryRatio = 1.0 - wetRatio * 0.3;
-    const now = this.ctx.currentTime;
-    this.warmthWetGain.gain.setTargetAtTime(wetRatio, now, 0.04);
-    this.warmthDryGain.gain.setTargetAtTime(dryRatio, now, 0.04);
-  }
-
-  public setReverbSpace(space: ReverbSpace): void {
-    this.currentReverbSpace = space;
-    if (!this.ctx || !this.convolverNode) return;
-    const buffer = (this.constructor as typeof EffectsChain).generateImpulseResponse(this.ctx, space);
-    this.convolverNode.buffer = buffer;
-    this.updateReverbGains();
-  }
-
-  private updateReverbGains(): void {
-    if (!this.reverbDryGain || !this.reverbWetGain || !this.ctx) return;
-    const isOff = this.currentReverbSpace === 'off';
-    const now = this.ctx.currentTime;
-    this.reverbWetGain.gain.setTargetAtTime(isOff ? 0.0 : 0.32, now, 0.05);
-    this.reverbDryGain.gain.setTargetAtTime(isOff ? 1.0 : 0.9, now, 0.05);
-  }
-
-  public setKaraokeMode(enabled: boolean): void {
-    this.isKaraokeEnabled = enabled;
-    if (!this.karaokeDryGain || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    this.karaokeDryGain.gain.setTargetAtTime(enabled ? 0.2 : 1.0, now, 0.05);
-  }
-
-  public setSpatialAudio(enabled: boolean): void {
-    this.isSpatialAudioEnabled = enabled;
-    if (!this.spatialCrossGain || !this.ctx) return;
-    this.spatialCrossGain.gain.setTargetAtTime(enabled ? 0.35 : 0.0, this.ctx.currentTime, 0.05);
-  }
-
-  public dispose(): void {
-    const disconnectNode = (node: AudioNode | null) => {
-      if (node) {
-        try { node.disconnect(); } catch {}
-      }
-    };
-
-    disconnectNode(this.inputNode);
-    disconnectNode(this.outputNode);
-    this.eqFilters.forEach(disconnectNode);
-    this.eqFilters = [];
-    disconnectNode(this.bassBoostFilter);
-    disconnectNode(this.bassCompressor);
-    disconnectNode(this.warmthDryGain);
-    disconnectNode(this.warmthWetGain);
-    disconnectNode(this.warmthShaper);
-    disconnectNode(this.warmthPostBus);
-    disconnectNode(this.convolverNode);
-    disconnectNode(this.reverbDryGain);
-    disconnectNode(this.reverbWetGain);
-    disconnectNode(this.reverbPostBus);
-    disconnectNode(this.karaokeDryGain);
-    disconnectNode(this.karaokeWetGain);
-    disconnectNode(this.karaokeBassFilter);
-    disconnectNode(this.spatialCrossGain);
   }
 }

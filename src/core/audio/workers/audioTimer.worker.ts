@@ -1,10 +1,26 @@
-/**
- * Ultra-Precise 20ms Audio Timer Web Worker
- * 
- * Runs an isolated high-resolution audio clock timer inside a dedicated Web Worker.
- * Ensures smooth transitions, equal-power crossfades, and playback position broadcasts
- * unaffected by main thread CPU spikes, DOM layout passes, or tab backgrounding.
- */
+// Web Worker for 20ms precision audio loop
+let timerId: number | null = null;
+const TICK_INTERVAL = 20;
+
+if (typeof self !== 'undefined' && typeof (self as any).postMessage === 'function') {
+  (self as any).onmessage = (e: MessageEvent) => {
+    const { command, action, interval } = e.data || {};
+    const cmd = command || action;
+    const tickInterval = interval || TICK_INTERVAL;
+
+    if (cmd === 'start') {
+      if (timerId !== null) clearInterval(timerId);
+      timerId = (self as any).setInterval(() => {
+        (self as any).postMessage({ type: 'tick', timestamp: performance.now() });
+      }, tickInterval);
+    } else if (cmd === 'stop') {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+  };
+}
 
 export interface AudioTimerController {
   start: (intervalMs?: number) => void;
@@ -13,25 +29,6 @@ export interface AudioTimerController {
   onTick: (callback: (timestamp: number) => void) => void;
 }
 
-const WORKER_SCRIPT = `
-  let timerId = null;
-  self.onmessage = function(e) {
-    if (!e.data) return;
-    if (e.data.action === 'start') {
-      if (timerId !== null) clearInterval(timerId);
-      const interval = e.data.interval || 20;
-      timerId = setInterval(function() {
-        self.postMessage({ type: 'tick', timestamp: performance.now() });
-      }, interval);
-    } else if (e.data.action === 'stop') {
-      if (timerId !== null) {
-        clearInterval(timerId);
-        timerId = null;
-      }
-    }
-  };
-`;
-
 export function createAudioTimerWorker(defaultIntervalMs = 20): AudioTimerController {
   let worker: Worker | null = null;
   let tickCallback: ((timestamp: number) => void) | null = null;
@@ -39,17 +36,16 @@ export function createAudioTimerWorker(defaultIntervalMs = 20): AudioTimerContro
 
   if (typeof window !== 'undefined' && typeof Worker !== 'undefined') {
     try {
-      const blob = new Blob([WORKER_SCRIPT], { type: 'application/javascript' });
-      const blobUrl = URL.createObjectURL(blob);
-      worker = new Worker(blobUrl);
+      worker = new Worker(
+        new URL('./audioTimer.worker.ts', import.meta.url),
+        { type: 'module' }
+      );
 
       worker.onmessage = (e: MessageEvent<{ type?: string; timestamp?: number }>) => {
         if (e.data && e.data.type === 'tick' && tickCallback) {
           tickCallback(e.data.timestamp || performance.now());
         }
       };
-
-      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.warn('[AudioTimerWorker] Fallback to main thread timer:', err);
       worker = null;
@@ -59,7 +55,7 @@ export function createAudioTimerWorker(defaultIntervalMs = 20): AudioTimerContro
   return {
     start(intervalMs = defaultIntervalMs) {
       if (worker) {
-        worker.postMessage({ action: 'start', interval: intervalMs });
+        worker.postMessage({ command: 'start', interval: intervalMs });
       } else if (typeof window !== 'undefined') {
         if (fallbackTimer !== null) clearInterval(fallbackTimer);
         fallbackTimer = setInterval(() => {
@@ -69,7 +65,7 @@ export function createAudioTimerWorker(defaultIntervalMs = 20): AudioTimerContro
     },
     stop() {
       if (worker) {
-        worker.postMessage({ action: 'stop' });
+        worker.postMessage({ command: 'stop' });
       }
       if (fallbackTimer !== null) {
         clearInterval(fallbackTimer);
