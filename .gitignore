@@ -20,6 +20,10 @@ dist-ssr
 *.sw?
 
 # Vercel & Large Assets
+# Python cache
+__pycache__/
+*.pyc
+
 .vercel
 public/songs
 dist/songs
