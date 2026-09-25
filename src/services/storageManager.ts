@@ -14,15 +14,28 @@ import { getDB } from '../db/indexedDB';
 import { dexieDB } from '../db/dexieDB';
 
 type StorageChangeCallback = () => void;
-const storageChangeListeners: Set<StorageChangeCallback> = new Set();
+
+function getStorageChangeListeners(): Set<StorageChangeCallback> {
+  if (typeof window !== 'undefined') {
+    if (!(window as any).__auraStorageListeners) {
+      (window as any).__auraStorageListeners = new Set<StorageChangeCallback>();
+    }
+    return (window as any).__auraStorageListeners;
+  }
+  return new Set<StorageChangeCallback>();
+}
 
 export function onStorageChange(cb: StorageChangeCallback): () => void {
-  storageChangeListeners.add(cb);
-  return () => storageChangeListeners.delete(cb);
+  const listeners = getStorageChangeListeners();
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
 }
 
 function notifyStorageChange(): void {
-  storageChangeListeners.forEach((cb) => {
+  const listeners = getStorageChangeListeners();
+  listeners.forEach((cb) => {
     try { cb(); } catch {}
   });
 }
@@ -331,5 +344,3 @@ export class StorageManager {
     return false;
   }
 }
-
-export { useStorageStore } from '../stores/useStorageStore';

@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   AlertTriangle,
 } from 'lucide-react';
-import { useStorageStore } from '../services/storageManager';
+import { useStorageStore } from '../stores/useStorageStore';
 
 interface HeaderProps {
   onOpenImport: () => void;
