@@ -15,6 +15,7 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream } from '../services/streamingEngine';
+import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
 
@@ -843,7 +844,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         // Sync to CarPlay on init
         syncLibraryToCarPlay(finalTracks);
-        syncFavoritesToCarPlay(favs || []);
+        const resolvedFavs = finalTracks.filter((t) => favIds.includes(t.id));
+        syncFavoritesToCarPlay(resolvedFavs);
       } catch (e) {
         console.warn('Error loading from IndexedDB:', e);
         const fallbackTracks = getDefaultLibraryTracks();

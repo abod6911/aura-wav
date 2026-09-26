@@ -33,11 +33,10 @@ export const CarPlayMode: React.FC = () => {
     setCarModeOpen,
     favorites,
     toggleFavorite,
-    isFavorite,
     shuffle,
     toggleShuffle,
     repeatMode,
-    toggleRepeat,
+    cycleRepeat,
     playTrack,
     tracks,
   } = usePlayerStore();
@@ -134,9 +133,10 @@ export const CarPlayMode: React.FC = () => {
 
   if (!isCarModeOpen) return null;
 
-  const activeFav = currentTrack ? isFavorite(currentTrack.id) : false;
+  const activeFav = currentTrack ? favorites.includes(currentTrack.id) : false;
   const accentColor = currentTrack?.accentColor || currentTrack?.dominantColor || '#FA243C';
-  const displayTracks = favorites.length > 0 ? favorites : tracks.slice(0, 20);
+  const favoriteTracks = tracks.filter((t) => favorites.includes(t.id));
+  const displayTracks: Track[] = favoriteTracks.length > 0 ? favoriteTracks : tracks.slice(0, 20);
 
   return (
     <AnimatePresence>
@@ -205,17 +205,17 @@ export const CarPlayMode: React.FC = () => {
 
         {/* --- Main Driving Viewport (Adaptive: Landscape 2-Column / Portrait Stacked) --- */}
         <main
-          className="relative z-10 flex-1 flex flex-col landscape:flex-row lg:flex-row items-center justify-between p-6 sm:p-10 gap-6 sm:gap-12 overflow-hidden"
+          className="relative z-10 flex-1 flex flex-col landscape:flex-row items-center justify-center p-4 sm:p-8 landscape:p-4 gap-4 sm:gap-10 landscape:gap-8 overflow-hidden w-full max-w-7xl mx-auto"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
           {/* Column 1: Giant Artwork & Track Metadata */}
-          <div className="flex-1 w-full flex flex-col items-center justify-center max-w-xl text-center">
+          <div className="flex-1 w-full flex flex-col items-center justify-center max-w-md landscape:max-w-sm text-center">
             {/* Massive Album Artwork with Single Tap Play/Pause */}
             <motion.div
               whileTap={{ scale: 0.97 }}
               onClick={togglePlayPause}
-              className="relative w-48 h-48 xs:w-56 xs:h-56 sm:w-72 sm:h-72 landscape:w-56 landscape:h-56 md:w-80 md:h-80 rounded-3xl overflow-hidden border-2 border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] cursor-pointer group"
+              className="relative w-44 h-44 xs:w-52 xs:h-52 sm:w-64 sm:h-64 landscape:w-36 landscape:h-36 md:landscape:w-44 md:landscape:h-44 rounded-3xl overflow-hidden border-2 border-white/15 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] cursor-pointer group shrink-0"
             >
               {currentTrack?.artworkUrl || currentTrack?.coverUrl ? (
                 <img
@@ -231,43 +231,42 @@ export const CarPlayMode: React.FC = () => {
                     background: `linear-gradient(135deg, ${accentColor} 0%, #0A0A0E 100%)`,
                   }}
                 >
-                  <Volume2 className="w-20 h-20 text-white/40" />
+                  <Volume2 className="w-16 h-16 text-white/40" />
                 </div>
               )}
 
               {/* Center Play Overlay on Hover/Pause */}
               {!isPlaying && (
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center shadow-2xl">
-                    <Play className="w-8 h-8 fill-black translate-x-0.5" />
+                  <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-2xl">
+                    <Play className="w-7 h-7 fill-black translate-x-0.5" />
                   </div>
                 </div>
               )}
             </motion.div>
 
             {/* Track Info (Oversized for Quick Glance) */}
-            <div className="mt-5 w-full px-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
+            <div className="mt-3 landscape:mt-2 w-full px-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl landscape:text-xl font-black text-white truncate tracking-tight">
                 {currentTrack?.title || 'لا يوجد ملف قيد التشغيل'}
               </h1>
-              <p className="text-lg sm:text-xl text-zinc-300 font-semibold truncate mt-1">
+              <p className="text-sm sm:text-base landscape:text-sm text-zinc-300 font-semibold truncate mt-0.5">
                 {currentTrack?.artist || 'اختر أغنية للبدء'}
               </p>
-              <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-xs font-mono text-zinc-400">
+              <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[11px] font-mono text-zinc-400">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Lossless Hi-Fi Studio Master</span>
               </div>
             </div>
 
             {/* High-Contrast In-Car Scrubber */}
-            <div className="w-full mt-5 px-4 max-w-md">
+            <div className="w-full mt-3 landscape:mt-2 px-2 max-w-sm">
               <div
-                className="relative h-4 bg-white/15 rounded-full overflow-hidden cursor-pointer touch-none"
+                className="relative h-3.5 bg-white/15 rounded-full overflow-hidden cursor-pointer touch-none"
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const clickX = e.clientX - rect.left;
                   const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-                  // In RTL: adjust ratio if direction inverted, or standard seek
                   seek(ratio * duration);
                 }}
               >
@@ -278,74 +277,74 @@ export const CarPlayMode: React.FC = () => {
                   }}
                 />
               </div>
-              <div className="flex justify-between items-center text-xs font-mono text-zinc-400 mt-2 font-bold">
+              <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mt-1.5 font-bold">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
             </div>
           </div>
 
-          {/* Column 2: Oversized In-Car Transport Controls (Strictly >= 64px) */}
-          <div className="flex-1 w-full max-w-xl flex flex-col items-center justify-center">
-            {/* Primary Controls Row */}
-            <div className="flex items-center justify-center gap-4 sm:gap-6 w-full">
+          {/* Column 2: Oversized In-Car Transport Controls */}
+          <div className="flex-1 w-full max-w-lg flex flex-col items-center justify-center">
+            {/* Primary Controls Row (Strictly LTR for standard music ergonomics) */}
+            <div className="flex items-center justify-center gap-3 sm:gap-5 landscape:gap-3 w-full" dir="ltr">
               {/* Skip Back 15s */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => seek(Math.max(0, currentTime - 15))}
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
+                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-11 landscape:h-11 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
                 title="ترجيع 15 ثانية"
               >
-                <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
+                <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.button>
 
-              {/* Previous Track (>= 64px) */}
+              {/* Previous Track */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => previousTrack()}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white/[0.12] hover:bg-white/[0.18] border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                className="w-14 h-14 sm:w-18 sm:h-18 landscape:w-14 landscape:h-14 rounded-2xl sm:rounded-3xl bg-white/[0.12] hover:bg-white/[0.18] border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
                 title="المسار السابق"
               >
-                <SkipBack className="w-8 h-8 sm:w-9 sm:h-9" />
+                <SkipBack className="w-7 h-7 sm:w-8 sm:h-8" />
               </motion.button>
 
-              {/* Giant Play/Pause Button (80px - 96px) */}
+              {/* Giant Play/Pause Button */}
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 onClick={togglePlayPause}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white text-black flex items-center justify-center shadow-[0_15px_45px_rgba(255,255,255,0.25)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="w-18 h-18 sm:w-22 sm:h-22 landscape:w-16 landscape:h-16 md:landscape:w-20 md:landscape:h-20 rounded-full bg-white text-black flex items-center justify-center shadow-[0_15px_45px_rgba(255,255,255,0.25)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
               >
                 {isPlaying ? (
-                  <Pause className="w-10 h-10 sm:w-12 sm:h-12 fill-black" />
+                  <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-black" />
                 ) : (
-                  <Play className="w-10 h-10 sm:w-12 sm:h-12 fill-black translate-x-1" />
+                  <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-black translate-x-0.5" />
                 )}
               </motion.button>
 
-              {/* Next Track (>= 64px) */}
+              {/* Next Track */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => nextTrack({ forceImmediate: true })}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-white/[0.12] hover:bg-white/[0.18] border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                className="w-14 h-14 sm:w-18 sm:h-18 landscape:w-14 landscape:h-14 rounded-2xl sm:rounded-3xl bg-white/[0.12] hover:bg-white/[0.18] border border-white/15 flex items-center justify-center text-white transition-all cursor-pointer shadow-lg active:scale-95"
                 title="المسار التالي"
               >
-                <SkipForward className="w-8 h-8 sm:w-9 sm:h-9" />
+                <SkipForward className="w-7 h-7 sm:w-8 sm:h-8" />
               </motion.button>
 
               {/* Skip Forward 15s */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => seek(Math.min(duration, currentTime + 15))}
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
+                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-11 landscape:h-11 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
                 title="تقديم 15 ثانية"
               >
-                <RotateCw className="w-6 h-6 sm:w-7 sm:h-7" />
+                <RotateCw className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.button>
             </div>
 
             {/* Secondary Ergonomic Controls Row (Favorite, Shuffle, Repeat) */}
-            <div className="flex items-center justify-center gap-6 mt-8 sm:mt-10">
+            <div className="flex items-center justify-center gap-6 mt-6 sm:mt-8 landscape:mt-4">
               {/* Shuffle */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -363,7 +362,7 @@ export const CarPlayMode: React.FC = () => {
               {/* Favorite Heart */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => currentTrack && toggleFavorite(currentTrack)}
+                onClick={() => currentTrack && toggleFavorite(currentTrack.id)}
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${
                   activeFav
                     ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
@@ -377,7 +376,7 @@ export const CarPlayMode: React.FC = () => {
               {/* Repeat */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={toggleRepeat}
+                onClick={cycleRepeat}
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${
                   repeatMode !== 'off'
                     ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-lg shadow-[#FA243C]/30'
