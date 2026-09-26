@@ -992,9 +992,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const state = get();
 
       let playableTrack = track;
+
+      // Fast-path: If track already has an online stream or direct audioUrl, bypass slow offline DB queries!
+      const hasDirectStream = !!(playableTrack.audioUrl && (
+        playableTrack.audioUrl.startsWith('/api/stream') ||
+        playableTrack.audioUrl.startsWith('http') ||
+        playableTrack.audioUrl.startsWith('blob:')
+      ));
+
       // 1. Check in-memory file/blob
       // 2. Retrieve saved audio from OPFS or IndexedDB (works 100% offline!)
-      if (!playableTrack.file && !playableTrack.blob) {
+      if (!hasDirectStream && !playableTrack.file && !playableTrack.blob) {
         try {
           let blob = await getAudioFileFromStorage(track.id);
           if (!blob && track.trackNumber) {
@@ -1009,7 +1017,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
 
       // 3. If still no audio source, check if we have a saved FileSystemDirectoryHandle
-      if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl && playableTrack.fileName) {
+      if (!hasDirectStream && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl && playableTrack.fileName) {
         try {
           const db = await getDB();
           const dirHandle = await db.get('settings', 'savedDirectoryHandle');
@@ -1033,7 +1041,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         window.location.hostname.startsWith('192.168.')
       );
 
-      if (isLocalHost && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
+      if (!hasDirectStream && isLocalHost && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
         const catItem = resolveCatalogTrackItem(playableTrack.fileName, playableTrack.title, playableTrack.artist, playableTrack.trackNumber);
         if (catItem && catItem.audioUrl) {
           playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
@@ -1041,7 +1049,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
 
       // 4. Ensure we have a valid playable stream (local blob, verified local path, or high-speed online stream)
-      if (!playableTrack.file && !playableTrack.blob) {
+      if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
         try {
           const resolvedStream = await resolvePlayableStream(playableTrack);
           if (resolvedStream) {
