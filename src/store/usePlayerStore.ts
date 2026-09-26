@@ -1049,7 +1049,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
 
       // 4. Ensure we have a valid playable stream (local blob, verified local path, or high-speed online stream)
-      if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
+      if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
         try {
           const resolvedStream = await resolvePlayableStream(playableTrack);
           if (resolvedStream) {
