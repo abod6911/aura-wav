@@ -136,6 +136,7 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
             artworkUrl: highResArtwork,
             coverUrl: highResArtwork,
             audioUrl: streamAudioUrl, // Full audio stream
+            previewUrl: item.previewUrl, // Direct high-fidelity stream fallback
             source: matchedLocal ? 'local' : 'online',
             dominantColor: '#FA243C',
             accentColor: '#FA243C',

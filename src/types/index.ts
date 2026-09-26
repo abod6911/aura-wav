@@ -16,6 +16,7 @@ export interface Track {
   artworkUrl?: string;
   coverUrl?: string; // Spotify alias for artworkUrl
   audioUrl?: string;
+  previewUrl?: string; // Direct Apple Music / iTunes high-fidelity audio stream
   fileName?: string;
   dominantColor?: string;
   accentColor?: string; // Spotify alias for dominantColor

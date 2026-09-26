@@ -285,6 +285,11 @@ export class DeckChannel {
     } catch (err: any) {
       if (err.name === 'NotAllowedError') {
         console.warn(`[DeckChannel ${this.name}] Autoplay blocked: user gesture required`);
+      } else if (this.track?.previewUrl && this.audio.src !== this.track.previewUrl) {
+        console.warn(`[DeckChannel ${this.name}] Primary stream error, falling back to direct stream:`, this.track.previewUrl);
+        this.audio.src = this.track.previewUrl;
+        await this.audio.play().catch(() => {});
+        return;
       }
       throw err;
     }

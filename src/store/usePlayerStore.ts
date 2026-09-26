@@ -1090,11 +1090,39 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       // Launch audio playback asynchronously with auto-retry fallback
       djAudioEngine.playTrack(playableTrack).then(async (success) => {
         if (!success) {
-          // Automatic Error Fallback & Retry Mechanism: query alternative stream instance
-          console.warn('[Audio Engine] Primary stream failed, clearing stream cache & attempting resilient fallback stream...');
+          console.warn('[Audio Engine] Primary stream failed, attempting resilient direct stream fallback...');
+          // 1. Direct Apple Music / AAC stream fallback (instant, guaranteed playable anywhere)
+          if (playableTrack.previewUrl) {
+            console.log('[Audio Engine] Playing direct preview stream:', playableTrack.previewUrl);
+            const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl };
+            const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
+            if (fallbackSuccess) {
+              set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+              return;
+            }
+          }
+
+          // 2. Query param preview fallback
+          if (playableTrack.audioUrl && playableTrack.audioUrl.includes('preview=')) {
+            try {
+              const urlObj = new URL(playableTrack.audioUrl, window.location.origin);
+              const prevUrl = urlObj.searchParams.get('preview');
+              if (prevUrl) {
+                console.log('[Audio Engine] Playing query preview stream:', prevUrl);
+                const fallbackTrack = { ...playableTrack, audioUrl: prevUrl };
+                const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
+                if (fallbackSuccess) {
+                  set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+                  return;
+                }
+              }
+            } catch {}
+          }
+
+          // 3. Alternative stream resolver fallback
           clearResolvedStreamCache(playableTrack);
           const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
-          if (fallbackUrl) {
+          if (fallbackUrl && fallbackUrl !== playableTrack.audioUrl) {
             playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
             const retrySuccess = await djAudioEngine.playTrack(playableTrack);
             if (retrySuccess) {
@@ -1103,18 +1131,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             }
           }
           set({ isPlaying: false, playbackState: 'error' });
+          get().addToast(`تعذر تشغيل "${playableTrack.title}" تلقائياً`, undefined, 'warning');
         } else {
           set({ isPlaying: true, playbackState: 'playing' });
         }
       }).catch(async (err) => {
-        console.warn('Play track notice, trying fallback:', err);
-        clearResolvedStreamCache(playableTrack);
-        const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
-        if (fallbackUrl) {
-          playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
-          const retrySuccess = await djAudioEngine.playTrack(playableTrack);
-          if (retrySuccess) {
-            set({ isPlaying: true, playbackState: 'playing', currentTrack: playableTrack });
+        console.warn('Play track notice, trying direct stream fallback:', err);
+        if (playableTrack.previewUrl) {
+          const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl };
+          const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
+          if (fallbackSuccess) {
+            set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
             return;
           }
         }
