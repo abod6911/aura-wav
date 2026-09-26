@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
                 AURA<span className="text-[#FA243C]">.WAV</span>
               </span>
               <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5">
-                {greeting}
+                {activeTab === 'home' ? (isRTL ? 'استوديو Hi-Fi' : 'Hi-Fi Studio') : greeting}
               </span>
             </div>
           </div>
@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse"
+                className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer"
                 title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
               >
                 <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Sleep Timer */}
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className={`p-2 rounded-full text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
                 sleepTimerRemaining !== null
                   ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
@@ -111,14 +111,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             >
               <Moon className="w-4 h-4" />
               {sleepTimerRemaining !== null && (
-                <span className="font-mono text-[10px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
+                <span className="font-mono text-[9px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full">{formatTimerRemaining(sleepTimerRemaining)}</span>
               )}
             </button>
 
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="p-2 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
               title={t.settings}
             >
               <Settings className="w-4 h-4" />

@@ -95,38 +95,38 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-36 md:pb-24 space-y-6 select-none" dir={dir}>
       {/* 1. Hero Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FA243C]/25 via-red-950/20 to-black/60 border border-white/[0.1] p-6 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-[#FA243C]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FA243C]/20 via-red-950/20 to-black/60 border border-white/[0.1] p-4 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-[#FA243C]/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-end gap-6 text-center sm:text-start">
+        <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-center sm:text-start">
           {/* Heart Art Tile */}
-          <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-gradient-to-br from-[#FA243C] via-[#FF375F] to-[#E00028] flex items-center justify-center flex-shrink-0 shadow-[0_12px_40px_rgba(250,36,60,0.45)] border border-white/20">
-            <Heart className="w-16 h-16 sm:w-20 sm:h-20 fill-white text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] animate-pulse" />
+          <div className="w-20 h-20 sm:w-40 sm:h-40 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#FA243C] via-[#FF375F] to-[#E00028] flex items-center justify-center flex-shrink-0 shadow-[0_12px_40px_rgba(250,36,60,0.4)] border border-white/20">
+            <Heart className="w-10 h-10 sm:w-20 sm:h-20 fill-white text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] animate-pulse" />
           </div>
 
           {/* Playlist Info */}
           <div className="flex-1 min-w-0">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#FF375F] bg-[#FA243C]/15 px-3 py-1 rounded-full border border-[#FA243C]/30 inline-block mb-2">
+            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[#FF375F] bg-[#FA243C]/15 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#FA243C]/30 inline-block mb-1.5 sm:mb-2">
               {isRTL ? 'قائمة تشغيل خاصة' : 'Personal Playlist'}
             </span>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
+            <h1 className="text-xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
               {isRTL ? 'أغانيك المفضلة' : 'Liked Songs'}
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-300 mt-2 font-medium flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <p className="text-xs sm:text-sm text-zinc-300 mt-1 sm:mt-2 font-medium flex items-center justify-center sm:justify-start gap-2 flex-wrap">
               <span>{favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'}</span>
               <span>•</span>
               <span className="text-zinc-400">{formattedTotalDuration}</span>
               <span>•</span>
-              <span className="text-emerald-400 font-bold">Lossless Hi-Fi</span>
+              <span className="text-emerald-400 font-bold">Studio Master Hi-Fi</span>
             </p>
 
             {/* Quick Actions */}
-            <div className="flex items-center justify-center sm:justify-start gap-3 mt-5 flex-wrap">
+            <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 mt-3.5 sm:mt-5 flex-wrap">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePlayAll}
                 disabled={favoriteTracks.length === 0}
-                className="px-6 py-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-sm flex items-center gap-2.5 shadow-lg shadow-[#FA243C]/35 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Play className="w-4 h-4 fill-white text-white" />
                 <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
@@ -136,7 +136,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleShufflePlay}
                 disabled={favoriteTracks.length === 0}
-                className="px-5 py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white font-bold text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Shuffle className="w-4 h-4 text-zinc-300" />
                 <span>{isRTL ? 'خلط عشوائي' : 'Shuffle'}</span>

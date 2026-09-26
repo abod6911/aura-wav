@@ -224,19 +224,14 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             {/* Playlist Editorial Metadata */}
             <div className="flex-1 text-center md:text-right space-y-1.5 sm:space-y-3 min-w-0">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#1DB954]/15 border border-[#1DB954]/30 text-[#1DB954] text-[10px] sm:text-xs font-semibold">
-                  <HardDrive className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span>مكتبة محلية 100% أوفلاين</span>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-xs font-semibold">
-                  <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
-                  <span>المجلد المحفوظ: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] border border-white/[0.1] text-zinc-300 text-[10px] sm:text-xs font-semibold">
+                  <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FA243C]" />
+                  <span>المجلد: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
                 </div>
 
                 <button
                   onClick={onOpenImport}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
                   <span>تغيير المجلد</span>
@@ -247,7 +242,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 مكتبتي الموسيقية
               </h1>
 
-              <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed max-w-2xl line-clamp-2 sm:line-clamp-none">
+              <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed max-w-2xl hidden sm:block">
                 مجموعتك الخاصة كاملة مع أغلفة الألبومات الأصلية عالية الدقة والكلمات المتزامنة، مع تقنية الدمج الاحترافي True DJ AutoMix دون أي انقطاع.
               </p>
 
@@ -256,7 +251,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 <span>•</span>
                 <span>{formattedTotalTime}</span>
                 <span>•</span>
-                <span className="text-[#1DB954] font-semibold">محفوظ ويعمل بدون نت 100%</span>
+                <span className="text-emerald-400 font-bold">Studio Master Hi-Fi</span>
               </div>
             </div>
 

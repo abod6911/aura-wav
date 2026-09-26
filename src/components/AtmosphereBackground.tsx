@@ -172,10 +172,17 @@ export const AtmosphereBackground: React.FC = () => {
 
     let animId: number;
     let isRunning = typeof document === 'undefined' ? true : !document.hidden;
+    let lastRenderTime = 0;
 
     const render = (now: number) => {
       if (!isRunning) return;
       animId = requestAnimationFrame(render);
+
+      // Frame throttle: When paused, throttle to ~20fps to conserve mobile GPU and battery
+      if (!isPlaying && now - lastRenderTime < 50) {
+        return;
+      }
+      lastRenderTime = now;
 
       const targetIntensity = isPlaying ? (reactiveVisualsEnabled ? 0.45 : 0.85) : 0.35;
 

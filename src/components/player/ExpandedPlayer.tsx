@@ -291,7 +291,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   transformStyle: 'preserve-3d',
                   boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`,
                 }}
-                className="group relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 rounded-3xl overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)]"
+                className="group relative w-60 h-60 xs:w-68 xs:h-68 sm:w-76 sm:h-76 md:w-80 md:h-80 max-h-[38vh] max-w-[38vh] aspect-square rounded-3xl overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)]"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setChangeArtworkModal(true, currentTrack);
@@ -599,7 +599,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             duration={duration}
             onSeek={seek}
             showTimestamps={true}
-            accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#1DB954'}
+            accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#FA243C'}
           />
         </div>
 
