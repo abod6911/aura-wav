@@ -77,13 +77,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       dir={dir}
     >
       {/* Top Hairline Progress Line with Dynamic Glowing Color */}
-      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/[0.08] overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/[0.1] overflow-hidden pointer-events-none">
         <div
           className="h-full transition-all duration-150 rounded-full"
           style={{
             width: `${progressPercent}%`,
-            background: `linear-gradient(90deg, ${accentColor}cc, ${accentColor})`,
-            boxShadow: `0 0 10px ${accentColor}90`,
+            backgroundColor: '#FA243C',
+            backgroundImage: 'linear-gradient(90deg, #FA243C, #FF375F)',
+            boxShadow: '0 0 10px rgba(250, 36, 60, 0.8)',
           }}
         />
       </div>

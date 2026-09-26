@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { TimelineSlider } from './TimelineSlider';
+import { TimelineSlider, formatDuration } from './TimelineSlider';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import {
   Play,
@@ -541,6 +541,17 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <Headphones className="w-3 h-3 text-emerald-400" />
                   <span className="font-mono">24-bit / 96kHz</span>
                 </div>
+
+                {/* Total Duration Badge */}
+                {duration > 0 && (
+                  <div
+                    dir="ltr"
+                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-white/10 bg-white/[0.06] text-zinc-300 flex items-center gap-1 shadow-sm font-mono"
+                    title="المدة الإجمالية للأغنية"
+                  >
+                    <span>⏱️ {formatDuration(duration)}</span>
+                  </div>
+                )}
 
                 {/* BPM & Camelot Key Badges */}
                 {currentTrack.key && (
