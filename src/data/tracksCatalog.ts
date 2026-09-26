@@ -100,7 +100,7 @@ export function resolveCatalogTrackItem(
     const cleanF = filename.toLowerCase().replace(/\.[^/.]+$/, '').trim();
     for (const item of TRACKS_CATALOG) {
       const itemF = item.fileName.toLowerCase().replace(/\.[^/.]+$/, '').trim();
-      if (cleanF === itemF || cleanF.includes(itemF) || itemF.includes(cleanF)) {
+      if (cleanF === itemF || (cleanF.length >= 8 && (cleanF.includes(itemF) || itemF.includes(cleanF)))) {
         return item;
       }
     }

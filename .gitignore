@@ -27,7 +27,8 @@ __pycache__/
 .vercel
 public/songs
 dist/songs
+public/stream-cache
 Liked_Songs
-
+scratch/
 
 .vercel

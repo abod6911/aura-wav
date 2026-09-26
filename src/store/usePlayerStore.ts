@@ -1033,8 +1033,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         window.location.hostname.startsWith('192.168.')
       );
 
-      if (isLocalHost && !playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
-        const catItem = resolveCatalogTrackItem(playableTrack.title, playableTrack.artist, playableTrack.fileName, playableTrack.trackNumber);
+      if (isLocalHost && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
+        const catItem = resolveCatalogTrackItem(playableTrack.fileName, playableTrack.title, playableTrack.artist, playableTrack.trackNumber);
         if (catItem && catItem.audioUrl) {
           playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
         }
@@ -1985,4 +1985,8 @@ if (typeof document !== 'undefined') {
       }
     }
   });
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).usePlayerStore = usePlayerStore;
 }

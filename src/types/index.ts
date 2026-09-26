@@ -24,7 +24,7 @@ export interface Track {
   syncedLyrics?: LyricLine[];
   file?: File;
   blob?: Blob;
-  source: 'local' | 'demo';
+  source: 'local' | 'demo' | 'online';
   storageType?: 'opfs' | 'indexeddb';
   dateAdded: number;
   // Professional DJ & Acoustic Metadata
