@@ -48,7 +48,6 @@ export class AudioEngine {
     // Initialize Haptics Engine on Master Output
     this.hapticsEngine = new HapticsEngine(this.ctx, this.masterBus);
 
-    this.setupBackgroundMediaStreamBridge();
     this.setupContextResilience();
     this.initTimerWorker();
   }
@@ -58,30 +57,6 @@ export class AudioEngine {
       AudioEngine.instance = new AudioEngine();
     }
     return AudioEngine.instance;
-  }
-
-  private setupBackgroundMediaStreamBridge(): void {
-    if (!this.ctx || !this.ctx.createMediaStreamDestination || typeof document === 'undefined') return;
-    try {
-      const streamDest = this.ctx.createMediaStreamDestination();
-      if (this.masterBus) {
-        this.masterBus.connect(streamDest);
-      }
-      let bridgeAudio = document.getElementById('aura-core-background-bridge') as HTMLAudioElement;
-      if (!bridgeAudio) {
-        bridgeAudio = document.createElement('audio');
-        bridgeAudio.id = 'aura-core-background-bridge';
-        bridgeAudio.setAttribute('playsinline', 'true');
-        bridgeAudio.setAttribute('webkit-playsinline', 'true');
-        bridgeAudio.style.position = 'fixed';
-        bridgeAudio.style.left = '-9999px';
-        bridgeAudio.style.opacity = '0.001';
-        bridgeAudio.style.pointerEvents = 'none';
-        document.body.appendChild(bridgeAudio);
-      }
-      bridgeAudio.srcObject = streamDest.stream;
-      bridgeAudio.play().catch(() => {});
-    } catch {}
   }
 
   private setupContextResilience(): void {

@@ -102,9 +102,6 @@ export class DJAudioEngineFacade {
         // Bind Deck Channels into EffectsChain input bus
         this.channelA.bindAudioGraph(this.ctx, chainNodes.input);
         this.channelB.bindAudioGraph(this.ctx, chainNodes.input);
-
-        // MediaStream Bridge for mobile background continuity
-        this.setupBackgroundMediaStreamBridge();
       } catch (err) {
         console.warn('[DJAudioEngine] DSP initialization notice:', err);
       }
@@ -165,9 +162,12 @@ export class DJAudioEngineFacade {
       }
 
       if (typeof document !== 'undefined') {
-        const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
-        if (bridge && bridge.paused) {
-          bridge.play().catch(() => {});
+        const bridge = document.getElementById('aura-background-bridge');
+        if (bridge) {
+          try {
+            (bridge as HTMLAudioElement).pause();
+            bridge.remove();
+          } catch {}
         }
       }
 
@@ -176,12 +176,12 @@ export class DJAudioEngineFacade {
       const SILENT_AUDIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
       if (!this.channelA.audio.src) {
         this.channelA.audio.src = SILENT_AUDIO;
-        this.channelA.audio.volume = 0;
+        this.channelA.audio.volume = 1.0;
         this.channelA.audio.play().catch(() => {});
       }
       if (!this.channelB.audio.src) {
         this.channelB.audio.src = SILENT_AUDIO;
-        this.channelB.audio.volume = 0;
+        this.channelB.audio.volume = 1.0;
         this.channelB.audio.play().catch(() => {});
       }
 
@@ -682,25 +682,7 @@ export class DJAudioEngineFacade {
     this.activeChannelName = this.activeChannelName === 'A' ? 'B' : 'A';
   }
 
-  private syncBridgePlayback(isPlaying: boolean): void {
-    if (typeof document === 'undefined') return;
-    try {
-      const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
-      if (!bridge) return;
-      if (isPlaying) {
-        if (bridge.paused) {
-          bridge.play().catch(() => {});
-        }
-      } else {
-        if (!bridge.paused) {
-          bridge.pause();
-        }
-      }
-    } catch {}
-  }
-
   private notifyPlaybackState(isPlaying: boolean): void {
-    this.syncBridgePlayback(isPlaying);
     if (this.callbacks.onPlaybackStateChange) {
       try {
         this.callbacks.onPlaybackStateChange(isPlaying);
@@ -794,31 +776,6 @@ export class DJAudioEngineFacade {
         handleResume();
       });
     }
-  }
-
-  private setupBackgroundMediaStreamBridge(): void {
-    if (!this.ctx || !this.ctx.createMediaStreamDestination || typeof document === 'undefined') return;
-    try {
-      const streamDest = this.ctx.createMediaStreamDestination();
-      if (this.masterGain) {
-        this.masterGain.connect(streamDest);
-      }
-      let bridgeAudio = document.getElementById('aura-background-bridge') as HTMLAudioElement;
-      if (!bridgeAudio) {
-        bridgeAudio = document.createElement('audio');
-        bridgeAudio.id = 'aura-background-bridge';
-        bridgeAudio.setAttribute('playsinline', 'true');
-        bridgeAudio.setAttribute('webkit-playsinline', 'true');
-        bridgeAudio.style.position = 'fixed';
-        bridgeAudio.style.left = '-9999px';
-        bridgeAudio.style.opacity = '0.001';
-        bridgeAudio.style.pointerEvents = 'none';
-        document.body.appendChild(bridgeAudio);
-      }
-      bridgeAudio.volume = 0.001;
-      bridgeAudio.srcObject = streamDest.stream;
-      bridgeAudio.play().catch(() => {});
-    } catch {}
   }
 
   private async resolveTrackUrl(track: Track): Promise<string> {

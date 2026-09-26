@@ -13,10 +13,11 @@ export class EffectsChain {
   private airEq!: BiquadFilterNode;
 
   // Professional Dual-Stage Mega Bass Boost Engine (In-Series: Zero Phase Cancellation)
-  private subBassFilter!: BiquadFilterNode;   // 60 Hz Lowshelf - Sub-bass foundation
-  private punchBassFilter!: BiquadFilterNode; // 90 Hz Peaking - Hard-hitting kick punch
+  private subBassFilter!: BiquadFilterNode;   // 70 Hz Lowshelf - Sub-bass foundation
+  private punchBassFilter!: BiquadFilterNode; // 105 Hz Peaking - Hard-hitting kick punch
+  private bassHeadroomGain!: GainNode;        // Dynamic Headroom Compensation
 
-  // Studio Limiter / Peak Headroom Protection (Prevents digital clipping when bass is cranked)
+  // Peak Safety Ceiling Limiter (Mastering transparent ceiling at 0.0dBFS - NEVER squashes normal music!)
   private limiterNode!: DynamicsCompressorNode;
 
   // Analog Tape Warmth (WaveShaper)
@@ -55,27 +56,30 @@ export class EffectsChain {
     // 2. Initialize Dual-Stage Mega Bass Boost
     this.subBassFilter = this.ctx.createBiquadFilter();
     this.subBassFilter.type = 'lowshelf';
-    this.subBassFilter.frequency.setValueAtTime(60, this.ctx.currentTime);
+    this.subBassFilter.frequency.setValueAtTime(70, this.ctx.currentTime);
     this.subBassFilter.gain.setValueAtTime(this.currentBassDb, this.ctx.currentTime);
 
     this.punchBassFilter = this.ctx.createBiquadFilter();
     this.punchBassFilter.type = 'peaking';
-    this.punchBassFilter.frequency.setValueAtTime(90, this.ctx.currentTime);
-    this.punchBassFilter.Q.setValueAtTime(1.1, this.ctx.currentTime);
-    this.punchBassFilter.gain.setValueAtTime(this.currentBassDb * 0.62, this.ctx.currentTime);
+    this.punchBassFilter.frequency.setValueAtTime(105, this.ctx.currentTime);
+    this.punchBassFilter.Q.setValueAtTime(1.0, this.ctx.currentTime);
+    this.punchBassFilter.gain.setValueAtTime(this.currentBassDb * 0.55, this.ctx.currentTime);
 
-    // 3. Initialize Studio Peak Limiter
+    this.bassHeadroomGain = this.ctx.createGain();
+    this.bassHeadroomGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+    // 3. Initialize Peak Safety Ceiling Limiter (Mastering transparent ceiling - 0.0dBFS, zero pumping)
     this.limiterNode = this.ctx.createDynamicsCompressor();
-    this.limiterNode.threshold.setValueAtTime(-2.0, this.ctx.currentTime);
-    this.limiterNode.knee.setValueAtTime(8.0, this.ctx.currentTime);
-    this.limiterNode.ratio.setValueAtTime(12.0, this.ctx.currentTime);
-    this.limiterNode.attack.setValueAtTime(0.003, this.ctx.currentTime);
-    this.limiterNode.release.setValueAtTime(0.12, this.ctx.currentTime);
+    this.limiterNode.threshold.setValueAtTime(0.0, this.ctx.currentTime);
+    this.limiterNode.knee.setValueAtTime(0.0, this.ctx.currentTime);
+    this.limiterNode.ratio.setValueAtTime(20.0, this.ctx.currentTime);
+    this.limiterNode.attack.setValueAtTime(0.001, this.ctx.currentTime);
+    this.limiterNode.release.setValueAtTime(0.05, this.ctx.currentTime);
 
-    // 4. Initialize Analog Warmth Waveshaper (Default: null for 100% bit-perfect pass-through)
+    // 4. Initialize Analog Warmth Waveshaper (Default: null and 'none' oversample for 100% bit-perfect pass-through)
     this.waveshaperNode = this.ctx.createWaveShaper();
     this.waveshaperNode.curve = null;
-    this.waveshaperNode.oversample = '2x';
+    this.waveshaperNode.oversample = 'none';
 
     // 5. Initialize Reverb (Default: off, 100% dry, 0% wet)
     this.convolverNode = this.ctx.createConvolver();
@@ -103,7 +107,7 @@ export class EffectsChain {
 
   /**
    * Pure serial high-fidelity audio graph:
-   * Input -> 5-Band EQ -> Dual-Stage Mega Bass Boost -> Studio Limiter -> Waveshaper -> Reverb -> Output
+   * Input -> 5-Band EQ -> Dual-Stage Mega Bass Boost -> Headroom Gain -> Safety Limiter -> Waveshaper -> Reverb -> Output
    * Zero parallel summation = ZERO comb filtering or phase smearing!
    */
   private buildGraph(): void {
@@ -114,12 +118,13 @@ export class EffectsChain {
     this.midEq.connect(this.trebleEq);
     this.trebleEq.connect(this.airEq);
 
-    // 2. Dual-Stage Mega Bass Boost in series
+    // 2. Dual-Stage Mega Bass Boost & Headroom in series
     this.airEq.connect(this.subBassFilter);
     this.subBassFilter.connect(this.punchBassFilter);
+    this.punchBassFilter.connect(this.bassHeadroomGain);
 
-    // 3. Studio Limiter for clean peak protection
-    this.punchBassFilter.connect(this.limiterNode);
+    // 3. Transparent Safety Limiter (0dBFS Ceiling)
+    this.bassHeadroomGain.connect(this.limiterNode);
 
     // 4. Analog Warmth
     this.limiterNode.connect(this.waveshaperNode);
@@ -157,26 +162,44 @@ export class EffectsChain {
 
   /**
    * Dual-Stage Mega Bass Boost:
-   * Boosts true sub-bass (< 60Hz) by up to +18dB, and kick punch (90Hz) by up to +11dB.
-   * At 0dB, the filters are completely flat with zero phase distortion.
-   * At +18dB, delivers monstrous, room-shaking bass with studio-grade limiter protection.
+   * Boosts true sub-bass (< 70Hz) by up to +18dB, and kick punch (105Hz) by up to +10dB.
+   * At 0dB, the filters are completely flat with zero coloration, zero phase distortion, and headroom gain = 1.0.
+   * When boosted, dynamically compensates headroom so the bass is massive and punchy without digital clipping.
    */
   public setBassBoostGain(db: number): void {
     if (!this.ctx || !this.subBassFilter || !this.punchBassFilter) return;
-    const clamped = Math.max(0, Math.min(18, db));
+    const clamped = Math.max(0, Math.min(18, isNaN(db) ? 0 : db));
     this.currentBassDb = clamped;
     const now = this.ctx.currentTime;
 
-    // Sub-bass shelf (60Hz)
-    this.subBassFilter.gain.setTargetAtTime(clamped, now, 0.05);
+    if (clamped <= 0.01) {
+      this.subBassFilter.gain.setTargetAtTime(0, now, 0.03);
+      this.punchBassFilter.gain.setTargetAtTime(0, now, 0.03);
+      if (this.bassHeadroomGain) {
+        this.bassHeadroomGain.gain.setTargetAtTime(1.0, now, 0.03);
+      }
+      if (this.limiterNode) {
+        this.limiterNode.threshold.setTargetAtTime(0.0, now, 0.03);
+      }
+      return;
+    }
 
-    // Kick punch peak (90Hz)
-    this.punchBassFilter.gain.setTargetAtTime(clamped * 0.62, now, 0.05);
+    // Sub-bass foundation shelf (70Hz)
+    this.subBassFilter.gain.setTargetAtTime(clamped, now, 0.03);
 
-    // Adaptive headroom limiter: lowers threshold slightly when extreme bass is applied
+    // Kick punch peak (105Hz)
+    this.punchBassFilter.gain.setTargetAtTime(clamped * 0.55, now, 0.03);
+
+    // Headroom compensation: gently scales level so massive bass does not clip
+    if (this.bassHeadroomGain) {
+      const makeupDb = -(clamped / 18.0) * 3.5;
+      const linearMakeup = Math.pow(10, makeupDb / 20);
+      this.bassHeadroomGain.gain.setTargetAtTime(linearMakeup, now, 0.03);
+    }
+
     if (this.limiterNode) {
-      const targetThreshold = clamped > 9 ? -3.5 : -1.5;
-      this.limiterNode.threshold.setTargetAtTime(targetThreshold, now, 0.05);
+      const targetThreshold = clamped > 9 ? -0.8 : -0.2;
+      this.limiterNode.threshold.setTargetAtTime(targetThreshold, now, 0.03);
     }
   }
 
@@ -187,10 +210,12 @@ export class EffectsChain {
   public setAnalogWarmth(amount: number): void {
     if (!this.waveshaperNode) return;
     const normalized = amount > 1 ? amount / 100 : amount;
-    const clamped = Math.max(0, Math.min(1, normalized));
+    const clamped = Math.max(0, Math.min(1, isNaN(normalized) ? 0 : normalized));
     if (clamped <= 0.005) {
       this.waveshaperNode.curve = null;
+      this.waveshaperNode.oversample = 'none';
     } else {
+      this.waveshaperNode.oversample = '2x';
       this.waveshaperNode.curve = this.generateSaturationCurve(clamped) as any;
     }
   }
@@ -257,7 +282,7 @@ export class EffectsChain {
   public setKaraokeMode(enabled: boolean): void {
     this.isKaraokeActive = enabled;
     if (this.midEq && this.ctx) {
-      const targetGain = enabled ? -16 : 0;
+      const targetGain = enabled ? -16 : (this.currentEQ.mid || 0);
       this.midEq.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
     }
   }

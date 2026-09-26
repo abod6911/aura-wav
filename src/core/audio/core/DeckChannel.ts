@@ -27,10 +27,10 @@ export class DeckChannel {
     this.filterNode = this.ctx.createBiquadFilter();
     this.outputNode = this.ctx.createGain();
 
-    // Default Filter Setup
-    this.filterNode.type = 'lowpass';
+    // Default Filter Setup (Neutral 100% allpass bit-perfect pass-through)
+    this.filterNode.type = 'allpass';
     this.filterNode.frequency.setValueAtTime(20000, this.ctx.currentTime);
-    this.filterNode.Q.setValueAtTime(0.7, this.ctx.currentTime);
+    this.filterNode.Q.setValueAtTime(0, this.ctx.currentTime);
 
     // Graph Connection: Source -> Preamp -> Filter -> Fader -> Output -> Master Destination
     this.preampGainNode.connect(this.filterNode);

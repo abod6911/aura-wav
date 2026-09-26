@@ -45,7 +45,10 @@ export class DeckChannel {
     this.audio.preload = 'auto';
     this.audio.crossOrigin = 'anonymous';
 
-    // Optimize mobile audio element behavior
+    // Optimize mobile audio element behavior & bit-perfect pitch preservation
+    this.audio.preservesPitch = true;
+    (this.audio as any).mozPreservesPitch = true;
+    (this.audio as any).webkitPreservesPitch = true;
     (this.audio as any).playsInline = true;
   }
 
@@ -70,11 +73,11 @@ export class DeckChannel {
       this.channelGainNode = ctx.createGain();
       this.channelGainNode.gain.setValueAtTime(this.volumeLevel, ctx.currentTime);
 
-      // 3. DJ Biquad Filter Node (Default neutral 20kHz pass-through)
+      // 3. DJ Biquad Filter Node (Default neutral 100% allpass bit-perfect pass-through)
       this.filterNode = ctx.createBiquadFilter();
-      this.filterNode.type = 'lowpass';
+      this.filterNode.type = 'allpass';
       this.filterNode.frequency.setValueAtTime(20000, ctx.currentTime);
-      this.filterNode.Q.setValueAtTime(0.707, ctx.currentTime);
+      this.filterNode.Q.setValueAtTime(0, ctx.currentTime);
 
       // 4. Stereo Panner Node
       if (typeof ctx.createStereoPanner === 'function') {
@@ -165,6 +168,10 @@ export class DeckChannel {
     this.isPreloaded = false;
 
     this.audio.crossOrigin = 'anonymous';
+    this.audio.preservesPitch = true;
+    (this.audio as any).mozPreservesPitch = true;
+    (this.audio as any).webkitPreservesPitch = true;
+    this.audio.volume = 1.0;
     this.audio.src = url;
     this.audio.load();
   }
@@ -189,6 +196,8 @@ export class DeckChannel {
     this.volumeLevel = clamped;
 
     if (this.channelGainNode && this.ctx) {
+      // Keep audio element at unity volume so Web Audio channelGainNode controls clean gain
+      this.audio.volume = 1.0;
       const now = this.ctx.currentTime;
       this.channelGainNode.gain.cancelScheduledValues(now);
       if (rampDuration > 0) {
@@ -238,14 +247,14 @@ export class DeckChannel {
   }
 
   /**
-   * Reset filter to neutral pass-through
+   * Reset filter to 100% neutral bit-perfect pass-through
    */
   public resetFilter(): void {
     if (!this.filterNode || !this.ctx) return;
     const now = this.ctx.currentTime;
-    this.filterNode.type = 'lowpass';
+    this.filterNode.type = 'allpass';
     this.filterNode.frequency.setValueAtTime(20000, now);
-    this.filterNode.Q.setValueAtTime(0.707, now);
+    this.filterNode.Q.setValueAtTime(0, now);
   }
 
   /**
