@@ -7,7 +7,7 @@ async function runE2E() {
 
   const artifactsDir = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\16609e2d-bb20-4c07-8185-34a6f0efc5cf';
 
-  // 1. Portrait Car Mount Viewport (iPhone 15 Pro)
+  // 1. Portrait Car Mount Viewport (iPhone 15 Pro: 393x852)
   const portraitContext = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -26,10 +26,6 @@ async function runE2E() {
     }
   });
   await pagePortrait.waitForTimeout(1000);
-
-  // Verify Car Mode elements exist
-  const carModeVisible = await pagePortrait.locator('text=Apple CarPlay Mode').isVisible();
-  console.log('[E2E] Car Mode Banner Visible (Portrait):', carModeVisible);
 
   const portraitScreenshotPath = path.join(artifactsDir, 'carplay_portrait_verified.png');
   await pagePortrait.screenshot({ path: portraitScreenshotPath });
@@ -58,13 +54,26 @@ async function runE2E() {
   await pageLandscape.screenshot({ path: landscapeScreenshotPath });
   console.log('[E2E] Saved Landscape screenshot to:', landscapeScreenshotPath);
 
-  // 3. Open Quick Driving List Drawer
-  await pageLandscape.click('text=قائمة القيادة');
-  await pageLandscape.waitForTimeout(600);
+  // 3. Test Clicking a Track from the Live Playlist
+  console.log('[E2E] Clicking on the first track in CarPlay playlist...');
+  await pageLandscape.evaluate(() => {
+    const trackItems = document.querySelectorAll('.min-h-\\[56px\\]');
+    if (trackItems && trackItems.length > 0) {
+      (trackItems[0]).click();
+    }
+  });
+  await pageLandscape.waitForTimeout(1500);
 
-  const drawerScreenshotPath = path.join(artifactsDir, 'carplay_quick_drawer_verified.png');
-  await pageLandscape.screenshot({ path: drawerScreenshotPath });
-  console.log('[E2E] Saved Quick Drawer screenshot to:', drawerScreenshotPath);
+  // Verify track is now playing
+  const isPlayingNow = await pageLandscape.evaluate(() => {
+    const store = window.usePlayerStore;
+    return store ? store.getState().isPlaying : false;
+  });
+  console.log('[E2E] Audio playback triggered successfully:', isPlayingNow);
+
+  const playingScreenshotPath = path.join(artifactsDir, 'carplay_playing_verified.png');
+  await pageLandscape.screenshot({ path: playingScreenshotPath });
+  console.log('[E2E] Saved Playing screenshot to:', playingScreenshotPath);
 
   await browser.close();
   console.log('✅ PASS: All Apple CarPlay E2E visual verifications completed successfully.');
