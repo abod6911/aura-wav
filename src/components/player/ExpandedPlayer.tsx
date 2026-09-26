@@ -28,7 +28,8 @@ import {
   MoreVertical,
   Palette,
   Headphones,
-  Tag
+  Tag,
+  Car
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -83,6 +84,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+  const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
@@ -231,18 +233,36 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </h5>
           </div>
 
-          <motion.button
-            data-testid="more-options-btn"
-            whileTap={{ scale: 0.88 }}
-            onClick={() => {
-              triggerHaptic();
-              setIsOptionsSheetOpen(true);
-            }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-colors cursor-pointer"
-            aria-label="More options"
-          >
-            <MoreVertical className="w-5 h-5" strokeWidth={1.8} />
-          </motion.button>
+          <div className="flex items-center gap-1.5">
+            <motion.button
+              data-testid="carplay-mode-btn"
+              whileTap={{ scale: 0.88 }}
+              onClick={() => {
+                triggerHaptic();
+                onClose();
+                setMobilePlayerOpen(false);
+                setCarModeOpen(true);
+              }}
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-[#FA243C] flex items-center justify-center transition-colors cursor-pointer"
+              title="وضع السيارة / CarPlay Mode"
+              aria-label="CarPlay Mode"
+            >
+              <Car className="w-5 h-5" strokeWidth={1.8} />
+            </motion.button>
+
+            <motion.button
+              data-testid="more-options-btn"
+              whileTap={{ scale: 0.88 }}
+              onClick={() => {
+                triggerHaptic();
+                setIsOptionsSheetOpen(true);
+              }}
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="More options"
+            >
+              <MoreVertical className="w-5 h-5" strokeWidth={1.8} />
+            </motion.button>
+          </div>
         </div>
 
         {/* 2. Main Dynamic Body Area (Tab Switcher) */}

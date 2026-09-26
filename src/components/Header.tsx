@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ShieldCheck,
   AlertTriangle,
+  Car,
 } from 'lucide-react';
 import { useStorageStore } from '../stores/useStorageStore';
 
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
+  const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
@@ -113,6 +115,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
               {sleepTimerRemaining !== null && (
                 <span className="font-mono text-[9px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full">{formatTimerRemaining(sleepTimerRemaining)}</span>
               )}
+            </button>
+
+            {/* CarPlay / Car Mode Trigger */}
+            <button
+              onClick={() => setCarModeOpen(true)}
+              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
+              title="وضع السيارة / CarPlay Mode"
+            >
+              <Car className="w-4 h-4 text-[#FA243C]" />
             </button>
 
             {/* Settings Trigger */}
@@ -267,6 +278,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             title={t.equalizer}
           >
             <Sliders className="w-4 h-4" />
+          </button>
+
+          {/* CarPlay / Car Mode Trigger */}
+          <button
+            onClick={() => setCarModeOpen(true)}
+            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            title="وضع السيارة / CarPlay Mode"
+          >
+            <Car className="w-4 h-4 text-[#FA243C]" />
           </button>
 
           {/* Settings Modal Trigger */}
