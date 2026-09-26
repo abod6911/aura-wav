@@ -106,6 +106,7 @@ interface PlayerState {
   metadataTargetTrack: Track | null;
   isSoundboardOpen: boolean;
   isAutoMixModalOpen: boolean;
+  isCarModeOpen: boolean;
   isOnline: boolean;
   downloadedTrackIds: string[];
   downloadAllProgress: { current: number; total: number } | null;
@@ -193,6 +194,8 @@ interface PlayerState {
   setActiveRightSidebarTab: (tab: 'queue' | 'now_playing') => void;
   setActiveFilterPill: (pill: 'all' | 'music' | 'podcasts') => void;
   clearQueue: () => void;
+  setCarModeOpen: (open: boolean) => void;
+  toggleCarMode: () => void;
 }
 
 let sleepTimerInterval: any = null;
@@ -505,6 +508,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     metadataTargetTrack: null,
     isSoundboardOpen: false,
     isAutoMixModalOpen: false,
+    isCarModeOpen: false,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
     downloadAllProgress: null,
@@ -1930,6 +1934,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         set({ downloadAllProgress: null });
       }
     },
+    setCarModeOpen: (open: boolean) => set({ isCarModeOpen: open }),
+    toggleCarMode: () => set((state) => ({ isCarModeOpen: !state.isCarModeOpen })),
   };
 });
 
