@@ -190,6 +190,15 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
 const resolvedStreamCache = new Map<string, string>();
 
 /**
+ * Invalidate cached stream URL for track if a stream fails or retry is requested.
+ */
+export function clearResolvedStreamCache(track: Partial<Track>): void {
+  if (!track || !track.title) return;
+  const cacheKey = `${track.title}:::${track.artist || ''}`.toLowerCase().trim();
+  resolvedStreamCache.delete(cacheKey);
+}
+
+/**
  * Resolves a high-bitrate playable audio stream URL for any track.
  * Strictly guarantees full-length track playback (never 30-second previews).
  */

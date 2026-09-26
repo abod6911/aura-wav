@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
-import { exec } from 'child_process';
+import http from 'http';
 import https from 'https';
+import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
@@ -21,6 +22,23 @@ if (!fs.existsSync(CACHE_DIR)) {
   try {
     fs.mkdirSync(CACHE_DIR, { recursive: true });
   } catch {}
+}
+
+const activeDownloads = new Set<string>();
+
+function triggerBackgroundDownload(query: string, targetPath: string): void {
+  if (activeDownloads.has(query) || fs.existsSync(targetPath)) return;
+  activeDownloads.add(query);
+
+  const safeQuery = query.replace(/["$`\\]/g, ' ').trim();
+  const cmd = `yt-dlp -f "ba/b" --no-playlist -o "${targetPath}" "ytsearch1:${safeQuery} audio"`;
+
+  exec(cmd, { timeout: 60000 }, (err) => {
+    activeDownloads.delete(query);
+    if (!err && fs.existsSync(targetPath)) {
+      console.log(`[StreamServer] Background download cached: ${path.basename(targetPath)}`);
+    }
+  });
 }
 
 function cleanFilename(str: string): string {
@@ -165,6 +183,86 @@ function streamLocalFile(filePath: string, req: IncomingMessage, res: ServerResp
 }
 
 /**
+ * Proxies a remote audio stream to client with full Range support, CORS headers, and redirect following.
+ */
+function proxyRemoteAudio(
+  targetUrl: string,
+  req: IncomingMessage,
+  res: ServerResponse,
+  redirectCount = 0
+): void {
+  if (redirectCount > 5) {
+    if (!res.headersSent) {
+      res.writeHead(502, { 'Access-Control-Allow-Origin': '*' });
+      res.end('Too many redirects');
+    }
+    return;
+  }
+
+  try {
+    const parsed = new URL(targetUrl);
+    const client = parsed.protocol === 'http:' ? http : https;
+    const headers: Record<string, string> = {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      Accept: '*/*',
+    };
+    if (req.headers.range) {
+      headers['Range'] = req.headers.range;
+    }
+
+    const remoteReq = client.get(targetUrl, { headers }, (remoteRes) => {
+      // Follow redirects
+      if (
+        (remoteRes.statusCode === 301 ||
+          remoteRes.statusCode === 302 ||
+          remoteRes.statusCode === 303 ||
+          remoteRes.statusCode === 307 ||
+          remoteRes.statusCode === 308) &&
+        remoteRes.headers.location
+      ) {
+        const nextUrl = new URL(remoteRes.headers.location, targetUrl).toString();
+        proxyRemoteAudio(nextUrl, req, res, redirectCount + 1);
+        return;
+      }
+
+      const statusCode = remoteRes.statusCode || 200;
+      const responseHeaders: Record<string, string> = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range, Content-Type, Accept',
+        'Content-Type': remoteRes.headers['content-type'] || 'audio/webm',
+        'Accept-Ranges': 'bytes',
+      };
+
+      if (remoteRes.headers['content-length']) {
+        responseHeaders['Content-Length'] = remoteRes.headers['content-length'];
+      }
+      if (remoteRes.headers['content-range']) {
+        responseHeaders['Content-Range'] = remoteRes.headers['content-range'];
+      }
+
+      res.writeHead(statusCode, responseHeaders);
+      remoteRes.pipe(res);
+    });
+
+    remoteReq.on('error', (err) => {
+      console.error('[StreamServer] Remote proxy error:', err);
+      if (!res.headersSent) {
+        res.writeHead(502, { 'Access-Control-Allow-Origin': '*' });
+        res.end('Remote stream proxy error');
+      }
+    });
+  } catch (err) {
+    console.error('[StreamServer] Invalid proxy URL:', err);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Access-Control-Allow-Origin': '*' });
+      res.end('Stream URL error');
+    }
+  }
+}
+
+/**
  * Handles incoming /api/stream HTTP requests.
  */
 export async function handleStreamRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -222,62 +320,21 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
   if (effectiveQuery) {
     try {
       const streamUrl = await resolveStreamUrlViaYtDlp(effectiveQuery);
+      proxyRemoteAudio(streamUrl, req, res);
 
-      const rangeHeader = req.headers.range;
-      const headers: Record<string, string> = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      };
-      if (rangeHeader) {
-        headers['Range'] = rangeHeader;
-      }
-
-      const remoteReq = https.get(streamUrl, { headers }, (remoteRes) => {
-        const statusCode = remoteRes.statusCode || 200;
-
-        const responseHeaders: Record<string, string> = {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-          'Access-Control-Allow-Headers': 'Range, Content-Type, Accept',
-          'Content-Type': remoteRes.headers['content-type'] || 'audio/webm',
-          'Accept-Ranges': 'bytes',
-        };
-
-        if (remoteRes.headers['content-length']) {
-          responseHeaders['Content-Length'] = remoteRes.headers['content-length'];
-        }
-        if (remoteRes.headers['content-range']) {
-          responseHeaders['Content-Range'] = remoteRes.headers['content-range'];
-        }
-
-        res.writeHead(statusCode, responseHeaders);
-        remoteRes.pipe(res);
-      });
-
-      remoteReq.on('error', (err) => {
-        console.error('[StreamServer] Remote proxy error:', err);
-        // Fallback to previewUrl if proxy fails
-        if (previewUrl && !res.headersSent) {
-          res.writeHead(302, { Location: previewUrl, 'Access-Control-Allow-Origin': '*' });
-          res.end();
-        } else if (!res.headersSent) {
-          res.writeHead(502, { 'Access-Control-Allow-Origin': '*' });
-          res.end('Remote stream connection error');
-        }
-      });
-
+      // Trigger background download to local cache so future plays/seeks are instant
+      const safeBase = cleanFilename(effectiveQuery);
+      const targetCachedPath = path.join(CACHE_DIR, `${safeBase}.webm`);
+      triggerBackgroundDownload(effectiveQuery, targetCachedPath);
       return;
     } catch (err) {
       console.warn(`[StreamServer] yt-dlp resolution failed for "${effectiveQuery}":`, err);
     }
   }
 
-  // 4. Fallback to iTunes previewUrl if yt-dlp failed or not found
+  // 4. Fallback to iTunes previewUrl if yt-dlp failed or not found (proxied directly with CORS)
   if (previewUrl) {
-    res.writeHead(302, {
-      Location: previewUrl,
-      'Access-Control-Allow-Origin': '*',
-    });
-    res.end();
+    proxyRemoteAudio(previewUrl, req, res);
     return;
   }
 

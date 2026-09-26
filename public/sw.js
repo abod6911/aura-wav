@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-wav-v9';
+const CACHE_NAME = 'aura-wav-v10';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -37,8 +37,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignore non-http(s) or range audio requests
-  if (!event.request.url.startsWith('http') || event.request.headers.has('range')) {
+  // Ignore non-http(s), range audio requests, and all backend API streaming endpoints
+  if (
+    !event.request.url.startsWith('http') ||
+    event.request.headers.has('range') ||
+    event.request.url.includes('/api/')
+  ) {
     return;
   }
 

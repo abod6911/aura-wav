@@ -254,6 +254,10 @@ export class DJAudioEngineFacade {
     this.primeDecks();
     const active = this.getActiveDeck();
     try {
+      if (active.audio.error) {
+        console.warn('[DJAudioEngine] Active deck audio encountered error, attempting recovery load...');
+        active.audio.load();
+      }
       await active.play();
       this.notifyPlaybackState(true);
       this.timerWorker.start(20);
@@ -780,6 +784,9 @@ export class DJAudioEngineFacade {
 
   private async resolveTrackUrl(track: Track): Promise<string> {
     if (track.blob) return URL.createObjectURL(track.blob);
+    if (track.audioUrl && (track.audioUrl.startsWith('/api/stream') || track.audioUrl.startsWith('/songs/') || track.audioUrl.startsWith('blob:'))) {
+      return track.audioUrl;
+    }
     const storedBlob = await getAudioFileFromStorage(track.id);
     if (storedBlob) {
       return URL.createObjectURL(storedBlob);

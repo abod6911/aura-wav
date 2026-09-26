@@ -2,7 +2,7 @@ import React, { useState, useEffect, useTransition } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { searchWorldwideMusic, SearchResultsCategorized } from '../services/streamingEngine';
-import { Search, Play, Pause, X, Disc, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Search, Play, Pause, X, Disc, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
 import { Track } from '../types';
 
 export const InfiniteSearchView: React.FC = () => {
@@ -20,6 +20,7 @@ export const InfiniteSearchView: React.FC = () => {
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playbackState = usePlayerStore((state) => state.playbackState);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
 
@@ -68,7 +69,15 @@ export const InfiniteSearchView: React.FC = () => {
 
   const handlePlaySong = (track: Track) => {
     if (currentTrack?.id === track.id) {
-      togglePlayPause();
+      if (isPlaying) {
+        togglePlayPause();
+      } else if (playbackState === 'buffering') {
+        // Buffering in progress, prevent spam clicks from aborting the stream
+        return;
+      } else {
+        // Re-play cleanly from scratch
+        playTrack(track, results.songs.length > 0 ? results.songs : undefined);
+      }
     } else {
       playTrack(track, results.songs.length > 0 ? results.songs : undefined);
     }
@@ -225,6 +234,8 @@ export const InfiniteSearchView: React.FC = () => {
                 >
                   {currentTrack?.id === results.topResult.id && isPlaying ? (
                     <Pause className="w-5 h-5 fill-current" />
+                  ) : currentTrack?.id === results.topResult.id && playbackState === 'buffering' ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
                   ) : (
                     <Play className="w-5 h-5 fill-current translate-x-0.5" />
                   )}
@@ -322,6 +333,8 @@ export const InfiniteSearchView: React.FC = () => {
                         >
                           {isCur && isPlaying ? (
                             <Pause className="w-3.5 h-3.5 fill-current" />
+                          ) : isCur && playbackState === 'buffering' ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                           ) : (
                             <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
                           )}

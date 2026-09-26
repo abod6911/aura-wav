@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { Play, Pause, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipForward, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MiniPlayerProps {
@@ -12,6 +12,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playbackState = usePlayerStore((state) => state.playbackState);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
@@ -143,6 +144,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         >
           {isPlaying ? (
             <Pause className="w-4.5 h-4.5 fill-black text-black" />
+          ) : playbackState === 'buffering' ? (
+            <Loader2 className="w-4.5 h-4.5 animate-spin text-black" />
           ) : (
             <Play className="w-4.5 h-4.5 fill-black text-black translate-x-0.5" />
           )}

@@ -14,7 +14,7 @@ import {
   saveAudioFileToStorage,
   StorageStats,
 } from '../services/storageManager';
-import { resolvePlayableStream } from '../services/streamingEngine';
+import { resolvePlayableStream, clearResolvedStreamCache } from '../services/streamingEngine';
 import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
@@ -1083,9 +1083,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.playTrack(playableTrack).then(async (success) => {
         if (!success) {
           // Automatic Error Fallback & Retry Mechanism: query alternative stream instance
-          console.warn('[Audio Engine] Primary stream failed, attempting resilient fallback stream...');
+          console.warn('[Audio Engine] Primary stream failed, clearing stream cache & attempting resilient fallback stream...');
+          clearResolvedStreamCache(playableTrack);
           const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
-          if (fallbackUrl && fallbackUrl !== playableTrack.audioUrl) {
+          if (fallbackUrl) {
             playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
             const retrySuccess = await djAudioEngine.playTrack(playableTrack);
             if (retrySuccess) {
@@ -1099,8 +1100,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }).catch(async (err) => {
         console.warn('Play track notice, trying fallback:', err);
+        clearResolvedStreamCache(playableTrack);
         const fallbackUrl = await resolvePlayableStream({ ...playableTrack, audioUrl: undefined });
-        if (fallbackUrl && fallbackUrl !== playableTrack.audioUrl) {
+        if (fallbackUrl) {
           playableTrack = { ...playableTrack, audioUrl: fallbackUrl };
           const retrySuccess = await djAudioEngine.playTrack(playableTrack);
           if (retrySuccess) {
@@ -1151,11 +1153,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     togglePlayPause: async () => {
       djAudioEngine.primeDecks();
-      const { isPlaying, currentTrack, tracks } = get();
+      const { isPlaying, currentTrack, tracks, playbackState } = get();
       if (!currentTrack && tracks.length > 0) {
         get().playTrack(tracks[0]);
         return;
       }
+      if (!currentTrack) return;
+
       const activeAudio = djAudioEngine.getActiveAudio();
       const isAudioActive = activeAudio && !activeAudio.paused && !activeAudio.ended && activeAudio.currentTime > 0;
       const isEnginePlaying = djAudioEngine.isPlaying();
@@ -1164,14 +1168,28 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (shouldPause) {
         djAudioEngine.pause();
         set({ isPlaying: false });
-        if (currentTrack) {
-          updateMediaSession(currentTrack, false, getMediaSessionCallbacks(get));
-        }
+        updateMediaSession(currentTrack, false, getMediaSessionCallbacks(get));
       } else {
+        // RESILIENT RECOVERY: If current track is unready, unprimed, in error state, or has no valid audio source,
+        // re-run playTrack to establish a fresh, working playback stream rather than silently failing!
+        const isBrokenOrUnprimed =
+          playbackState === 'error' ||
+          !activeAudio?.src ||
+          activeAudio.error !== null ||
+          (activeAudio.readyState === 0 && activeAudio.currentTime === 0);
+
+        if (isBrokenOrUnprimed) {
+          console.log('[togglePlayPause] Track in unready/error state, reloading via playTrack...');
+          await get().playTrack(currentTrack);
+          return;
+        }
+
         const success = await djAudioEngine.play();
         if (!success) {
-          set({ isPlaying: false });
-        } else if (currentTrack) {
+          console.warn('[togglePlayPause] Resume failed, recovering via fresh playTrack...');
+          await get().playTrack(currentTrack);
+        } else {
+          set({ isPlaying: true, playbackState: 'playing' });
           updateMediaSession(currentTrack, true, getMediaSessionCallbacks(get));
         }
       }

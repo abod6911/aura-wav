@@ -17,6 +17,7 @@ import {
   ListMusic,
   Mic2,
   Sliders,
+  Loader2,
 } from 'lucide-react';
 import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
@@ -25,6 +26,7 @@ export const PlayerBar: React.FC = () => {
   const { t, isRTL } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const playbackState = usePlayerStore((state) => state.playbackState);
   const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const volume = usePlayerStore((state) => state.volume);
@@ -151,6 +153,8 @@ export const PlayerBar: React.FC = () => {
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-black text-black" />
+              ) : playbackState === 'buffering' ? (
+                <Loader2 className="w-5 h-5 animate-spin text-black" />
               ) : (
                 <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
               )}
