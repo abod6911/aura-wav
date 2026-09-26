@@ -26,6 +26,7 @@ import { MetadataEditorModal } from './components/library/MetadataEditorModal';
 import { SettingsModal } from './components/SettingsModal';
 import { DJFxSheet } from './components/dj/DJFxSheet';
 import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
+import { CarPlayMode } from './components/carplay/CarPlayMode';
 import { useTranslation } from './i18n/useTranslation';
 
 import { djAudioEngine } from './lib/audioEngine';
@@ -375,6 +376,7 @@ export function App() {
       <MetadataEditorModal />
       <DJFxSheet />
       <AutoMixSelectorModal />
+      <CarPlayMode />
     </div>
   );
 }
