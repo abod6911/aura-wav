@@ -15,8 +15,8 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream } from '../services/streamingEngine';
-import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 import { wakeLockManager } from '../services/wakeLockManager';
+import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -572,6 +572,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     initStore: async () => {
       try {
         initMediaSessionHandlers(getMediaSessionCallbacks(get));
+        initCarPlayBridge();
         const db = await getDB();
         const [
           cachedTracks,
@@ -839,6 +840,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           savedFolderTimestamp: savedFolderTimestampVal || Date.now(),
           isLoadingLibrary: false,
         });
+
+        // Sync to CarPlay on init
+        syncLibraryToCarPlay(finalTracks);
+        syncFavoritesToCarPlay(favs || []);
       } catch (e) {
         console.warn('Error loading from IndexedDB:', e);
         const fallbackTracks = getDefaultLibraryTracks();
