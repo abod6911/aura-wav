@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import http from 'http';
 import https from 'https';
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
@@ -30,14 +30,30 @@ function triggerBackgroundDownload(query: string, targetPath: string): void {
   if (activeDownloads.has(query) || fs.existsSync(targetPath)) return;
   activeDownloads.add(query);
 
-  const safeQuery = query.replace(/["$`\\]/g, ' ').trim();
-  const cmd = `yt-dlp -f "ba/b" --no-playlist -o "${targetPath}" "ytsearch1:${safeQuery} audio"`;
+  const cleanQ = query.trim();
+  const args = [
+    '-f',
+    '140/ba[ext=m4a]/ba[ext=mp3]/ba/b',
+    '--no-playlist',
+    '-o',
+    targetPath,
+    `ytsearch1:${cleanQ} audio`,
+  ];
 
-  exec(cmd, { timeout: 60000 }, (err) => {
+  const child = spawn('yt-dlp', args, {
+    windowsHide: true,
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+  });
+
+  child.on('close', (code) => {
     activeDownloads.delete(query);
-    if (!err && fs.existsSync(targetPath)) {
+    if (code === 0 && fs.existsSync(targetPath)) {
       console.log(`[StreamServer] Background download cached: ${path.basename(targetPath)}`);
     }
+  });
+
+  child.on('error', () => {
+    activeDownloads.delete(query);
   });
 }
 
@@ -87,7 +103,8 @@ function findExistingLocalSong(query: string): string | null {
 }
 
 /**
- * Resolves a full-length YouTube audio stream URL using yt-dlp.
+ * Resolves a full-length YouTube audio stream URL using yt-dlp via spawn (UTF-8 safe for Arabic).
+ * Prioritizes format 140 (AAC / m4a) which is universally compatible with iOS, Safari, CarPlay, Android & Windows.
  */
 function resolveStreamUrlViaYtDlp(query: string): Promise<string> {
   const cacheKey = query.toLowerCase().trim();
@@ -97,28 +114,59 @@ function resolveStreamUrlViaYtDlp(query: string): Promise<string> {
   }
 
   return new Promise((resolve, reject) => {
-    // Sanitize query for shell safety
-    const safeQuery = query.replace(/["$`\\]/g, ' ').trim();
-    const cmd = `yt-dlp -f "ba/b" -g "ytsearch1:${safeQuery} audio"`;
+    const cleanQ = query.trim();
+    const args = [
+      '-f',
+      '140/ba[ext=m4a]/ba[ext=mp3]/ba/b',
+      '--no-playlist',
+      '-g',
+      `ytsearch1:${cleanQ} audio`,
+    ];
 
-    exec(cmd, { timeout: 15000 }, (error, stdout, _stderr) => {
-      if (error) {
-        console.warn(`[StreamServer] yt-dlp error for "${safeQuery}":`, error.message);
-        return reject(error);
-      }
+    const child = spawn('yt-dlp', args, {
+      windowsHide: true,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    });
 
-      const lines = stdout.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
-      if (lines.length > 0) {
-        const directUrl = lines[0];
-        // Cache URL for 3 hours (GoogleVideo URLs expire in ~6 hours)
-        streamUrlCache.set(cacheKey, {
-          url: directUrl,
-          expiresAt: Date.now() + 3 * 3600 * 1000,
-        });
-        resolve(directUrl);
-      } else {
-        reject(new Error(`No stream URL output for query: ${query}`));
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (d) => {
+      stdout += d.toString();
+    });
+
+    child.stderr.on('data', (d) => {
+      stderr += d.toString();
+    });
+
+    const timer = setTimeout(() => {
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error(`yt-dlp timeout for query: ${cleanQ}`));
+    }, 15000);
+
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      if (code === 0 && stdout) {
+        const lines = stdout.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('http'));
+        if (lines.length > 0) {
+          const directUrl = lines[0];
+          // Cache URL for 3 hours (GoogleVideo URLs expire in ~6 hours)
+          streamUrlCache.set(cacheKey, {
+            url: directUrl,
+            expiresAt: Date.now() + 3 * 3600 * 1000,
+          });
+          resolve(directUrl);
+          return;
+        }
       }
+      reject(new Error(`yt-dlp failed (code ${code}): ${stderr || 'No stream URL'}`));
+    });
+
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
     });
   });
 }
@@ -134,6 +182,19 @@ function streamLocalFile(filePath: string, req: IncomingMessage, res: ServerResp
 
     const ext = path.extname(filePath).toLowerCase();
     const contentType = ext === '.webm' ? 'audio/webm' : ext === '.m4a' ? 'audio/mp4' : 'audio/mpeg';
+
+    if (req.method === 'HEAD') {
+      res.writeHead(200, {
+        'Content-Length': totalSize,
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      });
+      res.end();
+      return;
+    }
 
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');
@@ -158,6 +219,7 @@ function streamLocalFile(filePath: string, req: IncomingMessage, res: ServerResp
         'Content-Length': chunksize,
         'Content-Type': contentType,
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
         'Cache-Control': 'public, max-age=31536000, immutable',
       });
 
@@ -168,6 +230,7 @@ function streamLocalFile(filePath: string, req: IncomingMessage, res: ServerResp
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
         'Cache-Control': 'public, max-age=31536000, immutable',
       });
 
@@ -226,12 +289,22 @@ function proxyRemoteAudio(
         return;
       }
 
+      const rawType = (remoteRes.headers['content-type'] || '').toLowerCase();
+      let contentType = 'audio/mp4';
+      if (rawType.includes('webm') || targetUrl.includes('.webm') || targetUrl.includes('mime=audio%2Fwebm')) {
+        contentType = 'audio/webm';
+      } else if (rawType.includes('mpeg') || rawType.includes('mp3') || targetUrl.includes('.mp3')) {
+        contentType = 'audio/mpeg';
+      } else {
+        contentType = 'audio/mp4';
+      }
+
       const statusCode = remoteRes.statusCode || 200;
       const responseHeaders: Record<string, string> = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
         'Access-Control-Allow-Headers': 'Range, Content-Type, Accept',
-        'Content-Type': remoteRes.headers['content-type'] || 'audio/webm',
+        'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
       };
 
@@ -243,6 +316,12 @@ function proxyRemoteAudio(
       }
 
       res.writeHead(statusCode, responseHeaders);
+
+      if (req.method === 'HEAD') {
+        res.end();
+        return;
+      }
+
       remoteRes.pipe(res);
     });
 
@@ -300,14 +379,14 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
     }
   }
 
-  // 2. Check if cached in public/stream-cache/
+  // 2. Check if cached in public/stream-cache/ (check m4a first, then mp3)
   if (effectiveQuery) {
     const safeBase = cleanFilename(effectiveQuery);
-    const cachedWebm = path.join(CACHE_DIR, `${safeBase}.webm`);
+    const cachedM4a = path.join(CACHE_DIR, `${safeBase}.m4a`);
     const cachedMp3 = path.join(CACHE_DIR, `${safeBase}.mp3`);
 
-    if (fs.existsSync(cachedWebm)) {
-      streamLocalFile(cachedWebm, req, res);
+    if (fs.existsSync(cachedM4a)) {
+      streamLocalFile(cachedM4a, req, res);
       return;
     }
     if (fs.existsSync(cachedMp3)) {
@@ -322,9 +401,9 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
       const streamUrl = await resolveStreamUrlViaYtDlp(effectiveQuery);
       proxyRemoteAudio(streamUrl, req, res);
 
-      // Trigger background download to local cache so future plays/seeks are instant
+      // Trigger background download to local cache as universal m4a so future plays/seeks are instant
       const safeBase = cleanFilename(effectiveQuery);
-      const targetCachedPath = path.join(CACHE_DIR, `${safeBase}.webm`);
+      const targetCachedPath = path.join(CACHE_DIR, `${safeBase}.m4a`);
       triggerBackgroundDownload(effectiveQuery, targetCachedPath);
       return;
     } catch (err) {
