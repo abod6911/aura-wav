@@ -1098,6 +1098,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
             if (fallbackSuccess) {
               set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+              // Asynchronously resolve full-length stream and upgrade seamlessly at current position
+              resolvePlayableStream({ ...playableTrack, audioUrl: undefined }).then((fullUrl) => {
+                if (fullUrl && fullUrl !== fallbackTrack.audioUrl && !fullUrl.includes('mzstatic.com') && !fullUrl.includes('AudioPreview')) {
+                  console.log('[Audio Engine] Seamlessly upgrading fallback to full-length stream:', fullUrl);
+                  const activeDeck = djAudioEngine.getActiveDeck();
+                  if (activeDeck.track?.id === fallbackTrack.id) {
+                    const curTime = activeDeck.getCurrentTime();
+                    activeDeck.audio.src = fullUrl;
+                    activeDeck.audio.currentTime = curTime;
+                    activeDeck.audio.play().catch(() => {});
+                  }
+                }
+              });
               return;
             }
           }
@@ -1113,6 +1126,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
                 const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
                 if (fallbackSuccess) {
                   set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+                  resolvePlayableStream({ ...playableTrack, audioUrl: undefined }).then((fullUrl) => {
+                    if (fullUrl && fullUrl !== fallbackTrack.audioUrl && !fullUrl.includes('mzstatic.com') && !fullUrl.includes('AudioPreview')) {
+                      console.log('[Audio Engine] Seamlessly upgrading query preview to full-length stream:', fullUrl);
+                      const activeDeck = djAudioEngine.getActiveDeck();
+                      if (activeDeck.track?.id === fallbackTrack.id) {
+                        const curTime = activeDeck.getCurrentTime();
+                        activeDeck.audio.src = fullUrl;
+                        activeDeck.audio.currentTime = curTime;
+                        activeDeck.audio.play().catch(() => {});
+                      }
+                    }
+                  });
                   return;
                 }
               }

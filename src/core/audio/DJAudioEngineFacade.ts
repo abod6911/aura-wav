@@ -784,7 +784,7 @@ export class DJAudioEngineFacade {
 
   private async resolveTrackUrl(track: Track): Promise<string> {
     if (track.blob) return URL.createObjectURL(track.blob);
-    if (track.audioUrl && (track.audioUrl.startsWith('/api/stream') || track.audioUrl.startsWith('/songs/') || track.audioUrl.startsWith('blob:'))) {
+    if (track.audioUrl && (track.audioUrl.startsWith('/songs/') || track.audioUrl.startsWith('blob:'))) {
       return track.audioUrl;
     }
     const storedBlob = await getAudioFileFromStorage(track.id);

@@ -230,6 +230,24 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
 
   // 3. /api/stream endpoint (our full-length backend streamer)
   if (track.audioUrl && track.audioUrl.startsWith('/api/stream')) {
+    try {
+      const sep = track.audioUrl.includes('?') ? '&' : '?';
+      const jsonUrl = `${track.audioUrl}${sep}format=json`;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1500);
+      const res = await fetch(jsonUrl, { signal: controller.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.url) {
+          if (data.duration && data.duration > 30) {
+            track.duration = data.duration;
+          }
+          resolvedStreamCache.set(cacheKey, data.url);
+          return data.url;
+        }
+      }
+    } catch {}
     return track.audioUrl;
   }
 
@@ -266,6 +284,19 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
 
   if (isItunesPreview) {
     const fullStreamUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}&preview=${encodeURIComponent(track.audioUrl || '')}`;
+    try {
+      const res = await fetch(`${fullStreamUrl}&format=json`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.url) {
+          if (data.duration && data.duration > 30) {
+            track.duration = data.duration;
+          }
+          resolvedStreamCache.set(cacheKey, data.url);
+          return data.url;
+        }
+      }
+    } catch {}
     resolvedStreamCache.set(cacheKey, fullStreamUrl);
     return fullStreamUrl;
   }
@@ -277,6 +308,19 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
 
   // 7. Fallback to full stream endpoint for any track
   const fallbackUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}`;
+  try {
+    const res = await fetch(`${fallbackUrl}&format=json`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.url) {
+        if (data.duration && data.duration > 30) {
+          track.duration = data.duration;
+        }
+        resolvedStreamCache.set(cacheKey, data.url);
+        return data.url;
+      }
+    }
+  } catch {}
   resolvedStreamCache.set(cacheKey, fallbackUrl);
   return fallbackUrl;
 }

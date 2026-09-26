@@ -347,6 +347,82 @@ function proxyRemoteAudio(
   }
 }
 
+// Dynamic SoundCloud client ID holder
+let scClientId = 'pmagYZKQF6mRtNmtRzPkXSQJ76jYHLN8';
+let scClientIdExpiry = Date.now() + 24 * 3600 * 1000;
+
+async function getWorkingSoundCloudClientId(): Promise<string> {
+  if (scClientId && scClientIdExpiry > Date.now()) return scClientId;
+  try {
+    const pageRes = await fetch('https://soundcloud.com', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+    const html = await pageRes.text();
+    const scriptUrls = [...html.matchAll(/src="(https:\/\/[^"]+\.js)"/g)].map(m => m[1]);
+    for (const s of scriptUrls.slice(-6).reverse()) {
+      const sRes = await fetch(s);
+      const jsText = await sRes.text();
+      const m = jsText.match(/client_id[:=]"([a-zA-Z0-9]{32})"/);
+      if (m) {
+        scClientId = m[1];
+        scClientIdExpiry = Date.now() + 12 * 3600 * 1000;
+        return scClientId;
+      }
+    }
+  } catch {}
+  return scClientId || 'pmagYZKQF6mRtNmtRzPkXSQJ76jYHLN8';
+}
+
+async function resolveViaSoundCloud(query: string): Promise<{ url: string; duration: number; title: string } | null> {
+  try {
+    const clientId = await getWorkingSoundCloudClientId();
+    const cleanQ = query
+      .replace(/[([][^\])]*[)\]]/g, ' ')
+      .replace(/ft\.?|feat\.?|remix|official|video|lyrics/gi, ' ')
+      .replace(/[^\w\s\u0600-\u06FF-]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const searchUrl = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(cleanQ)}&client_id=${clientId}&limit=10`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+    const data: any = await res.json();
+    if (!data || !data.collection || data.collection.length === 0) return null;
+
+    const fullTracks = data.collection.filter((t: any) => t.duration > 60000);
+    const candidates = fullTracks.length > 0 ? fullTracks : data.collection;
+
+    for (const track of candidates) {
+      const trans = track.media?.transcodings || [];
+      const progressive = trans.find((t: any) => t.format?.protocol === 'progressive') ||
+                          trans.find((t: any) => t.format?.mime_type?.includes('mpeg'));
+      if (progressive && progressive.url) {
+        const streamRes = await fetch(`${progressive.url}?client_id=${clientId}`);
+        if (streamRes.ok) {
+          const sData: any = await streamRes.json();
+          if (sData && sData.url) {
+            return {
+              url: sData.url,
+              duration: Math.round(track.duration / 1000),
+              title: track.title,
+            };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[StreamServer] SoundCloud resolution error:', err);
+  }
+  return null;
+}
+
 /**
  * Handles incoming /api/stream HTTP requests.
  */
@@ -367,6 +443,7 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
   const query = parsedUrl.searchParams.get('query') || parsedUrl.searchParams.get('q') || '';
   const videoId = parsedUrl.searchParams.get('id') || '';
   const previewUrl = parsedUrl.searchParams.get('preview') || '';
+  const format = parsedUrl.searchParams.get('format') || '';
 
   const effectiveQuery = query || (videoId ? `videoId:${videoId}` : '');
 
@@ -380,6 +457,12 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
   if (effectiveQuery) {
     const localSong = findExistingLocalSong(effectiveQuery);
     if (localSong) {
+      if (format === 'json') {
+        const relUrl = `/songs/${encodeURIComponent(path.basename(localSong))}`;
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: relUrl, source: 'local' }));
+        return;
+      }
       streamLocalFile(localSong, req, res);
       return;
     }
@@ -392,19 +475,56 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
     const cachedMp3 = path.join(CACHE_DIR, `${safeBase}.mp3`);
 
     if (fs.existsSync(cachedM4a)) {
+      if (format === 'json') {
+        const relUrl = `/stream-cache/${encodeURIComponent(`${safeBase}.m4a`)}`;
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: relUrl, source: 'cache' }));
+        return;
+      }
       streamLocalFile(cachedM4a, req, res);
       return;
     }
     if (fs.existsSync(cachedMp3)) {
+      if (format === 'json') {
+        const relUrl = `/stream-cache/${encodeURIComponent(`${safeBase}.mp3`)}`;
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: relUrl, source: 'cache' }));
+        return;
+      }
       streamLocalFile(cachedMp3, req, res);
       return;
     }
   }
 
-  // 3. Resolve direct high-bitrate stream URL via yt-dlp
+  // 3. Fast SoundCloud Cloudflare CDN resolution (300ms response, full track length)
+  if (effectiveQuery) {
+    const scResult = await resolveViaSoundCloud(effectiveQuery);
+    if (scResult && scResult.url) {
+      if (format === 'json') {
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: scResult.url, duration: scResult.duration, title: scResult.title, source: 'soundcloud-cdn' }));
+        return;
+      }
+      // Redirect directly to high-speed Cloudflare CDN
+      res.writeHead(307, {
+        Location: scResult.url,
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      res.end();
+      return;
+    }
+  }
+
+  // 4. Resolve direct high-bitrate stream URL via yt-dlp
   if (effectiveQuery) {
     try {
       const streamUrl = await resolveStreamUrlViaYtDlp(effectiveQuery);
+      if (format === 'json') {
+        res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, url: streamUrl, source: 'yt-dlp' }));
+        return;
+      }
       proxyRemoteAudio(streamUrl, req, res);
 
       // Trigger background download to local cache as universal m4a so future plays/seeks are instant
@@ -417,8 +537,13 @@ export async function handleStreamRequest(req: IncomingMessage, res: ServerRespo
     }
   }
 
-  // 4. Fallback to iTunes previewUrl if yt-dlp failed or not found (proxied directly with CORS)
+  // 5. Fallback to iTunes previewUrl if full resolution failed (proxied directly with CORS)
   if (previewUrl) {
+    if (format === 'json') {
+      res.writeHead(200, { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, url: previewUrl, duration: 30, source: 'preview' }));
+      return;
+    }
     proxyRemoteAudio(previewUrl, req, res);
     return;
   }
