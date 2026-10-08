@@ -775,9 +775,10 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
       onTouchStart={handleTouchStart}
       onTouchEnd={clearTouchTimer}
       onTouchMove={clearTouchTimer}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
       className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
         isCurrent
-          ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
+          ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
           : isNextUp
           ? 'bg-purple-500/10 border border-purple-500/35'
           : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'

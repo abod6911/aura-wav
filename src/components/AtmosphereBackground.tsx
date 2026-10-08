@@ -177,6 +177,13 @@ export const AtmosphereBackground: React.FC = () => {
     const render = (now: number) => {
       if (!isRunning) return;
 
+      // Throttle to 30fps (delta >= 33ms) to save over 50% GPU and eliminate scroll lag
+      if (now - lastRenderTime < 33) {
+        if (isPlaying) {
+          animId = requestAnimationFrame(render);
+        }
+        return;
+      }
       lastRenderTime = now;
 
       const targetIntensity = isPlaying ? (reactiveVisualsEnabled ? 0.45 : 0.85) : 0.35;

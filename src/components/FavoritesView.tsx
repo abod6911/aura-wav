@@ -247,6 +247,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                       playTrack(track, favoriteTracks);
                     }
                   }}
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
                   className={`group grid grid-cols-[28px_48px_1fr_36px_36px] sm:grid-cols-[36px_48px_1fr_60px_44px_36px] items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-2.5 transition-colors cursor-pointer select-none ${
                     isCurrent
                       ? 'bg-gradient-to-r from-[#FA243C]/20 via-[#FA243C]/10 to-transparent border-l-2 border-[#FA243C]'

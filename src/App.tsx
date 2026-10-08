@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { usePlayerStore } from './store/usePlayerStore';
 import { AtmosphereBackground } from './components/AtmosphereBackground';
 import { Sidebar } from './components/Sidebar';
@@ -13,21 +13,23 @@ import { PlayerBar } from './components/PlayerBar';
 import { MiniPlayer } from './components/player/MiniPlayer';
 import { ExpandedPlayer } from './components/player/ExpandedPlayer';
 import { MobileNavDock } from './components/MobileNavDock';
-import { SyncedLyrics } from './components/lyrics/SyncedLyrics';
-import { EqualizerModal } from './components/EqualizerModal';
-import { QueueDrawer } from './components/QueueDrawer';
-import { ImportModal } from './components/ImportModal';
 import { ToastContainer } from './components/ToastContainer';
-import { SleepTimerModal } from './components/SleepTimerModal';
-import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { WelcomeSplash } from './components/WelcomeSplash';
-import { ChangeArtworkModal } from './components/ChangeArtworkModal';
-import { MetadataEditorModal } from './components/library/MetadataEditorModal';
-import { SettingsModal } from './components/SettingsModal';
-import { DJFxSheet } from './components/dj/DJFxSheet';
-import { AutoMixSelectorModal } from './components/dj/AutoMixSelectorModal';
-import { CarPlayMode } from './components/carplay/CarPlayMode';
 import { useTranslation } from './i18n/useTranslation';
+
+// Code-split heavy modals and sheets for ultra-fast initial load & minimal memory
+const SyncedLyrics = lazy(() => import('./components/lyrics/SyncedLyrics').then((m) => ({ default: m.SyncedLyrics })));
+const EqualizerModal = lazy(() => import('./components/EqualizerModal').then((m) => ({ default: m.EqualizerModal })));
+const QueueDrawer = lazy(() => import('./components/QueueDrawer').then((m) => ({ default: m.QueueDrawer })));
+const ImportModal = lazy(() => import('./components/ImportModal').then((m) => ({ default: m.ImportModal })));
+const SleepTimerModal = lazy(() => import('./components/SleepTimerModal').then((m) => ({ default: m.SleepTimerModal })));
+const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal').then((m) => ({ default: m.KeyboardShortcutsModal })));
+const ChangeArtworkModal = lazy(() => import('./components/ChangeArtworkModal').then((m) => ({ default: m.ChangeArtworkModal })));
+const MetadataEditorModal = lazy(() => import('./components/library/MetadataEditorModal').then((m) => ({ default: m.MetadataEditorModal })));
+const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal })));
+const DJFxSheet = lazy(() => import('./components/dj/DJFxSheet').then((m) => ({ default: m.DJFxSheet })));
+const AutoMixSelectorModal = lazy(() => import('./components/dj/AutoMixSelectorModal').then((m) => ({ default: m.AutoMixSelectorModal })));
+const CarPlayMode = lazy(() => import('./components/carplay/CarPlayMode').then((m) => ({ default: m.CarPlayMode })));
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -120,34 +122,23 @@ export function App() {
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
 
-  const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
-  const seek = usePlayerStore((state) => state.seek);
-  const duration = usePlayerStore((state) => state.duration);
-  const volume = usePlayerStore((state) => state.volume);
-  const setVolume = usePlayerStore((state) => state.setVolume);
-  const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
-  const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
-  const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
+  // Modal visibility states (boolean subscriptions only)
   const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
-  const setLyricsOpen = usePlayerStore((state) => state.setLyricsOpen);
   const isEqualizerOpen = usePlayerStore((state) => state.isEqualizerOpen);
-  const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const isQueueOpen = usePlayerStore((state) => state.isQueueOpen);
-  const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
   const isSleepTimerOpen = usePlayerStore((state) => state.isSleepTimerOpen);
-  const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const isShortcutsOpen = usePlayerStore((state) => state.isShortcutsOpen);
-  const setShortcutsOpen = usePlayerStore((state) => state.setShortcutsOpen);
   const isSettingsOpen = usePlayerStore((state) => state.isSettingsOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const isWelcomeOpen = usePlayerStore((state) => state.isWelcomeOpen);
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
-  const setIsOnline = usePlayerStore((state) => state.setIsOnline);
-  const addToast = usePlayerStore((state) => state.addToast);
+  const isChangeArtworkOpen = usePlayerStore((state) => state.isChangeArtworkOpen);
+  const isMetadataEditorOpen = usePlayerStore((state) => state.isMetadataEditorOpen);
+  const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
+  const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
+  const isCarModeOpen = usePlayerStore((state) => state.isCarModeOpen);
 
-  const prevVolumeRef = useRef(volume > 0 ? volume : 0.8);
-
+  const prevVolumeRef = useRef(0.8);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const importTracks = usePlayerStore((state) => state.importTracks);
@@ -207,10 +198,10 @@ export function App() {
 
   // Online / Offline network status listener
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => usePlayerStore.getState().setIsOnline(true);
+    const handleOffline = () => usePlayerStore.getState().setIsOnline(false);
     if (typeof navigator !== 'undefined') {
-      setIsOnline(navigator.onLine);
+      usePlayerStore.getState().setIsOnline(navigator.onLine);
     }
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -218,7 +209,7 @@ export function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [setIsOnline]);
+  }, []);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -415,31 +406,38 @@ export function App() {
       {/* 7. Mobile Bottom Navigation Dock */}
       <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
 
-      {/* 8. Drawers & Modals */}
-      <SyncedLyrics />
-      <EqualizerModal />
-      <QueueDrawer />
-      <SleepTimerModal />
-      <KeyboardShortcutsModal />
+      {/* 8. Drawers & Modals (Lazy-loaded and mounted only when active) */}
       <ToastContainer />
       <WelcomeSplash
         forceShow={isWelcomeOpen}
         onComplete={() => setWelcomeOpen(false)}
       />
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-      />
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        onOpenImport={() => setIsImportModalOpen(true)}
-      />
-      <ChangeArtworkModal />
-      <MetadataEditorModal />
-      <DJFxSheet />
-      <AutoMixSelectorModal />
-      <CarPlayMode />
+
+      <Suspense fallback={null}>
+        {isLyricsOpen && <SyncedLyrics />}
+        {isEqualizerOpen && <EqualizerModal />}
+        {isQueueOpen && <QueueDrawer />}
+        {isSleepTimerOpen && <SleepTimerModal />}
+        {isShortcutsOpen && <KeyboardShortcutsModal />}
+        {isImportModalOpen && (
+          <ImportModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+          />
+        )}
+        {isSettingsOpen && (
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            onOpenImport={() => setIsImportModalOpen(true)}
+          />
+        )}
+        {isChangeArtworkOpen && <ChangeArtworkModal />}
+        {isMetadataEditorOpen && <MetadataEditorModal />}
+        {isSoundboardOpen && <DJFxSheet />}
+        {isAutoMixModalOpen && <AutoMixSelectorModal />}
+        {isCarModeOpen && <CarPlayMode />}
+      </Suspense>
     </div>
   );
 }

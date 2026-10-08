@@ -293,6 +293,7 @@ export const InfiniteSearchView: React.FC = () => {
                     <div
                       key={trk.id}
                       onClick={() => handlePlaySong(trk)}
+                      style={{ contentVisibility: 'auto', containIntrinsicSize: '58px' }}
                       className={`flex items-center justify-between p-3 cursor-pointer transition-colors ${
                         isCur ? 'bg-[#FA243C]/15' : 'hover:bg-white/[0.05]'
                       }`}

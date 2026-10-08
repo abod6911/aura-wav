@@ -50,6 +50,22 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       external: ['react-native-fs'],
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-framer';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          if (id.includes('node_modules/dexie')) {
+            return 'vendor-dexie';
+          }
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+        },
+      },
     },
   },
 });
