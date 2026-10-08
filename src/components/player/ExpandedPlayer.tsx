@@ -29,7 +29,11 @@ import {
   Palette,
   Headphones,
   Tag,
-  Car
+  Car,
+  Volume1,
+  Volume2,
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,7 +42,7 @@ interface ExpandedPlayerProps {
   onClose: () => void;
 }
 
-type TabType = 'player' | 'up_next' | 'lyrics' | 'related';
+type TabType = 'player' | 'up_next' | 'lyrics' | 'studio' | 'related';
 
 export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose }) => {
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
@@ -64,6 +68,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const automixDuration = usePlayerStore((state) => state.automixDuration);
   const playbackRate = usePlayerStore((state) => state.playbackRate);
   const setPlaybackRate = usePlayerStore((state) => state.setPlaybackRate);
+  const volume = usePlayerStore((state) => state.volume);
+  const setVolume = usePlayerStore((state) => state.setVolume);
 
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const nextTrack = usePlayerStore((state) => state.nextTrack);
@@ -91,20 +97,46 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const playDJSound = usePlayerStore((state) => state.playDJSound);
   const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
 
+  const spatialMode = usePlayerStore((state) => state.spatialMode);
+  const setSpatialMode = usePlayerStore((state) => state.setSpatialMode);
+  const karaokeMode = usePlayerStore((state) => state.karaokeMode);
+  const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
+  const karaokeVocalLevel = usePlayerStore((state) => state.karaokeVocalLevel);
+  const setKaraokeVocalLevel = usePlayerStore((state) => state.setKaraokeVocalLevel);
+  const bassBoost = usePlayerStore((state) => state.bassBoost);
+  const setBassBoost = usePlayerStore((state) => state.setBassBoost);
+  const analogWarmth = usePlayerStore((state) => state.analogWarmth);
+  const setAnalogWarmth = usePlayerStore((state) => state.setAnalogWarmth);
+
   const [activeTab, setActiveTab] = useState<TabType>('player');
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
   const [activeDJPHand, setActiveDJPHand] = useState<string | null>(null);
+  const [showWaveform, setShowWaveform] = useState(false);
   const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
 
   // 3D Artwork Tilt Reaction
   const [artworkTilt, setArtworkTilt] = useState({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+
   const handleArtworkPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (rafRef.current !== null) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    setArtworkTilt({ x: -(py * 16), y: px * 16 });
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    
+    rafRef.current = requestAnimationFrame(() => {
+      const px = (clientX - rect.left) / rect.width - 0.5;
+      const py = (clientY - rect.top) / rect.height - 0.5;
+      setArtworkTilt({ x: -(py * 16), y: px * 16 });
+      rafRef.current = null;
+    });
   };
   const handleArtworkPointerLeave = () => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     setArtworkTilt({ x: 0, y: 0 });
   };
 
@@ -117,11 +149,20 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     }
   };
 
+  const djTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (djTimeoutRef.current) clearTimeout(djTimeoutRef.current);
+    };
+  }, []);
+
   const handleQuickDJDrop = (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => {
     triggerHaptic();
     setActiveDJPHand(effect);
     playDJSound(effect);
-    setTimeout(() => {
+    if (djTimeoutRef.current) clearTimeout(djTimeoutRef.current);
+    djTimeoutRef.current = setTimeout(() => {
       setActiveDJPHand((curr) => (curr === effect ? null : curr));
     }, 350);
   };
@@ -536,6 +577,148 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </div>
             </motion.div>
           )}
+
+          {/* TAB E: AUDIOPHILE SOUND STUDIO */}
+          {activeTab === 'studio' && (
+            <motion.div
+              key="studio"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              className="flex-1 flex flex-col min-h-0 bg-white/[0.03] border border-white/[0.08] rounded-3xl p-4 overflow-y-auto space-y-4 backdrop-blur-xl"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white">
+                    <Sparkles className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h4 className="text-sm font-black text-white">استوديو الصوت ثلاثي الأبعاد</h4>
+                    <p className="text-[10px] text-zinc-400">Web Audio Hi-Fi DSP & Spatial Reverbs</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/30">
+                  Hi-Res 24-bit
+                </span>
+              </div>
+
+              {/* Spatial Presets Grid */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-zinc-300">البيئة الصوتية ثلاثية الأبعاد (Spatial Reverb):</span>
+                <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
+                  {[
+                    { id: 'off', label: 'ستيريو مباشر', icon: '⏹️', desc: 'Stereo Direct' },
+                    { id: 'concert', label: 'قاعة حفلات', icon: '🏛️', desc: 'Live Concert' },
+                    { id: 'studio', label: 'استوديو نقي', icon: '🎙️', desc: 'Acoustic Studio' },
+                    { id: 'club', label: 'نادي ليلي', icon: '🎛️', desc: 'Club & Bass' },
+                    { id: '8d', label: 'صوت فضائي 8D', icon: '🎧', desc: '360° Orbit' },
+                  ].map((preset) => {
+                    const isSelected = spatialMode === preset.id;
+                    return (
+                      <button
+                        key={preset.id}
+                        onClick={() => {
+                          triggerHaptic();
+                          setSpatialMode(preset.id as any);
+                        }}
+                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-gradient-to-tr from-[#FA243C]/25 to-[#FF375F]/15 border-[#FA243C] shadow-lg shadow-[#FA243C]/20 text-white'
+                            : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+                        }`}
+                      >
+                        <span className="text-base mb-1">{preset.icon}</span>
+                        <span className="text-xs font-bold block">{preset.label}</span>
+                        <span className="text-[9px] text-zinc-400">{preset.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Karaoke Sing Mode Card */}
+              <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎤</span>
+                    <div>
+                      <h5 className="text-xs font-black text-white">وضع الكاريوكي وعزل صوت المغني</h5>
+                      <p className="text-[10px] text-zinc-400">Apple Music Sing Center-Channel Cut</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      triggerHaptic();
+                      setKaraokeMode(!karaokeMode);
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
+                      karaokeMode
+                        ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {karaokeMode ? 'مفعل' : 'معطل'}
+                  </button>
+                </div>
+
+                {karaokeMode && (
+                  <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
+                    <div className="flex justify-between text-[11px] text-zinc-300">
+                      <span>نسبة خفض صوت المغني:</span>
+                      <span className="font-mono font-bold text-[#1DB954]">
+                        {Math.round(karaokeVocalLevel * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={karaokeVocalLevel}
+                      onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#1DB954] cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Bass Boost & Analog Warmth */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold text-white">
+                    <span>⚡ Mega Bass Boost:</span>
+                    <span className="text-[#FA243C] font-mono">+{bassBoost} dB</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="12"
+                    step="0.5"
+                    value={bassBoost}
+                    onChange={(e) => setBassBoost(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold text-white">
+                    <span>📻 Analog Warmth:</span>
+                    <span className="text-amber-400 font-mono">{analogWarmth}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={analogWarmth}
+                    onChange={(e) => setAnalogWarmth(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-amber-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* 3. Track Details & Scrubber */}
@@ -590,6 +773,21 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     ⚡ {currentTrack.bpm} BPM
                   </span>
                 )}
+
+                {/* Interactive Waveform Mode Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowWaveform(!showWaveform)}
+                  title={showWaveform ? 'الشريط الكلاسيكي' : 'عرض الموجة الصوتية التفاعلية'}
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                    showWaveform
+                      ? 'border-[#FA243C] bg-[#FA243C]/20 text-white shadow-[#FA243C]/20'
+                      : 'border-white/10 bg-white/[0.06] text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Activity className="w-3 h-3" />
+                  <span>{showWaveform ? 'Waveform' : 'Line'}</span>
+                </button>
               </div>
             </div>
 
@@ -619,6 +817,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             duration={duration}
             onSeek={seek}
             showTimestamps={true}
+            showWaveform={showWaveform}
+            trackId={currentTrack.id}
             accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#FA243C'}
           />
         </div>
@@ -741,6 +941,25 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </motion.button>
         </div>
 
+        {/* Volume Control */}
+        <div className="flex items-center gap-3 px-6 mt-3">
+          <Volume1 className="w-4 h-4 text-white/50 flex-shrink-0" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
+              [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white
+              [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.5)]"
+            style={{ background: `linear-gradient(to right, rgba(255,255,255,0.7) ${volume * 100}%, rgba(255,255,255,0.2) ${volume * 100}%)` }}
+          />
+          <Volume2 className="w-4 h-4 text-white/50 flex-shrink-0" />
+        </div>
+
         {/* 5. 3 Tabs Selector */}
         <div className="flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
@@ -765,6 +984,18 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           >
             <Mic2 className="w-4 h-4" />
             <span>{t.syncedLyrics}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(activeTab === 'studio' ? 'player' : 'studio')}
+            className={`flex items-center gap-1.5 h-11 px-3 sm:px-4 rounded-full transition-all cursor-pointer ${
+              activeTab === 'studio'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isRTL ? 'الاستوديو 3D' : 'Studio 3D'}</span>
           </button>
 
           <button
