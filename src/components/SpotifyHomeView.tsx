@@ -11,6 +11,8 @@ import {
   Flame,
   Music2,
   Disc3,
+  CheckCircle2,
+  Download,
 } from 'lucide-react';
 import { Track } from '../types';
 import { motion } from 'framer-motion';
@@ -28,8 +30,22 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const favorites = usePlayerStore((state) => state.favorites);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
+  const history = usePlayerStore((state) => state.history);
+  const activeMoodFilter = usePlayerStore((state) => state.activeMoodFilter);
+  const setActiveMoodFilter = usePlayerStore((state) => state.setActiveMoodFilter);
+  const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+  const spatialMode = usePlayerStore((state) => state.spatialMode);
 
   const [visibleTableCount, setVisibleTableCount] = useState(30);
+
+  const MOOD_FILTERS = [
+    { id: null, label: isRTL ? 'الكل' : 'All', icon: '🌟' },
+    { id: 'energy', label: isRTL ? 'طاقة وحماس' : 'High Energy', icon: '⚡' },
+    { id: 'chill', label: isRTL ? 'هدوء وليل' : 'Midnight Chill', icon: '🌙' },
+    { id: 'focus', label: isRTL ? 'تركيز وروقان' : 'Deep Focus', icon: '🎧' },
+    { id: 'nostalgia', label: isRTL ? 'ذكريات وحنين' : 'Melancholy', icon: '💔' },
+    { id: 'road', label: isRTL ? 'خط وسفر' : 'Road Trip', icon: '🚗' },
+  ];
 
   // Time-aware greeting
   const greeting = useMemo(() => {
@@ -47,42 +63,94 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Helper: Get unique tracks by artist
-  const getUniqueByArtist = (trackList: Track[], maxCount: number): Track[] => {
+  const recentlyPlayed = useMemo(() => {
     const seen = new Set<string>();
-    const result: Track[] = [];
-    for (const trk of trackList) {
+    return history.filter(t => {
+      if (seen.has(t.id)) return false;
+      seen.add(t.id);
+      return true;
+    }).slice(0, 10);
+  }, [history]);
+
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+
+  const downloadedTracks = useMemo(() => {
+    if (downloadedTrackIds.length === 0) return [];
+    const idSet = new Set(downloadedTrackIds);
+    return tracks.filter((t) => idSet.has(t.id));
+  }, [tracks, downloadedTrackIds]);
+
+  const { quickAccessTracks, featuredHits, topArtists, hipHopHits, rockClassics } = useMemo(() => {
+    const quickAccess: Track[] = [];
+    const featured: Track[] = [];
+    const artists: { name: string; avatarUrl: string; track: Track }[] = [];
+    const hiphop: Track[] = [];
+    const rock: Track[] = [];
+
+    const seenQuick = new Set<string>();
+    const seenFeatured = new Set<string>();
+    const seenArtists = new Set<string>();
+    const seenHiphop = new Set<string>();
+    const seenRock = new Set<string>();
+
+    for (const trk of tracks) {
       const art = (trk.artist || '').toLowerCase().trim();
-      if (!seen.has(art)) {
-        seen.add(art);
-        result.push(trk);
-        if (result.length >= maxCount) break;
+      const genre = trk.genre || '';
+
+      if (quickAccess.length < 5 && !seenQuick.has(art)) {
+        seenQuick.add(art);
+        quickAccess.push(trk);
+      }
+
+      if (featured.length < 12 && !seenFeatured.has(art)) {
+        seenFeatured.add(art);
+        featured.push(trk);
+      }
+
+      if (artists.length < 14 && !seenArtists.has(art)) {
+        seenArtists.add(art);
+        artists.push({
+          name: trk.artist,
+          avatarUrl: trk.coverUrl || trk.artworkUrl || '/logo.svg',
+          track: trk,
+        });
+      }
+
+      if (hiphop.length < 10 && genre.includes('Hip-Hop') && !seenHiphop.has(art)) {
+        seenHiphop.add(art);
+        hiphop.push(trk);
+      }
+
+      if (rock.length < 10 && genre.includes('Rock') && !seenRock.has(art)) {
+        seenRock.add(art);
+        rock.push(trk);
       }
     }
-    return result;
-  };
 
-  const quickAccessTracks = useMemo(() => getUniqueByArtist(tracks, 5), [tracks]);
-  const featuredHits = useMemo(() => getUniqueByArtist(tracks, 12), [tracks]);
-  const topArtists = useMemo(() => {
-    return getUniqueByArtist(tracks, 14).map((trk) => ({
-      name: trk.artist,
-      avatarUrl: trk.coverUrl || trk.artworkUrl || '/logo.svg',
-      track: trk,
-    }));
-  }, [tracks]);
-
-  const hipHopHits = useMemo(() => {
-    const hiphop = tracks.filter((trk) => (trk.genre || '').includes('Hip-Hop'));
-    return getUniqueByArtist(hiphop, 10);
-  }, [tracks]);
-
-  const rockClassics = useMemo(() => {
-    const rock = tracks.filter((trk) => (trk.genre || '').includes('Rock'));
-    return getUniqueByArtist(rock, 10);
+    return {
+      quickAccessTracks: quickAccess,
+      featuredHits: featured,
+      topArtists: artists,
+      hipHopHits: hiphop,
+      rockClassics: rock,
+    };
   }, [tracks]);
 
   const likedTracks = useMemo(() => tracks.filter((trk) => favorites.includes(trk.id)), [tracks, favorites]);
+
+  const displayedTracks = useMemo(() => {
+    if (!activeMoodFilter) return tracks;
+    return tracks.filter((t) => {
+      const g = (t.genre || '').toLowerCase();
+      const bpm = t.bpm || 110;
+      if (activeMoodFilter === 'energy') return bpm >= 120 || g.includes('hip-hop') || g.includes('rock') || g.includes('dance');
+      if (activeMoodFilter === 'chill') return bpm < 110 || g.includes('r&b') || g.includes('pop') || g.includes('acoustic');
+      if (activeMoodFilter === 'focus') return bpm <= 100 || g.includes('classical') || g.includes('ambient') || g.includes('instrumental');
+      if (activeMoodFilter === 'nostalgia') return g.includes('rock') || g.includes('classic');
+      if (activeMoodFilter === 'road') return bpm >= 115 || g.includes('pop') || g.includes('rock');
+      return true;
+    });
+  }, [tracks, activeMoodFilter]);
 
   // Spotlight Track (Current or first featured)
   const spotlightTrack = currentTrack || (tracks.length > 0 ? tracks[0] : null);
@@ -122,6 +190,70 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             </button>
           )}
         </div>
+
+        {/* Mood & Vibe Radar Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar -mx-1 px-1">
+          {MOOD_FILTERS.map((mood) => {
+            const isSelected = activeMoodFilter === mood.id;
+            return (
+              <button
+                key={mood.id || 'all'}
+                onClick={() => setActiveMoodFilter(mood.id)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  isSelected
+                    ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/25 scale-105'
+                    : 'bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08]'
+                }`}
+              >
+                <span>{mood.icon}</span>
+                <span>{mood.label}</span>
+                {mood.id && (
+                  <span className="text-[10px] opacity-60 tabular-nums">
+                    ({displayedTracks.length})
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Mood Mix Banner */}
+        {activeMoodFilter && (
+          <div className="mb-4 p-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">
+                {MOOD_FILTERS.find((m) => m.id === activeMoodFilter)?.icon}
+              </span>
+              <div>
+                <h4 className="text-xs font-black text-white">
+                  {MOOD_FILTERS.find((m) => m.id === activeMoodFilter)?.label}
+                </h4>
+                <p className="text-[10px] text-zinc-400">
+                  {displayedTracks.length} مسار مطابق للمزاج المحدد
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (displayedTracks.length > 0) {
+                    playTrack(displayedTracks[0], displayedTracks);
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-full bg-white text-black font-extrabold text-xs flex items-center gap-1 shadow-md hover:scale-105 transition-all cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>تشغيل الكل</span>
+              </button>
+              <button
+                onClick={() => setActiveMoodFilter(null)}
+                className="text-xs text-zinc-400 hover:text-white px-2 py-1 cursor-pointer"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 2. Hero Spotlight Card (Apple Music Editorial Showcase) */}
         {spotlightTrack && (
@@ -225,6 +357,24 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             </div>
           </div>
 
+          {/* Spatial Sound Studio Bento Tile */}
+          <div
+            onClick={() => setMobilePlayerOpen(true)}
+            className="group flex items-center gap-2.5 sm:gap-3 glass-obsidian-1 hover:border-white/20 rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/25">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-bold text-white truncate">
+                {isRTL ? 'استوديو الصوت 3D' : '3D Sound Studio'}
+              </p>
+              <p className="text-[11px] text-purple-300 truncate font-mono">
+                {spatialMode === 'off' ? 'Hi-Fi Master' : `${spatialMode.toUpperCase()} Active`}
+              </p>
+            </div>
+          </div>
+
           {/* Quick Access Distinct Tracks */}
           {quickAccessTracks.map((trk) => {
             const isCur = currentTrack?.id === trk.id;
@@ -255,6 +405,144 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
 
       {/* 4. Horizontal Snap Carousels */}
       <div className="px-3 sm:px-6 md:px-8 space-y-8 mt-4">
+        {/* CAROUSEL - RECENTLY PLAYED */}
+        {recentlyPlayed.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+                  سمعتها مؤخراً
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {recentlyPlayed.map((trk) => {
+                const isCur = currentTrack?.id === trk.id;
+                return (
+                  <div
+                    key={trk.id}
+                    onClick={() => playTrack(trk)}
+                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 glass-obsidian-1 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                      <img
+                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                        alt={trk.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isCur) togglePlayPause();
+                          else playTrack(trk);
+                        }}
+                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                          isCur && isPlaying
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        }`}
+                      >
+                        {isCur && isPlaying ? (
+                          <Pause className="w-4 h-4 fill-black text-black" />
+                        ) : (
+                          <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                      {trk.title}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {trk.artist}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* CAROUSEL - DOWNLOADED / OFFLINE TRACKS */}
+        {downloadedTracks.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
+                  {isRTL ? 'جاهزة للأوفلاين (بدون إنترنت)' : 'Saved Offline'}
+                </h2>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>{downloadedTracks.length}</span>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  if (downloadedTracks.length > 0) {
+                    playTrack(downloadedTracks[0], downloadedTracks);
+                  }
+                }}
+                className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 cursor-pointer transition-colors px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20"
+              >
+                <Play className="w-3 h-3 fill-current" />
+                <span>{isRTL ? 'تشغيل الكل' : 'Play all'}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+              {downloadedTracks.map((trk) => {
+                const isCur = currentTrack?.id === trk.id;
+                return (
+                  <div
+                    key={trk.id}
+                    onClick={() => playTrack(trk, downloadedTracks)}
+                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 glass-obsidian-1 hover:border-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                      <img
+                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                        alt={trk.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2 right-2 p-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-400 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isCur) togglePlayPause();
+                          else playTrack(trk, downloadedTracks);
+                        }}
+                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                          isCur && isPlaying
+                            ? 'opacity-100 scale-100'
+                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        }`}
+                      >
+                        {isCur && isPlaying ? (
+                          <Pause className="w-4 h-4 fill-black text-black" />
+                        ) : (
+                          <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                        )}
+                      </button>
+                    </div>
+
+                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-emerald-400' : 'text-white'}`}>
+                      {trk.title}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                      {trk.artist}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* CAROUSEL A: Featured Hits */}
         {featuredHits.length > 0 && (
           <section className="space-y-3">
@@ -403,20 +691,22 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
         <section className="space-y-3 pt-2">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
-              {isRTL ? 'أحدث المسارات في مكتبتك' : 'Latest Tracks in Library'}
+              {activeMoodFilter
+                ? `${isRTL ? 'مسارات المزاج: ' : 'Vibe Tracks: '} ${MOOD_FILTERS.find((m) => m.id === activeMoodFilter)?.label}`
+                : isRTL ? 'أحدث المسارات في مكتبتك' : 'Latest Tracks in Library'}
             </h2>
             <span className="text-xs text-zinc-400 font-mono tabular-nums">
-              {tracks.length} {t.songs}
+              {displayedTracks.length} {t.songs}
             </span>
           </div>
 
           <div className="divide-y divide-white/[0.06] rounded-2xl glass-obsidian-1 overflow-hidden">
-            {tracks.slice(0, visibleTableCount).map((trk, idx) => {
+            {displayedTracks.slice(0, visibleTableCount).map((trk, idx) => {
               const isCur = currentTrack?.id === trk.id;
               return (
                 <div
                   key={`${trk.id}_${idx}`}
-                  onClick={() => playTrack(trk)}
+                  onClick={() => playTrack(trk, displayedTracks)}
                   className={`flex items-center justify-between p-3.5 cursor-pointer transition-colors ${
                     isCur ? 'bg-[#FA243C]/15' : 'hover:bg-white/[0.05]'
                   }`}
@@ -445,12 +735,20 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       onClick={(e) => {
                         e.stopPropagation();
                         if (isCur) togglePlayPause();
-                        else playTrack(trk);
+                        else playTrack(trk, displayedTracks);
                       }}
-                      className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] flex items-center justify-center text-white cursor-pointer active:scale-90 transition-all"
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-white cursor-pointer active:scale-90 transition-all ${
+                        isCur
+                          ? 'bg-[#FA243C] shadow-lg shadow-[#FA243C]/40'
+                          : 'bg-white/[0.08] hover:bg-white/[0.18]'
+                      }`}
                     >
                       {isCur && isPlaying ? (
-                        <Pause className="w-3.5 h-3.5 fill-current" />
+                        <div className="flex items-end gap-[2px] h-3.5 w-3.5 justify-center">
+                          <span className="w-0.5 bg-white rounded-full animate-[bounce_0.8s_infinite] h-full" />
+                          <span className="w-0.5 bg-white rounded-full animate-[bounce_0.6s_infinite_0.15s] h-2/3" />
+                          <span className="w-0.5 bg-white rounded-full animate-[bounce_1s_infinite_0.3s] h-4/5" />
+                        </div>
                       ) : (
                         <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
                       )}
@@ -461,7 +759,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             })}
           </div>
 
-          {visibleTableCount < tracks.length && (
+          {visibleTableCount < displayedTracks.length && (
             <div className="pt-2 text-center">
               <button
                 onClick={() => setVisibleTableCount((prev) => prev + 30)}
