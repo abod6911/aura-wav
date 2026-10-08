@@ -223,7 +223,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-6 pb-44 w-full max-w-full">
+    <div className="space-y-6 pb-[calc(200px+env(safe-area-inset-bottom,24px))] md:pb-28 w-full max-w-full">
       {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
@@ -335,12 +335,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <span className="text-xs text-zinc-400 font-medium">استمع فوراً لأبرز الأغاني</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+          <div className="flex overflow-x-auto no-scrollbar pb-2 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 -mx-1 px-1">
             {featuredTracks.map((t) => (
               <div
                 key={t.id}
                 onClick={() => playTrack(t, tracks)}
-                className="group relative p-3 rounded-[22px] apple-glass-card border border-white/[0.08] hover:border-white/20 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:-translate-y-1 select-none apple-spring"
+                className="group relative p-3 rounded-[22px] apple-glass-card border border-white/[0.08] hover:border-white/20 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:-translate-y-1 select-none apple-spring flex-shrink-0 w-36 sm:w-auto"
               >
                 <div className="relative aspect-square w-full rounded-[16px] overflow-hidden bg-[#151520] shadow-md border border-white/5">
                   <img

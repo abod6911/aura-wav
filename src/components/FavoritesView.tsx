@@ -104,7 +104,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-36 md:pb-24 space-y-6 select-none" dir={dir}>
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24 space-y-6 select-none" dir={dir}>
       {/* 1. Hero Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FA243C]/20 via-red-950/20 to-black/60 border border-white/[0.1] p-4 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 bg-[#FA243C]/15 rounded-full blur-3xl pointer-events-none" />

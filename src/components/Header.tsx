@@ -58,10 +58,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
       <div className="flex flex-col sm:hidden w-full gap-2.5">
         <div className="flex items-center justify-between w-full">
           {/* Brand & Dynamic Greeting */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
               title={t.settings}
               aria-label={t.settings}
             >
@@ -69,19 +69,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
                 A
               </div>
             </button>
-            <div className="flex flex-col">
-              <span className="font-black text-white text-base tracking-tight leading-none flex items-center gap-1.5">
+            <div className="flex flex-col min-w-0">
+              <span className="font-black text-white text-base tracking-tight leading-none flex items-center gap-1.5 truncate">
                 AURA<span className="text-[#FA243C]">.WAV</span>
                 <span className="apple-badge text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C]">ALAC</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5">
+              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
                 {activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting}
               </span>
             </div>
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
@@ -95,17 +95,17 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer min-h-[36px]"
               title={t.importFolder}
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span className="text-[11px]">{t.importMusic}</span>
+              <span className="text-[11px] hidden xs:inline">{t.importMusic}</span>
             </button>
 
             {/* Sleep Timer */}
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center apple-spring cursor-pointer ${
+              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center apple-spring cursor-pointer relative ${
                 sleepTimerRemaining !== null
                   ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
@@ -114,14 +114,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             >
               <Moon className="w-4 h-4" />
               {sleepTimerRemaining !== null && (
-                <span className="font-mono text-[9px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full">{formatTimerRemaining(sleepTimerRemaining)}</span>
+                <span className="font-mono text-[8px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
               )}
             </button>
 
             {/* CarPlay / Car Mode Trigger */}
             <button
               onClick={() => setCarModeOpen(true)}
-              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
               title="وضع السيارة / CarPlay Mode"
             >
               <Car className="w-4 h-4 text-[#FA243C]" />
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
               title={t.settings}
             >
               <Settings className="w-4 h-4" />

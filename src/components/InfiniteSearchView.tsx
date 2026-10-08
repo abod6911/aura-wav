@@ -91,7 +91,7 @@ export const InfiniteSearchView: React.FC = () => {
   ];
 
   return (
-    <div className="w-full text-white pb-16 px-3 sm:px-6 md:px-8 pt-4 select-none" dir={dir}>
+    <div className="w-full text-white pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24 px-3 sm:px-6 md:px-8 pt-4 select-none" dir={dir}>
       {/* Search Input Bar */}
       <div className="relative max-w-2xl mx-auto mb-5">
         <div className="relative flex items-center bg-white/[0.06] hover:bg-white/[0.1] focus-within:bg-white/[0.12] focus-within:ring-2 focus-within:ring-[#FA243C]/50 rounded-full transition-all shadow-xl border border-white/[0.1] px-4 py-1.5">
