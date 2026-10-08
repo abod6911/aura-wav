@@ -86,14 +86,15 @@ export const PlayerBar: React.FC = () => {
   return (
     <>
       <footer
+        data-testid="player-bar"
         dir="ltr"
         style={{
           boxShadow: `0 24px 60px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
         }}
-        className="hidden md:flex fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[86px] z-40 bg-[#0d0d15]/85 backdrop-blur-3xl px-6 sm:px-8 items-center justify-between border border-white/[0.14] rounded-[28px] select-none transition-shadow duration-500"
+        className="hidden md:flex fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[86px] z-40 bg-[#0d0d15]/85 backdrop-blur-3xl px-6 sm:px-8 items-center justify-between border border-white/[0.14] rounded-[28px] select-none transition-shadow duration-500 apple-glass-dock"
       >
         {/* 1. Track Info (Left) */}
-        <div className="flex items-center gap-3.5 w-1/4 min-w-0">
+        <div className="flex items-center gap-3.5 w-[260px] min-w-0 flex-shrink-0">
           <div
             onClick={() => setMobilePlayerOpen(true)}
             className={`relative w-14 h-14 rounded-[18px] overflow-hidden bg-black/60 border border-white/15 shadow-xl flex-shrink-0 group cursor-pointer transition-transform ${
@@ -161,7 +162,7 @@ export const PlayerBar: React.FC = () => {
         </div>
 
         {/* 2. Main Playback Controls & Scrubber (Center) */}
-        <div className="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
+        <div className="flex-1 max-w-xl mx-4 min-w-0 flex flex-col items-center gap-1.5">
           {/* Controls Row */}
           <div className="flex items-center gap-5">
             {/* Waveform Toggle */}
@@ -244,7 +245,7 @@ export const PlayerBar: React.FC = () => {
         </div>
 
         {/* 3. Utility Tools & Volume (Right) */}
-        <div className="flex items-center justify-end gap-2.5 w-1/4">
+        <div className="flex-shrink-0 flex items-center justify-end gap-2 sm:gap-2.5">
           {/* Spatial Audio Quick Pill (Apple Music Spatial Style) */}
           <button
             onClick={cycleSpatialMode}
@@ -274,6 +275,7 @@ export const PlayerBar: React.FC = () => {
 
           {/* Synced Lyrics Toggle */}
           <button
+            data-testid="lyrics-toggle-btn"
             onClick={() => setLyricsOpen(!isLyricsOpen)}
             title={t.syncedLyrics}
             className={`px-2.5 py-1.5 rounded-xl apple-spring cursor-pointer text-xs font-bold ${

@@ -132,11 +132,10 @@ export const EqualizerModal: React.FC = () => {
     return { points: pts, pathD: pD, fillD: fD };
   }, [eqGains]);
 
-  if (!isEqualizerOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none">
+      {isEqualizerOpen && (
+        <div data-testid="equalizer-modal" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -772,6 +771,7 @@ export const EqualizerModal: React.FC = () => {
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 };

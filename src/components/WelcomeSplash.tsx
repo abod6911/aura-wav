@@ -58,17 +58,17 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
 
   const { greeting, subtitle, Icon, color, glow } = getGreetingData();
 
-  if (!visible) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0, scale: 1.05 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 bg-[#050508]/95 backdrop-blur-3xl select-none overflow-hidden"
-      >
+      {visible && (
+        <motion.div
+          data-testid="welcome-splash"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.05 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 bg-[#050508]/95 backdrop-blur-3xl select-none overflow-hidden"
+        >
         {/* Ambient Neon Atmosphere */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
@@ -212,6 +212,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           </motion.button>
         </div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

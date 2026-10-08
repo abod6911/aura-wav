@@ -47,6 +47,7 @@ export default defineConfig({
     },
   },
   build: {
+    emptyOutDir: false,
     rollupOptions: {
       external: ['react-native-fs'],
     },

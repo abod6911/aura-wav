@@ -25,9 +25,11 @@ export const SyncedLyrics: React.FC = () => {
   const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
   const hasTrack = usePlayerStore((state) => !!state.currentTrack);
 
-  if (!isLyricsOpen || !hasTrack) return null;
-
-  return <SyncedLyricsModal />;
+  return (
+    <AnimatePresence>
+      {isLyricsOpen && hasTrack && <SyncedLyricsModal />}
+    </AnimatePresence>
+  );
 };
 
 const SyncedLyricsModal: React.FC = () => {
@@ -101,14 +103,14 @@ const SyncedLyricsModal: React.FC = () => {
   const isArabicText = (text: string) => /[\u0600-\u06FF]/.test(text);
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-50 bg-[#060609] flex flex-col select-none overflow-hidden"
-      >
+    <motion.div
+      data-testid="lyrics-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-50 bg-[#060609] flex flex-col select-none overflow-hidden"
+    >
         {/* Luxury Obsidian Base Canvas */}
         <div className="absolute inset-0 -z-20 bg-gradient-to-b from-[#08080c] via-[#060609] to-[#040406]" />
 
@@ -158,6 +160,7 @@ const SyncedLyricsModal: React.FC = () => {
           </div>
 
           <motion.button
+            data-testid="close-lyrics-btn"
             whileTap={{ scale: 0.88 }}
             onClick={() => setLyricsOpen(false)}
             className="w-10 h-10 rounded-full apple-glass-pill text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer apple-spring"
@@ -417,6 +420,5 @@ const SyncedLyricsModal: React.FC = () => {
           اضغط على أي سطر للانتقال المباشر لتلك اللحظة في الأغنية
         </div>
       </motion.div>
-    </AnimatePresence>
   );
 };
