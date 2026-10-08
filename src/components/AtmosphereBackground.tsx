@@ -77,9 +77,9 @@ export const AtmosphereBackground: React.FC = () => {
   const [webglSupported, setWebglSupported] = useState(true);
 
   const [rawColors, setRawColors] = useState({
-    p: '#1DB954',
-    s: '#10B981',
-    a: '#065F46',
+    p: '#FA243C',
+    s: '#FF375F',
+    a: '#7D12FF',
   });
 
   // Extract track palette asynchronously outside render loop
@@ -176,12 +176,7 @@ export const AtmosphereBackground: React.FC = () => {
 
     const render = (now: number) => {
       if (!isRunning) return;
-      animId = requestAnimationFrame(render);
 
-      // Frame throttle: When paused, throttle to ~20fps to conserve mobile GPU and battery
-      if (!isPlaying && now - lastRenderTime < 50) {
-        return;
-      }
       lastRenderTime = now;
 
       const targetIntensity = isPlaying ? (reactiveVisualsEnabled ? 0.45 : 0.85) : 0.35;
@@ -194,6 +189,10 @@ export const AtmosphereBackground: React.FC = () => {
       gl!.uniform3fv(c4Loc, rgbColors.c4);
 
       gl!.drawArrays(gl.TRIANGLES, 0, 6);
+
+      if (isPlaying) {
+        animId = requestAnimationFrame(render);
+      }
     };
 
     animId = requestAnimationFrame(render);

@@ -44,7 +44,7 @@ export function generateSvgCover(title: string, artist: string): string {
   const initial = (cleanArtist !== 'Unknown' && cleanArtist !== 'Unknown Artist' ? cleanArtist : cleanTitle).charAt(0).toUpperCase() || 'A';
 
   const gradients = [
-    { start: '#1DB954', mid: '#10B981', end: '#047857' }, // Spotify Emerald
+    { start: '#FA243C', mid: '#FF375F', end: '#7D12FF' }, // Apple Crimson & Violet
     { start: '#6366F1', mid: '#8B5CF6', end: '#4F46E5' }, // Neon Violet
     { start: '#EC4899', mid: '#F43F5E', end: '#BE123C' }, // Crimson Rose
     { start: '#3B82F6', mid: '#06B6D4', end: '#0284C7' }, // Electric Blue

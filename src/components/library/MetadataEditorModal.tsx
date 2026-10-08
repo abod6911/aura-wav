@@ -115,11 +115,11 @@ export const MetadataEditorModal: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/30 flex items-center justify-center text-[#1DB954]">
+              <div className="w-10 h-10 rounded-2xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C]">
                 <Tag className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">تعديل بيانات الأغنية (ID3 Tags)</h3>
+                <h3 className="text-lg font-black text-white">تعديل بيانات الأغنية (ID3 Tags)</h3>
                 <p className="text-xs text-zinc-400">حفظ دائم في وحدة التخزين OPFS وقاعدة بيانات Dexie</p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export const MetadataEditorModal: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
                 <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity text-white text-[10px] font-bold gap-1">
-                  <Upload className="w-4 h-4 text-[#1DB954]" />
+                  <Upload className="w-4 h-4 text-[#FA243C]" />
                   <span>تغيير</span>
                   <input
                     type="file"
@@ -160,12 +160,12 @@ export const MetadataEditorModal: React.FC = () => {
                     type="button"
                     onClick={handleSearchArtwork}
                     disabled={isSearchingArtwork}
-                    className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-zinc-200 flex items-center gap-1.5 transition-colors"
+                    className="px-2.5 py-1 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-xs font-bold text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     {isSearchingArtwork ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1DB954]" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FA243C]" />
                     ) : (
-                      <Sparkles className="w-3.5 h-3.5 text-[#1DB954]" />
+                      <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
                     )}
                     <span>بحث عن غلاف أونلاين</span>
                   </button>
@@ -178,7 +178,7 @@ export const MetadataEditorModal: React.FC = () => {
                         type="button"
                         key={cand.id}
                         onClick={() => handleSelectCandidate(cand)}
-                        className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 hover:border-[#1DB954] flex-shrink-0 transition-all"
+                        className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 hover:border-[#FA243C] flex-shrink-0 transition-all cursor-pointer"
                       >
                         <img
                           src={cand.artworkUrl}
@@ -197,7 +197,7 @@ export const MetadataEditorModal: React.FC = () => {
               {/* Title */}
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
-                  <Music className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <Music className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>اسم الأغنية (Title)</span>
                 </label>
                 <input
@@ -205,14 +205,14 @@ export const MetadataEditorModal: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
               {/* Artist */}
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <User className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>الفنان (Artist)</span>
                 </label>
                 <input
@@ -220,28 +220,28 @@ export const MetadataEditorModal: React.FC = () => {
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
                   required
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
               {/* Album */}
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
-                  <Disc className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <Disc className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>الألبوم (Album)</span>
                 </label>
                 <input
                   type="text"
                   value={album}
                   onChange={(e) => setAlbum(e.target.value)}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
               {/* Genre */}
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <Tag className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>النمط الموسيقي (Genre)</span>
                 </label>
                 <input
@@ -249,14 +249,14 @@ export const MetadataEditorModal: React.FC = () => {
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
                   placeholder="Pop, Hip-Hop, R&B..."
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
               {/* Year */}
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>سنة الإصدار (Year)</span>
                 </label>
                 <input
@@ -264,7 +264,7 @@ export const MetadataEditorModal: React.FC = () => {
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
                   placeholder="2024"
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -277,7 +277,7 @@ export const MetadataEditorModal: React.FC = () => {
                     value={bpm}
                     onChange={(e) => setBpm(e.target.value)}
                     placeholder="128"
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors"
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -287,7 +287,7 @@ export const MetadataEditorModal: React.FC = () => {
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
                     placeholder="8A, 8B"
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#1DB954] transition-colors uppercase"
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors uppercase"
                   />
                 </div>
               </div>
@@ -298,7 +298,7 @@ export const MetadataEditorModal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setMetadataEditorModal(false)}
-                className="px-4 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-bold text-white transition-colors"
+                className="px-4 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-bold text-white transition-colors cursor-pointer"
               >
                 إلغاء
               </button>
@@ -306,7 +306,7 @@ export const MetadataEditorModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2.5 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs flex items-center gap-2 transition-all shadow-lg shadow-[#1DB954]/25"
+                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs flex items-center gap-2 transition-all shadow-lg shadow-[#FA243C]/25 cursor-pointer hover:scale-105 active:scale-95"
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>حفظ التعديلات في OPFS</span>

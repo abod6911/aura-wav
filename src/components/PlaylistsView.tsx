@@ -110,8 +110,8 @@ export const PlaylistsView: React.FC = () => {
               return (
                 <div key={track.id} className="relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
                   {/* Underneath Swipe Action Panel */}
-                  <div className="absolute inset-y-0 right-0 w-32 sm:w-36 bg-[#1DB954] rounded-2xl flex items-center justify-center gap-2 text-black font-black text-xs px-3 shadow-inner pointer-events-none">
-                    <ListPlus className="w-4 h-4 text-black stroke-[2.5]" />
+                  <div className="absolute inset-y-0 right-0 w-32 sm:w-36 bg-gradient-to-r from-[#FA243C] to-[#FF375F] rounded-2xl flex items-center justify-center gap-2 text-white font-black text-xs px-3 shadow-inner pointer-events-none">
+                    <ListPlus className="w-4 h-4 text-white stroke-[2.5]" />
                     <span>الأغنية التالية</span>
                   </div>
 
@@ -224,7 +224,7 @@ export const PlaylistsView: React.FC = () => {
 
         <button
           onClick={() => setIsCreating(!isCreating)}
-          className="px-5 py-2.5 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs flex items-center gap-2 transition-all shadow-lg cursor-pointer"
+          className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-[0_4px_16px_rgba(250,36,60,0.35)] active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>قائمة جديدة</span>
@@ -235,20 +235,20 @@ export const PlaylistsView: React.FC = () => {
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="p-4 rounded-2xl bg-white/[0.04] border border-[#1DB954]/30 flex items-center gap-3 animate-fadeIn"
+          className="p-4 rounded-[22px] apple-glass-card border border-[var(--apple-rose)]/30 flex items-center gap-3 animate-fadeIn"
         >
           <input
             type="text"
             placeholder="اسم قائمة التشغيل (مثال: أغاني الخط السريع، ليلية...)"
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#1DB954]"
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--apple-rose)] transition-colors"
             autoFocus
           />
-          <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black text-xs font-extrabold transition-all shadow-md shadow-[#1DB954]/30 cursor-pointer">
+          <button type="submit" className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white text-xs font-semibold transition-all shadow-md shadow-[var(--apple-red)]/30 active:scale-95 cursor-pointer">
             إنشاء
           </button>
-          <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2.5 rounded-xl bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer">
+          <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2.5 rounded-full bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer transition-colors">
             إلغاء
           </button>
         </form>
@@ -261,10 +261,10 @@ export const PlaylistsView: React.FC = () => {
             <div
               key={pl.id}
               onClick={() => setSelectedPlaylistId(pl.id)}
-              className="group p-4 rounded-3xl bg-white/[0.03] border border-white/[0.08] hover:border-[#1DB954]/40 hover:bg-white/[0.06] transition-all cursor-pointer space-y-3 shadow-xl"
+              className="group p-4 rounded-[24px] apple-glass-card border border-white/[0.08] hover:border-[var(--apple-rose)]/40 hover:shadow-[0_12px_32px_rgba(250,36,60,0.15)] transition-all cursor-pointer space-y-3"
             >
-              <div className="w-full aspect-square rounded-2xl bg-gradient-to-tr from-[#1DB954]/20 to-[#10B981]/10 border border-white/10 flex items-center justify-center group-hover:scale-[1.03] transition-transform">
-                <ListMusic className="w-10 h-10 text-[#1DB954] group-hover:scale-110 transition-transform" />
+              <div className="w-full aspect-square rounded-[18px] bg-gradient-to-tr from-[var(--apple-red)]/20 via-[var(--apple-rose)]/15 to-[var(--apple-violet)]/10 border border-white/10 flex items-center justify-center group-hover:scale-[1.03] transition-transform">
+                <ListMusic className="w-10 h-10 text-[var(--apple-rose)] group-hover:scale-110 transition-transform" />
               </div>
               <div>
                 <h4 className="font-bold text-white text-sm truncate">{pl.name}</h4>
@@ -274,7 +274,7 @@ export const PlaylistsView: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 space-y-3 bg-white/[0.02] border border-dashed border-white/10 rounded-3xl">
+        <div className="text-center py-20 space-y-3 apple-glass-card border border-dashed border-white/10 rounded-[28px]">
           <ListMusic className="w-12 h-12 mx-auto text-zinc-600" />
           <h4 className="text-base font-bold text-white">لا توجد قوائم تشغيل بعد</h4>
           <p className="text-xs text-zinc-500 max-w-sm mx-auto">

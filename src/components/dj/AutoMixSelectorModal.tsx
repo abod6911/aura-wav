@@ -86,23 +86,23 @@ export const AutoMixSelectorModal: React.FC = () => {
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
           style={{ touchAction: 'manipulation' }}
-          className="relative w-full max-w-lg bg-[#0d0d15]/95 border border-white/[0.12] rounded-t-3xl sm:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden p-5 sm:p-6 space-y-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
+          className="relative w-full max-w-lg apple-glass-card border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden p-5 sm:p-6 space-y-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-[#1DB954]/20 border border-[#1DB954]/40 flex items-center justify-center text-[#1DB954]">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 flex items-center justify-center text-[var(--apple-rose)]">
                 <Sliders className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                   <span>أنماط انتقال الـ AutoMix الذكي</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
-                    PRO DJ
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 font-mono">
+                    APPLE MIX
                   </span>
                 </h3>
                 <p className="text-[11px] text-zinc-400 font-medium">
-                  اختر الطريقة التي تفضل أن تنتقل بها الأغاني بين بعضها البعض
+                  اختر الطريقة التي تفضل أن تنتقل بها الأغاني بسلاسة
                 </p>
               </div>
             </div>
@@ -116,7 +116,7 @@ export const AutoMixSelectorModal: React.FC = () => {
           </div>
 
           {/* Master Enable / Disable Toggle */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+          <div className="flex items-center justify-between p-3.5 rounded-[22px] bg-white/[0.04] border border-white/[0.08]">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300">
                 <SlidersHorizontal className="w-5 h-5" />
@@ -130,7 +130,7 @@ export const AutoMixSelectorModal: React.FC = () => {
             <button
               onClick={() => setAutoMix(!automixEnabled)}
               className={`relative w-12 h-6.5 rounded-full transition-colors p-0.5 cursor-pointer ${
-                automixEnabled ? 'bg-[#1DB954]' : 'bg-white/20'
+                automixEnabled ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)]' : 'bg-white/20'
               }`}
             >
               <div
@@ -143,10 +143,10 @@ export const AutoMixSelectorModal: React.FC = () => {
 
           {/* Transition Duration Slider */}
           {automixEnabled && (
-            <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+            <div className="p-3.5 rounded-[22px] bg-white/[0.03] border border-white/[0.06] space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300 font-semibold">مدة الانتقال والخلط:</span>
-                <span className="text-[#1ed760] font-mono font-bold bg-[#1DB954]/15 px-2 py-0.5 rounded-lg border border-[#1DB954]/30">
+                <span className="text-[var(--apple-rose)] font-mono font-bold bg-[var(--apple-rose)]/15 px-2 py-0.5 rounded-lg border border-[var(--apple-rose)]/30">
                   {automixDuration} ثوانٍ
                 </span>
               </div>
@@ -157,7 +157,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 step={1}
                 value={automixDuration}
                 onChange={(e) => setAutoMix(true, Number(e.target.value))}
-                className="w-full accent-[#1DB954] cursor-pointer"
+                className="w-full accent-[var(--apple-rose)] cursor-pointer"
               />
               <div className="flex justify-between text-[10px] text-zinc-500 font-mono">
                 <span>سريع (2s)</span>
@@ -177,14 +177,14 @@ export const AutoMixSelectorModal: React.FC = () => {
                   key={opt.id}
                   onClick={() => handleSelectStyle(opt.id)}
                   style={{ touchAction: 'manipulation' }}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-start justify-between gap-3 ${
+                  className={`p-3.5 rounded-[20px] border transition-all cursor-pointer select-none flex items-start justify-between gap-3 ${
                     isSelected
-                      ? 'bg-[#1DB954]/15 border-[#1DB954]/40 shadow-lg shadow-[#1DB954]/10'
+                      ? 'bg-[var(--apple-rose)]/15 border-[var(--apple-rose)]/40 shadow-lg shadow-[var(--apple-rose)]/10'
                       : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.08]'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? 'bg-[#1DB954]/20 text-white' : 'bg-white/[0.06] text-zinc-400'}`}>
+                    <div className={`p-2 rounded-xl mt-0.5 ${isSelected ? 'bg-gradient-to-tr from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-sm' : 'bg-white/[0.06] text-zinc-400'}`}>
                       <OptIcon className="w-5 h-5" />
                     </div>
                     <div className="space-y-1">
@@ -209,7 +209,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                   <div
                     className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-1 transition-colors ${
                       isSelected
-                        ? 'bg-[#1DB954] border-[#1DB954] text-white'
+                        ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] border-transparent text-white shadow-sm'
                         : 'border-white/20 text-transparent'
                     }`}
                   >
@@ -233,7 +233,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 store.nextTrack(false);
                 setAutoMixModalOpen(false);
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-[#1DB954] to-[#10B981] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#1DB954]/25 active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
               <span>تجربة انتقال فوري بهذا النمط الآن</span>

@@ -65,98 +65,122 @@ export const getDB = () => {
 
 // Track Operations
 export async function saveTracks(tracks: Track[], blobs?: { id: string; blob: Blob }[]): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['tracks', 'audioBlobs'], 'readwrite');
-  const trackStore = tx.objectStore('tracks');
-  const blobStore = tx.objectStore('audioBlobs');
+  try {
+    const db = await getDB();
+    const tx = db.transaction(['tracks', 'audioBlobs'], 'readwrite');
+    const trackStore = tx.objectStore('tracks');
+    const blobStore = tx.objectStore('audioBlobs');
 
-  for (const track of tracks) {
-    // Strip file and blob from track object before storing in tracks table
-    const { file, blob, ...serializableTrack } = track;
-    await trackStore.put(serializableTrack as Track);
-  }
-
-  if (blobs && blobs.length > 0) {
-    for (const item of blobs) {
-      await blobStore.put(item);
+    for (const track of tracks) {
+      const { file, blob, ...serializableTrack } = track;
+      await trackStore.put(serializableTrack as Track);
     }
-  }
 
-  await tx.done;
+    if (blobs && blobs.length > 0) {
+      for (const item of blobs) {
+        await blobStore.put(item);
+      }
+    }
+
+    await tx.done;
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
 
 export async function getAllTracks(): Promise<Track[]> {
-  const db = await getDB();
-  return db.getAll('tracks');
+  try {
+    const db = await getDB();
+    return await db.getAll('tracks');
+  } catch (err) { console.warn('[IndexedDB]', err); return []; }
 }
 
 export async function getAudioBlob(id: string): Promise<Blob | null> {
-  const db = await getDB();
-  const result = await db.get('audioBlobs', id);
-  return result ? result.blob : null;
+  try {
+    const db = await getDB();
+    const result = await db.get('audioBlobs', id);
+    return result ? result.blob : null;
+  } catch (err) { console.warn('[IndexedDB]', err); return null; }
 }
 
 export async function deleteTrack(id: string): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['tracks', 'audioBlobs', 'favorites'], 'readwrite');
-  await tx.objectStore('tracks').delete(id);
-  await tx.objectStore('audioBlobs').delete(id);
-  await tx.objectStore('favorites').delete(id);
-  await tx.done;
+  try {
+    const db = await getDB();
+    const tx = db.transaction(['tracks', 'audioBlobs', 'favorites'], 'readwrite');
+    await tx.objectStore('tracks').delete(id);
+    await tx.objectStore('audioBlobs').delete(id);
+    await tx.objectStore('favorites').delete(id);
+    await tx.done;
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
 
 export async function clearAllTracks(): Promise<void> {
-  const db = await getDB();
-  const tx = db.transaction(['tracks', 'audioBlobs', 'favorites'], 'readwrite');
-  await tx.objectStore('tracks').clear();
-  await tx.objectStore('audioBlobs').clear();
-  await tx.objectStore('favorites').clear();
-  await tx.done;
+  try {
+    const db = await getDB();
+    const tx = db.transaction(['tracks', 'audioBlobs', 'favorites'], 'readwrite');
+    await tx.objectStore('tracks').clear();
+    await tx.objectStore('audioBlobs').clear();
+    await tx.objectStore('favorites').clear();
+    await tx.done;
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
 
 // Favorites Operations
 export async function getFavoriteIds(): Promise<string[]> {
-  const db = await getDB();
-  const allFavs = await db.getAll('favorites');
-  return allFavs.map((f) => f.id);
+  try {
+    const db = await getDB();
+    const allFavs = await db.getAll('favorites');
+    return allFavs.map((f) => f.id);
+  } catch (err) { console.warn('[IndexedDB]', err); return []; }
 }
 
 export async function toggleFavorite(id: string): Promise<boolean> {
-  const db = await getDB();
-  const existing = await db.get('favorites', id);
-  if (existing) {
-    await db.delete('favorites', id);
-    return false;
-  } else {
-    await db.put('favorites', { id, addedAt: Date.now() });
-    return true;
-  }
+  try {
+    const db = await getDB();
+    const existing = await db.get('favorites', id);
+    if (existing) {
+      await db.delete('favorites', id);
+      return false;
+    } else {
+      await db.put('favorites', { id, addedAt: Date.now() });
+      return true;
+    }
+  } catch (err) { console.warn('[IndexedDB]', err); return false; }
 }
 
 // Playlists
 export async function getAllPlaylists(): Promise<Playlist[]> {
-  const db = await getDB();
-  return db.getAll('playlists');
+  try {
+    const db = await getDB();
+    return await db.getAll('playlists');
+  } catch (err) { console.warn('[IndexedDB]', err); return []; }
 }
 
 export async function savePlaylist(playlist: Playlist): Promise<void> {
-  const db = await getDB();
-  await db.put('playlists', playlist);
+  try {
+    const db = await getDB();
+    await db.put('playlists', playlist);
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
 
 export async function deletePlaylist(id: string): Promise<void> {
-  const db = await getDB();
-  await db.delete('playlists', id);
+  try {
+    const db = await getDB();
+    await db.delete('playlists', id);
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
 
 // Settings
 export async function getSetting<T>(key: string, defaultValue: T): Promise<T> {
-  const db = await getDB();
-  const val = await db.get('settings', key);
-  return val !== undefined ? val : defaultValue;
+  try {
+    const db = await getDB();
+    const val = await db.get('settings', key);
+    return val !== undefined ? val : defaultValue;
+  } catch (err) { console.warn('[IndexedDB]', err); return defaultValue; }
 }
 
 export async function saveSetting(key: string, val: any): Promise<void> {
-  const db = await getDB();
-  await db.put('settings', val, key);
+  try {
+    const db = await getDB();
+    await db.put('settings', val, key);
+  } catch (err) { console.warn('[IndexedDB]', err); return; }
 }
+

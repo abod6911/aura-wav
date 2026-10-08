@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #08080c;
+  --app-bg: #07070a;
   --accent-color: 250, 36, 60;
-  --spotify-green: #1DB954;
-  --spotify-green-hover: #1ed760;
-  --mesh-color-1: rgba(250, 36, 60, 0.22);
-  --mesh-color-2: rgba(255, 55, 95, 0.15);
-  --mesh-color-3: rgba(8, 8, 12, 0.95);
+  --apple-red: #FA243C;
+  --apple-rose: #FF375F;
+  --apple-violet: #7D12FF;
+  --mesh-color-1: rgba(250, 36, 60, 0.28);
+  --mesh-color-2: rgba(255, 55, 95, 0.18);
+  --mesh-color-3: rgba(125, 18, 255, 0.15);
 }
 
 /* 2% Vinyl Film Grain Noise Overlay */
@@ -26,12 +27,15 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--app-bg);
-  color: #f4f4f5;
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #f4f4f7;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Readex Pro", "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -0.015em;
   user-select: none;
   -webkit-user-select: none;
   overflow-x: hidden;
   height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Tabular Numerals for strictly aligned music clocks and counters */
@@ -53,67 +57,82 @@ button, a, input, select, [role="button"], .cursor-pointer {
   flex-direction: column;
 }
 
-/* Obsidian Glass Layer 1 (Cards, Rows, Modals) */
+/* Apple Music Liquid Glass Materials */
+.apple-glass-card,
 .glass-obsidian-1,
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.14),
+    0 16px 36px 0 rgba(0, 0, 0, 0.45);
 }
 
-/* Obsidian Glass Layer 2 (Floating Docks, Bottom Sheets, Top Floating Bars) */
+/* Apple iOS 18 / macOS Floating Acrylic Dock */
+.apple-glass-dock,
 .glass-obsidian-2,
 .glass-ios-dock {
-  background: rgba(18, 18, 26, 0.65);
-  backdrop-filter: blur(40px) saturate(190%);
-  -webkit-backdrop-filter: blur(40px) saturate(190%);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85);
-}
-
-/* Apple Music iOS Liquid Glassmorphism Primitives */
-.glass-ios-card {
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.glass-ios-card-hover {
-  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-}
-.glass-ios-card-hover:active {
-  transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.glass-ios-dock {
-  background: rgba(18, 18, 24, 0.88);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.75);
-}
-
-.glass-ios-sheet {
-  background: rgba(12, 12, 16, 0.94);
+  background: rgba(14, 14, 20, 0.78);
   backdrop-filter: blur(50px) saturate(210%);
   -webkit-backdrop-filter: blur(50px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
+    0 24px 60px rgba(0, 0, 0, 0.85);
 }
 
-.ambient-glow-mesh {
-  background: radial-gradient(circle at 50% 20%, var(--mesh-color-1, rgba(250, 36, 60, 0.25)) 0%, rgba(12, 12, 16, 0.95) 75%);
+/* Apple Translucent Glass Pill */
+.apple-glass-pill {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.2);
+}
+.apple-glass-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.apple-glass-pill:active {
+  transform: scale(0.96);
+}
+
+/* Apple Music Lossless / Spatial / Dolby Capsule Badge */
+.apple-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+/* Apple Tactile Spring Curve */
+.apple-spring {
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+              opacity 0.2s ease,
+              background-color 0.2s ease;
+}
+.apple-spring:active {
+  transform: scale(0.96);
 }
 
 /* Typography pairing for Arabic & Latin */
 [dir="rtl"] {
-  font-family: 'Readex Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Readex Pro", "SF Pro Arabic", "Tajawal", sans-serif;
   letter-spacing: 0;
 }
 [dir="ltr"] {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Plus Jakarta Sans", sans-serif;
 }
 
 .glass-panel-hover {
@@ -385,29 +404,31 @@ input[type=range]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 20px rgba(250, 36, 60, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 
-/* Spotify Signature Green Play Button */
+/* Apple Signature Play Button */
 .spotify-play-btn {
-  background-color: #1DB954;
-  color: #000000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(29, 185, 84, 0.4);
+  background: linear-gradient(135deg, #FA243C 0%, #FF375F 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(250, 36, 60, 0.45);
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background-color 0.2s ease,
+              opacity 0.2s ease,
               box-shadow 0.2s ease;
 }
 .spotify-play-btn:hover {
-  background-color: #1ed760;
+  background: linear-gradient(135deg, #FF375F 0%, #FA243C 100%);
   transform: scale(1.06);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(29, 185, 84, 0.6);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(250, 36, 60, 0.65);
 }
 .spotify-play-btn:active {
   transform: scale(0.94);
 }
 
-/* Spotify Card Surface */
+/* Apple Card Surface */
 .spotify-card {
-  background-color: #181818;
-  border-radius: 8px;
-  transition: background-color 0.25s ease, transform 0.25s ease;
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  transition: background-color 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 .spotify-card:hover {
   background-color: #282828;

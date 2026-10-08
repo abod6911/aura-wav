@@ -22,27 +22,62 @@ import {
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Track } from '../../types';
 
+const CarPlayScrubber: React.FC = () => {
+  const currentTime = usePlayerStore((s) => s.currentTime);
+  const duration = usePlayerStore((s) => s.duration);
+  const seek = usePlayerStore((s) => s.seek);
+
+  const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || seconds < 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  return (
+    <div className="w-full mt-3 landscape:mt-2 max-w-sm px-2">
+      <div
+        className="relative h-3.5 bg-white/15 rounded-full overflow-hidden cursor-pointer touch-none"
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+          seek(ratio * duration);
+        }}
+      >
+        <div
+          className="h-full bg-gradient-to-r from-[#FA243C] to-rose-400 rounded-full transition-all duration-100"
+          style={{
+            width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+          }}
+        />
+      </div>
+      <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mt-1.5 font-bold">
+        <span>{formatTime(currentTime)}</span>
+        <span>{formatTime(duration)}</span>
+      </div>
+    </div>
+  );
+};
+
 export const CarPlayMode: React.FC = () => {
-  const {
-    currentTrack,
-    isPlaying,
-    currentTime,
-    duration,
-    togglePlayPause,
-    nextTrack,
-    previousTrack,
-    seek,
-    isCarModeOpen,
-    setCarModeOpen,
-    favorites,
-    toggleFavorite,
-    shuffle,
-    toggleShuffle,
-    repeatMode,
-    cycleRepeat,
-    playTrack,
-    tracks,
-  } = usePlayerStore();
+  const currentTrack = usePlayerStore(s => s.currentTrack);
+  const isPlaying = usePlayerStore(s => s.isPlaying);
+  const duration = usePlayerStore(s => s.duration);
+  const togglePlayPause = usePlayerStore(s => s.togglePlayPause);
+  const nextTrack = usePlayerStore(s => s.nextTrack);
+  const previousTrack = usePlayerStore(s => s.previousTrack);
+  const seek = usePlayerStore(s => s.seek);
+  const isCarModeOpen = usePlayerStore(s => s.isCarModeOpen);
+  const setCarModeOpen = usePlayerStore(s => s.setCarModeOpen);
+  const favorites = usePlayerStore(s => s.favorites);
+  const toggleFavorite = usePlayerStore(s => s.toggleFavorite);
+  const shuffle = usePlayerStore(s => s.shuffle);
+  const toggleShuffle = usePlayerStore(s => s.toggleShuffle);
+  const repeatMode = usePlayerStore(s => s.repeatMode);
+  const cycleRepeat = usePlayerStore(s => s.cycleRepeat);
+  const playTrack = usePlayerStore(s => s.playTrack);
+  const tracks = usePlayerStore(s => s.tracks);
 
   const [currentTimeFormatted, setCurrentTimeFormatted] = useState('');
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -316,36 +351,14 @@ export const CarPlayMode: React.FC = () => {
               </div>
             </div>
 
-            {/* In-Car Scrubber */}
-            <div className="w-full mt-3 landscape:mt-2 max-w-sm px-2">
-              <div
-                className="relative h-3.5 bg-white/15 rounded-full overflow-hidden cursor-pointer touch-none"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickX = e.clientX - rect.left;
-                  const ratio = Math.max(0, Math.min(1, clickX / rect.width));
-                  seek(ratio * duration);
-                }}
-              >
-                <div
-                  className="h-full bg-gradient-to-r from-[#FA243C] to-rose-400 rounded-full transition-all duration-100"
-                  style={{
-                    width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mt-1.5 font-bold">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
+            <CarPlayScrubber />
 
             {/* Oversized Transport Controls (Strictly LTR) */}
             <div className="flex items-center justify-center gap-3 sm:gap-4 landscape:gap-2.5 mt-4 landscape:mt-3 w-full max-w-md" dir="ltr">
               {/* Skip Back 15s */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => seek(Math.max(0, currentTime - 15))}
+                onClick={() => seek(Math.max(0, usePlayerStore.getState().currentTime - 15))}
                 className="w-12 h-12 sm:w-13 sm:h-13 landscape:w-11 landscape:h-11 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
                 title="ترجيع 15 ثانية"
               >
@@ -389,7 +402,7 @@ export const CarPlayMode: React.FC = () => {
               {/* Skip Forward 15s */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
-                onClick={() => seek(Math.min(duration, currentTime + 15))}
+                onClick={() => seek(Math.min(duration, usePlayerStore.getState().currentTime + 15))}
                 className="w-12 h-12 sm:w-13 sm:h-13 landscape:w-11 landscape:h-11 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
                 title="تقديم 15 ثانية"
               >

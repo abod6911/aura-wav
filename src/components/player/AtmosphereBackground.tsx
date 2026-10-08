@@ -57,6 +57,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
   opacity = 0.85,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animIdRef = useRef<number>(0);
 
   // Target and current interpolated colors
   const targetColorA = useRef<[number, number, number]>(hexToRgb(primaryColor));
@@ -121,7 +122,6 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
     window.addEventListener('resize', resize);
     resize();
 
-    let animId: number;
     const startTime = performance.now();
     let isRunning = typeof document === 'undefined' ? true : !document.hidden;
 
@@ -142,21 +142,25 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
       gl.uniform1f(opacityLoc, opacity);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-      animId = requestAnimationFrame(render);
+      
+      cancelAnimationFrame(animIdRef.current);
+      animIdRef.current = requestAnimationFrame(render);
     };
 
     if (isRunning) {
-      animId = requestAnimationFrame(render);
+      cancelAnimationFrame(animIdRef.current);
+      animIdRef.current = requestAnimationFrame(render);
     }
 
     const handleVisibility = () => {
       if (typeof document !== 'undefined' && document.hidden) {
         isRunning = false;
-        cancelAnimationFrame(animId);
+        cancelAnimationFrame(animIdRef.current);
       } else {
         if (!isRunning) {
           isRunning = true;
-          animId = requestAnimationFrame(render);
+          cancelAnimationFrame(animIdRef.current);
+          animIdRef.current = requestAnimationFrame(render);
         }
       }
     };
@@ -170,7 +174,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', handleVisibility);
       }
-      cancelAnimationFrame(animId);
+      cancelAnimationFrame(animIdRef.current);
       gl.deleteProgram(program);
       gl.deleteBuffer(buffer);
     };

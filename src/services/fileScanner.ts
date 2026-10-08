@@ -183,7 +183,7 @@ export async function processAudioFiles(
 
           const palette = artworkUrl && !artworkUrl.startsWith('data:image/svg')
             ? await extractPaletteFromImage(artworkUrl)
-            : { primary: '#1DB954', secondary: '#10B981' };
+            : { primary: '#FA243C', secondary: '#FF375F' };
 
           // Use file.slice() to create a clean Blob without duplicating full audio binary in RAM
           const pureAudioBlob = file.slice(0, file.size, file.type || 'audio/mpeg');

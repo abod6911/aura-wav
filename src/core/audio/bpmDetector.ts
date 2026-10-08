@@ -255,8 +255,8 @@ export function checkHarmonicCompatibility(keyA?: string, keyB?: string): Harmon
       score: 'energy_shift',
       labelAr: isEnergyUp ? 'رفع طاقة (+1 Energy)' : 'تهدئة إيقاع (-1 Energy)',
       labelEn: isEnergyUp ? 'Energy Boost' : 'Energy Drop',
-      badgeBg: 'bg-[#1DB954]/20 border-[#1DB954]/40',
-      badgeText: 'text-[#1ed760]',
+      badgeBg: 'bg-[var(--apple-rose)]/20 border-[var(--apple-rose)]/40',
+      badgeText: 'text-[var(--apple-rose)]',
     };
   }
 

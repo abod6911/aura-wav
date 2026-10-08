@@ -99,6 +99,7 @@ export async function saveAudioFileToStorage(
 ): Promise<'opfs' | 'indexeddb'> {
   const opfsDir = await getOPFSDirectory();
 
+  let opfsSuccess = false;
   if (opfsDir) {
     try {
       const sanitizedId = trackId.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -106,24 +107,28 @@ export async function saveAudioFileToStorage(
       const writable = await (fileHandle as any).createWritable();
       await writable.write(blobOrFile);
       await writable.close();
-      notifyStorageChange();
-      return 'opfs';
+      opfsSuccess = true;
     } catch (opfsErr) {
       console.warn(`[StorageManager] OPFS write failed for ${trackId}, falling back to IndexedDB:`, opfsErr);
     }
   }
 
-  // Fallback: Atomic write into Dexie & IndexedDB audioBlobs
+  // Dual-persist: Always record in IndexedDB / Dexie so audioBlobs keys are tracked by the store on restart
   try {
     await dexieDB.audioBlobs.put({ id: trackId, blob: blobOrFile });
   } catch {}
 
-  const db = await getDB();
-  const tx = db.transaction('audioBlobs', 'readwrite');
-  await tx.store.put({ id: trackId, blob: blobOrFile });
-  await tx.done;
+  try {
+    const db = await getDB();
+    const tx = db.transaction('audioBlobs', 'readwrite');
+    await tx.store.put({ id: trackId, blob: blobOrFile });
+    await tx.done;
+  } catch (idbErr) {
+    console.warn(`[StorageManager] IndexedDB save error for ${trackId}:`, idbErr);
+  }
+
   notifyStorageChange();
-  return 'indexeddb';
+  return opfsSuccess ? 'opfs' : 'indexeddb';
 }
 
 /**

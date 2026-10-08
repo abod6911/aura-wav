@@ -19,28 +19,84 @@ import {
   MicOff,
   Flame,
   Waves,
+  CheckCircle2,
+  Download,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const MiniProgressBar = () => {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const duration = usePlayerStore((state) => state.duration);
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+  return (
+    <div className="absolute top-0 left-3 right-3 h-[2px] bg-white/10 rounded-full overflow-hidden">
+      <div
+        className="bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] h-full rounded-full"
+        style={{ width: `${progressPercent}%` }}
+      />
+    </div>
+  );
+};
+
+const ScrubberProgress = () => {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const duration = usePlayerStore((state) => state.duration);
+  const seek = usePlayerStore((state) => state.seek);
+  return (
+    <TimelineSlider
+      currentTime={currentTime}
+      duration={duration}
+      onSeek={seek}
+      showTimestamps={true}
+    />
+  );
+};
+
+const CrossfadeBadge = () => {
+  const currentTime = usePlayerStore((state) => state.currentTime);
+  const duration = usePlayerStore((state) => state.duration);
+  const automixEnabled = usePlayerStore((state) => state.automixEnabled);
+  const automixDuration = usePlayerStore((state) => state.automixDuration);
+  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
+  const automixStyle = usePlayerStore((state) => state.automixStyle);
+
+  const isCrossfadingSoon =
+    isAutoMixingLive ||
+    (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
+
+  if (!(automixEnabled && isCrossfadingSoon)) return null;
+
+  return (
+    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
+      <span>
+        {automixStyle === 'vinyl_brake'
+          ? 'AutoMix: فرملة فينيل'
+          : automixStyle === 'echo_out'
+          ? 'AutoMix: صدى متلاشٍ'
+          : automixStyle === 'filter_sweep'
+          ? 'AutoMix: فلتر كلوب'
+          : 'AutoMix: تلاشٍ انسيابي'}
+      </span>
+    </div>
+  );
+};
 
 export const MobilePlayerSheet: React.FC = () => {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const currentTime = usePlayerStore((state) => state.currentTime);
-  const duration = usePlayerStore((state) => state.duration);
   const shuffle = usePlayerStore((state) => state.shuffle);
   const repeatMode = usePlayerStore((state) => state.repeatMode);
-  const automixEnabled = usePlayerStore((state) => state.automixEnabled);
-  const automixDuration = usePlayerStore((state) => state.automixDuration);
 
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const nextTrack = usePlayerStore((state) => state.nextTrack);
   const previousTrack = usePlayerStore((state) => state.previousTrack);
-  const seek = usePlayerStore((state) => state.seek);
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
 
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
 
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
@@ -48,7 +104,6 @@ export const MobilePlayerSheet: React.FC = () => {
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
   const automixStyle = usePlayerStore((state) => state.automixStyle);
-  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
 
   // Pro DSP states
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
@@ -61,10 +116,6 @@ export const MobilePlayerSheet: React.FC = () => {
   if (!currentTrack) return null;
 
   const isFav = favorites.includes(currentTrack.id);
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-  const isCrossfadingSoon =
-    isAutoMixingLive ||
-    (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
 
   return (
     <>
@@ -75,12 +126,7 @@ export const MobilePlayerSheet: React.FC = () => {
           className="md:hidden fixed bottom-[72px] left-3 right-3 z-40 bg-[#181822]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-2.5 shadow-2xl flex items-center gap-3 cursor-pointer select-none"
         >
           {/* Top Progress Line */}
-          <div className="absolute top-0 left-3 right-3 h-[2px] bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="bg-[#1DB954] h-full rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+          <MiniProgressBar />
 
           <img
             src={currentTrack.artworkUrl || '/logo.svg'}
@@ -126,7 +172,7 @@ export const MobilePlayerSheet: React.FC = () => {
           {/* Dynamic Background Blur */}
           {currentTrack.artworkUrl && (
             <div
-              className="absolute inset-0 -z-10 opacity-30 filter blur-[90px] bg-cover bg-center scale-125"
+              className="absolute inset-0 -z-10 opacity-30 filter blur-[40px] bg-cover bg-center scale-125"
               style={{ backgroundImage: `url(${currentTrack.artworkUrl})` }}
             />
           )}
@@ -141,7 +187,7 @@ export const MobilePlayerSheet: React.FC = () => {
             </button>
 
             <div className="text-center">
-              <span className="text-[10px] uppercase tracking-wider text-[#1DB954] font-bold">
+              <span className="text-[10px] uppercase tracking-wider text-[var(--apple-rose)] font-bold">
                 مشغل AURA.WAV • APPLE MUSIC
               </span>
               <h5 className="text-xs text-aura-textSecondary truncate max-w-[200px]">
@@ -152,7 +198,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={() => setVisualizerMode(!visualizerMode)}
               className={`p-2 rounded-full transition-colors ${
-                visualizerMode ? 'bg-[#1DB954] text-white shadow-md shadow-[#1DB954]/30' : 'bg-white/10 text-white/70'
+                visualizerMode ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md shadow-[var(--apple-red)]/30' : 'bg-white/10 text-white/70'
               }`}
               title="محلل الصوت"
             >
@@ -163,9 +209,9 @@ export const MobilePlayerSheet: React.FC = () => {
           {/* Center: Large Draggable Artwork with Fluid Gestures or Visualizer */}
           <div className="flex-1 flex flex-col items-center justify-center my-3 relative">
             {visualizerMode ? (
-              <div className="w-full max-w-xs h-64 glass-panel rounded-3xl p-4 flex flex-col justify-center items-center border border-white/15">
+              <div className="w-full max-w-xs h-64 apple-glass-card rounded-3xl p-4 flex flex-col justify-center items-center border border-white/15">
                 <AudioVisualizer height={160} bars={32} mode="bars" />
-                <span className="text-xs text-[#1ed760] font-mono mt-4">Real-Time Waveform</span>
+                <span className="text-xs text-[var(--apple-rose)] font-mono mt-4">Real-Time Waveform</span>
               </div>
             ) : (
               <div className="flex flex-col items-center space-y-2">
@@ -192,19 +238,7 @@ export const MobilePlayerSheet: React.FC = () => {
                   />
 
                   {/* AutoMix In-Flight Badge */}
-                  {automixEnabled && isCrossfadingSoon && (
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#1DB954]/95 text-white text-[10px] font-bold shadow-lg animate-pulse border border-white/20">
-                      <span>
-                        {automixStyle === 'vinyl_brake'
-                          ? 'AutoMix: فرملة فينيل'
-                          : automixStyle === 'echo_out'
-                          ? 'AutoMix: صدى متلاشٍ'
-                          : automixStyle === 'filter_sweep'
-                          ? 'AutoMix: فلتر كلوب'
-                          : 'AutoMix: تلاشٍ انسيابي'}
-                      </span>
-                    </div>
-                  )}
+                  <CrossfadeBadge />
 
                   {/* Active DSP Status Badges */}
                   <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
@@ -238,29 +272,47 @@ export const MobilePlayerSheet: React.FC = () => {
           {/* Track Details & Favorite */}
           <div className="flex items-center justify-between mb-2">
             <div className="min-w-0 flex-1 pr-2">
-              <h3 className="text-xl font-black text-white truncate">{currentTrack.title}</h3>
-              <p className="text-sm font-medium text-aura-textSecondary truncate">{currentTrack.artist}</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-black text-white truncate">{currentTrack.title}</h3>
+                {downloadedTrackIds.includes(currentTrack.id) && (
+                  <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>أوفلاين</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-sm font-medium text-aura-textSecondary truncate mt-0.5">{currentTrack.artist}</p>
             </div>
-            <button
-              onClick={() => toggleFavorite(currentTrack.id)}
-              className="p-2.5 rounded-full hover:bg-white/10 text-aura-muted hover:text-red-400"
-            >
-              <Heart
-                className={`w-6 h-6 ${
-                  isFav ? 'text-red-500 fill-red-500' : 'text-white/40'
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => downloadTrackForOffline(currentTrack.id)}
+                className={`p-2.5 rounded-full hover:bg-white/10 transition-colors ${
+                  downloadedTrackIds.includes(currentTrack.id) ? 'text-emerald-400' : 'text-white/40 hover:text-white'
                 }`}
-              />
-            </button>
+                title={downloadedTrackIds.includes(currentTrack.id) ? 'محفوظة أوفلاين ✓' : 'حفظ للاستماع بدون إنترنت'}
+              >
+                {downloadedTrackIds.includes(currentTrack.id) ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <Download className="w-5 h-5" />
+                )}
+              </button>
+              <button
+                onClick={() => toggleFavorite(currentTrack.id)}
+                className="p-2.5 rounded-full hover:bg-white/10 text-aura-muted hover:text-red-400"
+              >
+                <Heart
+                  className={`w-6 h-6 ${
+                    isFav ? 'text-red-500 fill-red-500' : 'text-white/40'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Scrubber Progress Slider */}
           <div className="mb-4">
-            <TimelineSlider
-              currentTime={currentTime}
-              duration={duration}
-              onSeek={seek}
-              showTimestamps={true}
-            />
+            <ScrubberProgress />
           </div>
 
           {/* Main Controls: Apple Music Style Big Center Play */}
@@ -268,7 +320,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={toggleShuffle}
               className={`p-2 transition-colors ${
-                shuffle ? 'text-[#1DB954]' : 'text-white/40'
+                shuffle ? 'text-[var(--apple-rose)]' : 'text-white/40'
               }`}
             >
               <Shuffle className="w-5 h-5" />
@@ -302,7 +354,7 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={cycleRepeat}
               className={`p-2 transition-colors ${
-                repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-white/40'
+                repeatMode !== 'off' ? 'text-[var(--apple-rose)]' : 'text-white/40'
               }`}
             >
               {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
@@ -318,7 +370,7 @@ export const MobilePlayerSheet: React.FC = () => {
               }}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Mic2 className="w-5 h-5 text-[#1DB954]" />
+              <Mic2 className="w-5 h-5 text-[var(--apple-rose)]" />
               <span>الكلمات</span>
             </button>
 
@@ -326,10 +378,10 @@ export const MobilePlayerSheet: React.FC = () => {
             <button
               onClick={() => setKaraokeMode(!karaokeMode)}
               className={`flex flex-col items-center gap-1 text-[11px] transition-colors ${
-                karaokeMode ? 'text-purple-400 font-bold' : 'text-aura-textSecondary hover:text-white'
+                karaokeMode ? 'text-[var(--apple-rose)] font-bold' : 'text-aura-textSecondary hover:text-white'
               }`}
             >
-              {karaokeMode ? <MicOff className="w-5 h-5 text-purple-400" /> : <Mic2 className="w-5 h-5" />}
+              {karaokeMode ? <MicOff className="w-5 h-5 text-[var(--apple-rose)]" /> : <Mic2 className="w-5 h-5" />}
               <span>{karaokeMode ? 'عزل الفوكال: ON' : 'كاريوكي'}</span>
             </button>
 
@@ -337,7 +389,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setEqualizerOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <Sliders className="w-5 h-5 text-[#10B981]" />
+              <Sliders className="w-5 h-5 text-white/80" />
               <span>المعادل & DSP</span>
             </button>
 
@@ -345,7 +397,7 @@ export const MobilePlayerSheet: React.FC = () => {
               onClick={() => setQueueOpen(true)}
               className="flex flex-col items-center gap-1 text-[11px] text-aura-textSecondary hover:text-white"
             >
-              <ListMusic className="w-5 h-5 text-[#1ed760]" />
+              <ListMusic className="w-5 h-5 text-[var(--apple-rose)]" />
               <span>الانتظار</span>
             </button>
           </div>

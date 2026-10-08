@@ -77,8 +77,8 @@ export const RightSidebar: React.FC = () => {
               <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
                 يعمل الآن
               </span>
-              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#282828] border border-white/5">
-                <div className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="flex items-center gap-3 p-2.5 rounded-2xl apple-glass-card border border-white/[0.08]">
+                <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0">
                   <img
                     src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
                     alt={currentTrack.title}
@@ -86,12 +86,12 @@ export const RightSidebar: React.FC = () => {
                   />
                   {isPlaying && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-ping" />
+                      <span className="w-2 h-2 rounded-full bg-[var(--apple-rose)] animate-ping" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-bold text-[#1DB954] truncate">
+                  <h5 className="text-xs font-bold text-[var(--apple-rose)] truncate">
                     {currentTrack.title}
                   </h5>
                   <p className="text-[11px] text-zinc-400 truncate mt-0.5">
@@ -100,12 +100,12 @@ export const RightSidebar: React.FC = () => {
                 </div>
                 <button
                   onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-1.5 text-zinc-400 hover:text-[#1DB954] transition-colors cursor-pointer"
+                  className="p-1.5 text-zinc-400 hover:text-[var(--apple-rose)] transition-colors cursor-pointer"
                 >
                   <Heart
                     className={`w-4 h-4 ${
                       isFavorite
-                        ? 'text-[#1DB954] fill-[#1DB954]'
+                        ? 'text-[var(--apple-rose)] fill-[var(--apple-rose)]'
                         : ''
                     }`}
                   />
@@ -122,7 +122,7 @@ export const RightSidebar: React.FC = () => {
                   <span className="text-[11px] font-bold text-white uppercase tracking-wider">
                     قائمة الانتظار المباشرة
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30">
+                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30">
                     {userQueue.length}/{MAX_USER_QUEUE}
                   </span>
                 </div>
@@ -138,7 +138,7 @@ export const RightSidebar: React.FC = () => {
               </div>
 
               {userQueue.length === 0 ? (
-                <div className="py-4 px-3 rounded-xl bg-white/[0.02] border border-dashed border-white/10 text-center">
+                <div className="py-4 px-3 rounded-2xl apple-glass-card border border-dashed border-white/10 text-center">
                   <p className="text-[11px] text-zinc-400">قائمة الانتظار المباشرة فارغة</p>
                   <p className="text-[9px] mt-0.5 text-zinc-600">اسحب أي أغنية لليسار لإضافتها هنا</p>
                 </div>
@@ -147,10 +147,10 @@ export const RightSidebar: React.FC = () => {
                   {userQueue.map((track, idx) => (
                     <div
                       key={`sidebar_user_${track.id}_${idx}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors cursor-pointer"
+                      className="group flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
-                      <span className="w-4 text-center text-[10px] font-bold text-[#1DB954] font-mono">
+                      <span className="w-4 text-center text-[10px] font-bold text-[var(--apple-rose)] font-mono">
                         {idx + 1}
                       </span>
 
@@ -253,7 +253,7 @@ export const RightSidebar: React.FC = () => {
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-white group-hover:text-[#1DB954] truncate transition-colors">
+                        <p className="text-xs font-medium text-white group-hover:text-[var(--apple-rose)] truncate transition-colors">
                           {track.title}
                         </p>
                         <p className="text-[10px] text-zinc-400 truncate">
@@ -290,7 +290,7 @@ export const RightSidebar: React.FC = () => {
           {currentTrack ? (
             <>
               {/* High-res Artwork */}
-              <div className="relative aspect-square w-full rounded-xl overflow-hidden shadow-2xl bg-[#242424] group">
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl bg-black/40 group border border-white/10">
                 <img
                   src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
                   alt={currentTrack.title}
@@ -310,12 +310,12 @@ export const RightSidebar: React.FC = () => {
                 </div>
                 <button
                   onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-1.5 text-zinc-400 hover:text-[#1DB954] transition-colors cursor-pointer"
+                  className="p-1.5 text-zinc-400 hover:text-[var(--apple-rose)] transition-colors cursor-pointer"
                 >
                   <Heart
                     className={`w-5 h-5 ${
                       isFavorite
-                        ? 'text-[#1DB954] fill-[#1DB954]'
+                        ? 'text-[var(--apple-rose)] fill-[var(--apple-rose)]'
                         : ''
                     }`}
                   />
@@ -323,10 +323,10 @@ export const RightSidebar: React.FC = () => {
               </div>
 
               {/* Audio Specs Badge */}
-              <div className="p-3 rounded-xl bg-[#242424] border border-white/5 space-y-2 text-xs">
+              <div className="p-3.5 rounded-2xl apple-glass-card border border-white/[0.08] space-y-2.5 text-xs">
                 <div className="flex items-center justify-between text-zinc-400">
                   <span className="flex items-center gap-1.5">
-                    <Disc className="w-3.5 h-3.5 text-[#1DB954]" />
+                    <Disc className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
                     الألبوم
                   </span>
                   <span className="text-white font-medium truncate max-w-[140px]">
@@ -335,11 +335,11 @@ export const RightSidebar: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-zinc-400">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#1DB954]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
                     جودة الصوت
                   </span>
-                  <span className="text-[#1DB954] font-bold text-[11px] bg-[#1DB954]/10 px-2 py-0.5 rounded-full">
-                    Lossless 320kbps
+                  <span className="text-[var(--apple-rose)] font-bold text-[11px] bg-[var(--apple-rose)]/10 border border-[var(--apple-rose)]/25 px-2.5 py-0.5 rounded-full font-mono">
+                    Apple Lossless 24-Bit
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-zinc-400">

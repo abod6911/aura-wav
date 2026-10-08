@@ -45,15 +45,17 @@ export const ChangeArtworkModal: React.FC = () => {
 
   const handleSelectCandidate = async (candidate: ArtworkCandidate) => {
     setIsApplying(true);
+    let newUrl: string | null = null;
     try {
       const res = await fetch(candidate.artworkUrl);
       if (!res.ok) throw new Error('Failed to download artwork');
       const blob = await res.blob();
-      const newUrl = URL.createObjectURL(blob);
+      newUrl = URL.createObjectURL(blob);
       await updateTrackArtwork(targetTrack.id, blob, newUrl);
       setChangeArtworkModal(false);
     } catch (err) {
       console.warn('Error applying candidate cover:', err);
+      if (newUrl) URL.revokeObjectURL(newUrl);
     } finally {
       setIsApplying(false);
     }
@@ -64,14 +66,16 @@ export const ChangeArtworkModal: React.FC = () => {
     if (!file) return;
 
     setIsApplying(true);
+    let newUrl: string | null = null;
     try {
       const arrayBuf = await file.arrayBuffer();
       const blob = new Blob([arrayBuf], { type: file.type || 'image/png' });
-      const newUrl = URL.createObjectURL(blob);
+      newUrl = URL.createObjectURL(blob);
       await updateTrackArtwork(targetTrack.id, blob, newUrl);
       setChangeArtworkModal(false);
     } catch (err) {
       console.warn('Error uploading custom artwork:', err);
+      if (newUrl) URL.revokeObjectURL(newUrl);
     } finally {
       setIsApplying(false);
     }
@@ -79,13 +83,15 @@ export const ChangeArtworkModal: React.FC = () => {
 
   const handleGenerateLuxuryCover = async () => {
     setIsApplying(true);
+    let newUrl: string | null = null;
     try {
       const blob = await generateLuxuryCanvasArtwork(targetTrack.title, targetTrack.artist);
-      const newUrl = URL.createObjectURL(blob);
+      newUrl = URL.createObjectURL(blob);
       await updateTrackArtwork(targetTrack.id, blob, newUrl);
       setChangeArtworkModal(false);
     } catch (err) {
       console.warn('Error generating luxury canvas artwork:', err);
+      if (newUrl) URL.revokeObjectURL(newUrl);
     } finally {
       setIsApplying(false);
     }
@@ -102,12 +108,12 @@ export const ChangeArtworkModal: React.FC = () => {
           className="w-full max-w-xl bg-[#09090e]/95 border border-white/[0.1] rounded-3xl p-5 sm:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 relative overflow-hidden my-auto"
         >
           {/* Top Ambient Glow */}
-          <div className="absolute top-0 right-1/3 w-72 h-72 bg-[#1DB954]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-1/3 w-72 h-72 bg-[var(--apple-rose)]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/25 text-[#1DB954]">
+              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 text-[var(--apple-rose)]">
                 <ImageIcon className="w-5 h-5" />
               </div>
               <div>
@@ -115,7 +121,7 @@ export const ChangeArtworkModal: React.FC = () => {
                   تغيير غلاف الأغنية والبحث أونلاين
                 </h2>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  اختر صورة أونلاين بدقة عالية أو ارفع صورة من جوالك
+                  اختر صورة أونلاين بدقة عالية (Apple Lossless Artwork) أو ارفع صورة
                 </p>
               </div>
             </div>
@@ -130,11 +136,11 @@ export const ChangeArtworkModal: React.FC = () => {
           </div>
 
           {/* Current Track Banner */}
-          <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-3.5 p-3 rounded-[22px] bg-white/[0.03] border border-white/[0.06]">
             <img
               src={targetTrack.artworkUrl || '/logo.svg'}
               alt={targetTrack.title}
-              className="w-14 h-14 rounded-xl object-cover border border-white/10 shadow-md flex-shrink-0"
+              className="w-14 h-14 rounded-2xl object-cover border border-white/10 shadow-md flex-shrink-0"
             />
             <div className="min-w-0 flex-1">
               <h4 className="text-sm font-bold text-white truncate">{targetTrack.title}</h4>
@@ -145,7 +151,7 @@ export const ChangeArtworkModal: React.FC = () => {
               onClick={handleGenerateLuxuryCover}
               disabled={isApplying}
               title="إنشاء غلاف استوديو فخم 512x512 PNG متوافق مع الداينمك آيلند"
-              className="px-3 py-1.5 rounded-xl bg-[#1DB954]/20 hover:bg-[#1DB954]/30 text-[#1ed760] border border-[#1DB954]/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all flex-shrink-0"
+              className="px-3 py-1.5 rounded-full bg-[var(--apple-rose)]/15 hover:bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all flex-shrink-0 active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>غلاف استوديو</span>
@@ -166,7 +172,7 @@ export const ChangeArtworkModal: React.FC = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث باسم الأغنية أو الفنان..."
-                className="w-full bg-white/[0.05] border border-white/10 rounded-2xl py-2.5 pr-4 pl-10 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#1DB954] transition-colors"
+                className="w-full bg-white/[0.05] border border-white/10 rounded-full py-2.5 pr-4 pl-10 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--apple-rose)] transition-colors"
               />
               <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -174,7 +180,7 @@ export const ChangeArtworkModal: React.FC = () => {
             <button
               type="submit"
               disabled={isSearching}
-              className="px-5 py-2.5 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-colors cursor-pointer flex-shrink-0"
+              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-[var(--apple-red)]/30 cursor-pointer flex-shrink-0 active:scale-95"
             >
               {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               <span>بحث</span>
@@ -190,7 +196,7 @@ export const ChangeArtworkModal: React.FC = () => {
 
             {isSearching ? (
               <div className="py-12 flex flex-col items-center justify-center gap-3 text-zinc-400">
-                <Loader2 className="w-7 h-7 animate-spin text-[#1DB954]" />
+                <Loader2 className="w-7 h-7 animate-spin text-[var(--apple-rose)]" />
                 <span className="text-xs">جارٍ البحث عن أغلفة عالية الدقة...</span>
               </div>
             ) : candidates.length > 0 ? (
@@ -203,8 +209,8 @@ export const ChangeArtworkModal: React.FC = () => {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleSelectCandidate(cand)}
-                      className={`relative rounded-2xl overflow-hidden border cursor-pointer group bg-black/40 ${
-                        isCurrent ? 'border-[#1DB954] ring-2 ring-[#1DB954]/50' : 'border-white/10 hover:border-white/30'
+                      className={`relative rounded-[20px] overflow-hidden border cursor-pointer group bg-black/40 ${
+                        isCurrent ? 'border-[var(--apple-rose)] ring-2 ring-[var(--apple-rose)]/50' : 'border-white/10 hover:border-white/30'
                       }`}
                     >
                       <img
@@ -218,7 +224,7 @@ export const ChangeArtworkModal: React.FC = () => {
                         <span className="text-[10px] text-zinc-300 truncate">{cand.artist}</span>
                       </div>
                       {isCurrent && (
-                        <div className="absolute top-2 right-2 p-1 rounded-full bg-[#1DB954] text-white shadow-md">
+                        <div className="absolute top-2 right-2 p-1 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md">
                           <Check className="w-3.5 h-3.5" />
                         </div>
                       )}
@@ -235,8 +241,8 @@ export const ChangeArtworkModal: React.FC = () => {
 
           {/* Upload Custom File */}
           <div className="pt-2 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3">
-            <label className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors">
-              <Upload className="w-4 h-4 text-[#1DB954]" />
+            <label className="w-full sm:w-auto px-4 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors active:scale-95">
+              <Upload className="w-4 h-4 text-[var(--apple-rose)]" />
               <span>رفع صورة من الجوال / الكمبيوتر</span>
               <input
                 type="file"

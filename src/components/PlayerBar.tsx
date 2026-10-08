@@ -88,16 +88,16 @@ export const PlayerBar: React.FC = () => {
       <footer
         dir="ltr"
         style={{
-          boxShadow: `0 20px 50px rgba(0,0,0,0.88), 0 -1px 20px rgba(0,0,0,0.4), 0 0 45px -8px ${accentColor}30`,
+          boxShadow: `0 24px 60px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
         }}
-        className="hidden md:flex fixed bottom-3 inset-x-4 sm:bottom-3.5 sm:inset-x-8 max-w-7xl mx-auto h-[84px] z-40 bg-[#0d0d15]/90 backdrop-blur-3xl px-5 sm:px-7 items-center justify-between border border-white/[0.12] rounded-3xl select-none transition-shadow duration-500"
+        className="hidden md:flex fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[86px] z-40 bg-[#0d0d15]/85 backdrop-blur-3xl px-6 sm:px-8 items-center justify-between border border-white/[0.14] rounded-[28px] select-none transition-shadow duration-500"
       >
         {/* 1. Track Info (Left) */}
         <div className="flex items-center gap-3.5 w-1/4 min-w-0">
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className={`relative w-14 h-14 rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-lg flex-shrink-0 group cursor-pointer transition-transform ${
-              isPlaying ? 'ring-2 ring-[#FA243C]/40 shadow-[#FA243C]/20' : ''
+            className={`relative w-14 h-14 rounded-[18px] overflow-hidden bg-black/60 border border-white/15 shadow-xl flex-shrink-0 group cursor-pointer transition-transform ${
+              isPlaying ? 'ring-2 ring-[#FA243C]/50 shadow-[#FA243C]/30' : ''
             }`}
           >
             <AnimatePresence mode="wait">
@@ -117,24 +117,29 @@ export const PlayerBar: React.FC = () => {
           </div>
 
           <div className="min-w-0 flex-1">
-            <h4
-              onClick={() => setMobilePlayerOpen(true)}
-              className="text-sm font-bold text-white truncate hover:underline cursor-pointer tracking-tight"
-              title={currentTrack?.title}
-            >
-              {currentTrack?.title || (isRTL ? 'اختر أغنية للتشغيل' : 'Select a track to play')}
-            </h4>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h4
+                onClick={() => setMobilePlayerOpen(true)}
+                className="text-sm font-black text-white truncate hover:underline cursor-pointer tracking-tight"
+                title={currentTrack?.title}
+              >
+                {currentTrack?.title || (isRTL ? 'اختر أغنية للتشغيل' : 'Select a track to play')}
+              </h4>
+              <span className="apple-badge text-[8px] bg-white/[0.08] text-white/80 shrink-0">
+                LOSSLESS
+              </span>
+            </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-xs text-zinc-400 truncate hover:underline cursor-pointer">
+              <p className="text-xs text-zinc-400 truncate hover:underline cursor-pointer font-medium">
                 {currentTrack?.artist || 'AURA.WAV'}
               </p>
               {isDownloaded && (
                 <span
-                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 shrink-0"
+                  className="apple-badge text-[8px] bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shrink-0"
                   title="محفوظة أوفلاين للأبد"
                 >
-                  <CheckCircle2 className="w-2.5 h-2.5" />
-                  <span>أوفلاين</span>
+                  <CheckCircle2 className="w-2 h-2" />
+                  <span>OFFLINE</span>
                 </span>
               )}
             </div>
@@ -143,12 +148,12 @@ export const PlayerBar: React.FC = () => {
           {currentTrack && (
             <button
               onClick={() => toggleFavorite(currentTrack.id)}
-              className="p-2 text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer"
+              className="p-2 text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer apple-spring"
               title={isFav ? t.favoriteRemoved : t.favoriteAdded}
             >
               <Heart
-                className={`w-4 h-4 transition-transform active:scale-125 ${
-                  isFav ? 'text-[#FA243C] fill-[#FA243C]' : ''
+                className={`w-4.5 h-4.5 transition-transform active:scale-125 ${
+                  isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.6)]' : ''
                 }`}
               />
             </button>
@@ -156,15 +161,15 @@ export const PlayerBar: React.FC = () => {
         </div>
 
         {/* 2. Main Playback Controls & Scrubber (Center) */}
-        <div className="flex flex-col items-center gap-1 w-2/4 max-w-xl">
+        <div className="flex flex-col items-center gap-1.5 w-2/4 max-w-xl">
           {/* Controls Row */}
           <div className="flex items-center gap-5">
             {/* Waveform Toggle */}
             <button
               onClick={() => setShowWaveformScrubber(!showWaveformScrubber)}
               title={showWaveformScrubber ? 'العودة للشريط الكلاسيكي' : 'عرض الموجة الصوتية التفاعلية'}
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                showWaveformScrubber ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-500 hover:text-white'
+              className={`p-1.5 rounded-xl apple-spring cursor-pointer ${
+                showWaveformScrubber ? 'text-[#FA243C] bg-white/[0.1] border border-white/10' : 'text-zinc-400 hover:text-white'
               }`}
             >
               <Activity className="w-3.5 h-3.5" />
@@ -174,7 +179,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={toggleShuffle}
               title={t.shuffle}
-              className={`p-1.5 transition-colors cursor-pointer ${
+              className={`p-1.5 apple-spring cursor-pointer ${
                 shuffle ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -185,16 +190,16 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={previousTrack}
               title={t.previous}
-              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
+              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer"
             >
               <SkipBack className="w-5 h-5 fill-current" />
             </button>
 
-            {/* Play/Pause Button */}
+            {/* Apple Play/Pause Statement Button */}
             <button
               onClick={togglePlayPause}
               title={isPlaying ? t.pause : t.play}
-              className="w-11 h-11 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(250,36,60,0.35)] cursor-pointer"
+              className="hi-fi-play-button w-12 h-12 rounded-full text-black flex items-center justify-center apple-spring shadow-[0_4px_24px_rgba(250,36,60,0.35)] cursor-pointer"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-black text-black" />
@@ -209,7 +214,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={() => nextTrack({ forceImmediate: true })}
               title={t.next}
-              className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
+              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer"
             >
               <SkipForward className="w-5 h-5 fill-current" />
             </button>
@@ -218,7 +223,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={cycleRepeat}
               title={repeatMode === 'one' ? t.repeatOne : t.repeatAll}
-              className={`p-1.5 transition-colors cursor-pointer relative ${
+              className={`p-1.5 apple-spring cursor-pointer relative ${
                 repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -240,28 +245,28 @@ export const PlayerBar: React.FC = () => {
 
         {/* 3. Utility Tools & Volume (Right) */}
         <div className="flex items-center justify-end gap-2.5 w-1/4">
-          {/* Spatial Audio Quick Pill */}
+          {/* Spatial Audio Quick Pill (Apple Music Spatial Style) */}
           <button
             onClick={cycleSpatialMode}
             title={`الصوت المكاني: ${spatialMode.toUpperCase()}`}
-            className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-black apple-spring cursor-pointer flex items-center gap-1.5 ${
               spatialMode !== 'off'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25 ring-1 ring-white/20'
-                : 'text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08]'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/30 border border-white/20'
+                : 'apple-glass-pill text-zinc-400 hover:text-white'
             }`}
           >
-            <Sparkles className="w-3 h-3" />
-            <span className="tracking-wider">{spatialMode === 'off' ? '3D' : spatialMode.toUpperCase()}</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="tracking-wider text-[11px]">{spatialMode === 'off' ? 'SPATIAL' : spatialMode.toUpperCase()}</span>
           </button>
 
-          {/* Karaoke Mode Quick Toggle */}
+          {/* Karaoke Mode Quick Toggle (Apple Music Sing Style) */}
           <button
             onClick={() => setKaraokeMode(!karaokeMode)}
-            title={karaokeMode ? 'إيقاف وضع الكاريوكي' : 'تفعيل وضع الكاريوكي وعزل صوت المغني'}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
+            title={karaokeMode ? 'إيقاف وضع Apple Sing' : 'تفعيل وضع Apple Sing وعزل صوت المغني'}
+            className={`p-2 rounded-xl apple-spring cursor-pointer ${
               karaokeMode
-                ? 'bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/30 shadow-md shadow-[#1DB954]/20 ring-1 ring-[#1DB954]/40'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                ? 'bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/40 shadow-lg shadow-[#FA243C]/30 ring-1 ring-[#FA243C]/50'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
             <Mic2 className="w-4.5 h-4.5" />
@@ -271,11 +276,11 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => setLyricsOpen(!isLyricsOpen)}
             title={t.syncedLyrics}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${
-              isLyricsOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white'
+            className={`px-2.5 py-1.5 rounded-xl apple-spring cursor-pointer text-xs font-bold ${
+              isLyricsOpen ? 'bg-white/[0.12] text-white border border-white/15' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <span className="text-xs font-bold px-0.5">LYRICS</span>
+            <span>LYRICS</span>
           </button>
 
           {/* Equalizer Quick Modal */}

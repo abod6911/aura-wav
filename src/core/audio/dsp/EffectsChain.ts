@@ -220,10 +220,12 @@ export class EffectsChain {
     }
   }
 
+  private saturationCurve = new Float32Array(44100);
+
   private generateSaturationCurve(amount: number): Float32Array {
     const k = amount * 8;
     const n_samples = 44100;
-    const curve = new Float32Array(n_samples);
+    const curve = this.saturationCurve;
     const deg = Math.PI / 180;
     for (let i = 0; i < n_samples; ++i) {
       const x = (i * 2) / n_samples - 1;
@@ -263,7 +265,13 @@ export class EffectsChain {
     this.setReverbPreset(normalized as ReverbPreset);
   }
 
+  private reverbBufferCache = new Map<string, AudioBuffer>();
+
   private generateSyntheticImpulse(duration: number, decay: number): AudioBuffer {
+    const key = `${duration}_${decay}`;
+    if (this.reverbBufferCache.has(key)) {
+      return this.reverbBufferCache.get(key)!;
+    }
     const sampleRate = this.ctx.sampleRate;
     const length = Math.floor(sampleRate * duration);
     const impulse = this.ctx.createBuffer(2, length, sampleRate);
@@ -276,6 +284,7 @@ export class EffectsChain {
       left[i] = (Math.random() * 2 - 1) * factor;
       right[i] = (Math.random() * 2 - 1) * factor;
     }
+    this.reverbBufferCache.set(key, impulse);
     return impulse;
   }
 

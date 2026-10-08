@@ -62,8 +62,8 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
         audioUrl: item.audioUrl, // Direct local studio master
         fileName: item.fileName,
         source: 'local',
-        dominantColor: '#1DB954',
-        accentColor: '#1DB954',
+        dominantColor: '#FA243C',
+        accentColor: '#FF375F',
         dateAdded: Date.now(),
       };
       localMatchingSongs.push(track);
@@ -188,7 +188,16 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
 }
 
 // In-memory stream cache to avoid redundant network lookups
-const resolvedStreamCache = new Map<string, string>();
+class BoundedMap<K, V> extends Map<K, V> {
+  set(key: K, value: V) {
+    if (this.size > 200) {
+      const firstKey = this.keys().next().value;
+      if (firstKey) this.delete(firstKey);
+    }
+    return super.set(key, value);
+  }
+}
+const resolvedStreamCache = new BoundedMap<string, string>();
 
 /**
  * Invalidate cached stream URL for track if a stream fails or retry is requested.
@@ -210,7 +219,7 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
   if (track.blob) {
     try {
       return URL.createObjectURL(track.blob);
-    } catch {}
+    } catch (err) { console.warn('[resolvePlayableStream] Blob error:', err); }
   }
 
   const cacheKey = `${track.title}:::${track.artist}`.toLowerCase().trim();
@@ -223,7 +232,8 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
     try {
       const decoded = decodeURIComponent(track.audioUrl);
       return encodeURI(decoded);
-    } catch {
+    } catch (err) {
+      console.warn('[resolvePlayableStream] Decode error:', err);
       return track.audioUrl;
     }
   }
@@ -234,7 +244,7 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
       const sep = track.audioUrl.includes('?') ? '&' : '?';
       const jsonUrl = `${track.audioUrl}${sep}format=json`;
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 1500);
+      const timer = setTimeout(() => controller.abort(), 6000);
       const res = await fetch(jsonUrl, { signal: controller.signal });
       clearTimeout(timer);
       if (res.ok) {
@@ -247,7 +257,7 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
           return data.url;
         }
       }
-    } catch {}
+    } catch (err) { console.warn('[resolvePlayableStream] stream endpoint error:', err); }
     return track.audioUrl;
   }
 
@@ -296,7 +306,7 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
           return data.url;
         }
       }
-    } catch {}
+    } catch (err) { console.warn('[resolvePlayableStream] iTunes preview full stream error:', err); }
     resolvedStreamCache.set(cacheKey, fullStreamUrl);
     return fullStreamUrl;
   }
@@ -320,7 +330,8 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
         return data.url;
       }
     }
-  } catch {}
+  } catch (err) { console.warn('[resolvePlayableStream] fallback full stream error:', err); }
   resolvedStreamCache.set(cacheKey, fallbackUrl);
   return fallbackUrl;
 }
+

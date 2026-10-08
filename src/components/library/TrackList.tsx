@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Track } from '../../types';
 import {
@@ -23,6 +23,9 @@ import {
   ArrowUp,
   Tag,
   Sliders,
+  ListEnd,
+  Pencil,
+  Download,
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -52,6 +55,29 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const [activeRange, setActiveRange] = useState<RangeOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('number');
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
+
+  useEffect(() => {
+    const handleClose = () => setContextMenu(null);
+    window.addEventListener('click', handleClose);
+    window.addEventListener('scroll', handleClose, { capture: true });
+    return () => {
+      window.removeEventListener('click', handleClose);
+      window.removeEventListener('scroll', handleClose, { capture: true } as any);
+    };
+  }, []);
+
+  const handleContextMenu = useCallback((track: Track, clientX: number, clientY: number) => {
+    const menuWidth = 250;
+    const menuHeight = 280;
+    let x = clientX;
+    let y = clientY;
+    
+    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
+    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+    
+    setContextMenu({ x: Math.max(10, x), y: Math.max(10, y), track });
+  }, []);
 
 
 
@@ -281,29 +307,29 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       ) : (
         /* Empty State Hero CTA */
-        <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 bg-gradient-to-b from-[#1DB954]/15 to-[#0c0c12] border border-white/[0.08] text-center space-y-4">
-          <FolderOpen className="w-14 h-14 mx-auto text-[#1DB954] animate-bounce" />
+        <div className="relative overflow-hidden rounded-[28px] p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-[#07070a] border border-white/[0.1] text-center space-y-4 backdrop-blur-2xl">
+          <FolderOpen className="w-14 h-14 mx-auto text-[#FA243C] animate-bounce" />
           <h2 className="text-2xl md:text-3xl font-black text-white">لا توجد أغانٍ محملة حالياً</h2>
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
-            قم باستيراد مجلد أغانيك المحلي <code className="text-[#1DB954] bg-white/10 px-2 py-0.5 rounded font-mono">Liked_Songs</code> للاستماع فوراً بدون اتصال مع كافة الأغلفة.
+            قم باستيراد مجلد أغانيك المحلي <code className="text-[#FF375F] bg-white/10 px-2 py-0.5 rounded font-mono">Liked_Songs</code> للاستماع فوراً بدون اتصال مع كافة الأغلفة.
           </p>
           <button
             onClick={onOpenImport}
-            className="px-8 py-3.5 rounded-2xl bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold text-sm transition-all shadow-xl cursor-pointer"
+            className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-sm transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer"
           >
             استيراد المجلد المحلي ({tracks.length || 1750} أغنية)
           </button>
         </div>
       )}
 
-      {/* 1.5 Featured Picks Editorial Shelf (Spotify Style) */}
+      {/* 1.5 Featured Picks Editorial Shelf (Apple Music Style) */}
       {tracks.length > 0 && (
         <div className="space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#1DB954]" />
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                مختارات مميزة لك
+              <Sparkles className="w-4 h-4 text-[#FA243C]" />
+              <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                مختارات Apple Music لك
               </h3>
             </div>
             <span className="text-xs text-zinc-400 font-medium">استمع فوراً لأبرز الأغاني</span>
@@ -314,9 +340,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <div
                 key={t.id}
                 onClick={() => playTrack(t, tracks)}
-                className="group relative p-3 rounded-2xl bg-[#141414] hover:bg-[#202020] border border-white/[0.06] hover:border-[#1DB954]/40 backdrop-blur-xl transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:shadow-[#1DB954]/15 hover:-translate-y-1 select-none"
+                className="group relative p-3 rounded-[22px] apple-glass-card border border-white/[0.08] hover:border-white/20 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:-translate-y-1 select-none apple-spring"
               >
-                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-[#151520] shadow-md border border-white/5">
+                <div className="relative aspect-square w-full rounded-[16px] overflow-hidden bg-[#151520] shadow-md border border-white/5">
                   <img
                     src={t.artworkUrl || '/logo.svg'}
                     alt={t.title}
@@ -333,10 +359,10 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#1DB954] transition-colors" dir="auto">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#FA243C] transition-colors" dir="auto">
                     {t.title}
                   </h4>
-                  <p className="text-[11px] text-zinc-400 truncate mt-0.5" dir="auto">
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium" dir="auto">
                     {t.artist}
                   </p>
                 </div>
@@ -357,7 +383,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             placeholder="ابحث برقم المسار، العنوان، الفنان، أو الألبوم... (اضغط / للبحث)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#1DB954]/60 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all"
+            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all"
           />
           {searchQuery && (
             <button
@@ -387,7 +413,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             onClick={() => setActiveFilter('favorites')}
             className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeFilter === 'favorites'
-                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/25'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
@@ -399,12 +425,24 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             onClick={() => setActiveFilter('lyrics')}
             className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeFilter === 'lyrics'
-                ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/25'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
             <Mic2 className="w-3.5 h-3.5" />
             <span>بكلمات متزامنة</span>
+          </button>
+
+          <button
+            onClick={() => setActiveFilter('offline')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeFilter === 'offline'
+                ? 'bg-emerald-500 text-black font-extrabold shadow-md shadow-emerald-500/25'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>أوفلاين ({downloadedTrackIds.length})</span>
           </button>
 
           {/* Sort Dropdown */}
@@ -446,7 +484,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               }}
               className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-all border cursor-pointer ${
                 isSel
-                  ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1DB954] shadow-sm'
+                  ? 'bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF375F] shadow-sm'
                   : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
               }`}
             >
@@ -456,7 +494,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         })}
       </div>
 
-      {/* 2.5 YouTube Music Mood & Activity Bar */}
+      {/* 2.5 Mood & Vibe Bar (Apple Music Curated Moods) */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none scrollbar-none">
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider pl-1 flex-shrink-0">
@@ -474,9 +512,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <button
                 key={m.id}
                 onClick={() => setActiveMood(isSelected ? null : m.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer apple-spring ${
                   isSelected
-                    ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30 scale-105 font-extrabold'
+                    ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white border-[#FA243C]/50 shadow-lg shadow-[#FA243C]/30 scale-105 font-extrabold'
                     : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.06]'
                 }`}
               >
@@ -499,9 +537,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePlayAll}
-                className="px-3.5 py-1.5 rounded-xl bg-[#1DB954] hover:bg-[#1ed760] text-black text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#1DB954]/25 transition-all cursor-pointer"
+                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#FA243C]/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
-                <Play className="w-3.5 h-3.5 fill-black" />
+                <Play className="w-3.5 h-3.5 fill-white text-white" />
                 <span>تشغيل راديو هذا المزاج</span>
               </button>
               <button
@@ -542,6 +580,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   key={track.id}
                   track={track}
                   index={idx}
+                  onContextMenu={handleContextMenu}
                 />
               ))}
 
@@ -550,7 +589,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 <div ref={sentinelRef} className="pt-6 pb-4 text-center">
                   <button
                     onClick={() => setVisibleLimit((prev) => Math.min(prev + 100, filtered.length))}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/[0.05] hover:bg-[#1DB954]/20 hover:border-[#1DB954]/50 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-lg active:scale-95"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/[0.05] hover:bg-[#FA243C]/20 hover:border-[#FA243C]/50 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-lg active:scale-95 apple-spring"
                   >
                     <span>عرض المزيد من المسارات ({visibleLimit} من أصل {filtered.length})</span>
                   </button>
@@ -585,12 +624,87 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="fixed bottom-24 right-4 z-40 px-4 py-2.5 rounded-full bg-[#12121c]/90 border border-white/20 text-white shadow-[0_8px_30px_rgba(0,0,0,0.7)] backdrop-blur-xl flex items-center gap-2 text-xs font-bold hover:bg-white/20 active:scale-95 transition-all cursor-pointer select-none"
+          className="fixed bottom-24 right-4 z-40 px-4 py-2.5 rounded-full apple-glass-dock text-white flex items-center gap-2 text-xs font-bold hover:bg-white/20 active:scale-95 transition-all cursor-pointer select-none apple-spring"
           title="العودة للأعلى"
         >
-          <ArrowUp className="w-4 h-4 text-[#1DB954]" />
+          <ArrowUp className="w-4 h-4 text-[#FA243C]" />
           <span>للأعلى</span>
         </motion.button>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          className="fixed z-50 bg-[#1a1a2e]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-1 w-56 flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              usePlayerStore.getState().playNextInQueue(contextMenu.track);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <ListEnd className="w-4 h-4 text-[#FA243C]" />
+            <span>تشغيل التالي</span>
+          </button>
+          <button
+            onClick={() => {
+              usePlayerStore.getState().addToQueue(contextMenu.track);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <ListPlus className="w-4 h-4 text-[#FA243C]" />
+            <span>إضافة للقائمة</span>
+          </button>
+          <button
+            onClick={() => {
+              usePlayerStore.getState().toggleFavorite(contextMenu.track.id);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <Heart className={`w-4 h-4 ${favorites.includes(contextMenu.track.id) ? 'text-[#FA243C] fill-[#FA243C]' : 'text-[#FA243C]'}`} />
+            <span>{favorites.includes(contextMenu.track.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}</span>
+          </button>
+          <button
+            onClick={() => {
+              usePlayerStore.getState().downloadTrackForOffline(contextMenu.track.id);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>
+              {usePlayerStore.getState().downloadedTrackIds.includes(contextMenu.track.id)
+                ? 'محفوظة أوفلاين ✓'
+                : 'حفظ للاستماع بدون إنترنت'}
+            </span>
+          </button>
+          <div className="h-px bg-white/10 my-1 mx-2" />
+          <button
+            onClick={() => {
+              usePlayerStore.getState().setMetadataEditorModal(true, contextMenu.track);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <Pencil className="w-4 h-4 text-zinc-400" />
+            <span>تعديل البيانات</span>
+          </button>
+          <button
+            onClick={() => {
+              usePlayerStore.getState().setChangeArtworkModal(true, contextMenu.track);
+              setContextMenu(null);
+            }}
+            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+          >
+            <ImageIcon className="w-4 h-4 text-zinc-400" />
+            <span>تغيير الغلاف</span>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -599,13 +713,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 interface TrackTableRowProps {
   track: Track;
   index: number;
+  onContextMenu?: (track: Track, clientX: number, clientY: number) => void;
 }
 
-const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }) => {
+const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, onContextMenu }) => {
   const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
   const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
   const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
   const isNextUp = usePlayerStore((state) => state.nextUpTrackId === track.id);
+  const isDownloaded = usePlayerStore((state) => state.downloadedTrackIds.includes(track.id));
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -629,9 +745,36 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
 
   const displayIndex = track.trackNumber !== undefined ? track.trackNumber : index + 1;
 
+  const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onContextMenu) onContextMenu(track, e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
+    touchTimerRef.current = setTimeout(() => {
+      if (onContextMenu) onContextMenu(track, clientX, clientY);
+    }, 500);
+  };
+
+  const clearTouchTimer = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
   return (
     <div
       onClick={handleRowClick}
+      onContextMenu={handleContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={clearTouchTimer}
+      onTouchMove={clearTouchTimer}
       className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
         isCurrent
           ? 'bg-white/[0.08] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)] backdrop-blur-xl'
@@ -695,6 +838,9 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index }
           >
             {track.title}
           </h4>
+          {isDownloaded && (
+            <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+          )}
           {isNextUp && (
             <span className="inline-flex items-center gap-1 text-[9px] text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/35 font-bold flex-shrink-0 animate-pulse">
               <ListPlus className="w-2.5 h-2.5" />

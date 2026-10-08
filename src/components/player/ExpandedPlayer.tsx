@@ -388,7 +388,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 <p
                   dir="auto"
                   onClick={() => setActiveTab('lyrics')}
-                  className="text-xs sm:text-sm text-[#1ed760] font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-[#1DB954]/10 border border-[#1DB954]/25 max-w-sm truncate cursor-pointer hover:bg-[#1DB954]/20 transition-colors animate-fadeIn"
+                  className="text-xs sm:text-sm text-white font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-white/[0.08] border border-white/15 max-w-sm truncate cursor-pointer hover:bg-white/[0.14] transition-colors animate-fadeIn"
                 >
                   "{lyrics[activeLyricIndex].text}"
                 </p>
@@ -396,7 +396,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </motion.div>
           )}
 
-          {/* TAB B: UP NEXT QUEUE (YouTube Music Style) */}
+          {/* TAB B: UP NEXT QUEUE */}
           {activeTab === 'up_next' && (
             <motion.div
               key="up_next"
@@ -407,7 +407,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             >
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <ListMusic className="w-4 h-4 text-[#1DB954]" />
+                  <ListMusic className="w-4 h-4 text-[#FA243C]" />
                   <span className="text-sm font-bold text-white">قائمة التالي ({queue.length})</span>
                 </div>
 
@@ -416,7 +416,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   onClick={toggleSmartAutoplay}
                   className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     smartAutoplay
-                      ? 'bg-[#1DB954] text-black font-extrabold shadow-md shadow-[#1DB954]/30'
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
                       : 'bg-white/5 text-zinc-400'
                   }`}
                 >
@@ -433,7 +433,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       key={`${t.id}_${idx}`}
                       onClick={() => playTrack(t)}
                       className={`flex items-center justify-between p-2 rounded-2xl cursor-pointer transition-colors ${
-                        isCur ? 'bg-[#1DB954]/20 border border-[#1DB954]/35' : 'hover:bg-white/[0.04]'
+                        isCur ? 'bg-[#FA243C]/20 border border-[#FA243C]/35' : 'hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -443,7 +443,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                           className="w-10 h-10 rounded-xl object-cover"
                         />
                         <div className="min-w-0 text-left">
-                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
+                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
                             {t.title}
                           </h5>
                           <p className="text-[11px] text-zinc-400 truncate">{t.artist}</p>
@@ -456,7 +456,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                             e.stopPropagation();
                             removeFromQueue(idx);
                           }}
-                          className="p-1.5 text-zinc-500 hover:text-[#1DB954]"
+                          className="p-1.5 text-zinc-500 hover:text-[#FA243C]"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -479,7 +479,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             >
               <div className="flex items-center justify-between pb-2 border-b border-white/[0.06] flex-shrink-0">
                 <span className="text-sm font-bold text-white flex items-center gap-2">
-                  <Mic2 className="w-4 h-4 text-[#1DB954]" />
+                  <Mic2 className="w-4 h-4 text-[var(--apple-rose)]" />
                   <span>الكلمات المتزامنة</span>
                 </span>
                 <span className="text-[11px] text-zinc-400">انقر على أي سطر للانتقال</span>
@@ -598,7 +598,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     <p className="text-[10px] text-zinc-400">Web Audio Hi-Fi DSP & Spatial Reverbs</p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/30">
+                <span className="apple-badge bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
                   Hi-Res 24-bit
                 </span>
               </div>
@@ -643,7 +643,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <div className="flex items-center gap-2">
                     <span className="text-base">🎤</span>
                     <div>
-                      <h5 className="text-xs font-black text-white">وضع الكاريوكي وعزل صوت المغني</h5>
+                      <h5 className="text-xs font-black text-white">وضع Apple Sing وعزل صوت المغني</h5>
                       <p className="text-[10px] text-zinc-400">Apple Music Sing Center-Channel Cut</p>
                     </div>
                   </div>
@@ -654,7 +654,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     }}
                     className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
                       karaokeMode
-                        ? 'bg-[#1DB954] text-black shadow-md shadow-[#1DB954]/30'
+                        ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/35'
                         : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                   >
@@ -666,7 +666,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
                     <div className="flex justify-between text-[11px] text-zinc-300">
                       <span>نسبة خفض صوت المغني:</span>
-                      <span className="font-mono font-bold text-[#1DB954]">
+                      <span className="font-mono font-bold text-[#FF375F]">
                         {Math.round(karaokeVocalLevel * 100)}%
                       </span>
                     </div>
@@ -677,7 +677,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       step="0.05"
                       value={karaokeVocalLevel}
                       onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#1DB954] cursor-pointer"
+                      className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
                     />
                   </div>
                 )}
@@ -731,43 +731,50 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <p className="text-sm text-zinc-400 truncate mt-0.5 font-medium">
                 {currentTrack.artist}
               </p>
-              {/* Apple Music Style Hi-Res Lossless & Spatial Audio Badges (Monochromatic & Clean) */}
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              {/* Apple Music Style Hi-Res Lossless & Spatial Audio Badges */}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="apple-badge bg-white/[0.08] text-white/90">
+                  APPLE DIGITAL MASTER
+                </span>
+                
                 <div
                   dir="ltr"
-                  className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 flex items-center gap-1.5 shadow-sm"
-                  title="صوت استوديو نقي عالي الدقة (Studio Master Lossless)"
+                  className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                  title="صوت استوديو نقي عالي الدقة (Lossless 24-bit)"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Lossless Hi-Fi</span>
-                  <span className="text-white/20">|</span>
-                  <Headphones className="w-3 h-3 text-emerald-400" />
-                  <span className="font-mono">24-bit / 96kHz</span>
+                  <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+                  <span>LOSSLESS 24-BIT</span>
                 </div>
+
+                {spatialMode !== 'off' && (
+                  <span className="apple-badge bg-purple-500/15 border-purple-500/30 text-purple-300">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    <span>SPATIAL {spatialMode.toUpperCase()}</span>
+                  </span>
+                )}
+
+                {karaokeMode && (
+                  <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF375F]">
+                    <Mic2 className="w-2.5 h-2.5" />
+                    <span>SING ACTIVE</span>
+                  </span>
+                )}
 
                 {/* Total Duration Badge */}
                 {duration > 0 && (
                   <div
                     dir="ltr"
-                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-white/10 bg-white/[0.06] text-zinc-300 flex items-center gap-1 shadow-sm font-mono"
+                    className="apple-badge bg-white/[0.06] text-zinc-300 font-mono"
                     title="المدة الإجمالية للأغنية"
                   >
                     <span>⏱️ {formatDuration(duration)}</span>
                   </div>
                 )}
 
-                {/* BPM & Camelot Key Badges */}
-                {currentTrack.key && (
-                  <span
-                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-purple-500/15 border-purple-500/30 text-purple-300 shadow-sm"
-                    title={`مفتاح Camelot: ${currentTrack.key}`}
-                  >
-                    🎵 {currentTrack.key}
-                  </span>
-                )}
+                {/* BPM Badge */}
                 {currentTrack.bpm && (
                   <span
-                    className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/15 border-amber-500/30 text-amber-300 shadow-sm tabular-nums"
+                    className="apple-badge bg-amber-500/15 border-amber-500/30 text-amber-300 tabular-nums font-mono"
                     title={`سرعة الإيقاع: ${currentTrack.bpm} BPM`}
                   >
                     ⚡ {currentTrack.bpm} BPM
@@ -779,20 +786,20 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   type="button"
                   onClick={() => setShowWaveform(!showWaveform)}
                   title={showWaveform ? 'الشريط الكلاسيكي' : 'عرض الموجة الصوتية التفاعلية'}
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1 shadow-sm ${
+                  className={`apple-badge apple-spring cursor-pointer ${
                     showWaveform
-                      ? 'border-[#FA243C] bg-[#FA243C]/20 text-white shadow-[#FA243C]/20'
+                      ? 'border-[#FA243C]/50 bg-[#FA243C]/20 text-white shadow-sm'
                       : 'border-white/10 bg-white/[0.06] text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <Activity className="w-3 h-3" />
-                  <span>{showWaveform ? 'Waveform' : 'Line'}</span>
+                  <Activity className="w-2.5 h-2.5" />
+                  <span>{showWaveform ? 'WAVEFORM' : 'CLASSIC'}</span>
                 </button>
               </div>
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Favorite Heart (44x44px minimum touch target) */}
+              {/* Favorite Heart with Apple Haptic & Glow */}
               <motion.button
                 data-testid="expanded-favorite-btn"
                 whileTap={{ scale: 0.88 }}
@@ -800,12 +807,12 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   triggerHaptic();
                   toggleFavorite(currentTrack.id);
                 }}
-                className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#1DB954] transition-colors cursor-pointer rounded-full"
+                className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer rounded-full apple-spring"
                 aria-label={isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}
               >
                 <Heart
-                  className={`w-6 h-6 transition-colors ${
-                    isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-500'
+                  className={`w-6 h-6 transition-transform ${
+                    isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_12px_rgba(250,36,60,0.65)] scale-110' : 'text-zinc-500'
                   }`}
                 />
               </motion.button>
@@ -842,7 +849,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             style={{ touchAction: 'manipulation' }}
             className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               shuffle 
-                ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
             }`}
             title="تشغيل عشوائي ذكي (Smart Shuffle)"
@@ -850,7 +857,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           >
             <Shuffle className="w-5 h-5" />
             {shuffle && (
-              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1ed760] shadow-[0_0_6px_#10B981]" />
+              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />
             )}
           </motion.button>
 
@@ -882,7 +889,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             }}
             style={{ 
               touchAction: 'manipulation',
-              ['--aura-glow' as any]: currentTrack.accentColor || currentTrack.dominantColor || 'rgba(29, 185, 84, 0.45)'
+              ['--aura-glow' as any]: currentTrack.accentColor || currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
             }}
             className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90 duration-150"
             aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -890,7 +897,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             {/* Dynamic artwork aura backlight */}
             <div 
               className="absolute inset-0 rounded-full blur-xl opacity-45 group-hover:opacity-80 transition-opacity pointer-events-none -z-10"
-              style={{ backgroundColor: currentTrack.accentColor || currentTrack.dominantColor || '#1DB954' }}
+              style={{ backgroundColor: currentTrack.accentColor || currentTrack.dominantColor || '#FA243C' }}
             />
             {isPlaying ? (
               <Pause className="w-8 h-8 fill-[#09090b] text-[#09090b] transition-transform active:scale-95" />
@@ -928,7 +935,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             style={{ touchAction: 'manipulation' }}
             className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
               repeatMode !== 'off' 
-                ? 'bg-[#1DB954]/20 border border-[#1DB954]/60 text-[#1ed760] shadow-[0_0_18px_rgba(29,185,84,0.45)]' 
+                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
                 : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
             }`}
             title="تكرار (Repeat)"
@@ -936,7 +943,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
             {repeatMode !== 'off' && (
-              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1ed760] shadow-[0_0_6px_#10B981]" />
+              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />
             )}
           </motion.button>
         </div>
@@ -1066,7 +1073,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <SlidersHorizontal className="w-5 h-5 text-[#1DB954]" />
+                      <SlidersHorizontal className="w-5 h-5 text-[#FA243C]" />
                       <span>المعادل الصوتي (Equalizer)</span>
                     </div>
                   </button>
@@ -1116,7 +1123,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <Tag className="w-5 h-5 text-[#1DB954]" />
+                      <Tag className="w-5 h-5 text-[#FA243C]" />
                       <span>تعديل بيانات الأغنية (ID3 Tags)</span>
                     </div>
                   </button>
@@ -1137,7 +1144,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                           }}
                           className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
                             playbackRate === rate
-                              ? 'bg-[#1DB954] text-black font-extrabold'
+                              ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
                               : 'bg-white/[0.06] text-zinc-400 hover:text-white'
                           }`}
                         >

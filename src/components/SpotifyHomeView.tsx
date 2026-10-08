@@ -262,17 +262,17 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
             onClick={() => playTrack(spotlightTrack)}
-            className="relative w-full rounded-2xl sm:rounded-3xl p-4 sm:p-7 glass-obsidian-1 border border-white/[0.12] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)] cursor-pointer group mb-5"
+            className="relative w-full rounded-[28px] p-5 sm:p-8 apple-glass-card border border-white/[0.14] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.8)] cursor-pointer group mb-6 apple-spring"
           >
             {/* Background Blur Artwork */}
             <div
-              className="absolute inset-0 -z-10 opacity-20 filter blur-[70px] bg-cover bg-center scale-125 transition-transform duration-700 group-hover:scale-130"
+              className="absolute inset-0 -z-10 opacity-25 filter blur-[80px] bg-cover bg-center scale-125 transition-transform duration-700 group-hover:scale-130"
               style={{ backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})` }}
             />
 
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-7">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8">
               {/* Grand Rounded Squircle Artwork */}
-              <div className="relative w-28 h-28 sm:w-48 sm:h-48 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-[1.02] transition-transform duration-300">
+              <div className="relative w-32 h-32 sm:w-52 sm:h-52 rounded-[22px] overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-[1.03] transition-transform duration-300">
                 <img
                   src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
                   alt={spotlightTrack.title}
@@ -284,23 +284,31 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
               {/* Editorial Details */}
               <div className="flex-1 min-w-0 text-center sm:text-start flex flex-col justify-between h-full w-full">
                 <div className="w-full min-w-0">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/35 text-[#FF375F] text-[10px] font-extrabold uppercase tracking-wide mb-1.5 sm:mb-2.5">
-                    <Sparkles className="w-3 h-3" />
-                    <span>{t.heroListenNow}</span>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2 sm:mb-3">
+                    <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[10px] font-black">
+                      <Sparkles className="w-3 h-3" />
+                      APPLE MUSIC EXCLUSIVE
+                    </span>
+                    <span className="apple-badge bg-white/10 text-white/90">
+                      LOSSLESS
+                    </span>
+                    <span className="apple-badge bg-white/10 text-white/90">
+                      SPATIAL AUDIO
+                    </span>
                   </div>
-                  <h3 className="text-lg sm:text-2xl md:text-3xl font-black text-white truncate tracking-tight">
+                  <h3 className="text-xl sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
                     {spotlightTrack.title}
                   </h3>
-                  <p className="text-xs sm:text-base text-zinc-300 font-semibold truncate mt-0.5 sm:mt-1">
+                  <p className="text-sm sm:text-lg text-zinc-300 font-bold truncate mt-1">
                     {spotlightTrack.artist}
                   </p>
-                  <p className="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5 font-mono max-w-full">
-                    {spotlightTrack.album || 'Lossless Audio'}
+                  <p className="text-xs text-zinc-400 truncate mt-1 font-mono max-w-full">
+                    {spotlightTrack.album || 'Apple Digital Master'}
                   </p>
                 </div>
 
                 {/* Instant Play Action Button */}
-                <div className="pt-3 sm:pt-5 flex items-center justify-center sm:justify-start gap-3">
+                <div className="pt-4 sm:pt-6 flex items-center justify-center sm:justify-start gap-3">
                   <motion.button
                     whileTap={{ scale: 0.94 }}
                     onClick={(e) => {
@@ -311,7 +319,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                         playTrack(spotlightTrack);
                       }
                     }}
-                    className="flex items-center gap-2 sm:gap-2.5 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="flex items-center gap-2.5 px-6 sm:px-7 py-2.5 sm:py-3 rounded-full bg-white text-black font-black text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
                     {isPlaying && currentTrack?.id === spotlightTrack.id ? (
                       <>
@@ -332,7 +340,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
         )}
 
         {/* 3. Quick Access 2-Column Mobile Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {/* Liked Songs Tile */}
           <div
             onClick={() => {
@@ -342,16 +350,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 setActiveTab('favorites');
               }
             }}
-            className="group flex items-center gap-2.5 sm:gap-3 glass-obsidian-1 hover:border-white/20 rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
+            className="group flex items-center gap-3 apple-glass-card rounded-[20px] p-3 transition-all cursor-pointer relative shadow-sm overflow-hidden apple-spring"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 bg-gradient-to-br from-[#FA243C] to-[#FF375F] flex items-center justify-center shadow-lg shadow-[#FA243C]/25">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex-shrink-0 bg-gradient-to-br from-[#FA243C] to-[#FF375F] flex items-center justify-center shadow-lg shadow-[#FA243C]/25">
               <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-bold text-white truncate">
                 {t.likedSongsCard}
               </p>
-              <p className="text-[11px] text-zinc-400 truncate tabular-nums font-mono">
+              <p className="text-[11px] text-zinc-400 truncate tabular-nums font-mono font-medium">
                 {favorites.length} {t.songs}
               </p>
             </div>
@@ -360,16 +368,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           {/* Spatial Sound Studio Bento Tile */}
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className="group flex items-center gap-2.5 sm:gap-3 glass-obsidian-1 hover:border-white/20 rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
+            className="group flex items-center gap-3 apple-glass-card rounded-[20px] p-3 transition-all cursor-pointer relative shadow-sm overflow-hidden apple-spring"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/25">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex-shrink-0 bg-gradient-to-br from-[#7D12FF] to-[#FA243C] flex items-center justify-center shadow-lg shadow-[#7D12FF]/30">
               <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm font-bold text-white truncate">
                 {isRTL ? 'استوديو الصوت 3D' : '3D Sound Studio'}
               </p>
-              <p className="text-[11px] text-purple-300 truncate font-mono">
+              <p className="text-[11px] text-purple-300 truncate font-mono font-medium">
                 {spatialMode === 'off' ? 'Hi-Fi Master' : `${spatialMode.toUpperCase()} Active`}
               </p>
             </div>
@@ -382,18 +390,18 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
               <div
                 key={trk.id}
                 onClick={() => playTrack(trk)}
-                className="group flex items-center gap-2.5 sm:gap-3 glass-obsidian-1 hover:border-white/20 rounded-2xl p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden"
+                className="group flex items-center gap-3 apple-glass-card rounded-[20px] p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden apple-spring"
               >
                 <img
                   src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
                   alt={trk.title}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 shadow-md"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover flex-shrink-0 shadow-md group-hover:scale-105 transition-transform"
                 />
                 <div className="min-w-0 flex-1">
                   <p className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
                     {trk.title}
                   </p>
-                  <p className="text-[11px] text-zinc-400 truncate">
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
                     {trk.artist}
                   </p>
                 </div>

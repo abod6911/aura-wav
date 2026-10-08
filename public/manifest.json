@@ -31,5 +31,22 @@
   ],
   "categories": ["music", "entertainment", "audio"],
   "dir": "rtl",
-  "lang": "ar"
+  "lang": "ar",
+  "shortcuts": [
+    {
+      "name": "المفضلة",
+      "short_name": "❤️",
+      "url": "/?tab=favorites",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "بحث",
+      "short_name": "🔍",
+      "url": "/?tab=search",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": { "client_mode": "navigate-existing" },
+  "edge_side_panel": { "preferred_width": 400 }
 }

@@ -27,11 +27,11 @@ export const QueueDrawer: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-start bg-black/60 backdrop-blur-md animate-fadeIn select-none">
-      <div className="w-full max-w-md h-full bg-[#121218]/95 border-l border-white/10 p-5 sm:p-6 pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] flex flex-col justify-between shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md h-full apple-glass-card border-l border-white/[0.12] p-5 sm:p-6 pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] flex flex-col justify-between shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-[#1DB954]/20 text-[#1DB954]">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 text-[var(--apple-rose)]">
               <ListMusic className="w-5 h-5" />
             </div>
             <div>
@@ -57,10 +57,10 @@ export const QueueDrawer: React.FC = () => {
           {/* Section 1: Currently Playing */}
           {currentTrack && (
             <div className="space-y-2">
-              <span className="text-[11px] font-bold text-[#1DB954] uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-[var(--apple-rose)] uppercase tracking-wider block">
                 يعمل الآن
               </span>
-              <div className="p-3 rounded-2xl bg-[#1DB954]/10 border border-[#1DB954]/30 flex items-center gap-3">
+              <div className="p-3 rounded-2xl apple-glass-card border border-[var(--apple-rose)]/30 bg-[var(--apple-rose)]/[0.06] flex items-center gap-3">
                 <img
                   src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
                   alt={currentTrack.title}
@@ -72,22 +72,22 @@ export const QueueDrawer: React.FC = () => {
                 </div>
                 {/* Dynamic animated equalizer */}
                 <div className="flex items-end gap-1 h-5 px-1 flex-shrink-0">
-                  <div className={`w-1 bg-[#1DB954] rounded-full transition-all duration-300 ${isPlaying ? 'h-5 animate-pulse' : 'h-2'}`} />
-                  <div className={`w-1 bg-[#10B981] rounded-full transition-all duration-300 ${isPlaying ? 'h-3.5 animate-pulse delay-75' : 'h-2'}`} />
-                  <div className={`w-1 bg-[#34D399] rounded-full transition-all duration-300 ${isPlaying ? 'h-4.5 animate-pulse delay-150' : 'h-2'}`} />
+                  <div className={`w-1 bg-[var(--apple-red)] rounded-full transition-all duration-300 ${isPlaying ? 'h-5 animate-pulse' : 'h-2'}`} />
+                  <div className={`w-1 bg-[var(--apple-rose)] rounded-full transition-all duration-300 ${isPlaying ? 'h-3.5 animate-pulse delay-75' : 'h-2'}`} />
+                  <div className={`w-1 bg-[var(--apple-violet)] rounded-full transition-all duration-300 ${isPlaying ? 'h-4.5 animate-pulse delay-150' : 'h-2'}`} />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section 2: Spotify-Style Dynamic "Up Next" Queue (Max 9 Tracks) */}
+          {/* Section 2: Apple-Style Dynamic "Up Next" Queue (Max 9 Tracks) */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-white uppercase tracking-wider">
                   قائمة الانتظار المباشرة (Up Next)
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30">
                   {userQueue.length}/{MAX_USER_QUEUE}
                 </span>
               </div>
@@ -117,7 +117,7 @@ export const QueueDrawer: React.FC = () => {
                     key={`${track.id}_queue_${idx}`}
                     className="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 flex items-center gap-3 transition-colors group"
                   >
-                    <span className="text-xs font-mono font-bold text-[#1DB954] w-4 text-center">
+                    <span className="text-xs font-mono font-bold text-[var(--apple-rose)] w-4 text-center">
                       {idx + 1}
                     </span>
 
@@ -190,7 +190,7 @@ export const QueueDrawer: React.FC = () => {
                     />
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-medium text-white group-hover:text-[#1DB954] truncate transition-colors">
+                      <h4 className="text-xs font-medium text-white group-hover:text-[var(--apple-rose)] truncate transition-colors">
                         {track.title}
                       </h4>
                       <p className="text-[11px] text-zinc-400 truncate mt-0.5">{track.artist}</p>
@@ -202,7 +202,7 @@ export const QueueDrawer: React.FC = () => {
                         playTrack(track);
                       }}
                       title="تشغيل فوري"
-                      className="p-1.5 rounded-lg hover:bg-[#1DB954]/20 text-[#1DB954] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      className="p-1.5 rounded-lg hover:bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                     </button>

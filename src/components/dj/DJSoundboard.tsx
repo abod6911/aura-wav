@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Sparkles, X, Disc, Volume2, Flame, Sliders, Zap, Activity, Radio, SlidersHorizontal } from 'lucide-react';
@@ -19,9 +19,9 @@ const SOUND_PADS: SoundPad[] = [
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
     icon: Disc,
-    color: '#1DB954',
-    gradient: 'from-[#1DB954]/25 via-[#1DB954]/10 to-transparent',
-    glowColor: 'rgba(29, 185, 84, 0.45)',
+    color: '#FA243C',
+    gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
+    glowColor: 'rgba(250, 36, 60, 0.45)',
   },
   {
     id: 'airhorn',
@@ -69,6 +69,9 @@ export const DJSoundboard: React.FC = () => {
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
 
   const [activePad, setActivePad] = useState<string | null>(null);
+  const padTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (padTimeoutRef.current) clearTimeout(padTimeoutRef.current); }, []);
 
   if (!isSoundboardOpen) return null;
 
@@ -80,7 +83,8 @@ export const DJSoundboard: React.FC = () => {
       } catch {}
     }
     playDJSound(pad.id);
-    setTimeout(() => {
+    if (padTimeoutRef.current) clearTimeout(padTimeoutRef.current);
+    padTimeoutRef.current = setTimeout(() => {
       setActivePad((curr) => (curr === pad.id ? null : curr));
     }, 350);
   };
@@ -114,18 +118,18 @@ export const DJSoundboard: React.FC = () => {
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
           style={{ touchAction: 'manipulation' }}
-          className="relative w-full max-w-lg bg-[#0c0c14]/95 border border-white/[0.12] rounded-t-3xl sm:rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden p-5 sm:p-6 space-y-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
+          className="relative w-full max-w-lg apple-glass-card border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden p-5 sm:p-6 space-y-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-[#1DB954]/20 border border-[#1DB954]/40 flex items-center justify-center text-[#1DB954]">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 flex items-center justify-center text-[var(--apple-rose)]">
                 <Flame className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                   <span>لوحة مؤثرات الـ DJ الحية</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 font-mono">
                     LIVE
                   </span>
                 </h3>
@@ -204,14 +208,14 @@ export const DJSoundboard: React.FC = () => {
                 setAutoMixModalOpen(true);
               }}
               style={{ touchAction: 'manipulation' }}
-              className="rounded-2xl p-4 flex flex-col items-center justify-center gap-2 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
+              className="rounded-[22px] p-4 flex flex-col items-center justify-center gap-2 border border-white/[0.08] hover:border-[var(--apple-rose)]/40 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
             >
-              <SlidersHorizontal className="w-6 h-6 text-[#1DB954]" />
+              <SlidersHorizontal className="w-6 h-6 text-[var(--apple-rose)]" />
               <div className="text-center">
                 <span className="block text-xs sm:text-sm font-extrabold text-white">
                   نمط الانتقال
                 </span>
-                <span className="block text-[10px] text-[#1ed760] font-medium mt-0.5">
+                <span className="block text-[10px] text-[var(--apple-rose)] font-medium mt-0.5">
                   {getStyleLabel()}
                 </span>
               </div>
@@ -229,7 +233,7 @@ export const DJSoundboard: React.FC = () => {
                 setSoundboardOpen(false);
                 setAutoMixModalOpen(true);
               }}
-              className="text-[#1ed760] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+              className="text-[var(--apple-rose)] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>تغيير نمط الانتقال</span>

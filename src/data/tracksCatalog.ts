@@ -169,8 +169,8 @@ export function getDefaultLibraryTracks(): Track[] {
       fileName: item.fileName,
       source: 'local',
       dateAdded: 1700000000000 + item.number,
-      dominantColor: '#1DB954',
-      accentColor: '#1DB954',
+      dominantColor: '#FA243C',
+      accentColor: '#FF375F',
     };
   });
 }

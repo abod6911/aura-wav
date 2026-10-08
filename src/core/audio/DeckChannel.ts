@@ -97,7 +97,9 @@ export class DeckChannel {
 
       // Connect HTMLAudioElement source if available
       try {
-        this.sourceNode = ctx.createMediaElementSource(this.audio);
+        if (!this.sourceNode) {
+          this.sourceNode = ctx.createMediaElementSource(this.audio);
+        }
         this.sourceNode.connect(this.preampGainNode);
       } catch (err) {
         console.warn(`[DeckChannel ${this.name}] MediaElementSource already connected or notice:`, err);

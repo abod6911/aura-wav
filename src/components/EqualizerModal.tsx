@@ -151,24 +151,24 @@ export const EqualizerModal: React.FC = () => {
           />
 
           {/* Top Ambient Glow */}
-          <div className="absolute top-0 right-1/4 w-80 h-80 bg-[#1DB954]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-1/4 w-80 h-80 bg-[var(--apple-rose)]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/25 text-[#1DB954]">
+              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 text-[var(--apple-rose)]">
                 {modalTab === 'eq' ? <Sliders className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
                   <span>
-                    {modalTab === 'eq' ? 'المعادل الصوتي و AutoMix' : 'مؤثرات الاستوديو (Pro Web Audio DSP)'}
+                    {modalTab === 'eq' ? 'المعادل الصوتي و AutoMix' : 'مؤثرات الاستوديو (Apple Pro Audio DSP)'}
                   </span>
                 </h2>
                 <p className="text-xs text-zinc-400 mt-0.5">
                   {modalTab === 'eq'
                     ? 'تحكم دقيق بالترددات والدمج التلقائي'
-                    : 'معالجة إشارة رقمية متقدمة: دفء أنبوبي، بيئات 3D، وعزل المغني'}
+                    : 'معالجة إشارة رقمية متقدمة: دفء أنبوبي، بيئات Spatial Audio، وعزل المغني'}
                 </p>
               </div>
             </div>
@@ -200,7 +200,7 @@ export const EqualizerModal: React.FC = () => {
               onClick={() => setModalTab('eq')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 modalTab === 'eq'
-                  ? 'bg-[#1DB954] text-black shadow-[0_2px_12px_rgba(29,185,84,0.3)]'
+                  ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-[0_2px_14px_rgba(250,36,60,0.35)]'
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
@@ -211,7 +211,7 @@ export const EqualizerModal: React.FC = () => {
               onClick={() => setModalTab('pro_dsp')}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 modalTab === 'pro_dsp'
-                  ? 'bg-[#1DB954] text-black shadow-[0_2px_12px_rgba(29,185,84,0.3)]'
+                  ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-[0_2px_14px_rgba(250,36,60,0.35)]'
                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
@@ -230,13 +230,13 @@ export const EqualizerModal: React.FC = () => {
               <div className="rounded-2xl p-4 sm:p-5 border border-white/[0.08] bg-white/[0.025] space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-[#1DB954]/15 border border-[#1DB954]/25 text-[#10B981]">
+                    <div className="p-2.5 rounded-xl bg-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/25 text-[var(--apple-rose)]">
                       <Disc className="w-5 h-5 animate-spin-slow" />
                     </div>
                     <div>
                       <h4 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
                         <span>True DJ AutoMix (الدمج التلقائي)</span>
-                        <span className="px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[10px] text-[#1ed760] font-bold border border-[#1DB954]/30">
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--apple-rose)]/20 text-[10px] text-[var(--apple-rose)] font-bold border border-[var(--apple-rose)]/30">
                           EQUAL-POWER
                         </span>
                       </h4>
@@ -250,7 +250,7 @@ export const EqualizerModal: React.FC = () => {
                   <button
                     onClick={() => setAutoMix(!automixEnabled)}
                     className={`w-13 h-7 rounded-full p-1 transition-colors relative flex items-center cursor-pointer shadow-inner ${
-                      automixEnabled ? 'bg-[#1DB954] shadow-[#1DB954]/30' : 'bg-white/10'
+                      automixEnabled ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] shadow-[0_0_12px_rgba(250,36,60,0.4)]' : 'bg-white/10'
                     }`}
                   >
                     <div
@@ -265,7 +265,7 @@ export const EqualizerModal: React.FC = () => {
                   <div className="pt-2 border-t border-white/[0.06] space-y-2">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-zinc-400 font-medium">مدة الانتقال التدريجي (Crossfade):</span>
-                      <span className="text-[#1ed760] font-bold font-mono px-2 py-0.5 rounded-md bg-[#1DB954]/15 border border-[#1DB954]/20">
+                      <span className="text-[var(--apple-rose)] font-bold font-mono px-2 py-0.5 rounded-md bg-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/20">
                         {automixDuration} ثوانٍ
                       </span>
                     </div>
@@ -278,7 +278,7 @@ export const EqualizerModal: React.FC = () => {
                         step={1}
                         value={automixDuration}
                         onChange={(e) => setAutoMix(true, parseInt(e.target.value, 10))}
-                        className="w-full accent-[#1DB954] cursor-pointer"
+                        className="w-full accent-[var(--apple-rose)] cursor-pointer"
                       />
                       <div className="flex justify-between text-[11px] font-medium text-zinc-500">
                         <span>سريع (2s)</span>
@@ -291,9 +291,9 @@ export const EqualizerModal: React.FC = () => {
               </div>
 
               {/* Mega Bass Boost Section */}
-              <div className="rounded-2xl p-4 sm:p-5 border border-[#1DB954]/20 bg-gradient-to-r from-[#1DB954]/10 via-[#10B981]/5 to-black/40 relative overflow-hidden space-y-3">
+              <div className="rounded-2xl p-4 sm:p-5 border border-[var(--apple-rose)]/20 bg-gradient-to-r from-[var(--apple-red)]/10 via-[var(--apple-rose)]/5 to-black/40 relative overflow-hidden space-y-3">
                 <div
-                  className="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[#1DB954]/20 blur-2xl pointer-events-none transition-opacity duration-300"
+                  className="absolute -right-10 -top-10 w-36 h-36 rounded-full bg-[var(--apple-rose)]/20 blur-2xl pointer-events-none transition-opacity duration-300"
                   style={{ opacity: bassBoost > 0 ? 0.3 + (bassBoost / 18) * 0.7 : 0 }}
                 />
 
@@ -302,7 +302,7 @@ export const EqualizerModal: React.FC = () => {
                     <div
                       className={`p-2.5 rounded-xl border transition-all duration-300 ${
                         bassBoost > 0
-                          ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1DB954] shadow-[0_0_16px_rgba(29,185,84,0.4)]'
+                          ? 'bg-[var(--apple-rose)]/20 border-[var(--apple-rose)]/40 text-[var(--apple-rose)] shadow-[0_0_16px_rgba(250,36,60,0.4)]'
                           : 'bg-white/[0.04] border-white/[0.08] text-zinc-400'
                       }`}
                     >
@@ -314,7 +314,7 @@ export const EqualizerModal: React.FC = () => {
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
                             bassBoost > 0
-                              ? 'bg-[#1DB954]/25 text-[#1ed760] border-[#1DB954]/40'
+                              ? 'bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border-[var(--apple-rose)]/40'
                               : 'bg-white/[0.05] text-zinc-500 border-white/[0.05]'
                           }`}
                         >
@@ -339,7 +339,7 @@ export const EqualizerModal: React.FC = () => {
                         onClick={() => setBassBoost(p.val)}
                         className={`px-2 sm:px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
                           bassBoost === p.val
-                            ? 'bg-[#1DB954] text-white shadow-lg shadow-[#1DB954]/30'
+                            ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-lg shadow-[var(--apple-red)]/30'
                             : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
                         }`}
                       >
@@ -357,13 +357,13 @@ export const EqualizerModal: React.FC = () => {
                     step={0.5}
                     value={bassBoost}
                     onChange={(e) => setBassBoost(parseFloat(e.target.value))}
-                    className="w-full accent-[#1DB954] cursor-pointer h-2 bg-white/10 rounded-lg appearance-none"
+                    className="w-full accent-[var(--apple-rose)] cursor-pointer h-2 bg-white/10 rounded-lg appearance-none"
                   />
                   <div className="flex justify-between text-[10px] font-mono text-zinc-500">
                     <span>طبيعي (0dB)</span>
                     <span>متوسط (+6dB)</span>
                     <span>عميق (+12dB)</span>
-                    <span className="text-[#1ed760] font-bold">زلزال (+18dB)</span>
+                    <span className="text-[var(--apple-rose)] font-bold">زلزال (+18dB)</span>
                   </div>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export const EqualizerModal: React.FC = () => {
               {/* Presets Chips */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-400 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
                   <span>الأوضاع الجاهزة (Presets):</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -400,26 +400,26 @@ export const EqualizerModal: React.FC = () => {
                 <div className="relative w-full h-20 bg-black/40 rounded-xl border border-white/[0.06] overflow-hidden">
                   <div className="absolute inset-0 flex flex-col justify-between py-2 px-3 pointer-events-none opacity-30 text-[9px] font-mono text-zinc-400">
                     <div className="border-b border-dashed border-white/20 pb-0.5">+12dB</div>
-                    <div className="border-b border-white/30 pb-0.5 text-[#1ed760]">0dB (Flat)</div>
+                    <div className="border-b border-white/30 pb-0.5 text-[var(--apple-rose)]">0dB (Flat)</div>
                     <div className="border-t border-dashed border-white/20 pt-0.5">-12dB</div>
                   </div>
 
                   <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1DB954" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                        <stop offset="0%" stopColor="#FA243C" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#7D12FF" stopOpacity="0.0" />
                       </linearGradient>
                       <linearGradient id="eqStroke" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#1DB954" />
-                        <stop offset="50%" stopColor="#10B981" />
-                        <stop offset="100%" stopColor="#34D399" />
+                        <stop offset="0%" stopColor="#FA243C" />
+                        <stop offset="50%" stopColor="#FF375F" />
+                        <stop offset="100%" stopColor="#7D12FF" />
                       </linearGradient>
                     </defs>
                     <path d={fillD} fill="url(#eqFill)" />
                     <path d={pathD} fill="none" stroke="url(#eqStroke)" strokeWidth="2.5" strokeLinecap="round" />
                     {points.map((p, i) => (
-                      <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#ffffff" stroke="#1DB954" strokeWidth="1" />
+                      <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#ffffff" stroke="#FA243C" strokeWidth="1" />
                     ))}
                   </svg>
                 </div>
@@ -435,7 +435,7 @@ export const EqualizerModal: React.FC = () => {
                         <span
                           className={`text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md tabular-nums transition-colors ${
                             isBoost
-                              ? 'text-[#1ed760] bg-[#1DB954]/20 border border-[#1DB954]/30'
+                              ? 'text-[var(--apple-rose)] bg-[var(--apple-rose)]/20 border border-[var(--apple-rose)]/30'
                               : isCut
                               ? 'text-pink-300 bg-pink-500/20 border border-pink-500/30'
                               : 'text-zinc-500 bg-white/[0.04]'
@@ -456,7 +456,7 @@ export const EqualizerModal: React.FC = () => {
                             step={0.5}
                             value={gain}
                             onChange={(e) => setEqGain(idx, parseFloat(e.target.value))}
-                            className="accent-[#1DB954] cursor-pointer -rotate-90 w-24 sm:w-28 origin-center"
+                            className="accent-[var(--apple-rose)] cursor-pointer -rotate-90 w-24 sm:w-28 origin-center"
                           />
                         </div>
 
@@ -640,9 +640,9 @@ export const EqualizerModal: React.FC = () => {
               {/* 4. 3D Convolver Reverb Spaces */}
               <div className="rounded-2xl p-4 sm:p-5 border border-white/[0.08] bg-white/[0.025] space-y-3">
                 <div className="flex items-center gap-2">
-                  <Waves className="w-4 h-4 text-[#1DB954]" />
+                  <Waves className="w-4 h-4 text-[var(--apple-rose)]" />
                   <h4 className="font-bold text-white text-sm sm:text-base">
-                    محاكي البيئات الصوتية ثلاثية الأبعاد (3D Reverb Spaces)
+                    محاكي البيئات الصوتية ثلاثية الأبعاد (Apple Spatial Reverb)
                   </h4>
                   <span className="text-[10px] text-zinc-500 mr-auto font-mono">100% OFFLINE DSP</span>
                 </div>
@@ -657,17 +657,17 @@ export const EqualizerModal: React.FC = () => {
                       <button
                         key={space.id}
                         onClick={() => setReverbSpace(space.id)}
-                        className={`p-3 rounded-xl border text-right transition-all flex items-start justify-between gap-2.5 cursor-pointer ${
+                        className={`p-3 rounded-2xl border text-right transition-all flex items-start justify-between gap-2.5 cursor-pointer ${
                           isSelected
-                            ? 'bg-[#1DB954]/15 border-[#1DB954]/50 shadow-[0_0_15px_rgba(29,185,84,0.2)]'
+                            ? 'bg-[var(--apple-rose)]/15 border-[var(--apple-rose)]/50 shadow-[0_0_15px_rgba(250,36,60,0.25)]'
                             : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.1]'
                         }`}
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`p-1.5 rounded-lg ${
-                                isSelected ? 'bg-[#1DB954] text-black' : 'bg-white/[0.06] text-zinc-400'
+                              className={`p-1.5 rounded-xl ${
+                                isSelected ? 'bg-gradient-to-tr from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-sm' : 'bg-white/[0.06] text-zinc-400'
                               }`}
                             >
                               {space.icon}
@@ -679,7 +679,7 @@ export const EqualizerModal: React.FC = () => {
                         <span
                           className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md self-start ${
                             isSelected
-                              ? 'bg-[#1DB954]/25 text-[#1ed760] border border-[#1DB954]/40'
+                              ? 'bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border border-[var(--apple-rose)]/40'
                               : 'bg-white/[0.05] text-zinc-500'
                           }`}
                         >
@@ -695,12 +695,12 @@ export const EqualizerModal: React.FC = () => {
               <div className="rounded-2xl p-4 sm:p-5 border border-white/[0.08] bg-white/[0.025] space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400">
+                    <div className="p-2 rounded-xl bg-[var(--apple-rose)]/15 text-[var(--apple-rose)]">
                       <Smartphone className="w-4 h-4" />
                     </div>
                     <div>
                       <h5 className="font-bold text-white text-xs sm:text-sm">
-                        الاهتزاز اللمسي مع ضربات البيز (Haptic Bass Feedback)
+                        الاهتزاز اللمسي مع ضربات البيز (Apple Taptic Engine Sync)
                       </h5>
                       <p className="text-[11px] text-zinc-400">
                         نبضات فيزيائية ناعمة مع كل ضربة إيقاع قوية على الهواتف الذكية.
@@ -711,7 +711,7 @@ export const EqualizerModal: React.FC = () => {
                   <button
                     onClick={() => setHapticFeedbackEnabled(!hapticFeedbackEnabled)}
                     className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
-                      hapticFeedbackEnabled ? 'bg-[#1DB954]' : 'bg-white/10'
+                      hapticFeedbackEnabled ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)]' : 'bg-white/10'
                     }`}
                   >
                     <div
@@ -724,7 +724,7 @@ export const EqualizerModal: React.FC = () => {
 
                 <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400">
+                    <div className="p-2 rounded-xl bg-[var(--apple-violet)]/15 text-purple-300">
                       <Eye className="w-4 h-4" />
                     </div>
                     <div>
@@ -740,7 +740,7 @@ export const EqualizerModal: React.FC = () => {
                   <button
                     onClick={() => setReactiveVisualsEnabled(!reactiveVisualsEnabled)}
                     className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
-                      reactiveVisualsEnabled ? 'bg-[#1DB954]' : 'bg-white/10'
+                      reactiveVisualsEnabled ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)]' : 'bg-white/10'
                     }`}
                   >
                     <div

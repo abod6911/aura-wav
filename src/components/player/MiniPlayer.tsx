@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { Play, Pause, SkipForward, Loader2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MiniPlayerProps {
@@ -19,8 +19,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const nextTrack = usePlayerStore((state) => state.nextTrack);
   const previousTrack = usePlayerStore((state) => state.previousTrack);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
 
   if (!currentTrack) return null;
+
+  const isDownloaded = downloadedTrackIds.includes(currentTrack.id);
 
   const validDuration = isFinite(duration) && duration > 0 ? duration : 1;
   const progressPercent = Math.min(100, Math.max(0, (currentTime / validDuration) * 100));
@@ -111,9 +114,16 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
 
       {/* Track Info */}
       <div onClick={handleExpand} className="flex-1 min-w-0 pr-1">
-        <h4 className="text-xs font-bold text-white truncate tracking-tight">
-          {currentTrack.title}
-        </h4>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <h4 className="text-xs font-bold text-white truncate tracking-tight">
+            {currentTrack.title}
+          </h4>
+          {isDownloaded && (
+            <span className="shrink-0 text-emerald-400" title="جاهزة بدون إنترنت">
+              <CheckCircle2 className="w-3 h-3" />
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-1.5 mt-0.5">
           <p className="text-[11px] text-zinc-400 truncate font-medium">
             {currentTrack.artist}

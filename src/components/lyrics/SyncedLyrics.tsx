@@ -15,6 +15,8 @@ import {
   Repeat1,
   Volume2,
   VolumeX,
+  Mic2,
+  MicOff,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { extractPaletteFromImage } from '../../lib/colorSampler';
@@ -38,6 +40,10 @@ const SyncedLyricsModal: React.FC = () => {
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const automixDuration = usePlayerStore((state) => state.automixDuration);
+  const karaokeMode = usePlayerStore((state) => state.karaokeMode);
+  const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
+  const karaokeVocalLevel = usePlayerStore((state) => state.karaokeVocalLevel);
+  const setKaraokeVocalLevel = usePlayerStore((state) => state.setKaraokeVocalLevel);
 
   const seek = usePlayerStore((state) => state.seek);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
@@ -78,9 +84,9 @@ const SyncedLyricsModal: React.FC = () => {
   };
 
   const [palette, setPalette] = useState<{ primary: string; secondary: string; accent: string }>({
-    primary: 'rgba(99, 102, 241, 0.4)',
-    secondary: 'rgba(168, 85, 247, 0.35)',
-    accent: 'rgba(236, 72, 153, 0.25)',
+    primary: 'rgba(250, 36, 60, 0.45)',
+    secondary: 'rgba(255, 55, 95, 0.35)',
+    accent: 'rgba(125, 18, 255, 0.25)',
   });
 
   useEffect(() => {
@@ -106,7 +112,7 @@ const SyncedLyricsModal: React.FC = () => {
         {/* Luxury Obsidian Base Canvas */}
         <div className="absolute inset-0 -z-20 bg-gradient-to-b from-[#08080c] via-[#060609] to-[#040406]" />
 
-        {/* Dynamic Multi-Orb Luminous Ambient Glow (Apple Music Style - 100% Anti-Mud) */}
+        {/* Dynamic Multi-Orb Luminous Ambient Glow (Apple Music Style) */}
         <div
           className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-45 pointer-events-none transition-all duration-1000 ease-out"
           style={{ backgroundColor: palette.primary }}
@@ -123,15 +129,29 @@ const SyncedLyricsModal: React.FC = () => {
         {/* Ambient Dark Vignette & Glass Overlay */}
         <div className="absolute inset-0 -z-10 bg-black/40 backdrop-blur-[50px] pointer-events-none" />
 
-        {/* Top Header Bar */}
+        {/* Top Header Bar: Apple Music Live Lyrics & Apple Music Sing */}
         <div className="w-full px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/[0.08] z-20">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-xs font-semibold text-[#1ed760]">
-              <Sparkles className="w-3.5 h-3.5 text-[#1DB954] animate-pulse" />
-              <span>Synced Lyrics</span>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-xs font-black text-white">
+              <Sparkles className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
+              <span>LIVE LYRICS</span>
             </div>
+            
+            {/* Apple Music Sing Mode Switch */}
+            <button
+              onClick={() => setKaraokeMode(!karaokeMode)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
+                karaokeMode
+                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/35 ring-1 ring-white/20'
+                  : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'
+              }`}
+            >
+              <Mic2 className="w-3 h-3" />
+              <span>APPLE SING</span>
+            </button>
+
             {isAutoMixing && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/40 text-xs font-bold text-[#1ed760] animate-pulse">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs font-bold text-emerald-400 animate-pulse">
                 AutoMix Active
               </span>
             )}
@@ -140,7 +160,7 @@ const SyncedLyricsModal: React.FC = () => {
           <motion.button
             whileTap={{ scale: 0.88 }}
             onClick={() => setLyricsOpen(false)}
-            className="w-10 h-10 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-colors shadow-lg"
+            className="w-10 h-10 rounded-full apple-glass-pill text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer apple-spring"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -191,7 +211,7 @@ const SyncedLyricsModal: React.FC = () => {
               <button
                 onClick={toggleShuffle}
                 className={`p-2 rounded-full transition-colors ${
-                  shuffle ? 'text-[#1DB954] bg-[#1DB954]/20' : 'text-zinc-500 hover:text-white'
+                  shuffle ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
                 }`}
               >
                 <Shuffle className="w-4 h-4" />
@@ -207,7 +227,7 @@ const SyncedLyricsModal: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={togglePlayPause}
-                className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 transition-all"
+                className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-105 transition-all"
               >
                 {isPlaying ? (
                   <Pause className="w-6 h-6 fill-black" />
@@ -226,7 +246,7 @@ const SyncedLyricsModal: React.FC = () => {
               <button
                 onClick={cycleRepeat}
                 className={`p-2 rounded-full transition-colors ${
-                  repeatMode !== 'off' ? 'text-[#1DB954] bg-[#1DB954]/20' : 'text-zinc-500 hover:text-white'
+                  repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
                 }`}
               >
                 {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
@@ -234,7 +254,7 @@ const SyncedLyricsModal: React.FC = () => {
             </div>
 
             {/* Volume Slider */}
-            <div className="flex items-center justify-center gap-2 pt-2" dir="ltr">
+            <div className="flex items-center justify-center gap-2 pt-1" dir="ltr">
               <button
                 onClick={() => setVolume(volume === 0 ? 0.9 : 0)}
                 className="text-zinc-500 hover:text-white transition-colors"
@@ -251,6 +271,30 @@ const SyncedLyricsModal: React.FC = () => {
                 className="w-32 accent-white cursor-pointer"
               />
             </div>
+
+            {/* Apple Music Sing Vocal Level Slider */}
+            {karaokeMode && (
+              <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/[0.06] border border-[#FA243C]/30 shadow-lg">
+                <div className="flex items-center justify-between text-xs font-bold text-white">
+                  <span className="flex items-center gap-1.5 text-[#FF375F]">
+                    <Mic2 className="w-3.5 h-3.5" />
+                    <span>مستوى صوت المغني (Sing)</span>
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-400">
+                    {Math.round(karaokeVocalLevel * 100)}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={karaokeVocalLevel}
+                  onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
+                  className="w-full accent-[#FA243C] cursor-pointer"
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Column: Kinetic Synchronized Lyrics Stream */}
@@ -310,7 +354,7 @@ const SyncedLyricsModal: React.FC = () => {
               })
             ) : currentTrack?.lyrics ? (
               <div className="text-center py-24 text-zinc-400 space-y-4 whitespace-pre-line text-lg leading-loose">
-                <Music2 className="w-12 h-12 mx-auto text-[#1DB954] opacity-60" />
+                <Music2 className="w-12 h-12 mx-auto text-[#FA243C] opacity-70" />
                 <p className="text-white text-2xl font-bold">كلمات الأغنية</p>
                 <div className="max-w-xl mx-auto text-zinc-300 text-lg leading-relaxed">
                   {currentTrack.lyrics}
@@ -318,10 +362,10 @@ const SyncedLyricsModal: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-36 text-zinc-400 space-y-4">
-                <Music2 className="w-14 h-14 mx-auto text-[#1DB954] animate-pulse opacity-40" />
+                <Music2 className="w-14 h-14 mx-auto text-[#FA243C] animate-pulse opacity-50" />
                 <h4 className="text-white text-2xl font-bold">لا توجد كلمات متزامنة متاحة</h4>
-                <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-                  يمكنك وضع ملف <code className="text-[#1ed760] font-mono bg-white/10 px-1.5 py-0.5 rounded">.lrc</code> بنفس اسم الأغنية أو يتم جلبها تلقائياً عند الاتصال بالإنترنت.
+                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
+                  يمكنك وضع ملف <code className="text-[#FF375F] font-mono bg-white/10 px-1.5 py-0.5 rounded">.lrc</code> بنفس اسم الأغنية أو يتم جلبها تلقائياً عند الاتصال بالإنترنت.
                 </p>
               </div>
             )}

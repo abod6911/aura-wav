@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const totalMins = Math.floor((totalDurationSecs % 3600) / 60);
 
   return (
-    <header className="py-2.5 sm:py-3.5 border-b border-white/[0.08] select-none mb-3 sm:mb-4 w-full min-w-0" dir={dir}>
+    <header className="py-2.5 sm:py-3 border-b border-white/[0.08] select-none mb-3 sm:mb-4 w-full min-w-0" dir={dir}>
       {/* Mobile Header Bar */}
       <div className="flex flex-col sm:hidden w-full gap-2.5">
         <div className="flex items-center justify-between w-full">
@@ -61,20 +61,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/20 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+              className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
               title={t.settings}
               aria-label={t.settings}
             >
-              <div className="w-full h-full bg-[#121218] rounded-full flex items-center justify-center text-white text-xs font-black">
+              <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black">
                 A
               </div>
             </button>
             <div className="flex flex-col">
-              <span className="font-black text-white text-base tracking-tight leading-none">
+              <span className="font-black text-white text-base tracking-tight leading-none flex items-center gap-1.5">
                 AURA<span className="text-[#FA243C]">.WAV</span>
+                <span className="apple-badge text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C]">ALAC</span>
               </span>
               <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5">
-                {activeTab === 'home' ? (isRTL ? 'استوديو Hi-Fi' : 'Hi-Fi Studio') : greeting}
+                {activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting}
               </span>
             </div>
           </div>
@@ -84,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer"
                 title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
               >
                 <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -94,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.08] text-xs font-bold text-white transition-all cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer"
               title={t.importFolder}
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
@@ -104,9 +105,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Sleep Timer */}
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
+              className={`w-9 h-9 rounded-full text-xs font-bold flex items-center justify-center apple-spring cursor-pointer ${
                 sleepTimerRemaining !== null
-                  ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                  ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
               title={t.sleepTimer}
@@ -120,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* CarPlay / Car Mode Trigger */}
             <button
               onClick={() => setCarModeOpen(true)}
-              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
               title="وضع السيارة / CarPlay Mode"
             >
               <Car className="w-4 h-4 text-[#FA243C]" />
@@ -129,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
               title={t.settings}
             >
               <Settings className="w-4 h-4" />
@@ -141,20 +142,20 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-0.5">
           <button
             onClick={() => setActiveFilterPill('all')}
-            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
               activeFilterPill === 'all'
-                ? 'bg-white text-black shadow-sm'
-                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
+                ? 'bg-white text-black shadow-md'
+                : 'apple-glass-pill text-zinc-300'
             }`}
           >
             {t.all}
           </button>
           <button
             onClick={() => setActiveFilterPill('music')}
-            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
               activeFilterPill === 'music'
-                ? 'bg-[#FA243C] text-white shadow-sm'
-                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                : 'apple-glass-pill text-zinc-300'
             }`}
           >
             {t.music}
@@ -164,10 +165,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
               setActiveFilterPill('podcasts');
               addToast(isRTL ? 'قسم البودكاست قيد التطوير' : 'Podcasts section coming soon', undefined, 'info');
             }}
-            className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
               activeFilterPill === 'podcasts'
-                ? 'bg-[#FA243C] text-white shadow-sm'
-                : 'bg-white/[0.08] text-zinc-300 hover:bg-white/[0.14]'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                : 'apple-glass-pill text-zinc-300'
             }`}
           >
             {t.podcasts}
@@ -178,56 +179,60 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
       {/* Desktop Header Bar */}
       <div className="hidden sm:flex items-center justify-between w-full min-w-0">
         {/* Left: History Navigation & Saved Folder */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3.5 min-w-0">
           <div className="flex items-center gap-1.5" dir="ltr">
             <button
               onClick={() => setActiveTab('home')}
-              className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
               title={t.listenNow}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setActiveTab('search')}
-              className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
               title={t.search}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onOpenImport}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white text-xs font-medium apple-spring cursor-pointer"
               title={t.importFolder}
             >
               <FolderOpen className="w-3.5 h-3.5 text-[#FA243C]" />
               <span className="font-bold text-white">{savedFolderName || 'Liked_Songs'}</span>
-              <span className="text-zinc-500 font-mono text-[11px]">({tracks.length} {t.songs})</span>
+              <span className="text-zinc-400 font-mono text-[11px]">({tracks.length} {t.songs})</span>
             </button>
-            <span className="hidden lg:inline-flex items-center gap-1.5 text-[11px] text-zinc-400">
-              <span>{totalHours > 0 ? `${totalHours}h ` : ''}{totalMins}m</span>
+            <span className="hidden lg:inline-flex items-center gap-2 text-[11px] text-zinc-400">
+              <span className="font-mono">{totalHours > 0 ? `${totalHours}h ` : ''}{totalMins}m</span>
               <span>•</span>
-              <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                {t.offlineReady}
+              <span className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400">
+                <ShieldCheck className="w-2.5 h-2.5" />
+                LOSSLESS AUDIO
               </span>
             </span>
           </div>
         </div>
 
         {/* Right: Desktop Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Quick Search */}
+        <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* Cupertino Search Pill */}
           {activeTab !== 'search' && (
             <button
-              onClick={() => setActiveTab('search')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-400 hover:text-white text-xs font-medium transition-all cursor-pointer"
+              onClick={() => {
+                setActiveTab('search');
+                setTimeout(() => document.getElementById('library-search-input')?.focus(), 50);
+              }}
+              className="flex items-center gap-3 px-3.5 py-1.5 rounded-full apple-glass-pill text-zinc-400 hover:text-white text-xs font-medium apple-spring cursor-pointer group"
               title={t.quickSearch}
             >
-              <Search className="w-3.5 h-3.5 text-zinc-400" />
+              <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
               <span>{t.quickSearch}</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-zinc-400 font-mono">⌘K</kbd>
             </button>
           )}
 
@@ -246,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Import Folder Action */}
           <button
             onClick={onOpenImport}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:brightness-110 text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 shadow-md shadow-[#FA243C]/20 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold apple-spring shadow-lg shadow-[#FA243C]/25 cursor-pointer"
             title={t.importFolder}
           >
             <FolderPlus className="w-4 h-4" />
@@ -256,10 +261,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Sleep Timer */}
           <button
             onClick={() => setSleepTimerOpen(true)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
+            className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 apple-spring cursor-pointer ${
               sleepTimerRemaining !== null
-                ? 'bg-[#FA243C] border-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
-                : 'bg-white/[0.05] hover:bg-white/[0.1] border-white/[0.08] text-zinc-300 hover:text-white'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
+                : 'apple-glass-pill text-zinc-300 hover:text-white'
             }`}
             title={t.sleepTimer}
           >
@@ -274,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Equalizer */}
           <button
             onClick={() => setEqualizerOpen(true)}
-            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
             title={t.equalizer}
           >
             <Sliders className="w-4 h-4" />
@@ -283,7 +288,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* CarPlay / Car Mode Trigger */}
           <button
             onClick={() => setCarModeOpen(true)}
-            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
             title="وضع السيارة / CarPlay Mode"
           >
             <Car className="w-4 h-4 text-[#FA243C]" />
@@ -292,7 +297,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Settings Modal Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="p-2 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
             title={t.settings}
           >
             <Settings className="w-4 h-4" />
@@ -301,10 +306,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Profile Avatar Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/20 flex-shrink-0 cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+            className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer apple-spring"
             title={t.profile}
           >
-            <div className="w-full h-full bg-[#121218] rounded-full flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-black">
               A
             </div>
           </button>

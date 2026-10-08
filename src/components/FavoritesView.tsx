@@ -12,6 +12,8 @@ import {
   ListPlus,
   Radio,
   Clock,
+  Download,
+  CheckCircle2,
 } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { Track } from '../types';
@@ -45,6 +47,15 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
       .map((id) => trackMap.get(id))
       .filter((t): t is Track => t !== undefined);
   }, [tracks, favorites]);
+
+  const downloadFavoritesOffline = usePlayerStore((state) => state.downloadFavoritesOffline);
+  const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const savedFavoritesCount = useMemo(() => {
+    const saved = new Set(downloadedTrackIds);
+    return favoriteTracks.reduce((n, t) => (saved.has(t.id) ? n + 1 : n), 0);
+  }, [favoriteTracks, downloadedTrackIds]);
+  const allFavoritesSaved = favoriteTracks.length > 0 && savedFavoritesCount === favoriteTracks.length;
 
   // Filtered by search
   const displayedTracks = useMemo(() => {
@@ -140,6 +151,21 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
               >
                 <Shuffle className="w-4 h-4 text-zinc-300" />
                 <span>{isRTL ? 'خلط عشوائي' : 'Shuffle'}</span>
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => downloadFavoritesOffline()}
+                disabled={favoriteTracks.length === 0 || !!downloadAllProgress || allFavoritesSaved}
+                title={isRTL ? 'حفظ المفضلة للاستماع بدون إنترنت' : 'Save favorites for offline listening'}
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {allFavoritesSaved ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                <span>
+                  {allFavoritesSaved
+                    ? isRTL ? 'محفوظة أوفلاين' : 'Saved offline'
+                    : isRTL ? `حفظ أوفلاين (${favoriteTracks.length - savedFavoritesCount})` : `Save offline (${favoriteTracks.length - savedFavoritesCount})`}
+                </span>
               </motion.button>
             </div>
           </div>

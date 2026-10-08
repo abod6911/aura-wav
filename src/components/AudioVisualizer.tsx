@@ -17,6 +17,25 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
+  const isRunningRef = useRef<boolean>(typeof document === 'undefined' ? true : !document.hidden);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined') {
+        isRunningRef.current = !document.hidden;
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -27,8 +46,6 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     const dataArray = new Uint8Array(128);
     // Track peak heights for authentic studio bouncy peak meters
     const peaks = new Float32Array(bars).fill(0);
-
-    let isRunning = typeof document === 'undefined' ? true : !document.hidden;
 
     if (!isPlaying) {
       // Draw resting calm baseline once without running continuous requestAnimationFrame loop
@@ -46,7 +63,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     }
 
     const render = () => {
-      if (!isRunning || !isPlaying) return;
+      if (!isRunningRef.current || !isPlaying) return;
       animationId = requestAnimationFrame(render);
 
       djAudioEngine.getVisualizerData(dataArray);
@@ -125,32 +142,12 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       }
     };
 
-    if (isRunning) {
+    if (isRunningRef.current) {
       animationId = requestAnimationFrame(render);
     }
 
-    const handleVisibility = () => {
-      if (typeof document !== 'undefined' && document.hidden) {
-        isRunning = false;
-        cancelAnimationFrame(animationId);
-      } else {
-        if (!isRunning) {
-          isRunning = true;
-          animationId = requestAnimationFrame(render);
-        }
-      }
-    };
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', handleVisibility);
-    }
-
     return () => {
-      isRunning = false;
       cancelAnimationFrame(animationId);
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', handleVisibility);
-      }
     };
   }, [isPlaying, currentTrack, bars, mode]);
 

@@ -1,4 +1,6 @@
 const CACHE_NAME = 'aura-wav-v10';
+const AUDIO_CACHE_NAME = 'aura-wav-audio-v1';
+const IMAGE_CACHE_NAME = 'aura-wav-images-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -26,7 +28,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith('aura-wav-') && key !== CACHE_NAME && key !== AUDIO_CACHE_NAME && key !== IMAGE_CACHE_NAME) {
             console.log('[SW] Purging old cache:', key);
             return caches.delete(key);
           }
@@ -37,12 +39,42 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignore non-http(s), range audio requests, and all backend API streaming endpoints
+  const url = event.request.url;
+
+  // Ignore non-GET, non-http(s), Range requests (audio seeking is served by the
+  // app from OPFS/IndexedDB or by the backend) and all backend API endpoints.
   if (
-    !event.request.url.startsWith('http') ||
+    event.request.method !== 'GET' ||
+    !url.startsWith('http') ||
     event.request.headers.has('range') ||
-    event.request.url.includes('/api/')
+    url.includes('/api/') ||
+    url.includes('/songs/')
   ) {
+    return;
+  }
+
+  // Artwork images: cache-first (precache included), bounded to 500 entries
+  if (event.request.destination === 'image' || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(url)) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        try {
+          const resp = await fetch(event.request);
+          if (resp && resp.status === 200) {
+            const cache = await caches.open(IMAGE_CACHE_NAME);
+            await cache.put(event.request, resp.clone());
+            const keys = await cache.keys();
+            if (keys.length > 500) {
+              await cache.delete(keys[0]);
+            }
+          }
+          return resp;
+        } catch {
+          return new Response('', { status: 404, statusText: 'Offline' });
+        }
+      })()
+    );
     return;
   }
 
@@ -117,6 +149,14 @@ self.addEventListener('message', (event) => {
       return Promise.all(keys.map((k) => caches.delete(k)));
     }).then(() => {
       self.clients.claim();
+    });
+  }
+  if (event.data && event.data.type === 'CHECK_OFFLINE_READY') {
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const keys = await cache.keys();
+      const cachedUrls = keys.map(k => new URL(k.url).pathname);
+      const allCached = STATIC_ASSETS.every(asset => cachedUrls.includes(asset));
+      event.source.postMessage({ type: 'OFFLINE_READY_STATUS', isReady: allCached });
     });
   }
 });

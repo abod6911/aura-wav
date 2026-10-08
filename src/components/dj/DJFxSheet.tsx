@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
@@ -35,9 +35,9 @@ const SOUND_PADS: SoundPad[] = [
     titleAr: 'خربشة القرص',
     titleEn: 'Vinyl Scratch',
     icon: Disc,
-    color: '#1DB954',
-    gradient: 'from-[#1DB954]/25 via-[#1DB954]/10 to-transparent',
-    glowColor: 'rgba(29, 185, 84, 0.45)',
+    color: '#FA243C',
+    gradient: 'from-[#FA243C]/25 via-[#FA243C]/10 to-transparent',
+    glowColor: 'rgba(250, 36, 60, 0.45)',
   },
   {
     id: 'airhorn',
@@ -128,6 +128,9 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
   const addToast = usePlayerStore((state) => state.addToast);
 
   const [activePad, setActivePad] = useState<string | null>(null);
+  const padTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (padTimeoutRef.current) clearTimeout(padTimeoutRef.current); }, []);
 
   const isOpen = propIsOpen !== undefined ? propIsOpen : isStoreOpen;
   const handleClose = () => {
@@ -150,7 +153,8 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
     setActivePad(pad.id);
     triggerHaptic(30);
     playDJSound(pad.id);
-    setTimeout(() => {
+    if (padTimeoutRef.current) clearTimeout(padTimeoutRef.current);
+    padTimeoutRef.current = setTimeout(() => {
       setActivePad((curr) => (curr === pad.id ? null : curr));
     }, 350);
   };
@@ -189,15 +193,15 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1DB954] to-[#34D399] p-[1.5px] shadow-lg shadow-[#1DB954]/20 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)] to-[var(--apple-rose)] p-[1.5px] shadow-lg shadow-[var(--apple-red)]/20 flex items-center justify-center">
                 <div className="w-full h-full bg-[#0c0c14] rounded-[14px] flex items-center justify-center">
-                  <Flame className="w-5 h-5 text-[#1DB954]" />
+                  <Flame className="w-5 h-5 text-[var(--apple-rose)]" />
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <span>أدوات ومؤثرات الـ DJ الحية</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1DB954]/20 text-[#1ed760] border border-[#1DB954]/30 font-mono">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 font-mono">
                     LIVE FX
                   </span>
                 </h3>
@@ -293,10 +297,10 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+          <div className="p-4 rounded-[22px] bg-white/[0.03] border border-white/[0.08] space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-[#1DB954]" />
+                <Gauge className="w-4 h-4 text-[var(--apple-rose)]" />
                 <span className="text-xs font-bold text-white">سرعة ونغمة القرص (Turntable Pitch)</span>
               </div>
 
@@ -305,7 +309,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   className={`text-xs font-mono font-black px-2 py-0.5 rounded-full border ${
                     playbackRate === 1.0
                       ? 'bg-white/10 text-zinc-300 border-white/10'
-                      : 'bg-[#1DB954]/20 text-[#1ed760] border-[#1DB954]/30'
+                      : 'bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border-[var(--apple-rose)]/30'
                   }`}
                 >
                   {playbackRate.toFixed(2)}x {pitchDiffPercent !== 0 && `(${pitchDiffPercent > 0 ? '+' : ''}${pitchDiffPercent}%)`}
@@ -335,7 +339,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                 onChange={(e) => {
                   setPlaybackRate(parseFloat(e.target.value));
                 }}
-                className="flex-1 accent-[#1DB954] cursor-pointer h-2 bg-white/10 rounded-full"
+                className="flex-1 accent-[var(--apple-rose)] cursor-pointer h-2 bg-white/10 rounded-full"
               />
               <span className="text-[10px] font-mono text-zinc-500">1.5x</span>
             </div>
@@ -350,7 +354,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   }}
                   className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer ${
                     Math.abs(playbackRate - rate) < 0.01
-                      ? 'bg-[#1DB954] text-white shadow-md shadow-[#1DB954]/30'
+                      ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md shadow-[var(--apple-red)]/30'
                       : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
@@ -399,15 +403,15 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                       setAutomixStyle(style.id);
                       if (!automixEnabled) setAutoMix(true, automixDuration);
                     }}
-                    className={`p-2.5 rounded-xl border text-right transition-all cursor-pointer flex flex-col gap-1 ${
+                    className={`p-2.5 rounded-2xl border text-right transition-all cursor-pointer flex flex-col gap-1 ${
                       isSelected
-                        ? 'bg-gradient-to-r from-purple-500/25 to-[#1DB954]/20 border-purple-500/50 shadow-md shadow-purple-500/20'
+                        ? 'bg-gradient-to-r from-[var(--apple-red)]/20 to-[var(--apple-rose)]/20 border-[var(--apple-rose)]/50 shadow-md shadow-[var(--apple-rose)]/20'
                         : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-zinc-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <StyleIcon className={`w-4 h-4 ${isSelected ? 'text-[#1ed760]' : 'text-zinc-400'}`} />
-                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />}
+                      <StyleIcon className={`w-4 h-4 ${isSelected ? 'text-[var(--apple-rose)]' : 'text-zinc-400'}`} />
+                      {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-[var(--apple-rose)]" />}
                     </div>
                     <span className="text-xs font-bold text-white leading-tight">{style.nameAr}</span>
                     <span className="text-[10px] text-zinc-400 leading-snug line-clamp-1">{style.desc}</span>

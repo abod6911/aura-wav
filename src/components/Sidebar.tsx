@@ -31,69 +31,71 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
   return (
     <aside
-      className="hidden lg:flex w-72 flex-col justify-between p-3.5 gap-3 bg-[#0a0a10]/80 backdrop-blur-3xl border-r border-white/[0.08] z-30 select-none h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none"
+      className="hidden lg:flex w-72 flex-col justify-between p-3.5 gap-3.5 bg-[#08080c]/85 backdrop-blur-3xl border-r border-white/[0.08] z-30 select-none h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none"
       dir={dir}
     >
-      <div className="space-y-3">
-        {/* Top Navigation Block: Apple Music Glass Card */}
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3.5 space-y-2.5 backdrop-blur-xl">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-2.5 px-2 mb-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center shadow-lg shadow-[#FA243C]/25">
-              <Radio className="w-4.5 h-4.5 text-white" />
+      <div className="space-y-3.5">
+        {/* Brand Block: Apple Music Squircle Header */}
+        <div className="bg-white/[0.04] border border-white/[0.1] rounded-[22px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
+          <div className="flex items-center gap-3 px-1 mb-3">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center shadow-lg shadow-[#FA243C]/35">
+              <Radio className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-white leading-none">
+              <span className="text-base font-black tracking-tight text-white leading-tight flex items-center gap-1.5">
                 AURA<span className="text-[#FA243C]">.WAV</span>
+                <span className="apple-badge text-[8px] bg-[#FA243C]/20 border-[#FA243C]/30 text-[#FA243C]">PRO</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-medium leading-none mt-1">
+              <span className="text-[10px] text-zinc-400 font-medium leading-none mt-0.5">
                 {t.brandSub}
               </span>
             </div>
           </div>
 
-          <button
-            onClick={() => setActiveTab('home')}
-            className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'home'
-                ? 'text-white bg-gradient-to-r from-[#FA243C]/25 to-[#FF375F]/15 border border-[#FA243C]/30 shadow-md'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
-            }`}
-          >
-            <Radio className={`w-4.5 h-4.5 ${activeTab === 'home' ? 'text-[#FA243C]' : ''}`} />
-            <span>{t.listenNow}</span>
-          </button>
+          {/* Section: Apple Music Navigation */}
+          <div className="space-y-1">
+            <div className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 px-3 py-1">
+              Apple Music
+            </div>
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold apple-spring cursor-pointer ${
+                activeTab === 'home'
+                  ? 'text-white bg-gradient-to-r from-[#FA243C] to-[#FF375F] shadow-[0_4px_16px_rgba(250,36,60,0.35)]'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <Radio className="w-4 h-4 flex-shrink-0" />
+              <span>{t.listenNow}</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab('search');
-              setTimeout(() => document.getElementById('library-search-input')?.focus(), 50);
-            }}
-            className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-              activeTab === 'search'
-                ? 'text-white bg-gradient-to-r from-[#FA243C]/25 to-[#FF375F]/15 border border-[#FA243C]/30 shadow-md'
-                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
-            }`}
-          >
-            <Search className={`w-4.5 h-4.5 ${activeTab === 'search' ? 'text-[#FA243C]' : ''}`} />
-            <span>{t.search}</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab('search');
+                setTimeout(() => document.getElementById('library-search-input')?.focus(), 50);
+              }}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold apple-spring cursor-pointer ${
+                activeTab === 'search'
+                  ? 'text-white bg-gradient-to-r from-[#FA243C] to-[#FF375F] shadow-[0_4px_16px_rgba(250,36,60,0.35)]'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <Search className="w-4 h-4 flex-shrink-0" />
+              <span>{t.search}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Library Card */}
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 space-y-2 backdrop-blur-xl">
-          <div className="flex items-center justify-between px-2 py-1 text-zinc-400">
-            <button
-              onClick={() => setActiveTab('library')}
-              className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider hover:text-white transition-colors cursor-pointer"
-            >
-              <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-[#FA243C]' : ''}`} />
-              <span>{t.library}</span>
-            </button>
+        {/* Section: Library */}
+        <div className="bg-white/[0.04] border border-white/[0.1] rounded-[22px] p-3.5 space-y-2 backdrop-blur-2xl">
+          <div className="flex items-center justify-between px-2 py-0.5">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+              {t.library}
+            </span>
             <button
               onClick={onOpenImport}
               title={t.importFolder}
-              className="p-1 hover:text-white transition-colors cursor-pointer"
+              className="p-1 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4 text-[#FA243C]" />
             </button>
@@ -102,18 +104,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           {/* Liked Songs Tile */}
           <button
             onClick={() => setActiveTab('favorites')}
-            className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl apple-spring cursor-pointer ${
               activeTab === 'favorites'
-                ? 'bg-white/[0.1] border border-white/10'
+                ? 'bg-white/[0.12] border border-white/15'
                 : 'hover:bg-white/[0.05]'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FA243C] to-[#FF375F] flex items-center justify-center flex-shrink-0 shadow-md shadow-[#FA243C]/20">
-              <Heart className="w-4.5 h-4.5 fill-white text-white" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FA243C] to-[#FF375F] flex items-center justify-center flex-shrink-0 shadow-md shadow-[#FA243C]/25">
+              <Heart className="w-4 h-4 fill-white text-white" />
             </div>
             <div className="min-w-0 text-start flex-1">
               <h4 className="text-xs font-bold text-white truncate">{t.favorites}</h4>
-              <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+              <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-medium">
                 {favorites.length} {t.songs}
               </p>
             </div>
@@ -122,18 +124,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           {/* All Songs Link */}
           <button
             onClick={() => setActiveTab('library')}
-            className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer ${
+            className={`w-full flex items-center gap-3 p-2.5 rounded-xl apple-spring cursor-pointer ${
               activeTab === 'library'
-                ? 'bg-white/[0.1] border border-white/10'
+                ? 'bg-white/[0.12] border border-white/15'
                 : 'hover:bg-white/[0.05]'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0 border border-white/10">
-              <Music className="w-4.5 h-4.5 text-[#FA243C]" />
+            <div className="w-9 h-9 rounded-xl bg-white/[0.07] flex items-center justify-center flex-shrink-0 border border-white/10">
+              <Music className="w-4 h-4 text-[#FA243C]" />
             </div>
             <div className="min-w-0 text-start flex-1">
               <h4 className="text-xs font-bold text-white truncate">{t.library}</h4>
-              <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+              <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-medium">
                 {tracks.length} {t.songs}
               </p>
             </div>
@@ -141,8 +143,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
         </div>
       </div>
 
-      {/* Bottom Footer Actions */}
-      <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 space-y-2 backdrop-blur-xl">
+      {/* Bottom Footer Actions: Apple Hi-Fi Studio & Settings */}
+      <div className="bg-white/[0.04] border border-white/[0.1] rounded-[22px] p-3.5 space-y-2.5 backdrop-blur-2xl">
+        <div className="flex items-center justify-between px-2 text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
+          <span>Apple Audio Engine</span>
+          <span className="apple-badge text-[8px] bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
+            Hi-Res
+          </span>
+        </div>
+
         <button
           onClick={() => setEqualizerOpen(true)}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
@@ -159,9 +168,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           <span>{t.settings}</span>
         </button>
 
-        <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-zinc-500 font-mono px-1">
-          <span className="truncate max-w-[120px]">{savedFolderName || 'Liked_Songs'}</span>
-          <span className="text-emerald-400">{t.offlineReady}</span>
+        <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-[10px] text-zinc-400 font-mono px-1">
+          <span className="truncate max-w-[130px] font-sans font-medium text-zinc-300">{savedFolderName || 'Liked_Songs'}</span>
+          <span className="text-emerald-400 font-bold">{t.offlineReady}</span>
         </div>
       </div>
     </aside>

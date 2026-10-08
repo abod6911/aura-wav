@@ -31,12 +31,12 @@ export const KeyboardShortcutsModal: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-md bg-[#101018]/95 border border-white/[0.12] rounded-3xl p-6 shadow-[0_24px_64px_rgba(0,0,0,0.8)] space-y-6"
+          className="relative w-full max-w-md apple-glass-card border border-white/[0.12] rounded-[28px] p-6 shadow-[0_24px_64px_rgba(0,0,0,0.85)] space-y-6"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/30 flex items-center justify-center text-[#1DB954]">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 flex items-center justify-center text-[var(--apple-rose)]">
                 <Keyboard className="w-5 h-5" />
               </div>
               <div>
@@ -61,7 +61,7 @@ export const KeyboardShortcutsModal: React.FC = () => {
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] transition-colors"
               >
                 <span className="text-xs text-zinc-300 font-medium">{s.desc}</span>
-                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-[#1ed760] shadow-sm">
+                <kbd className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-mono font-bold text-[var(--apple-rose)] shadow-sm">
                   {s.key}
                 </kbd>
               </div>
