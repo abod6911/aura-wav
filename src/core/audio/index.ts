@@ -6,6 +6,8 @@ export * from './dsp/EffectsChain';
 export * from './dsp/HapticsEngine';
 export * from './dsp/LoudnessNormalizer';
 export * from './workers/audioTimer.worker';
+export * from './dsp/SpatialReverbEngine';
+export * from './dsp/VocalAttenuator';
 export * from './AudioEngine';
 export * from './DJAudioEngineFacade';
 

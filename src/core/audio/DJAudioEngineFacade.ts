@@ -8,6 +8,8 @@ import { createAudioTimerWorker, AudioTimerController } from './workers/audioTim
 import { AutoMixStyle, DeckChannelName, ReverbSpace, EQ_BANDS } from './types';
 import { getAudioFileFromStorage } from '../../services/storageManager';
 import { resolvePlayableStream } from '../../services/streamingEngine';
+import { SpatialReverbEngine, SpatialMode } from './dsp/SpatialReverbEngine';
+import { VocalAttenuator } from './dsp/VocalAttenuator';
 
 export interface DJEngineCallbacks {
   onTrackEnded?: () => void;
@@ -36,6 +38,11 @@ export class DJAudioEngineFacade {
   private haptics: HapticsEngine;
   private normalizer: LoudnessNormalizer;
   private timerWorker: AudioTimerController;
+  private spatialEngine: SpatialReverbEngine | null = null;
+  private vocalAttenuator: VocalAttenuator | null = null;
+  private currentSpatialMode: SpatialMode = 'off';
+  private isKaraokeEnabled = false;
+  private currentKaraokeLevel = 0.85;
 
   // AutoMix & Transition Configuration
   private automixEnabled = true;
@@ -94,14 +101,31 @@ export class DJAudioEngineFacade {
         this.analyser.fftSize = 256;
         this.analyser.smoothingTimeConstant = 0.8;
 
+        // Initialize VocalAttenuator
+        this.vocalAttenuator = new VocalAttenuator(this.ctx);
+        if (this.isKaraokeEnabled) {
+          this.vocalAttenuator.setLevel(this.currentKaraokeLevel);
+          this.vocalAttenuator.setEnabled(true);
+        }
+
         // Initialize EffectsChain
-        const chainNodes = this.effects.init(this.ctx, this.analyser);
+        const chainNodes = this.effects.init(this.ctx);
+
+        // Initialize SpatialReverbEngine
+        this.spatialEngine = new SpatialReverbEngine(this.ctx);
+        if (this.currentSpatialMode !== 'off') {
+          this.spatialEngine.setMode(this.currentSpatialMode);
+        }
+
+        // Audiophile Graph Routing:
+        // Deck Channels -> VocalAttenuator -> EffectsChain -> SpatialEngine -> Analyser -> MasterGain -> Destination
+        this.channelA.bindAudioGraph(this.ctx, this.vocalAttenuator.input);
+        this.channelB.bindAudioGraph(this.ctx, this.vocalAttenuator.input);
+        this.vocalAttenuator.output.connect(chainNodes.input);
+        chainNodes.output.connect(this.spatialEngine.input);
+        this.spatialEngine.output.connect(this.analyser);
         this.analyser.connect(this.masterGain);
         this.masterGain.connect(this.ctx.destination);
-
-        // Bind Deck Channels into EffectsChain input bus
-        this.channelA.bindAudioGraph(this.ctx, chainNodes.input);
-        this.channelB.bindAudioGraph(this.ctx, chainNodes.input);
       } catch (err) {
         console.warn('[DJAudioEngine] DSP initialization notice:', err);
       }
@@ -272,6 +296,7 @@ export class DJAudioEngineFacade {
   public pause(): void {
     this.getActiveDeck().pause();
     this.getInactiveDeck().pause();
+    this.timerWorker.stop();
     if (typeof document !== 'undefined') {
       const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
       if (bridge && !bridge.paused) {
@@ -453,16 +478,49 @@ export class DJAudioEngineFacade {
     this.effects.setAnalogWarmth(percent);
   }
 
-  public setKaraokeMode(enabled: boolean): void {
+  public setKaraokeMode(enabled: boolean, level: number = 0.85): void {
+    this.isKaraokeEnabled = enabled;
+    this.currentKaraokeLevel = level;
+    if (this.vocalAttenuator) {
+      this.vocalAttenuator.setLevel(level);
+      this.vocalAttenuator.setEnabled(enabled);
+    }
     this.effects.setKaraokeMode(enabled);
   }
 
+  public setKaraokeLevel(level: number): void {
+    this.currentKaraokeLevel = level;
+    if (this.vocalAttenuator) {
+      this.vocalAttenuator.setLevel(level);
+    }
+  }
+
+  public setSpatialMode(mode: SpatialMode): void {
+    this.currentSpatialMode = mode;
+    if (this.spatialEngine) {
+      this.spatialEngine.setMode(mode);
+    }
+  }
+
+  public getSpatialMode(): SpatialMode {
+    return this.currentSpatialMode;
+  }
+
   public setSpatialAudio(enabled: boolean): void {
-    this.effects.setSpatialAudio(enabled);
+    this.setSpatialMode(enabled ? 'concert' : 'off');
   }
 
   public setReverbSpace(space: ReverbSpace): void {
     this.effects.setReverbSpace(space);
+    if (space === 'off') {
+      this.setSpatialMode('off');
+    } else if (space === 'arena') {
+      this.setSpatialMode('concert');
+    } else if (space === 'studio') {
+      this.setSpatialMode('studio');
+    } else if (space === 'vinyl_lounge') {
+      this.setSpatialMode('club');
+    }
   }
 
   public setLoudnessNormalization(enabled: boolean): void {
@@ -783,14 +841,31 @@ export class DJAudioEngineFacade {
   }
 
   private async resolveTrackUrl(track: Track): Promise<string> {
+    // 1. Direct in-memory Blob
     if (track.blob) return URL.createObjectURL(track.blob);
-    if (track.audioUrl && (track.audioUrl.startsWith('/songs/') || track.audioUrl.startsWith('blob:'))) {
+
+    // 2. Direct Blob URL
+    if (track.audioUrl && track.audioUrl.startsWith('blob:')) {
       return track.audioUrl;
     }
-    const storedBlob = await getAudioFileFromStorage(track.id);
-    if (storedBlob) {
-      return URL.createObjectURL(storedBlob);
+
+    // 3. Stored offline Blob from OPFS / Dexie / IDB (always prefer offline local copy!)
+    try {
+      let storedBlob = await getAudioFileFromStorage(track.id);
+      if (!storedBlob && track.trackNumber) {
+        storedBlob = await getAudioFileFromStorage(`track_catalog_${track.trackNumber}`);
+      }
+      if (storedBlob) {
+        return URL.createObjectURL(storedBlob);
+      }
+    } catch {}
+
+    // 4. Local songs folder path (when online / localhost)
+    if (track.audioUrl && track.audioUrl.startsWith('/songs/')) {
+      return track.audioUrl;
     }
+
+    // 5. Online stream resolver
     const stream = await resolvePlayableStream(track);
     if (stream) return stream;
     if (track.audioUrl) return track.audioUrl;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset, PlaybackState } from '../types';
-import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace } from '../lib/audioEngine';
+import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace, SpatialMode } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
@@ -12,12 +12,54 @@ import {
   getStorageStatistics,
   clearAllLocalStorage,
   saveAudioFileToStorage,
+  StorageManager,
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream, clearResolvedStreamCache } from '../services/streamingEngine';
 import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
+
+// ── Offline download helpers ───────────────────────────────────────────────
+let offlineDownloadCancelled = false;
+
+/** True if the origin has at least `bytes` of free quota (or if it can't be determined). */
+async function hasEnoughStorageFor(bytes: number): Promise<boolean> {
+  try {
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    if (!quota) return true;
+    // Keep a 10% safety margin so the app/IndexedDB never hit the hard quota
+    return quota - usage > Math.max(bytes, quota * 0.1);
+  } catch {
+    return true;
+  }
+}
+
+/** Gets the audio bytes for a track from memory, its file, a direct URL, or a resolved stream. */
+async function fetchTrackBlob(track: Track): Promise<Blob | null> {
+  if (track.blob) return track.blob;
+  if (track.file) return track.file;
+
+  const urls: string[] = [];
+  if (track.audioUrl) urls.push(track.audioUrl);
+  if (!track.audioUrl || track.audioUrl.startsWith('/api/stream')) {
+    try {
+      const resolved = await resolvePlayableStream(track);
+      if (resolved && !urls.includes(resolved)) urls.push(resolved);
+    } catch {}
+  }
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const blob = await res.blob();
+        if (blob.size > 0) return blob;
+      }
+    } catch {}
+  }
+  return null;
+}
 
 export const EQ_PRESETS: EqualizerPreset[] = [
   { name: 'Flat', nameAr: 'افتراضي متوازن', gains: [0, 0, 0, 0, 0] },
@@ -80,9 +122,12 @@ interface PlayerState {
   activeEqPreset: string;
   bassBoost: number;
   spatialAudio: boolean;
+  spatialMode: SpatialMode;
   loudnessNormalization: boolean;
   analogWarmth: number; // 0 to 100
   karaokeMode: boolean;
+  karaokeVocalLevel: number;
+  activeMoodFilter: string | null;
   reverbSpace: ReverbSpace;
   hapticFeedbackEnabled: boolean;
   reactiveVisualsEnabled: boolean;
@@ -143,9 +188,12 @@ interface PlayerState {
   setBassBoost: (level: number) => void;
   toggleSpatialAudio: () => void;
   setSpatialAudio: (enabled: boolean) => void;
+  setSpatialMode: (mode: SpatialMode) => void;
   setLoudnessNormalization: (enabled: boolean) => void;
   setAnalogWarmth: (level: number) => void;
   setKaraokeMode: (enabled: boolean) => void;
+  setKaraokeVocalLevel: (level: number) => void;
+  setActiveMoodFilter: (filter: string | null) => void;
   setReverbSpace: (space: ReverbSpace) => void;
   setHapticFeedbackEnabled: (enabled: boolean) => void;
   setReactiveVisualsEnabled: (enabled: boolean) => void;
@@ -177,6 +225,10 @@ interface PlayerState {
   addToast: (message: string, icon?: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
   downloadTrackForOffline: (trackId: string) => Promise<void>;
+  downloadTracksForOffline: (list: Track[], label?: string) => Promise<void>;
+  downloadFavoritesOffline: () => Promise<void>;
+  downloadPlaylistOffline: (playlistId: string) => Promise<void>;
+  cancelOfflineDownload: () => void;
   cacheAllAvailableTracksOffline: () => Promise<void>;
   isSettingsOpen: boolean;
   language: 'ar' | 'en';
@@ -346,6 +398,22 @@ export const resolveNextQueueTrack = async (state: {
 };
 
 export const usePlayerStore = create<PlayerState>((set, get) => {
+  const updateTrackInAllArrays = (trackId: string, updates: Partial<Track>) => {
+    const state = get();
+    const mapTrack = (t: Track) => t.id === trackId ? { ...t, ...updates } : t;
+    const newState: Partial<PlayerState> = {};
+    
+    if (state.currentTrack?.id === trackId) {
+      newState.currentTrack = { ...state.currentTrack, ...updates };
+    }
+    newState.tracks = state.tracks.map(mapTrack);
+    newState.filteredTracks = state.filteredTracks.map(mapTrack);
+    newState.queue = state.queue.map(mapTrack);
+    newState.userQueue = state.userQueue.map(mapTrack);
+    
+    set(newState);
+  };
+
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
     onTimeUpdate: (cur, dur) => {
@@ -433,14 +501,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (!newTrack.syncedLyrics || newTrack.syncedLyrics.length === 0) {
         fetchLyricsOnline(newTrack.title, newTrack.artist, newTrack.duration).then((res) => {
           if (res && (res.syncedLyrics || res.plainLyrics)) {
-            const updated: Track = {
-              ...newTrack,
+            updateTrackInAllArrays(newTrack.id, {
               syncedLyrics: res.syncedLyrics,
               lyrics: res.plainLyrics || newTrack.lyrics,
-            };
-            if (get().currentTrack?.id === updated.id) {
-              set({ currentTrack: updated });
-            }
+            });
           }
         });
       }
@@ -482,9 +546,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     activeEqPreset: 'Flat',
     bassBoost: 0,
     spatialAudio: false,
+    spatialMode: 'off' as SpatialMode,
     loudnessNormalization: true,
     analogWarmth: 0,
     karaokeMode: false,
+    karaokeVocalLevel: 0.85,
+    activeMoodFilter: null,
     reverbSpace: 'off' as ReverbSpace,
     hapticFeedbackEnabled: false,
     reactiveVisualsEnabled: true,
@@ -751,6 +818,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
               try {
                 const artItem = await db.get('artworkBlobs', track.id);
                 if (artItem && artItem.blob) {
+                  if (track.artworkUrl && track.artworkUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(track.artworkUrl);
+                  }
                   artworkUrl = URL.createObjectURL(artItem.blob);
                 }
               } catch {
@@ -846,6 +916,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         syncLibraryToCarPlay(finalTracks);
         const resolvedFavs = finalTracks.filter((t) => favIds.includes(t.id));
         syncFavoritesToCarPlay(resolvedFavs);
+
+        // Ask the browser not to evict downloaded songs under storage pressure
+        StorageManager.requestPersistence().catch(() => {});
       } catch (e) {
         console.warn('Error loading from IndexedDB:', e);
         const fallbackTracks = getDefaultLibraryTracks();
@@ -994,7 +1067,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       let playableTrack = track;
 
       // Fast-path: If track already has an online stream or direct audioUrl, bypass slow offline DB queries!
-      const hasDirectStream = !!(playableTrack.audioUrl && (
+      // (Tracks saved for offline always prefer the local copy — works with no connection and saves data.)
+      const isSavedOffline = state.downloadedTrackIds.includes(track.id);
+      const hasDirectStream = !isSavedOffline && !!(playableTrack.audioUrl && (
         playableTrack.audioUrl.startsWith('/api/stream') ||
         playableTrack.audioUrl.startsWith('http') ||
         playableTrack.audioUrl.startsWith('blob:')
@@ -1182,12 +1257,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             const db = await getDB();
             await db.put('artworkBlobs', { id: playableTrack.id, blob: artBlob });
 
-            // Update in tracks list
-            set((st) => ({
-              currentTrack: st.currentTrack?.id === enriched.id ? enriched : st.currentTrack,
-              tracks: st.tracks.map((t) => (t.id === enriched.id ? enriched : t)),
-              filteredTracks: st.filteredTracks.map((t) => (t.id === enriched.id ? enriched : t)),
-            }));
+            updateTrackInAllArrays(playableTrack.id, { artworkUrl: newUrl });
           }
         });
       }
@@ -1197,14 +1267,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         fetchLyricsOnline(playableTrack.title, playableTrack.artist, playableTrack.duration).then(
           (res) => {
             if (res && (res.syncedLyrics || res.plainLyrics)) {
-              const updatedTrack: Track = {
-                ...playableTrack,
+              updateTrackInAllArrays(playableTrack.id, {
                 syncedLyrics: res.syncedLyrics,
                 lyrics: res.plainLyrics || playableTrack.lyrics,
-              };
-              if (get().currentTrack?.id === updatedTrack.id) {
-                set({ currentTrack: updatedTrack });
-              }
+              });
             }
           }
         );
@@ -1306,14 +1372,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (!targetTrack.syncedLyrics || targetTrack.syncedLyrics.length === 0) {
         fetchLyricsOnline(targetTrack.title, targetTrack.artist, targetTrack.duration).then((res) => {
           if (res && (res.syncedLyrics || res.plainLyrics)) {
-            const updatedTrack: Track = {
-              ...targetTrack,
+            updateTrackInAllArrays(targetTrack.id, {
               syncedLyrics: res.syncedLyrics,
               lyrics: res.plainLyrics || targetTrack.lyrics,
-            };
-            if (get().currentTrack?.id === updatedTrack.id) {
-              set({ currentTrack: updatedTrack });
-            }
+            });
           }
         });
       }
@@ -1474,8 +1536,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     setSpatialAudio: (enabled: boolean) => {
       djAudioEngine.initContext().catch(() => {});
-      djAudioEngine.setSpatialAudio(enabled);
-      set({ spatialAudio: enabled });
+      const mode = enabled ? 'concert' : 'off';
+      djAudioEngine.setSpatialMode(mode);
+      set({ spatialAudio: enabled, spatialMode: mode });
+    },
+
+    setSpatialMode: (mode: SpatialMode) => {
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setSpatialMode(mode);
+      set({ spatialMode: mode, spatialAudio: mode !== 'off' });
+      const names: Record<SpatialMode, string> = {
+        off: 'صوت ستيريو مباشر (Direct Stereo)',
+        concert: 'قاعة حفلات كبرى (Grand Concert Hall)',
+        studio: 'استوديو نقي (Hi-Fi Studio)',
+        club: 'نادي ونظام بيز (Club Lounge)',
+        '8d': 'صوت محيطي 8D فضائي (360° Spatial Orbit)',
+      };
+      get().addToast(`تم تفعيل: ${names[mode]}`, undefined, 'info');
     },
 
     setLoudnessNormalization: (enabled: boolean) => {
@@ -1500,15 +1577,27 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     setKaraokeMode: (enabled: boolean) => {
       djAudioEngine.initContext().catch(() => {});
-      djAudioEngine.setKaraokeMode(enabled);
+      const level = get().karaokeVocalLevel ?? 0.85;
+      djAudioEngine.setKaraokeMode(enabled, level);
       set({ karaokeMode: enabled });
       get().addToast(
         enabled
-          ? 'تم تفعيل وضع الكاريوكي وعزل صوت المغني (Vocal Cut)'
+          ? 'تم تفعيل وضع الكاريوكي وعزل صوت المغني (Karaoke Vocal Cut)'
           : 'تم إيقاف وضع الكاريوكي والعودة للستيريو الأصلي',
         undefined,
         'info'
       );
+    },
+
+    setKaraokeVocalLevel: (level: number) => {
+      const clamped = Math.max(0, Math.min(1, isNaN(level) ? 0.85 : level));
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.setKaraokeLevel(clamped);
+      set({ karaokeVocalLevel: clamped });
+    },
+
+    setActiveMoodFilter: (filter: string | null) => {
+      set({ activeMoodFilter: filter });
     },
 
     setReverbSpace: (space: ReverbSpace) => {
@@ -1934,90 +2023,143 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
-      addToast(`جاري تنزيل "${track.title}" للعمل بدون إنترنت...`, undefined, 'info');
-
-      try {
-        let blob: Blob | null = track.blob || null;
-        if (!blob && track.file) {
-          blob = track.file;
-        } else if (!blob && track.audioUrl) {
-          const res = await fetch(track.audioUrl);
-          if (res.ok) {
-            blob = await res.blob();
-          }
-        }
-
-        if (blob) {
-          const db = await getDB();
-          await db.put('audioBlobs', { id: track.id, blob });
-          if (track.trackNumber) {
-            await db.put('audioBlobs', { id: `track_catalog_${track.trackNumber}`, blob });
-          }
-          set({ downloadedTrackIds: Array.from(new Set([...get().downloadedTrackIds, trackId])) });
-          addToast(`تم حفظ "${track.title}" أوفلاين بنجاح`, undefined, 'success');
-        } else {
-          addToast(`تعذر حفظ المسار أوفلاين`, undefined, 'warning');
-        }
-      } catch (err) {
-        console.warn('Error downloading track offline:', err);
-        addToast(`خطأ أثناء الحفظ للأوفلاين`, undefined, 'warning');
-      }
+      await get().downloadTracksForOffline([track], track.title);
     },
 
-    cacheAllAvailableTracksOffline: async () => {
-      const { tracks, downloadedTrackIds, addToast } = get();
-      if (tracks.length === 0) return;
-
-      const neededTracks = tracks.filter((t) => !downloadedTrackIds.includes(t.id));
-      if (neededTracks.length === 0) {
-        addToast('جميع المسارات الـ 261 محفوظة أوفلاين بالفعل في الذاكرة', undefined, 'success');
+    downloadTracksForOffline: async (list: Track[], label?: string) => {
+      const { downloadedTrackIds, addToast, downloadAllProgress } = get();
+      if (downloadAllProgress) {
+        addToast('هناك عملية تنزيل جارية بالفعل', undefined, 'info');
+        return;
+      }
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        addToast('لا يوجد اتصال بالإنترنت — لا يمكن التنزيل الآن', undefined, 'warning');
         return;
       }
 
-      addToast(`بدء حفظ ${neededTracks.length} مسار للعمل بدون إنترنت...`, undefined, 'info');
-      set({ downloadAllProgress: { current: 0, total: neededTracks.length } });
+      const saved = new Set<string>(downloadedTrackIds);
+      const needed = list.filter((t, i, arr) => !saved.has(t.id) && arr.findIndex((x) => x.id === t.id) === i);
+      if (needed.length === 0) {
+        addToast('كل هذه المسارات محفوظة أوفلاين بالفعل', undefined, 'success');
+        return;
+      }
+
+      StorageManager.requestPersistence().catch(() => {});
+      offlineDownloadCancelled = false;
+      addToast(
+        needed.length === 1
+          ? `جاري تنزيل "${needed[0].title}" للعمل بدون إنترنت...`
+          : `بدء حفظ ${needed.length} مسار${label ? ` (${label})` : ''} للعمل بدون إنترنت...`,
+        undefined,
+        'info'
+      );
+      set({ downloadAllProgress: { current: 0, total: needed.length } });
 
       let savedCount = 0;
-      const newDownloaded = new Set<string>(downloadedTrackIds);
+      let failedCount = 0;
+      let stoppedReason: 'cancelled' | 'storage' | 'offline' | null = null;
 
       try {
         const db = await getDB();
-        for (let i = 0; i < neededTracks.length; i++) {
-          const track = neededTracks[i];
-          let blob: Blob | null = track.blob || null;
-          if (!blob && track.file) {
-            blob = track.file;
-          } else if (!blob && track.audioUrl) {
-            try {
-              const res = await fetch(track.audioUrl);
-              if (res.ok) {
-                blob = await res.blob();
-              }
-            } catch {}
+        for (let i = 0; i < needed.length; i++) {
+          if (offlineDownloadCancelled) {
+            stoppedReason = 'cancelled';
+            break;
+          }
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            stoppedReason = 'offline';
+            break;
+          }
+          // Re-check free space every few songs so we never fill the device storage
+          if (i % 5 === 0 && !(await hasEnoughStorageFor(25 * 1024 * 1024))) {
+            stoppedReason = 'storage';
+            break;
           }
 
-          if (blob) {
-            await db.put('audioBlobs', { id: track.id, blob });
-            if (track.trackNumber) {
-              await db.put('audioBlobs', { id: `track_catalog_${track.trackNumber}`, blob });
+          const track = needed[i];
+          try {
+            const blob = await fetchTrackBlob(track);
+            if (blob) {
+              await saveAudioFileToStorage(track.id, blob);
+              if (track.trackNumber) {
+                await saveAudioFileToStorage(`track_catalog_${track.trackNumber}`, blob);
+              }
+              saved.add(track.id);
+              savedCount++;
+            } else {
+              failedCount++;
             }
-            newDownloaded.add(track.id);
-            savedCount++;
+          } catch (err) {
+            failedCount++;
+            console.warn('[Offline] Failed to save track:', track.title, err);
           }
 
           set({
-            downloadAllProgress: { current: i + 1, total: neededTracks.length },
-            downloadedTrackIds: Array.from(newDownloaded),
+            downloadAllProgress: { current: i + 1, total: needed.length },
+            downloadedTrackIds: Array.from(saved),
           });
         }
-
-        addToast(`تم حفظ ${savedCount} مسار في الذاكرة بنجاح - تعمل الآن أوفلاين للأبد`, undefined, 'success');
       } catch (err) {
-        console.warn('Error during bulk offline caching:', err);
-        addToast('حدث خطأ أثناء حفظ بعض المسارات للأوفلاين', undefined, 'warning');
+        console.warn('Error during offline caching:', err);
+        addToast('حدث خطأ أثناء الحفظ للأوفلاين', undefined, 'warning');
       } finally {
-        set({ downloadAllProgress: null });
+        set({ downloadAllProgress: null, downloadedTrackIds: Array.from(saved) });
+        get().refreshStorageStats().catch(() => {});
       }
+
+      if (stoppedReason === 'storage') {
+        addToast(`توقف التنزيل: مساحة التخزين شبه ممتلئة (تم حفظ ${savedCount})`, undefined, 'warning');
+      } else if (stoppedReason === 'offline') {
+        addToast(`انقطع الاتصال أثناء التنزيل (تم حفظ ${savedCount})`, undefined, 'warning');
+      } else if (stoppedReason === 'cancelled') {
+        addToast(`تم إلغاء التنزيل (تم حفظ ${savedCount})`, undefined, 'info');
+      } else if (savedCount > 0) {
+        addToast(
+          failedCount > 0
+            ? `تم حفظ ${savedCount} مسار أوفلاين — تعذر حفظ ${failedCount}`
+            : needed.length === 1
+              ? `تم حفظ "${needed[0].title}" أوفلاين بنجاح`
+              : `تم حفظ ${savedCount} مسار أوفلاين بنجاح`,
+          undefined,
+          failedCount > 0 ? 'warning' : 'success'
+        );
+      } else {
+        addToast('تعذر حفظ المسارات أوفلاين', undefined, 'warning');
+      }
+    },
+
+    cancelOfflineDownload: () => {
+      offlineDownloadCancelled = true;
+    },
+
+    downloadFavoritesOffline: async () => {
+      const { tracks, favorites, addToast } = get();
+      const favSet = new Set(favorites);
+      const list = tracks.filter((t) => favSet.has(t.id));
+      if (list.length === 0) {
+        addToast('لا توجد أغاني في المفضلة للتنزيل', undefined, 'info');
+        return;
+      }
+      await get().downloadTracksForOffline(list, 'المفضلة');
+    },
+
+    downloadPlaylistOffline: async (playlistId: string) => {
+      const { tracks, playlists, addToast } = get();
+      const pl = playlists.find((p) => p.id === playlistId);
+      if (!pl) return;
+      const idSet = new Set(pl.trackIds);
+      const list = tracks.filter((t) => idSet.has(t.id));
+      if (list.length === 0) {
+        addToast('قائمة التشغيل فارغة', undefined, 'info');
+        return;
+      }
+      await get().downloadTracksForOffline(list, pl.name);
+    },
+
+    cacheAllAvailableTracksOffline: async () => {
+      const { tracks } = get();
+      if (tracks.length === 0) return;
+      await get().downloadTracksForOffline(tracks, 'المكتبة كاملة');
     },
     setCarModeOpen: (open: boolean) => set({ isCarModeOpen: open }),
     toggleCarMode: () => set((state) => ({ isCarModeOpen: !state.isCarModeOpen })),
