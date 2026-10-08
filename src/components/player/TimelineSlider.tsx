@@ -1,4 +1,7 @@
 import React, { useState, useRef, useCallback, memo } from 'react';
+import { WaveformTimeline } from './WaveformTimeline';
+
+export { WaveformTimeline };
 
 export interface TimelineSliderProps {
   currentTime: number;
@@ -9,6 +12,8 @@ export interface TimelineSliderProps {
   className?: string;
   showTimestamps?: boolean;
   accentColor?: string;
+  showWaveform?: boolean;
+  trackId?: string;
 }
 
 export function formatDuration(seconds: number): string {
@@ -35,13 +40,30 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   className = '',
   showTimestamps = true,
   accentColor,
+  showWaveform = false,
+  trackId,
 }) => {
+  if (showWaveform) {
+    return (
+      <WaveformTimeline
+        trackId={trackId}
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={onSeek}
+        accentColor={accentColor}
+        disabled={disabled}
+        className={className}
+      />
+    );
+  }
+
   const [isDragging, setIsDragging] = useState(false);
   const [scrubSeconds, setScrubSeconds] = useState(0);
   const [showRemaining, setShowRemaining] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [hoverPosition, setHoverPosition] = useState<{ percent: number; seconds: number } | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const previewBubbleRef = useRef<HTMLDivElement>(null);
+  const previewTextRef = useRef<HTMLSpanElement>(null);
 
   const effectiveTime = isDragging ? scrubSeconds : currentTime;
   const safeDuration = duration > 0 ? duration : 1;
@@ -75,7 +97,10 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
     if (isDragging) {
       setScrubSeconds(seconds);
     } else {
-      setHoverPosition({ seconds, percent });
+      if (previewBubbleRef.current && previewTextRef.current) {
+        previewBubbleRef.current.style.left = `${percent}%`;
+        previewTextRef.current.textContent = formatDuration(seconds);
+      }
     }
   };
 
@@ -95,13 +120,17 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
     if (!disabled && duration > 0) {
       setIsHovering(true);
       const { seconds, percent } = calculateFromPointer(e.clientX);
-      setHoverPosition({ seconds, percent });
+      requestAnimationFrame(() => {
+        if (previewBubbleRef.current && previewTextRef.current) {
+          previewBubbleRef.current.style.left = `${percent}%`;
+          previewTextRef.current.textContent = formatDuration(seconds);
+        }
+      });
     }
   };
 
   const handlePointerLeave = () => {
     setIsHovering(false);
-    setHoverPosition(null);
   };
 
   return (
@@ -148,12 +177,13 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         </div>
 
         {/* Floating Time Preview Bubble (When Dragging or Hovering) */}
-        {(isDragging || (isHovering && hoverPosition)) && duration > 0 && (
+        {(isDragging || isHovering) && duration > 0 && (
           <div
+            ref={previewBubbleRef}
             className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-lg bg-zinc-900/95 border border-white/20 text-[11px] font-mono font-bold text-white shadow-xl pointer-events-none z-30 flex items-center gap-1 backdrop-blur-md"
-            style={{ left: `${isDragging ? progressPercent : hoverPosition?.percent || 0}%` }}
+            style={{ left: `${isDragging ? progressPercent : 0}%` }}
           >
-            <span>{formatDuration(isDragging ? scrubSeconds : hoverPosition?.seconds || 0)}</span>
+            <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
           </div>
         )}
 
