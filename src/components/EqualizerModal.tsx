@@ -108,29 +108,31 @@ export const EqualizerModal: React.FC = () => {
   const reactiveVisualsEnabled = usePlayerStore((state) => state.reactiveVisualsEnabled);
   const setReactiveVisualsEnabled = usePlayerStore((state) => state.setReactiveVisualsEnabled);
 
-  if (!isEqualizerOpen) return null;
-
   // Compute SVG Bézier curve points for the interactive frequency response curve
-  const points = eqGains.map((gain, idx) => {
-    const x = 10 + idx * 20; // 10%, 30%, 50%, 70%, 90%
-    const y = 50 - (gain / 15) * 38; // 50% is 0dB, bounded between 12% and 88%
-    return { x, y };
-  });
+  const { points, pathD, fillD } = React.useMemo(() => {
+    const pts = eqGains.map((gain, idx) => {
+      const x = 10 + idx * 20; // 10%, 30%, 50%, 70%, 90%
+      const y = 50 - (gain / 15) * 38; // 50% is 0dB, bounded between 12% and 88%
+      return { x, y };
+    });
 
-  // Generate smooth cubic bezier SVG path
-  let pathD = `M 0,${points[0].y}`;
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    if (i === 0) {
-      pathD += ` L ${p.x},${p.y}`;
-    } else {
-      const prev = points[i - 1];
-      const cx = (prev.x + p.x) / 2;
-      pathD += ` C ${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`;
+    let pD = `M 0,${pts[0].y}`;
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      if (i === 0) {
+        pD += ` L ${p.x},${p.y}`;
+      } else {
+        const prev = pts[i - 1];
+        const cx = (prev.x + p.x) / 2;
+        pD += ` C ${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`;
+      }
     }
-  }
-  pathD += ` L 100,${points[points.length - 1].y}`;
-  const fillD = `${pathD} L 100,95 L 0,95 Z`;
+    pD += ` L 100,${pts[pts.length - 1].y}`;
+    const fD = `${pD} L 100,95 L 0,95 Z`;
+    return { points: pts, pathD: pD, fillD: fD };
+  }, [eqGains]);
+
+  if (!isEqualizerOpen) return null;
 
   return (
     <AnimatePresence>

@@ -43,20 +43,6 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   showWaveform = false,
   trackId,
 }) => {
-  if (showWaveform) {
-    return (
-      <WaveformTimeline
-        trackId={trackId}
-        currentTime={currentTime}
-        duration={duration}
-        onSeek={onSeek}
-        accentColor={accentColor}
-        disabled={disabled}
-        className={className}
-      />
-    );
-  }
-
   const [isDragging, setIsDragging] = useState(false);
   const [scrubSeconds, setScrubSeconds] = useState(0);
   const [showRemaining, setShowRemaining] = useState(false);
@@ -132,6 +118,20 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   const handlePointerLeave = () => {
     setIsHovering(false);
   };
+
+  if (showWaveform) {
+    return (
+      <WaveformTimeline
+        trackId={trackId}
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={onSeek}
+        accentColor={accentColor}
+        disabled={disabled}
+        className={className}
+      />
+    );
+  }
 
   return (
     <div 

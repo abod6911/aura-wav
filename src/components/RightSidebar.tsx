@@ -21,6 +21,8 @@ export const RightSidebar: React.FC = () => {
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
 
+  const isFavorite = React.useMemo(() => favorites.includes(currentTrack?.id ?? ''), [favorites, currentTrack?.id]);
+
   if (!isRightSidebarOpen) return null;
 
   const formatDuration = (seconds: number) => {
@@ -102,7 +104,7 @@ export const RightSidebar: React.FC = () => {
                 >
                   <Heart
                     className={`w-4 h-4 ${
-                      favorites.includes(currentTrack.id)
+                      isFavorite
                         ? 'text-[#1DB954] fill-[#1DB954]'
                         : ''
                     }`}
@@ -312,7 +314,7 @@ export const RightSidebar: React.FC = () => {
                 >
                   <Heart
                     className={`w-5 h-5 ${
-                      favorites.includes(currentTrack.id)
+                      isFavorite
                         ? 'text-[#1DB954] fill-[#1DB954]'
                         : ''
                     }`}
