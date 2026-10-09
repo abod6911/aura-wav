@@ -358,7 +358,7 @@ export function App() {
       <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />
 
       {/* 3. Main View Area */}
-      <main className="main-safe-area flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto px-3 sm:px-6 md:px-8 z-10 scrollbar-thin scrollbar-thumb-white/10">
+      <main className="main-safe-area flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto overscroll-y-contain touch-pan-y transform-gpu px-3 sm:px-6 md:px-8 z-10 scrollbar-thin scrollbar-thumb-white/10">
         <OfflineBanner />
         <DownloadProgressPill />
         <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">

@@ -75,6 +75,17 @@ export const AtmosphereBackground: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [webglSupported, setWebglSupported] = useState(true);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const [rawColors, setRawColors] = useState({
     p: '#FA243C',
@@ -104,8 +115,13 @@ export const AtmosphereBackground: React.FC = () => {
     };
   }, [rawColors, currentTrack?.secondaryColor]);
 
-  // High-performance WebGL Render Loop
+  // High-performance WebGL Render Loop (Desktop only; on mobile we use pure CSS GPU compositor for solid 120 FPS)
   useEffect(() => {
+    if (isMobile) {
+      setWebglSupported(false);
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -229,7 +245,7 @@ export const AtmosphereBackground: React.FC = () => {
         gl!.deleteShader(frag);
       } catch {}
     };
-  }, [rgbColors, isPlaying, reactiveVisualsEnabled]);
+  }, [rgbColors, isPlaying, reactiveVisualsEnabled, isMobile]);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#050508] transform-gpu">
@@ -245,8 +261,8 @@ export const AtmosphereBackground: React.FC = () => {
         />
       )}
 
-      {/* WebGL GPU Fragment Shader Aurora */}
-      {webglSupported ? (
+      {/* WebGL GPU Fragment Shader Aurora (Desktop) vs CSS GPU Compositing (Mobile 120 FPS) */}
+      {webglSupported && !isMobile ? (
         <canvas
           ref={canvasRef}
           width={320}

@@ -162,7 +162,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
       <div className="relative px-3 sm:px-6 md:px-8 pt-4 pb-6 transition-colors duration-700">
         {/* Soft Ambient Mesh Glow */}
         <div
-          className="absolute inset-0 -z-10 opacity-30 filter blur-[90px] transition-all duration-700 pointer-events-none"
+          className="absolute inset-0 -z-10 opacity-30 transition-all duration-700 pointer-events-none transform-gpu"
           style={{
             background: `radial-gradient(circle at 50% 20%, ${heroAccentColor} 0%, transparent 70%)`,
           }}
@@ -266,7 +266,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           >
             {/* Background Blur Artwork */}
             <div
-              className="absolute inset-0 -z-10 opacity-25 filter blur-[80px] bg-cover bg-center scale-125 transition-transform duration-700 group-hover:scale-130"
+              className="absolute inset-0 -z-10 opacity-25 filter blur-[16px] md:blur-[24px] bg-cover bg-center scale-110 transition-transform duration-700 group-hover:scale-115 transform-gpu"
               style={{ backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})` }}
             />
 

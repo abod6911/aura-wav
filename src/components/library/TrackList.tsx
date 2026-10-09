@@ -226,10 +226,16 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     <div className="space-y-6 pb-[calc(200px+env(safe-area-inset-bottom,24px))] md:pb-28 w-full max-w-full">
       {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 bg-gradient-to-b from-white/[0.06] via-white/[0.02] to-transparent border border-white/[0.08] backdrop-blur-3xl shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 apple-glass-card shadow-[0_20px_60px_rgba(0,0,0,0.7)] transform-gpu">
           {/* Subtle Ambient Glow */}
-          <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#FA243C]/15 rounded-full blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none" />
+          <div
+            className="absolute -top-20 -right-20 w-96 h-96 rounded-full pointer-events-none transform-gpu"
+            style={{ background: 'radial-gradient(circle, rgba(250,36,60,0.18) 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-96 h-96 rounded-full pointer-events-none transform-gpu"
+            style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.14) 0%, transparent 70%)' }}
+          />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-3.5 sm:gap-6 md:gap-8">
             {/* Mosaic 4-Art Cover */}
@@ -554,7 +560,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div className="bg-[#08080c]/85 border border-white/[0.08] rounded-2xl sm:rounded-3xl p-2 sm:p-5 backdrop-blur-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
+      <div className="apple-glass-card rounded-2xl sm:rounded-3xl p-2 sm:p-5 shadow-[0_16px_40px_rgba(0,0,0,0.6)] transform-gpu">
         <div dir="ltr" className="w-full max-w-full">
           {/* Table Column Headers (Desktop) */}
           <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">

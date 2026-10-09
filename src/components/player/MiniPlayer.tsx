@@ -77,7 +77,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         }
       }}
       data-testid="mini-player"
-      className="md:hidden fixed bottom-[calc(88px+env(safe-area-inset-bottom,0px))] inset-x-4 max-w-md mx-auto z-30 bg-[#12121a]/85 backdrop-blur-3xl border border-white/[0.12] rounded-3xl p-2 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform"
+      className="md:hidden fixed bottom-[calc(88px+env(safe-area-inset-bottom,0px))] inset-x-4 max-w-md mx-auto z-30 apple-glass-dock rounded-3xl p-2 sm:p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform transform-gpu"
       dir={dir}
     >
       {/* Top Hairline Progress Line with Dynamic Glowing Color */}
