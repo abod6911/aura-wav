@@ -10,6 +10,7 @@ import { getAudioFileFromStorage } from '../../services/storageManager';
 import { resolvePlayableStream } from '../../services/streamingEngine';
 import { SpatialReverbEngine, SpatialMode } from './dsp/SpatialReverbEngine';
 import { VocalAttenuator } from './dsp/VocalAttenuator';
+import { AuraDspNode } from './worklets/auraDspProcessor';
 
 export interface DJEngineCallbacks {
   onTrackEnded?: () => void;
@@ -40,6 +41,7 @@ export class DJAudioEngineFacade {
   private timerWorker: AudioTimerController;
   private spatialEngine: SpatialReverbEngine | null = null;
   private vocalAttenuator: VocalAttenuator | null = null;
+  private auraDspNode: AuraDspNode | null = null;
   private currentSpatialMode: SpatialMode = 'off';
   private isKaraokeEnabled = false;
   private currentKaraokeLevel = 0.85;
@@ -101,27 +103,26 @@ export class DJAudioEngineFacade {
         this.analyser.fftSize = 256;
         this.analyser.smoothingTimeConstant = 0.8;
 
-        // Initialize VocalAttenuator
-        this.vocalAttenuator = new VocalAttenuator(this.ctx);
+        // Initialize Studio AuraDspNode (Mid-Side Vocal Attenuator + Tube Warmth AudioWorklet)
+        this.auraDspNode = new AuraDspNode(this.ctx);
         if (this.isKaraokeEnabled) {
-          this.vocalAttenuator.setLevel(this.currentKaraokeLevel);
-          this.vocalAttenuator.setEnabled(true);
+          this.auraDspNode.setParams({ vocalCut: this.currentKaraokeLevel });
         }
 
-        // Initialize EffectsChain
+        // Initialize EffectsChain (EQ + Mega Bass + Lookahead Brickwall Limiter)
         const chainNodes = this.effects.init(this.ctx);
 
-        // Initialize SpatialReverbEngine
+        // Initialize SpatialReverbEngine (HRTF 8D + 140Hz Center Bass Anchor)
         this.spatialEngine = new SpatialReverbEngine(this.ctx);
         if (this.currentSpatialMode !== 'off') {
           this.spatialEngine.setMode(this.currentSpatialMode);
         }
 
-        // Audiophile Graph Routing:
-        // Deck Channels -> VocalAttenuator -> EffectsChain -> SpatialEngine -> Analyser -> MasterGain -> Destination
-        this.channelA.bindAudioGraph(this.ctx, this.vocalAttenuator.input);
-        this.channelB.bindAudioGraph(this.ctx, this.vocalAttenuator.input);
-        this.vocalAttenuator.output.connect(chainNodes.input);
+        // Audiophile Studio Graph Routing:
+        // Deck Channels -> AuraDspNode -> EffectsChain -> SpatialEngine -> Analyser -> MasterGain -> Destination
+        this.channelA.bindAudioGraph(this.ctx, this.auraDspNode.input);
+        this.channelB.bindAudioGraph(this.ctx, this.auraDspNode.input);
+        this.auraDspNode.output.connect(chainNodes.input);
         chainNodes.output.connect(this.spatialEngine.input);
         this.spatialEngine.output.connect(this.analyser);
         this.analyser.connect(this.masterGain);
@@ -475,12 +476,18 @@ export class DJAudioEngineFacade {
   }
 
   public setAnalogWarmth(percent: number): void {
+    if (this.auraDspNode) {
+      this.auraDspNode.setParams({ tubeDrive: percent / 100.0 });
+    }
     this.effects.setAnalogWarmth(percent);
   }
 
   public setKaraokeMode(enabled: boolean, level: number = 0.85): void {
     this.isKaraokeEnabled = enabled;
     this.currentKaraokeLevel = level;
+    if (this.auraDspNode) {
+      this.auraDspNode.setParams({ vocalCut: enabled ? level : 0.0 });
+    }
     if (this.vocalAttenuator) {
       this.vocalAttenuator.setLevel(level);
       this.vocalAttenuator.setEnabled(enabled);
@@ -490,8 +497,28 @@ export class DJAudioEngineFacade {
 
   public setKaraokeLevel(level: number): void {
     this.currentKaraokeLevel = level;
+    if (this.auraDspNode) {
+      this.auraDspNode.setParams({ vocalCut: this.isKaraokeEnabled ? level : 0.0 });
+    }
     if (this.vocalAttenuator) {
       this.vocalAttenuator.setLevel(level);
+    }
+  }
+
+  public async triggerVinylBrake(durationSec = 0.75): Promise<void> {
+    await this.getActiveDeck().triggerVinylBrake(durationSec);
+  }
+
+  public setLoopRoll(roll: null | '1/4' | '1/2' | '1'): void {
+    const bpm = this.getActiveTrack()?.bpm || 120;
+    this.getActiveDeck().setLoopRoll(roll, bpm);
+  }
+
+  public toggle8DSpatial(): void {
+    if (this.currentSpatialMode === '8d') {
+      this.setSpatialMode('off');
+    } else {
+      this.setSpatialMode('8d');
     }
   }
 

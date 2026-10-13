@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 import path from 'path';
 import { handleStreamRequest } from './src/server/streamMiddleware.js';
 
@@ -22,7 +21,7 @@ function audioStreamingPlugin() {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), basicSsl(), audioStreamingPlugin()],
+  plugins: [react(), audioStreamingPlugin()],
   resolve: {
     alias: {
       jsmediatags: path.resolve(import.meta.dirname, 'node_modules/jsmediatags/dist/jsmediatags.min.js'),
@@ -60,6 +59,9 @@ export default defineConfig({
           }
           if (id.includes('node_modules/dexie')) {
             return 'vendor-dexie';
+          }
+          if (id.includes('tracksCatalog1750.json') || id.includes('tracksCatalog')) {
+            return 'catalog-data';
           }
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'vendor-react';

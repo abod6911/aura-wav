@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { djAudioEngine } from '../../lib/audioEngine';
 
 export interface AtmosphereBackgroundProps {
   primaryColor?: string; // Hex, e.g. '#6366f1'
@@ -29,23 +30,24 @@ const FRAGMENT_SHADER_SRC = `
   uniform vec3 u_colorA;
   uniform vec3 u_colorB;
   uniform float u_opacity;
+  uniform float u_bass_energy;
 
   void main() {
     vec2 st = gl_FragCoord.xy / u_resolution.xy;
     
-    // Smooth fluid motion calculations
+    // Smooth fluid motion calculations driven by time and bass pulse
     vec2 posA = vec2(0.3 + 0.2 * sin(u_time * 0.4), 0.7 + 0.15 * cos(u_time * 0.3));
     vec2 posB = vec2(0.7 - 0.2 * cos(u_time * 0.35), 0.3 - 0.15 * sin(u_time * 0.45));
     
     float distA = length(st - posA);
     float distB = length(st - posB);
 
-    // Deep smooth gradients
-    float glowA = smoothstep(0.85, 0.0, distA);
-    float glowB = smoothstep(0.85, 0.0, distB);
+    // Deep smooth gradients with bass bloom
+    float glowA = smoothstep(0.85 + u_bass_energy * 0.25, 0.0, distA);
+    float glowB = smoothstep(0.85 + u_bass_energy * 0.25, 0.0, distB);
 
     vec3 baseDark = vec3(0.031, 0.031, 0.047); // #08080c Obsidian background
-    vec3 mixedColor = baseDark + (u_colorA * glowA * 0.6) + (u_colorB * glowB * 0.5);
+    vec3 mixedColor = baseDark + (u_colorA * glowA * (0.6 + u_bass_energy * 0.45)) + (u_colorB * glowB * (0.5 + u_bass_energy * 0.35));
 
     gl_FragColor = vec4(mixedColor, u_opacity);
   }
@@ -109,6 +111,8 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
     const colALoc = gl.getUniformLocation(program, 'u_colorA');
     const colBLoc = gl.getUniformLocation(program, 'u_colorB');
     const opacityLoc = gl.getUniformLocation(program, 'u_opacity');
+    const bassLoc = gl.getUniformLocation(program, 'u_bass_energy');
+    const freqArray = new Uint8Array(16);
 
     // Handle Resize (with low resolution factor for optimal 120 FPS throughput)
     const resize = () => {
@@ -136,10 +140,23 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
         currentColorB.current[i] += (targetColorB.current[i] - currentColorB.current[i]) * 0.04;
       }
 
+      // Read Sub-Bass energy directly from AnalyserNode at 120fps without React re-render
+      let bassEnergy = 0.0;
+      const analyser = djAudioEngine.getAnalyser();
+      if (analyser) {
+        analyser.getByteFrequencyData(freqArray);
+        let sum = 0;
+        for (let i = 0; i < 6; i++) {
+          sum += freqArray[i];
+        }
+        bassEnergy = sum / (6 * 255.0);
+      }
+
       gl.uniform1f(timeLoc, elapsed);
       gl.uniform3fv(colALoc, currentColorA.current);
       gl.uniform3fv(colBLoc, currentColorB.current);
       gl.uniform1f(opacityLoc, opacity);
+      gl.uniform1f(bassLoc, bassEnergy);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       

@@ -14,6 +14,7 @@ export interface TimelineSliderProps {
   accentColor?: string;
   showWaveform?: boolean;
   trackId?: string;
+  layout?: 'stacked' | 'inline';
 }
 
 export function formatDuration(seconds: number): string {
@@ -42,6 +43,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   accentColor,
   showWaveform = false,
   trackId,
+  layout = 'stacked',
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [scrubSeconds, setScrubSeconds] = useState(0);
@@ -130,6 +132,100 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         disabled={disabled}
         className={className}
       />
+    );
+  }
+
+  if (layout === 'inline') {
+    return (
+      <div 
+        className={`w-full flex items-center gap-2.5 select-none touch-none ${className}`} 
+        dir="ltr"
+      >
+        {/* Elapsed Time */}
+        {showTimestamps && (
+          <span className="text-[11px] font-mono tabular-nums font-bold text-zinc-400 w-9 text-right shrink-0 select-none">
+            {formatDuration(effectiveTime)}
+          </span>
+        )}
+
+        {/* Compact Scrubber Groove & Thumb */}
+        <div
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={() => setIsDragging(false)}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
+          className="relative flex-1 h-6 flex items-center cursor-pointer group py-1"
+          role="slider"
+          aria-valuemin={0}
+          aria-valuemax={duration}
+          aria-valuenow={effectiveTime}
+          aria-label="شريط تقدم الأغنية"
+        >
+          {/* Groove Background */}
+          <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-200 rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] overflow-hidden relative backdrop-blur-md">
+            {/* Buffer Bar */}
+            <div
+              className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
+              style={{ width: `${bufferPercent}%` }}
+            />
+            {/* Progress Fill */}
+            <div
+              className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 transition-[width] duration-75 overflow-hidden"
+              style={{ 
+                width: `${progressPercent}%`,
+                backgroundColor: '#FA243C',
+                backgroundImage: 'linear-gradient(90deg, #FA243C 0%, #FF375F 60%, #FF758F 100%)',
+                boxShadow: '0 0 10px rgba(250, 36, 60, 0.7), inset 0 1px 1px rgba(255,255,255,0.4)',
+              }}
+            >
+              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/95 rounded-full shadow-[0_0_6px_#ffffff]" />
+            </div>
+          </div>
+
+          {/* Time Preview Bubble */}
+          {(isDragging || isHovering) && duration > 0 && (
+            <div
+              ref={previewBubbleRef}
+              className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-lg bg-zinc-900/95 border border-white/20 text-[11px] font-mono font-bold text-white shadow-xl pointer-events-none z-30 flex items-center gap-1 backdrop-blur-md"
+              style={{ left: `${isDragging ? progressPercent : 0}%` }}
+            >
+              <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
+            </div>
+          )}
+
+          {/* Tactile Thumb Knob */}
+          <div
+            className={`absolute -ml-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-transform duration-100 pointer-events-none z-20 ${
+              isDragging ? 'scale-125' : 'scale-100 group-hover:scale-110'
+            }`}
+            style={{ left: `${progressPercent}%` }}
+          >
+            <div className="w-3.5 h-3.5 rounded-full bg-white border border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.8)] flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FA243C]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Duration / Remaining */}
+        {showTimestamps && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowRemaining((prev) => !prev);
+            }}
+            title={showRemaining ? 'عرض إجمالي مدة الأغنية (انقر للتبديل)' : 'عرض الوقت المتبقي (انقر للتبديل)'}
+            className="text-[11px] font-mono tabular-nums font-bold text-zinc-400 hover:text-white transition-colors cursor-pointer w-9 text-left shrink-0 select-none py-0.5"
+          >
+            {showRemaining
+              ? `-${formatDuration(Math.max(0, duration - effectiveTime))}`
+              : formatDuration(duration)}
+          </button>
+        )}
+      </div>
     );
   }
 

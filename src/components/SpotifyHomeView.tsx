@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Track } from '../types';
 import { motion } from 'framer-motion';
+import { OptimizedImage } from './common/OptimizedImage';
 
 interface SpotifyHomeViewProps {
   onOpenImport?: () => void;
@@ -97,7 +98,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
       const art = (trk.artist || '').toLowerCase().trim();
       const genre = trk.genre || '';
 
-      if (quickAccess.length < 5 && !seenQuick.has(art)) {
+      if (quickAccess.length < 4 && !seenQuick.has(art)) {
         seenQuick.add(art);
         quickAccess.push(trk);
       }
@@ -155,6 +156,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
   // Spotlight Track (Current or first featured)
   const spotlightTrack = currentTrack || (tracks.length > 0 ? tracks[0] : null);
   const heroAccentColor = spotlightTrack?.dominantColor || spotlightTrack?.accentColor || '#FA243C';
+
+  const totalStats = useMemo(() => {
+    const totalTracks = tracks.length;
+    const totalArtists = new Set(tracks.map((t) => (t.artist || '').trim().toLowerCase())).size;
+    const totalSecs = tracks.reduce((sum, t) => sum + (t.duration || 0), 0);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const durationStr = hrs > 0 ? (isRTL ? `${hrs} س ${mins} د` : `${hrs}h ${mins}m`) : (isRTL ? `${mins} دقيقة` : `${mins}m`);
+    return { totalTracks, totalArtists, durationStr };
+  }, [tracks, isRTL]);
 
   return (
     <div className="w-full text-white pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-28 select-none overflow-x-hidden" dir={dir}>
@@ -255,36 +266,40 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
           </div>
         )}
 
-        {/* 2. Hero Spotlight Card (Apple Music Editorial Showcase) */}
+        {/* 2. Hero Spotlight Card (Full Cinematic Cover Background with 3-Column Stats & AutoMix) */}
         {spotlightTrack && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
             onClick={() => playTrack(spotlightTrack)}
-            className="relative w-full rounded-[24px] sm:rounded-[28px] p-4 sm:p-8 apple-glass-card border border-white/[0.14] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.8)] cursor-pointer group mb-5 sm:mb-6 apple-spring"
+            className="relative w-full rounded-[28px] sm:rounded-[32px] p-5 sm:p-8 md:p-10 border border-white/[0.14] overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.85)] cursor-pointer group mb-5 sm:mb-6 apple-spring"
           >
-            {/* Background Blur Artwork */}
+            {/* Cinematic Full Background with Dark Obsidian Gradient Overlay */}
             <div
-              className="absolute inset-0 -z-10 opacity-25 filter blur-[16px] md:blur-[24px] bg-cover bg-center scale-110 transition-transform duration-700 group-hover:scale-115 transform-gpu"
-              style={{ backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})` }}
+              className="absolute inset-0 -z-10 bg-cover bg-center scale-105 group-hover:scale-110 transition-transform duration-1000 transform-gpu"
+              style={{
+                backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})`,
+              }}
             />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060609] via-[#060609]/85 to-[#060609]/50 backdrop-blur-[14px]" />
 
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-8">
-              {/* Grand Rounded Squircle Artwork */}
-              <div className="relative w-28 h-28 sm:w-52 sm:h-52 rounded-[18px] sm:rounded-[22px] overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-[1.03] transition-transform duration-300">
-                <img
-                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
-                  alt={spotlightTrack.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-              </div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
+              {/* Left Column: Artwork + Title + Badges */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 min-w-0 w-full md:w-auto text-center sm:text-start">
+                <div className="relative w-24 h-24 sm:w-36 sm:h-36 rounded-[22px] overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-105 transition-transform duration-300">
+                  <OptimizedImage
+                    src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl}
+                    alt={spotlightTrack.title}
+                    size="large"
+                    priority={true}
+                    containerClassName="w-full h-full"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-              {/* Editorial Details */}
-              <div className="flex-1 min-w-0 text-center sm:text-start flex flex-col justify-between h-full w-full">
-                <div className="w-full min-w-0">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-2">
                     <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[9px] sm:text-[10px] font-black">
                       <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       APPLE MUSIC EXCLUSIVE
@@ -296,19 +311,39 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       SPATIAL AUDIO
                     </span>
                   </div>
-                  <h3 className="text-lg sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
-                    {spotlightTrack.title}
+
+                  <h3 className="text-xl sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
+                    <bdi dir="auto">{spotlightTrack.title}</bdi>
                   </h3>
-                  <p className="text-xs sm:text-lg text-zinc-300 font-bold truncate mt-0.5 sm:mt-1">
-                    {spotlightTrack.artist}
+                  <p className="text-sm sm:text-base text-zinc-300 font-bold truncate mt-1">
+                    <bdi dir="auto">{spotlightTrack.artist}</bdi>
                   </p>
-                  <p className="text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5 sm:mt-1 font-mono max-w-full">
-                    {spotlightTrack.album || 'Apple Digital Master'}
+                  <p className="text-xs text-zinc-400 truncate mt-0.5 font-mono">
+                    <bdi dir="auto">{spotlightTrack.album || 'Apple Digital Master'}</bdi>
                   </p>
                 </div>
+              </div>
 
-                {/* Instant Play Action Button */}
-                <div className="pt-3 sm:pt-6 flex items-center justify-center sm:justify-start gap-3">
+              {/* Right Column: 3-Column Stats & Action Buttons */}
+              <div className="flex flex-col items-center md:items-end gap-4 w-full md:w-auto">
+                {/* 3-Column Balanced Stats Grid */}
+                <div className="grid grid-cols-3 gap-3 sm:gap-5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-2xl px-4 py-2.5 text-center w-full sm:w-auto">
+                  <div className="px-1.5">
+                    <span className="block text-xs sm:text-sm font-black text-white font-mono">{totalStats.totalTracks}</span>
+                    <span className="text-[10px] text-zinc-400 font-medium">{isRTL ? 'مسار' : 'Tracks'}</span>
+                  </div>
+                  <div className="px-1.5 border-x border-white/10">
+                    <span className="block text-xs sm:text-sm font-black text-[#FF375F] font-mono">{totalStats.totalArtists}</span>
+                    <span className="text-[10px] text-zinc-400 font-medium">{isRTL ? 'فنان' : 'Artists'}</span>
+                  </div>
+                  <div className="px-1.5">
+                    <span className="block text-xs sm:text-sm font-black text-emerald-400 font-mono">{totalStats.durationStr}</span>
+                    <span className="text-[10px] text-zinc-400 font-medium">{isRTL ? 'المدة' : 'Duration'}</span>
+                  </div>
+                </div>
+
+                {/* Big Action Controls */}
+                <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center md:justify-end">
                   <motion.button
                     whileTap={{ scale: 0.94 }}
                     onClick={(e) => {
@@ -319,19 +354,31 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                         playTrack(spotlightTrack);
                       }
                     }}
-                    className="flex items-center gap-2 sm:gap-2.5 px-5 sm:px-7 py-2 sm:py-3 rounded-full bg-white text-black font-black text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 sm:gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-white text-black font-black text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
                     {isPlaying && currentTrack?.id === spotlightTrack.id ? (
                       <>
-                        <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />
+                        <Pause className="w-4 h-4 fill-black text-black" />
                         <span>{t.pause}</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black translate-x-0.5" />
+                        <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
                         <span>{t.heroPlayNow}</span>
                       </>
                     )}
+                  </motion.button>
+
+                  <motion.button
+                    whileTap={{ scale: 0.94 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      usePlayerStore.getState().setAutoMixModalOpen(true);
+                    }}
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-white font-extrabold text-xs sm:text-sm shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Disc3 className="w-4 h-4 text-[#FA243C] animate-spin" style={{ animationDuration: '6s' }} />
+                    <span>{isRTL ? 'دمج ذكي DJ' : 'Smart AutoMix'}</span>
                   </motion.button>
                 </div>
               </div>
@@ -392,17 +439,19 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 onClick={() => playTrack(trk)}
                 className="group flex items-center gap-2 sm:gap-3 apple-glass-card rounded-[18px] sm:rounded-[20px] p-2 sm:p-2.5 transition-all cursor-pointer relative shadow-sm overflow-hidden apple-spring"
               >
-                <img
-                  src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                <OptimizedImage
+                  src={trk.coverUrl || trk.artworkUrl}
                   alt={trk.title}
-                  className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl object-cover flex-shrink-0 shadow-md group-hover:scale-105 transition-transform"
+                  size="thumb"
+                  containerClassName="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex-shrink-0 shadow-md"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                 />
                 <div className="min-w-0 flex-1">
                   <p className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                    {trk.title}
+                    <bdi dir="auto">{trk.title}</bdi>
                   </p>
                   <p className="text-[10px] sm:text-[11px] text-zinc-400 truncate mt-0.5">
-                    {trk.artist}
+                    <bdi dir="auto">{trk.artist}</bdi>
                   </p>
                 </div>
               </div>
@@ -411,7 +460,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
         </div>
       </div>
 
-      {/* 4. Horizontal Snap Carousels */}
+      {/* 4. Horizontal Snap Carousels or Wide Feature Cards (< 4 items) */}
       <div className="px-3 sm:px-6 md:px-8 space-y-8 mt-4">
         {/* CAROUSEL - RECENTLY PLAYED */}
         {recentlyPlayed.length > 0 && (
@@ -419,57 +468,107 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">
-                  سمعتها مؤخراً
+                  {isRTL ? 'سمعتها مؤخراً' : 'Recently Played'}
                 </h2>
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {recentlyPlayed.map((trk) => {
-                const isCur = currentTrack?.id === trk.id;
-                return (
-                  <div
-                    key={trk.id}
-                    onClick={() => playTrack(trk)}
-                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 glass-obsidian-1 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
-                      <img
-                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
-                        alt={trk.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
+            {recentlyPlayed.length < 4 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {recentlyPlayed.map((trk) => {
+                  const isCur = currentTrack?.id === trk.id;
+                  return (
+                    <div
+                      key={trk.id}
+                      onClick={() => playTrack(trk, recentlyPlayed)}
+                      className="group flex items-center justify-between p-3 rounded-[22px] apple-glass-card border border-white/[0.08] hover:border-white/20 transition-all cursor-pointer shadow-lg select-none apple-spring"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <OptimizedImage
+                          src={trk.coverUrl || trk.artworkUrl}
+                          alt={trk.title}
+                          size="thumb"
+                          containerClassName="w-13 h-13 rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="min-w-0">
+                          <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                            <bdi dir="auto">{trk.title}</bdi>
+                          </h4>
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                            <bdi dir="auto">{trk.artist}</bdi>
+                          </p>
+                        </div>
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isCur) togglePlayPause();
-                          else playTrack(trk);
+                          else playTrack(trk, recentlyPlayed);
                         }}
-                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-md transition-all cursor-pointer ${
+                          isCur && isPlaying ? 'bg-[#FA243C] text-white' : 'bg-white text-black hover:scale-105 active:scale-95'
                         }`}
                       >
                         {isCur && isPlaying ? (
-                          <Pause className="w-4 h-4 fill-black text-black" />
+                          <Pause className="w-4 h-4 fill-current" />
                         ) : (
-                          <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                          <Play className="w-4 h-4 fill-current translate-x-0.5" />
                         )}
                       </button>
                     </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+                {recentlyPlayed.map((trk) => {
+                  const isCur = currentTrack?.id === trk.id;
+                  return (
+                    <div
+                      key={trk.id}
+                      onClick={() => playTrack(trk, recentlyPlayed)}
+                      className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-[22px] p-2.5 apple-glass-card border border-white/[0.08] hover:border-white/[0.18] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                        <OptimizedImage
+                          src={trk.coverUrl || trk.artworkUrl}
+                          alt={trk.title}
+                          size="card"
+                          containerClassName="w-full h-full"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isCur) togglePlayPause();
+                            else playTrack(trk, recentlyPlayed);
+                          }}
+                          className={`absolute bottom-2 start-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                            isCur && isPlaying
+                              ? 'opacity-100 scale-100'
+                              : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                          }`}
+                        >
+                          {isCur && isPlaying ? (
+                            <Pause className="w-4 h-4 fill-black text-black" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                          )}
+                        </button>
+                      </div>
 
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                      {trk.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {trk.artist}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+                      <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                        <bdi dir="auto">{trk.title}</bdi>
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                        <bdi dir="auto">{trk.artist}</bdi>
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 
@@ -499,24 +598,32 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
               </button>
             </div>
 
-            <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
-              {downloadedTracks.map((trk) => {
-                const isCur = currentTrack?.id === trk.id;
-                return (
-                  <div
-                    key={trk.id}
-                    onClick={() => playTrack(trk, downloadedTracks)}
-                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 glass-obsidian-1 hover:border-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
-                      <img
-                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
-                        alt={trk.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <div className="absolute top-2 right-2 p-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-400 shadow-sm">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+            {downloadedTracks.length < 4 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {downloadedTracks.map((trk) => {
+                  const isCur = currentTrack?.id === trk.id;
+                  return (
+                    <div
+                      key={trk.id}
+                      onClick={() => playTrack(trk, downloadedTracks)}
+                      className="group flex items-center justify-between p-3 rounded-[22px] apple-glass-card border border-emerald-500/20 hover:border-emerald-500/40 transition-all cursor-pointer shadow-lg select-none apple-spring"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <OptimizedImage
+                          src={trk.coverUrl || trk.artworkUrl}
+                          alt={trk.title}
+                          size="thumb"
+                          containerClassName="w-13 h-13 rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                        <div className="min-w-0">
+                          <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-emerald-400' : 'text-white'}`}>
+                            <bdi dir="auto">{trk.title}</bdi>
+                          </h4>
+                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                            <bdi dir="auto">{trk.artist}</bdi>
+                          </p>
+                        </div>
                       </div>
                       <button
                         onClick={(e) => {
@@ -524,30 +631,72 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           if (isCur) togglePlayPause();
                           else playTrack(trk, downloadedTracks);
                         }}
-                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
-                          isCur && isPlaying
-                            ? 'opacity-100 scale-100'
-                            : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-md transition-all cursor-pointer ${
+                          isCur && isPlaying ? 'bg-emerald-500 text-black' : 'bg-white text-black hover:scale-105 active:scale-95'
                         }`}
                       >
                         {isCur && isPlaying ? (
-                          <Pause className="w-4 h-4 fill-black text-black" />
+                          <Pause className="w-4 h-4 fill-current" />
                         ) : (
-                          <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                          <Play className="w-4 h-4 fill-current translate-x-0.5" />
                         )}
                       </button>
                     </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-3.5 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2 scroll-smooth">
+                {downloadedTracks.map((trk) => {
+                  const isCur = currentTrack?.id === trk.id;
+                  return (
+                    <div
+                      key={trk.id}
+                      onClick={() => playTrack(trk, downloadedTracks)}
+                      className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-[22px] p-2.5 apple-glass-card border border-emerald-500/20 hover:border-emerald-500/40 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                        <OptimizedImage
+                          src={trk.coverUrl || trk.artworkUrl}
+                          alt={trk.title}
+                          size="card"
+                          containerClassName="w-full h-full"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-2 end-2 p-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-400 shadow-sm">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isCur) togglePlayPause();
+                            else playTrack(trk, downloadedTracks);
+                          }}
+                          className={`absolute bottom-2 start-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                            isCur && isPlaying
+                              ? 'opacity-100 scale-100'
+                              : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
+                          }`}
+                        >
+                          {isCur && isPlaying ? (
+                            <Pause className="w-4 h-4 fill-black text-black" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                          )}
+                        </button>
+                      </div>
 
-                    <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-emerald-400' : 'text-white'}`}>
-                      {trk.title}
-                    </h4>
-                    <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {trk.artist}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
+                      <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-emerald-400' : 'text-white'}`}>
+                        <bdi dir="auto">{trk.title}</bdi>
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                        <bdi dir="auto">{trk.artist}</bdi>
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 
@@ -570,14 +719,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                   <div
                     key={trk.id}
                     onClick={() => playTrack(trk)}
-                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-2xl p-2.5 glass-obsidian-1 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="group flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer relative rounded-[22px] p-2.5 apple-glass-card border border-white/[0.08] hover:border-white/[0.18] transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2 shadow-lg">
-                      <img
-                        src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                    <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                      <OptimizedImage
+                        src={trk.coverUrl || trk.artworkUrl}
                         alt={trk.title}
+                        size="card"
+                        containerClassName="w-full h-full"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
                       />
                       <button
                         onClick={(e) => {
@@ -585,7 +735,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           if (isCur) togglePlayPause();
                           else playTrack(trk);
                         }}
-                        className={`absolute bottom-2 left-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
+                        className={`absolute bottom-2 start-2 w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-xl transition-all duration-200 cursor-pointer ${
                           isCur && isPlaying
                             ? 'opacity-100 scale-100'
                             : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105'
@@ -600,10 +750,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                     </div>
 
                     <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                      {trk.title}
+                      <bdi dir="auto">{trk.title}</bdi>
                     </h4>
                     <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                      {trk.artist}
+                      <bdi dir="auto">{trk.artist}</bdi>
                     </p>
                   </div>
                 );
@@ -630,11 +780,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 >
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md">
                     <div className="w-full h-full rounded-full overflow-hidden bg-black/60">
-                      <img
+                      <OptimizedImage
                         src={art.avatarUrl}
                         alt={art.name}
+                        size="card"
+                        containerClassName="w-full h-full"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        loading="lazy"
                       />
                     </div>
                   </div>
@@ -658,13 +809,19 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 <div
                   key={trk.id}
                   onClick={() => playTrack(trk)}
-                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-2xl p-2.5 glass-obsidian-1 hover:border-white/20 transition-all hover:scale-[1.02]"
+                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-[22px] p-2.5 apple-glass-card border border-white/[0.08] hover:border-white/[0.18] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2">
-                    <img src={trk.coverUrl || trk.artworkUrl || '/logo.svg'} alt={trk.title} className="w-full h-full object-cover" />
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                    <OptimizedImage
+                      src={trk.coverUrl || trk.artworkUrl}
+                      alt={trk.title}
+                      size="card"
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  <h4 className="text-xs font-bold text-white truncate">{trk.title}</h4>
-                  <p className="text-[11px] text-zinc-400 truncate">{trk.artist}</p>
+                  <h4 className="text-xs font-bold text-white truncate"><bdi dir="auto">{trk.title}</bdi></h4>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5"><bdi dir="auto">{trk.artist}</bdi></p>
                 </div>
               ))}
             </div>
@@ -682,13 +839,19 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 <div
                   key={trk.id}
                   onClick={() => playTrack(trk)}
-                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-2xl p-2.5 glass-obsidian-1 hover:border-white/20 transition-all hover:scale-[1.02]"
+                  className="group flex-shrink-0 w-36 sm:w-40 cursor-pointer rounded-[22px] p-2.5 apple-glass-card border border-white/[0.08] hover:border-white/[0.18] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <div className="aspect-square w-full rounded-xl overflow-hidden bg-black/40 mb-2">
-                    <img src={trk.coverUrl || trk.artworkUrl || '/logo.svg'} alt={trk.title} className="w-full h-full object-cover" />
+                  <div className="aspect-square w-full rounded-2xl overflow-hidden bg-black/40 mb-2 shadow-lg">
+                    <OptimizedImage
+                      src={trk.coverUrl || trk.artworkUrl}
+                      alt={trk.title}
+                      size="card"
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
                   </div>
-                  <h4 className="text-xs font-bold text-white truncate">{trk.title}</h4>
-                  <p className="text-[11px] text-zinc-400 truncate">{trk.artist}</p>
+                  <h4 className="text-xs font-bold text-white truncate"><bdi dir="auto">{trk.title}</bdi></h4>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5"><bdi dir="auto">{trk.artist}</bdi></p>
                 </div>
               ))}
             </div>
@@ -708,7 +871,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             </span>
           </div>
 
-          <div className="divide-y divide-white/[0.06] rounded-2xl glass-obsidian-1 overflow-hidden">
+          <div className="divide-y divide-white/[0.06] rounded-[24px] apple-glass-card border border-white/[0.08] overflow-hidden shadow-lg">
             {displayedTracks.slice(0, visibleTableCount).map((trk, idx) => {
               const isCur = currentTrack?.id === trk.id;
               return (
@@ -716,21 +879,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                   key={`${trk.id}_${idx}`}
                   onClick={() => playTrack(trk, displayedTracks)}
                   className={`flex items-center justify-between p-3.5 cursor-pointer transition-colors ${
-                    isCur ? 'bg-[#FA243C]/15' : 'hover:bg-white/[0.05]'
+                    isCur ? 'bg-[#FA243C]/15 border-s-2 border-[#FA243C]' : 'hover:bg-white/[0.05]'
                   }`}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <img
-                      src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1 pe-2">
+                    <OptimizedImage
+                      src={trk.coverUrl || trk.artworkUrl}
                       alt={trk.title}
-                      className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-md"
+                      size="thumb"
+                      containerClassName="w-12 h-12 rounded-xl flex-shrink-0 shadow-md"
+                      className="w-full h-full object-cover"
                     />
                     <div className="min-w-0 flex-1">
                       <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                        {trk.title}
+                        <bdi dir="auto">{trk.title}</bdi>
                       </h4>
                       <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                        {trk.artist}
+                        <bdi dir="auto">{trk.artist}</bdi>
                       </p>
                     </div>
                   </div>
@@ -753,9 +918,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                     >
                       {isCur && isPlaying ? (
                         <div className="flex items-end gap-[2px] h-3.5 w-3.5 justify-center">
-                          <span className="w-0.5 bg-white rounded-full animate-[bounce_0.8s_infinite] h-full" />
-                          <span className="w-0.5 bg-white rounded-full animate-[bounce_0.6s_infinite_0.15s] h-2/3" />
-                          <span className="w-0.5 bg-white rounded-full animate-[bounce_1s_infinite_0.3s] h-4/5" />
+                          <span className="w-0.5 bg-white rounded-full aura-soundbar-1 h-full" />
+                          <span className="w-0.5 bg-white rounded-full aura-soundbar-2 h-2/3" />
+                          <span className="w-0.5 bg-white rounded-full aura-soundbar-3 h-4/5" />
                         </div>
                       ) : (
                         <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />

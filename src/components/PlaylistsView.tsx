@@ -4,8 +4,10 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { Track } from '../types';
+import { useTranslation } from '../i18n/useTranslation';
 
 export const PlaylistsView: React.FC = () => {
+  const { isRTL, dir } = useTranslation();
   const playlists = usePlayerStore((state) => state.playlists);
   const tracks = usePlayerStore((state) => state.tracks);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);
@@ -91,14 +93,14 @@ export const PlaylistsView: React.FC = () => {
 
         {/* Tracks List (Strict LTR Table with Zero Empty Space) */}
         {playlistTracks.length > 0 ? (
-          <div dir="ltr" className="w-full max-w-full space-y-1">
+          <div dir={dir} className="w-full max-w-full space-y-1">
             <div className="hidden md:grid grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.08] select-none uppercase tracking-wider">
               <span className="text-center font-mono">#</span>
-              <span>Cover</span>
-              <span>Title & Artist</span>
-              <span>Album</span>
+              <span>{isRTL ? 'الغلاف' : 'Cover'}</span>
+              <span>{isRTL ? 'العنوان والفنان' : 'Title & Artist'}</span>
+              <span>{isRTL ? 'الألبوم' : 'Album'}</span>
               <span className="text-center"><Heart className="w-3.5 h-3.5 mx-auto opacity-70" /></span>
-              <span className="text-right font-mono flex items-center justify-end gap-1"><Clock className="w-3 h-3" /><span>Time</span></span>
+              <span className="text-end font-mono flex items-center justify-end gap-1"><Clock className="w-3 h-3" /><span>{isRTL ? 'المدة' : 'Time'}</span></span>
               <span />
             </div>
 
@@ -110,18 +112,18 @@ export const PlaylistsView: React.FC = () => {
               return (
                 <div key={track.id} className="relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
                   {/* Underneath Swipe Action Panel */}
-                  <div className="absolute inset-y-0 right-0 w-32 sm:w-36 bg-gradient-to-r from-[#FA243C] to-[#FF375F] rounded-2xl flex items-center justify-center gap-2 text-white font-black text-xs px-3 shadow-inner pointer-events-none">
+                  <div className="absolute inset-y-0 end-0 w-32 sm:w-36 bg-gradient-to-r from-[#FA243C] to-[#FF375F] rounded-2xl flex items-center justify-center gap-2 text-white font-black text-xs px-3 shadow-inner pointer-events-none">
                     <ListPlus className="w-4 h-4 text-white stroke-[2.5]" />
-                    <span>الأغنية التالية</span>
+                    <span>{isRTL ? 'الأغنية التالية' : 'Next Up'}</span>
                   </div>
 
                   <motion.div
                     drag="x"
                     dragDirectionLock
-                    dragConstraints={{ left: -110, right: 0 }}
+                    dragConstraints={{ left: isRTL ? 0 : -110, right: isRTL ? 110 : 0 }}
                     dragElastic={0.2}
                     onDragEnd={(_, info) => {
-                      if (info.offset.x < -40 || info.velocity.x < -150) {
+                      if (Math.abs(info.offset.x) > 40 || Math.abs(info.velocity.x) > 150) {
                         playNextInQueue(track);
                       }
                     }}
@@ -139,10 +141,10 @@ export const PlaylistsView: React.FC = () => {
                   >
                     <div className="text-center flex items-center justify-center">
                       {isCur && isPlaying ? (
-                        <div className="flex items-end gap-[2px] h-3.5">
-                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+                        <div className="flex items-end gap-[3px] h-3.5">
+                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
+                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
+                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
                         </div>
                       ) : (
                         <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#FA243C] font-bold' : 'text-zinc-500'}`}>
@@ -156,22 +158,26 @@ export const PlaylistsView: React.FC = () => {
                       <img src={track.artworkUrl || '/logo.svg'} alt={track.title} className="w-full h-full object-cover" />
                     </div>
 
-                    <div className="min-w-0 pr-2">
+                    <div className="min-w-0 pe-2">
                       <div className="flex items-center gap-2">
-                        <h4 dir="auto" className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                          {track.title}
+                        <h4 className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                          <bdi dir="auto">{track.title}</bdi>
                         </h4>
                         {isNextUp && (
                           <span className="inline-flex items-center gap-1 text-[9px] text-[#FA243C] bg-[#FA243C]/15 px-2 py-0.5 rounded-full border border-[#FA243C]/35 font-bold flex-shrink-0 animate-pulse">
                             <ListPlus className="w-2.5 h-2.5" />
-                            <span>التالية</span>
+                            <span>{isRTL ? 'التالية' : 'Next'}</span>
                           </span>
                         )}
                       </div>
-                      <p dir="auto" className="text-xs text-zinc-400 truncate mt-0.5">{track.artist}</p>
+                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                        <bdi dir="auto">{track.artist}</bdi>
+                      </p>
                     </div>
 
-                    <div dir="auto" className="hidden md:block text-xs text-zinc-400 truncate">{track.album || 'Single'}</div>
+                    <div className="hidden md:block text-xs text-zinc-400 truncate font-medium">
+                      <bdi dir="auto">{track.album || (isRTL ? 'أغنية منفردة' : 'Single')}</bdi>
+                    </div>
 
                     <div className="text-center">
                       <button
@@ -182,20 +188,20 @@ export const PlaylistsView: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="text-xs font-mono text-zinc-400 text-right tabular-nums">{formatTime(track.duration)}</div>
+                    <div className="text-xs font-mono text-zinc-400 text-end tabular-nums">{formatTime(track.duration)}</div>
 
                     <div className="relative hidden md:block group/menu">
                       <button onClick={(e) => e.stopPropagation()} className="p-2 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100 cursor-pointer">
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <div className="hidden group-hover/menu:block absolute right-0 top-8 z-30 w-44 bg-[#0d0d14]/95 border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-1.5 shadow-2xl space-y-1">
-                        <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left cursor-pointer">
+                      <div className="hidden group-hover/menu:block absolute end-0 top-8 z-30 w-44 bg-[#0d0d14]/95 border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-1.5 shadow-2xl space-y-1">
+                        <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-start cursor-pointer">
                           <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-                          <span>تشغيل التالي مباشرة</span>
+                          <span>{isRTL ? 'تشغيل التالي مباشرة' : 'Play Next'}</span>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left cursor-pointer">
+                        <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-start cursor-pointer">
                           <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
-                          <span>إضافة للانتظار</span>
+                          <span>{isRTL ? 'إضافة للانتظار' : 'Add to Queue'}</span>
                         </button>
                       </div>
                     </div>

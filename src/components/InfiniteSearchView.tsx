@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { searchWorldwideMusic, SearchResultsCategorized } from '../services/streamingEngine';
 import { Search, Play, Pause, X, Disc, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
 import { Track } from '../types';
+import { OptimizedImage } from './common/OptimizedImage';
 
 export const InfiniteSearchView: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -18,6 +19,7 @@ export const InfiniteSearchView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, startTransition] = useTransition();
 
+  const tracks = usePlayerStore((state) => state.tracks);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackState = usePlayerStore((state) => state.playbackState);
@@ -147,19 +149,67 @@ export const InfiniteSearchView: React.FC = () => {
               {isRTL ? 'تشغيل كامل بدون حدود 30 ثانية' : '100% Full Length Audio'}
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-            {GENRES.map((g) => (
-              <div
-                key={g.name}
-                onClick={() => setQuery(g.query)}
-                className={`h-28 sm:h-32 rounded-2xl p-4 bg-gradient-to-br ${g.gradient} cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-lg relative overflow-hidden flex flex-col justify-between group`}
-              >
-                <span className="text-sm sm:text-base font-black text-white leading-snug drop-shadow-md">
-                  {g.name}
-                </span>
-                <Disc className="w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors absolute -bottom-2 -right-2 transform rotate-12" />
-              </div>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
+            {GENRES.map((g) => {
+              const q = g.query.toLowerCase();
+              const matched = tracks.filter((t) => {
+                const genre = (t.genre || '').toLowerCase();
+                const title = (t.title || '').toLowerCase();
+                const artist = (t.artist || '').toLowerCase();
+                return genre.includes(q) || title.includes(q) || artist.includes(q);
+              });
+              const count = matched.length;
+              const covers: string[] = [];
+              const seenArt = new Set<string>();
+              for (const t of matched) {
+                const art = t.artworkUrl || t.coverUrl;
+                if (art && !seenArt.has(art)) {
+                  seenArt.add(art);
+                  covers.push(art);
+                  if (covers.length === 3) break;
+                }
+              }
+              while (covers.length < 3 && tracks.length > covers.length) {
+                const fb = tracks[covers.length]?.artworkUrl || tracks[covers.length]?.coverUrl || '/logo.svg';
+                covers.push(fb);
+              }
+
+              return (
+                <div
+                  key={g.name}
+                  onClick={() => setQuery(g.query)}
+                  className={`h-36 sm:h-40 rounded-[24px] p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 shadow-xl relative overflow-hidden flex flex-col justify-between group apple-spring select-none`}
+                >
+                  <div className="z-10 relative">
+                    <span className="text-sm sm:text-base font-black text-white leading-tight drop-shadow-md block">
+                      {g.name}
+                    </span>
+                    <span className="text-[11px] font-bold text-white/80 mt-1 block">
+                      {count > 0 ? (isRTL ? `${count} مسار` : `${count} tracks`) : (isRTL ? 'استكشف الآن' : 'Explore')}
+                    </span>
+                  </div>
+
+                  {/* 3D Tilted Artwork Cascade in Bottom Corner */}
+                  <div className="absolute -bottom-3 -end-3 w-28 h-28 pointer-events-none transform rotate-12 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-out">
+                    {covers[0] && (
+                      <div className="absolute top-0 end-0 w-16 h-16 rounded-xl overflow-hidden shadow-2xl border border-white/20 z-30">
+                        <img src={covers[0]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    {covers[1] && (
+                      <div className="absolute top-3 end-5 w-14 h-14 rounded-xl overflow-hidden shadow-xl border border-white/15 opacity-80 z-20">
+                        <img src={covers[1]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    {covers[2] && (
+                      <div className="absolute top-6 end-10 w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-white/10 opacity-60 z-10">
+                        <img src={covers[2]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -194,13 +244,15 @@ export const InfiniteSearchView: React.FC = () => {
                 className="p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={results.topResult.coverUrl || results.topResult.artworkUrl || '/logo.svg'}
-                      alt={results.topResult.title}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover shadow-2xl"
-                    />
-                    <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <div className="relative flex-shrink-0">
+                      <OptimizedImage
+                        src={results.topResult.coverUrl || results.topResult.artworkUrl}
+                        alt={results.topResult.title}
+                        size="card"
+                        containerClassName="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-2xl"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <Play className="w-8 h-8 text-white fill-current translate-x-0.5" />
                     </div>
                   </div>
@@ -250,26 +302,39 @@ export const InfiniteSearchView: React.FC = () => {
               <h3 className="text-lg font-black text-white">
                 {isRTL ? 'الفنانون' : 'Artists'}
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {results.artists.map((art) => (
-                  <div
-                    key={art.id}
-                    onClick={() => setQuery(art.name)}
-                    className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] flex flex-col items-center text-center cursor-pointer transition-all hover:scale-[1.02]"
-                  >
-                    <img
-                      src={art.avatarUrl || '/logo.svg'}
-                      alt={art.name}
-                      className="w-20 h-20 rounded-full object-cover shadow-lg mb-3"
-                    />
-                    <h4 className="text-xs sm:text-sm font-bold text-white truncate max-w-full">
-                      {art.name}
-                    </h4>
-                    <span className="text-[11px] text-zinc-400 mt-0.5">
-                      {art.listeners || (isRTL ? 'فنان' : 'Artist')}
-                    </span>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                {results.artists.map((art) => {
+                  const artistSongCount = tracks.filter((t) => t.artist.toLowerCase().includes(art.name.toLowerCase())).length;
+                  const subtitle = artistSongCount > 0
+                    ? (isRTL ? `${artistSongCount} مسار في مكتبتك` : `${artistSongCount} songs in library`)
+                    : (art.listeners || (isRTL ? 'فنان عالمي' : 'Artist'));
+
+                  return (
+                    <div
+                      key={art.id}
+                      onClick={() => setQuery(art.name)}
+                      className="p-4 rounded-2xl apple-glass-card hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 flex flex-col items-center text-center cursor-pointer transition-all hover:scale-[1.03] active:scale-[0.98] group apple-spring"
+                    >
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md mb-3">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black/60">
+                          <OptimizedImage
+                            src={art.avatarUrl}
+                            alt={art.name}
+                            size="thumb"
+                            containerClassName="w-full h-full"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-white w-full px-1 break-words line-clamp-2 leading-snug group-hover:text-[#FA243C] transition-colors" dir="auto">
+                        {art.name}
+                      </h4>
+                      <span className="text-[11px] font-medium text-zinc-400 mt-1 line-clamp-1">
+                        {subtitle}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -299,10 +364,12 @@ export const InfiniteSearchView: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <img
-                          src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                        <OptimizedImage
+                          src={trk.coverUrl || trk.artworkUrl}
                           alt={trk.title}
-                          className="w-11 h-11 rounded-xl object-cover flex-shrink-0 shadow-md"
+                          size="thumb"
+                          containerClassName="w-11 h-11 rounded-xl flex-shrink-0 shadow-md"
+                          className="w-full h-full object-cover"
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">

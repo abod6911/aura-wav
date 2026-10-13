@@ -3,11 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #07070a;
+  --app-bg: #060609;
   --accent-color: 250, 36, 60;
   --apple-red: #FA243C;
   --apple-rose: #FF375F;
   --apple-violet: #7D12FF;
+  --aura-accent: #FA243C;
+  --aura-accent-hover: #FF375F;
+  --aura-accent-glow: rgba(250, 36, 60, 0.4);
   --mesh-color-1: rgba(250, 36, 60, 0.28);
   --mesh-color-2: rgba(255, 55, 95, 0.18);
   --mesh-color-3: rgba(125, 18, 255, 0.15);
@@ -52,37 +55,37 @@ button, a, input, select, [role="button"], .cursor-pointer {
   flex-direction: column;
 }
 
-/* Apple Music Liquid Glass Materials - Optimized GPU kernels */
+/* Apple Liquid Glass Tier 1: Cards & Panels */
 .apple-glass-card,
 .glass-obsidian-1,
 .glass-panel {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.14),
-    0 16px 36px 0 rgba(0, 0, 0, 0.45);
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.16),
+    0 20px 48px 0 rgba(0, 0, 0, 0.6);
 }
 
-/* Apple iOS 18 / macOS Floating Acrylic Dock */
+/* Apple Liquid Glass Tier 2: Floating Docks & PlayerBar */
 .apple-glass-dock,
 .glass-obsidian-2,
 .glass-ios-dock {
-  background: rgba(14, 14, 20, 0.85);
-  backdrop-filter: blur(20px) saturate(170%);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  background: rgba(12, 12, 18, 0.82);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
-    0 24px 60px rgba(0, 0, 0, 0.85);
+    0 24px 64px rgba(0, 0, 0, 0.9);
 }
 
-/* Apple Translucent Glass Pill */
+/* Apple Liquid Glass Tier 3: Translucent Controls & Pills */
 .apple-glass-pill {
   background: rgba(255, 255, 255, 0.07);
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.2);
 }
@@ -94,23 +97,23 @@ button, a, input, select, [role="button"], .cursor-pointer {
   transform: scale(0.96);
 }
 
-/* Mobile GPU optimization: reduce convolution kernel to 8px for 60-120fps */
+/* Mobile GPU optimization: reduce convolution kernel on smaller viewports */
 @media (max-width: 768px) {
   .apple-glass-card,
   .glass-obsidian-1,
   .glass-panel {
-    backdrop-filter: blur(8px) saturate(140%);
-    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
   }
   .apple-glass-dock,
   .glass-obsidian-2,
   .glass-ios-dock {
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(170%);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
   }
   .apple-glass-pill {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
 
@@ -248,6 +251,15 @@ input[type=range]::-webkit-slider-thumb:hover {
   content-visibility: auto;
   contain-intrinsic-size: 64px;
 }
+
+@keyframes auraBarBounce {
+  0% { height: 25%; }
+  100% { height: 100%; }
+}
+.aura-soundbar-1 { animation: auraBarBounce 0.65s ease-in-out infinite alternate; }
+.aura-soundbar-2 { animation: auraBarBounce 0.45s ease-in-out 0.15s infinite alternate; }
+.aura-soundbar-3 { animation: auraBarBounce 0.85s ease-in-out 0.3s infinite alternate; }
+.aura-soundbar-4 { animation: auraBarBounce 0.55s ease-in-out 0.1s infinite alternate; }
 
 /* Apple Music Live Aurora Mesh Animations */
 @keyframes auroraDrift1 {

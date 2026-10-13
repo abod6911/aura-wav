@@ -11,6 +11,8 @@ export interface WaveformTimelineProps {
   className?: string;
   barCount?: number;
   height?: number;
+  cueInSeconds?: number;
+  cueOutSeconds?: number;
 }
 
 /**
@@ -64,6 +66,8 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
   className = '',
   barCount = 60,
   height = 36,
+  cueInSeconds,
+  cueOutSeconds,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -76,6 +80,12 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
   const safeDuration = duration > 0 ? duration : 1;
   const effectiveTime = isDragging ? scrubSeconds : currentTime;
   const currentRatio = Math.min(1, Math.max(0, effectiveTime / safeDuration));
+
+  // Smart Cue Points (defaults: Cue-In = 4% or given seconds, Cue-Out = 92% or given seconds)
+  const effectiveCueIn = cueInSeconds !== undefined ? cueInSeconds : duration * 0.04;
+  const effectiveCueOut = cueOutSeconds !== undefined ? cueOutSeconds : Math.max(0, duration - 18);
+  const cueInRatio = duration > 0 ? Math.min(1, effectiveCueIn / duration) : 0.04;
+  const cueOutRatio = duration > 0 ? Math.min(1, effectiveCueOut / duration) : 0.92;
 
   const calculateTarget = useCallback((clientX: number) => {
     if (!containerRef.current) return { seconds: 0, ratio: 0 };
@@ -174,6 +184,32 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
           </div>
         )}
 
+        {/* Smart Cue-In Visual Flag */}
+        {cueInRatio > 0 && cueInRatio < 0.5 && (
+          <div
+            style={{ left: `${cueInRatio * 100}%` }}
+            title={`Cue-In: ${formatDuration(effectiveCueIn)}`}
+            className="absolute top-0 bottom-0 w-[1.5px] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] pointer-events-none z-10 opacity-70 group-hover:opacity-100"
+          >
+            <span className="absolute -bottom-4 -translate-x-1/2 text-[8px] font-mono font-bold text-emerald-400 bg-black/60 px-1 rounded">
+              IN
+            </span>
+          </div>
+        )}
+
+        {/* Smart Cue-Out / AutoMix Trigger Flag */}
+        {cueOutRatio > 0.5 && cueOutRatio < 1 && (
+          <div
+            style={{ left: `${cueOutRatio * 100}%` }}
+            title={`Cue-Out: ${formatDuration(effectiveCueOut)}`}
+            className="absolute top-0 bottom-0 w-[1.5px] bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)] pointer-events-none z-10 opacity-70 group-hover:opacity-100"
+          >
+            <span className="absolute -bottom-4 -translate-x-1/2 text-[8px] font-mono font-bold text-amber-400 bg-black/60 px-1 rounded">
+              OUT
+            </span>
+          </div>
+        )}
+
         {/* Glowing Playhead Pin */}
         <div
           style={{
@@ -181,7 +217,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
             backgroundColor: accentColor,
             boxShadow: `0 0 12px ${accentColor}`,
           }}
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full border-2 border-white pointer-events-none transition-transform duration-75 group-hover:scale-125"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full border-2 border-white pointer-events-none transition-transform duration-75 group-hover:scale-125 z-20"
         />
       </div>
 

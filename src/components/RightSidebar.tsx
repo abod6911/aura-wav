@@ -1,8 +1,11 @@
 import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
+import { useTranslation } from '../i18n/useTranslation';
 import { X, Trash2, ListMusic, Heart, Play, Radio, Sparkles, Disc, ArrowUp, ArrowDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const RightSidebar: React.FC = () => {
+  const { t, isRTL, dir } = useTranslation();
   const isRightSidebarOpen = usePlayerStore((state) => state.isRightSidebarOpen);
   const setRightSidebarOpen = usePlayerStore((state) => state.setRightSidebarOpen);
   const activeRightSidebarTab = usePlayerStore((state) => state.activeRightSidebarTab);
@@ -32,37 +35,43 @@ export const RightSidebar: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const accentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
+
   return (
-    <aside className="hidden xl:flex w-80 flex-col bg-[#181818] rounded-xl my-2 ml-2 p-4 z-30 select-none h-[calc(100vh-7rem)] overflow-hidden border border-white/5 shadow-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
-        <div className="flex items-center gap-2">
+    <aside
+      dir={dir}
+      className="hidden xl:flex w-84 flex-col apple-glass-card rounded-[28px] my-3 ms-3 p-4.5 z-30 select-none h-[calc(100vh-6.5rem)] overflow-hidden border border-white/[0.1] shadow-[0_24px_64px_rgba(0,0,0,0.85)] backdrop-blur-3xl"
+    >
+      {/* Header with Liquid Tabs */}
+      <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] flex-shrink-0">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
           <button
             onClick={() => setActiveRightSidebarTab('queue')}
-            className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+            className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer apple-spring ${
               activeRightSidebarTab === 'queue'
-                ? 'bg-white text-black'
-                : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
+                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            قائمة الانتظار
+            {isRTL ? 'قائمة الانتظار' : 'Up Next'}
           </button>
           <button
             onClick={() => setActiveRightSidebarTab('now_playing')}
-            className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+            className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer apple-spring ${
               activeRightSidebarTab === 'now_playing'
-                ? 'bg-white text-black'
-                : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
+                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            جاري التشغيل
+            {isRTL ? 'يعمل الآن' : 'Now Playing'}
           </button>
         </div>
 
         <button
           onClick={() => setRightSidebarOpen(false)}
-          className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
-          title="إغلاق اللوحة الجانبية"
+          className="p-2 text-white/60 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+          title={isRTL ? 'إغلاق اللوحة الجانبية' : 'Close panel'}
+          aria-label="Close Sidebar"
         >
           <X className="w-4 h-4" />
         </button>
@@ -70,15 +79,15 @@ export const RightSidebar: React.FC = () => {
 
       {/* TAB 1: QUEUE */}
       {activeRightSidebarTab === 'queue' && (
-        <div className="flex-1 flex flex-col min-h-0 pt-3">
-          {/* Now Playing Block */}
+        <div className="flex-1 flex flex-col min-h-0 pt-3.5">
+          {/* Now Playing Mini Glass Card */}
           {currentTrack && (
             <div className="mb-4 flex-shrink-0">
-              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                يعمل الآن
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/55 block mb-2 ps-1">
+                {isRTL ? 'المسار النشط' : 'Active Track'}
               </span>
-              <div className="flex items-center gap-3 p-2.5 rounded-2xl apple-glass-card border border-white/[0.08]">
-                <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0">
+              <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.05] border border-white/[0.1] shadow-lg">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-white/15">
                   <img
                     src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
                     alt={currentTrack.title}
@@ -86,27 +95,26 @@ export const RightSidebar: React.FC = () => {
                   />
                   {isPlaying && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="w-2 h-2 rounded-full bg-[var(--apple-rose)] animate-ping" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#FA243C] animate-ping" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-bold text-[var(--apple-rose)] truncate">
-                    {currentTrack.title}
+                  <h5 className="text-xs font-bold text-white truncate leading-relaxed">
+                    <bdi dir="auto">{currentTrack.title}</bdi>
                   </h5>
-                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                    {currentTrack.artist}
+                  <p className="text-[11px] text-white/60 truncate mt-0.5 leading-relaxed">
+                    <bdi dir="auto">{currentTrack.artist}</bdi>
                   </p>
                 </div>
                 <button
                   onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-1.5 text-zinc-400 hover:text-[var(--apple-rose)] transition-colors cursor-pointer"
+                  className="p-2 text-white/60 hover:text-[#FA243C] transition-colors cursor-pointer"
+                  aria-label="Favorite"
                 >
                   <Heart
-                    className={`w-4 h-4 ${
-                      isFavorite
-                        ? 'text-[var(--apple-rose)] fill-[var(--apple-rose)]'
-                        : ''
+                    className={`w-4 h-4 transition-transform active:scale-125 ${
+                      isFavorite ? 'text-[#FA243C] fill-[#FA243C]' : ''
                     }`}
                   />
                 </button>
@@ -114,58 +122,62 @@ export const RightSidebar: React.FC = () => {
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto pr-1 no-scrollbar min-h-0 space-y-4">
+          <div className="flex-1 overflow-y-auto pe-1 no-scrollbar min-h-0 space-y-4">
             {/* 1. Dynamic User Queue (Up Next) */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider">
-                    قائمة الانتظار المباشرة
+              <div className="flex items-center justify-between mb-2 ps-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-white/75">
+                    {isRTL ? 'قائمة الانتظار المباشرة' : 'Direct Queue'}
                   </span>
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/35 font-mono">
                     {userQueue.length}/{MAX_USER_QUEUE}
                   </span>
                 </div>
                 {userQueue.length > 0 && (
                   <button
                     onClick={clearUserQueue}
-                    className="text-[10px] font-bold text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-[10px] font-bold text-white/50 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" />
-                    مسح
+                    <span>{isRTL ? 'مسح' : 'Clear'}</span>
                   </button>
                 )}
               </div>
 
               {userQueue.length === 0 ? (
-                <div className="py-4 px-3 rounded-2xl apple-glass-card border border-dashed border-white/10 text-center">
-                  <p className="text-[11px] text-zinc-400">قائمة الانتظار المباشرة فارغة</p>
-                  <p className="text-[9px] mt-0.5 text-zinc-600">اسحب أي أغنية لليسار لإضافتها هنا</p>
+                <div className="py-5 px-3 rounded-2xl bg-white/[0.02] border border-dashed border-white/[0.08] text-center">
+                  <p className="text-[11px] text-white/60 font-medium">
+                    {isRTL ? 'قائمة الانتظار المباشرة فارغة' : 'Queue is empty'}
+                  </p>
+                  <p className="text-[9px] mt-1 text-white/40">
+                    {isRTL ? 'اسحب أي أغنية أو انقر "تشغيل التالية"' : 'Swipe or tap "Play Next" on any song'}
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {userQueue.map((track, idx) => (
                     <div
                       key={`sidebar_user_${track.id}_${idx}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 transition-colors cursor-pointer"
+                      className="group flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] transition-all cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
-                      <span className="w-4 text-center text-[10px] font-bold text-[var(--apple-rose)] font-mono">
+                      <span className="w-4 text-center text-[10px] font-bold text-[#FA243C] font-mono">
                         {idx + 1}
                       </span>
 
                       <img
                         src={track.coverUrl || track.artworkUrl || '/logo.svg'}
                         alt={track.title}
-                        className="w-9 h-9 rounded object-cover flex-shrink-0"
+                        className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-white/10"
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-white truncate">
-                          {track.title}
+                        <p className="text-xs font-bold text-white truncate leading-relaxed">
+                          <bdi dir="auto">{track.title}</bdi>
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
-                          {track.artist}
+                        <p className="text-[10px] text-white/60 truncate leading-relaxed">
+                          <bdi dir="auto">{track.artist}</bdi>
                         </p>
                       </div>
 
@@ -176,10 +188,10 @@ export const RightSidebar: React.FC = () => {
                               e.stopPropagation();
                               reorderUserQueue(idx, idx - 1);
                             }}
-                            className="p-1 text-zinc-400 hover:text-white cursor-pointer"
-                            title="تقديم"
+                            className="p-1 text-white/60 hover:text-white cursor-pointer"
+                            title={isRTL ? 'تقديم' : 'Move Up'}
                           >
-                            <ArrowUp className="w-3 h-3" />
+                            <ArrowUp className="w-3.5 h-3.5" />
                           </button>
                         )}
                         {idx < userQueue.length - 1 && (
@@ -188,10 +200,10 @@ export const RightSidebar: React.FC = () => {
                               e.stopPropagation();
                               reorderUserQueue(idx, idx + 1);
                             }}
-                            className="p-1 text-zinc-400 hover:text-white cursor-pointer"
-                            title="تأخير"
+                            className="p-1 text-white/60 hover:text-white cursor-pointer"
+                            title={isRTL ? 'تأخير' : 'Move Down'}
                           >
-                            <ArrowDown className="w-3 h-3" />
+                            <ArrowDown className="w-3.5 h-3.5" />
                           </button>
                         )}
                         <button
@@ -199,8 +211,8 @@ export const RightSidebar: React.FC = () => {
                             e.stopPropagation();
                             removeFromUserQueue(idx);
                           }}
-                          className="p-1 text-zinc-400 hover:text-red-400 transition-opacity cursor-pointer"
-                          title="إزالة من القائمة"
+                          className="p-1 text-white/60 hover:text-red-400 transition-colors cursor-pointer"
+                          title={isRTL ? 'إزالة' : 'Remove'}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -213,35 +225,35 @@ export const RightSidebar: React.FC = () => {
 
             {/* 2. Sequential Playlist Context */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-                  التالي من القائمة ({queue.length})
+              <div className="flex items-center justify-between mb-2 ps-1">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-white/55">
+                  {isRTL ? `التالي من القائمة (${queue.length})` : `Up Next (${queue.length})`}
                 </span>
                 {queue.length > 0 && (
                   <button
                     onClick={clearQueue}
-                    className="text-[10px] font-bold text-zinc-400 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-[10px] font-bold text-white/50 hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3 h-3" />
-                    مسح
+                    <span>{isRTL ? 'مسح' : 'Clear'}</span>
                   </button>
                 )}
               </div>
 
               {queue.length === 0 ? (
-                <div className="py-6 text-center text-zinc-500">
-                  <ListMusic className="w-7 h-7 mx-auto mb-1.5 opacity-40" />
-                  <p className="text-xs font-medium">لا توجد مسارات متبقية</p>
+                <div className="py-6 text-center text-white/40">
+                  <ListMusic className="w-7 h-7 mx-auto mb-1.5 opacity-30" />
+                  <p className="text-xs font-medium">{isRTL ? 'لا توجد مسارات متبقية' : 'No tracks remaining'}</p>
                 </div>
               ) : (
                 <div className="space-y-1">
                   {queue.slice(0, 40).map((track, idx) => (
                     <div
                       key={`sidebar_playlist_${track.id}_${idx}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                      className="group flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/[0.06] transition-all cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
-                      <span className="w-4 text-center text-[10px] text-zinc-500 group-hover:hidden">
+                      <span className="w-4 text-center text-[10px] text-white/40 group-hover:hidden font-mono">
                         {idx + 1}
                       </span>
                       <Play className="w-3.5 h-3.5 text-white hidden group-hover:block fill-current" />
@@ -249,19 +261,19 @@ export const RightSidebar: React.FC = () => {
                       <img
                         src={track.coverUrl || track.artworkUrl || '/logo.svg'}
                         alt={track.title}
-                        className="w-8 h-8 rounded object-cover flex-shrink-0"
+                        className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-white/10"
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-white group-hover:text-[var(--apple-rose)] truncate transition-colors">
-                          {track.title}
+                        <p className="text-xs font-bold text-white group-hover:text-[#FF375F] truncate transition-colors leading-relaxed">
+                          <bdi dir="auto">{track.title}</bdi>
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
-                          {track.artist}
+                        <p className="text-[10px] text-white/60 truncate leading-relaxed">
+                          <bdi dir="auto">{track.artist}</bdi>
                         </p>
                       </div>
 
-                      <span className="text-[10px] text-zinc-500 flex-shrink-0 group-hover:hidden">
+                      <span className="text-[10px] text-white/45 font-mono flex-shrink-0 group-hover:hidden tabular-nums">
                         {formatDuration(track.duration)}
                       </span>
 
@@ -270,8 +282,8 @@ export const RightSidebar: React.FC = () => {
                           e.stopPropagation();
                           removeFromQueue(idx);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-400 transition-opacity cursor-pointer"
-                        title="إزالة من القائمة"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-white/50 hover:text-red-400 transition-all cursor-pointer"
+                        title={isRTL ? 'إزالة' : 'Remove'}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -286,94 +298,96 @@ export const RightSidebar: React.FC = () => {
 
       {/* TAB 2: NOW PLAYING DETAILS */}
       {activeRightSidebarTab === 'now_playing' && (
-        <div className="flex-1 overflow-y-auto pt-3 pr-1 no-scrollbar space-y-4">
+        <div className="flex-1 overflow-y-auto pt-3.5 pe-1 no-scrollbar space-y-4">
           {currentTrack ? (
             <>
-              {/* High-res Artwork */}
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden shadow-2xl bg-black/40 group border border-white/10">
+              {/* High-res Artwork with Dynamic Ambient Shadow */}
+              <div
+                style={{ boxShadow: `0 16px 40px -10px ${accentColor}40` }}
+                className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 group border border-white/15 transition-shadow duration-500"
+              >
                 <img
                   src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
                   alt={currentTrack.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
 
               {/* Title & Artist */}
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between gap-3 ps-1">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-bold text-white truncate hover:underline cursor-pointer">
-                    {currentTrack.title}
+                  <h3 className="text-base font-black text-white truncate hover:underline cursor-pointer leading-relaxed">
+                    <bdi dir="auto">{currentTrack.title}</bdi>
                   </h3>
-                  <p className="text-xs text-zinc-400 truncate mt-0.5 hover:underline cursor-pointer">
-                    {currentTrack.artist}
+                  <p className="text-xs text-white/70 truncate mt-0.5 hover:underline cursor-pointer leading-relaxed">
+                    <bdi dir="auto">{currentTrack.artist}</bdi>
                   </p>
                 </div>
                 <button
                   onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-1.5 text-zinc-400 hover:text-[var(--apple-rose)] transition-colors cursor-pointer"
+                  className="p-1.5 text-white/60 hover:text-[#FA243C] transition-colors cursor-pointer"
+                  aria-label="Favorite"
                 >
                   <Heart
-                    className={`w-5 h-5 ${
-                      isFavorite
-                        ? 'text-[var(--apple-rose)] fill-[var(--apple-rose)]'
-                        : ''
+                    className={`w-5 h-5 transition-transform active:scale-125 ${
+                      isFavorite ? 'text-[#FA243C] fill-[#FA243C]' : ''
                     }`}
                   />
                 </button>
               </div>
 
-              {/* Audio Specs Badge */}
-              <div className="p-3.5 rounded-2xl apple-glass-card border border-white/[0.08] space-y-2.5 text-xs">
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span className="flex items-center gap-1.5">
-                    <Disc className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
-                    الألبوم
+              {/* Audio Specs Apple Glass Card */}
+              <div className="p-3.5 rounded-2xl apple-glass-card border border-white/[0.1] space-y-2.5 text-xs">
+                <div className="flex items-center justify-between text-white/65">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Disc className="w-3.5 h-3.5 text-[#FA243C]" />
+                    <span>{isRTL ? 'الألبوم' : 'Album'}</span>
                   </span>
-                  <span className="text-white font-medium truncate max-w-[140px]">
-                    {currentTrack.album || 'ألبوم فردي'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
-                    جودة الصوت
-                  </span>
-                  <span className="text-[var(--apple-rose)] font-bold text-[11px] bg-[var(--apple-rose)]/10 border border-[var(--apple-rose)]/25 px-2.5 py-0.5 rounded-full font-mono">
-                    Apple Lossless 24-Bit
+                  <span className="text-white font-bold truncate max-w-[140px]">
+                    <bdi dir="auto">{currentTrack.album || (isRTL ? 'ألبوم فردي' : 'Single')}</bdi>
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-zinc-400">
-                  <span>المصدر</span>
-                  <span className="text-zinc-300">
-                    {currentTrack.source === 'local' ? 'مكتبة محلية آمنة' : 'معاينة تجريبية'}
+                <div className="flex items-center justify-between text-white/65">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
+                    <span>{isRTL ? 'جودة الصوت' : 'Quality'}</span>
+                  </span>
+                  <span className="text-[#FA243C] font-extrabold text-[10px] bg-[#FA243C]/15 border border-[#FA243C]/30 px-2 py-0.5 rounded-full font-mono">
+                    ALAC Lossless 24-Bit
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-white/65">
+                  <span className="font-medium">{isRTL ? 'المصدر' : 'Source'}</span>
+                  <span className="text-white/90 font-bold">
+                    {currentTrack.source === 'local' ? (isRTL ? 'مكتبة محلية آمنة' : 'Local Storage') : (isRTL ? 'بث سحابي' : 'Cloud Stream')}
                   </span>
                 </div>
               </div>
 
               {/* Artist Card */}
-              <div className="p-3.5 rounded-xl bg-[#242424] border border-white/5 space-y-2">
-                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                  عن الفنان
+              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/55 block">
+                  {isRTL ? 'عن الفنان' : 'About Artist'}
                 </span>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center font-bold text-white text-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center font-black text-white text-sm shadow-md shadow-[#FA243C]/25">
                     {currentTrack.artist.slice(0, 1).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h5 className="text-xs font-bold text-white truncate">
-                      {currentTrack.artist}
+                    <h5 className="text-xs font-bold text-white truncate leading-relaxed">
+                      <bdi dir="auto">{currentTrack.artist}</bdi>
                     </h5>
-                    <p className="text-[10px] text-zinc-400">
-                      فنان متألق في مكتبتك
+                    <p className="text-[10px] text-white/60">
+                      {isRTL ? 'فنان في مكتبتك' : 'Artist in your library'}
                     </p>
                   </div>
                 </div>
               </div>
             </>
           ) : (
-            <div className="py-16 text-center text-zinc-500">
-              <Radio className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-xs font-medium">لا توجد أغنية تعمل حالياً</p>
+            <div className="py-16 text-center text-white/40">
+              <Radio className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-xs font-medium">{isRTL ? 'لا توجد أغنية تعمل حالياً' : 'No track playing'}</p>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset, PlaybackState } from '../types';
-import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace, SpatialMode } from '../lib/audioEngine';
+import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace, SpatialMode, audioBufferPool } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
@@ -131,6 +131,7 @@ interface PlayerState {
   reverbSpace: ReverbSpace;
   hapticFeedbackEnabled: boolean;
   reactiveVisualsEnabled: boolean;
+  activeLoopRoll: null | '1/4' | '1/2' | '1';
 
   // YouTube Music Sleep Timer
   sleepTimerRemaining: number | null; // seconds countdown
@@ -152,6 +153,8 @@ interface PlayerState {
   metadataTargetTrack: Track | null;
   isSoundboardOpen: boolean;
   isAutoMixModalOpen: boolean;
+  isHarmonicJourneyOpen: boolean;
+  isSpotlightOpen: boolean;
   isCarModeOpen: boolean;
   isOnline: boolean;
   downloadedTrackIds: string[];
@@ -183,16 +186,21 @@ interface PlayerState {
   setAutomixStyle: (style: AutoMixStyle) => void;
   setSoundboardOpen: (open: boolean) => void;
   setAutoMixModalOpen: (open: boolean) => void;
+  setSpotlightOpen: (open: boolean) => void;
   playDJSound: (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => void;
   toggleFavorite: (trackId: string) => Promise<void>;
   setBassBoost: (level: number) => void;
   toggleSpatialAudio: () => void;
+  toggle8DSpatial: () => void;
   setSpatialAudio: (enabled: boolean) => void;
   setSpatialMode: (mode: SpatialMode) => void;
   setLoudnessNormalization: (enabled: boolean) => void;
   setAnalogWarmth: (level: number) => void;
   setKaraokeMode: (enabled: boolean) => void;
   setKaraokeVocalLevel: (level: number) => void;
+  triggerVinylBrake: () => Promise<void>;
+  setLoopRoll: (roll: null | '1/4' | '1/2' | '1') => void;
+  setHarmonicJourneyOpen: (open: boolean) => void;
   setActiveMoodFilter: (filter: string | null) => void;
   setReverbSpace: (space: ReverbSpace) => void;
   setHapticFeedbackEnabled: (enabled: boolean) => void;
@@ -420,6 +428,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       // Synchronize lockscreen & MediaSession position even when in background
       updateMediaSessionPosition(dur, cur);
 
+      // 25s Lookahead Smart Buffer Pre-fetch via SmartAudioBufferPool
+      const nextId = get().nextUpTrackId;
+      if (nextId) {
+        const nextTrk = get().tracks.find((t) => t.id === nextId) || null;
+        audioBufferPool.checkAndPrefetchNextTrack(cur, dur, nextTrk, fetchTrackBlob);
+      }
+
       // Gate React state re-renders when app is hidden to eliminate background CPU/battery drain
       if (typeof document !== 'undefined' && document.hidden) {
         return;
@@ -576,6 +591,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     metadataTargetTrack: null,
     isSoundboardOpen: false,
     isAutoMixModalOpen: false,
+    isHarmonicJourneyOpen: false,
+    isSpotlightOpen: false,
+    activeLoopRoll: null,
     isCarModeOpen: false,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     downloadedTrackIds: [],
@@ -1541,6 +1559,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     setSoundboardOpen: (open: boolean) => set({ isSoundboardOpen: open }),
     setAutoMixModalOpen: (open: boolean) => set({ isAutoMixModalOpen: open }),
+    setSpotlightOpen: (open: boolean) => set({ isSpotlightOpen: open }),
 
     playDJSound: (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => {
       djAudioEngine.playDJSound(effect);
@@ -1646,6 +1665,39 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setKaraokeLevel(clamped);
       set({ karaokeVocalLevel: clamped });
+    },
+
+    triggerVinylBrake: async () => {
+      set({ isPlaying: false, activeLoopRoll: null });
+      get().addToast('📀 Vinyl Brake / Turntable Power-Down', undefined, 'info');
+      await djAudioEngine.triggerVinylBrake();
+    },
+
+    setLoopRoll: (roll: null | '1/4' | '1/2' | '1') => {
+      djAudioEngine.initContext().catch(() => {});
+      set({ activeLoopRoll: roll });
+      djAudioEngine.setLoopRoll(roll);
+      if (roll) {
+        get().addToast(`🔁 Beat Loop Roll: ${roll} Beat`, undefined, 'info');
+      }
+    },
+
+    toggle8DSpatial: () => {
+      djAudioEngine.initContext().catch(() => {});
+      djAudioEngine.toggle8DSpatial();
+      const newMode = djAudioEngine.getSpatialMode();
+      set({ spatialMode: newMode, spatialAudio: newMode !== 'off' });
+      get().addToast(
+        newMode === '8d'
+          ? '🎧 تم تفعيل الصوت المحيطي 8D Binaural مع تثبيت البيس'
+          : 'تم إيقاف الصوت المحيطي 8D',
+        undefined,
+        'info'
+      );
+    },
+
+    setHarmonicJourneyOpen: (open: boolean) => {
+      set({ isHarmonicJourneyOpen: open });
     },
 
     setActiveMoodFilter: (filter: string | null) => {

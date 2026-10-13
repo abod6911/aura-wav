@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
   return (
     <aside
-      className="hidden lg:flex w-72 flex-col justify-between p-3.5 gap-3.5 bg-[#08080c]/85 backdrop-blur-3xl border-r border-white/[0.08] z-30 select-none h-[calc(100vh-5.5rem)] overflow-y-auto scrollbar-none"
+      className="hidden lg:flex w-72 flex-col justify-between p-3.5 gap-3.5 apple-glass-card rounded-[28px] my-3 ms-3 border-e border-white/[0.1] z-30 select-none h-[calc(100vh-6.5rem)] overflow-y-auto no-scrollbar shadow-[0_24px_64px_rgba(0,0,0,0.85)]"
       dir={dir}
     >
       <div className="space-y-3.5">

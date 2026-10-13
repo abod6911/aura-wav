@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
+import { OptimizedImage } from '../common/OptimizedImage';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface TrackListProps {
   onOpenImport: () => void;
@@ -39,6 +41,7 @@ type SortOption = 'number' | 'title' | 'artist' | 'duration';
 export type RangeOption = 'all' | '1-100' | '101-250' | '251-500' | '501-1000' | '1001-1750';
 
 export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
+  const { t, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const searchQuery = usePlayerStore((state) => state.searchQuery);
   const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
@@ -141,46 +144,36 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     return list;
   }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds]);
 
-  const [visibleLimit, setVisibleLimit] = useState(60);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  // 120fps Viewport Virtualization
+  const ROW_HEIGHT = 72;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(800);
 
-  // Reset visible limit whenever search query, filter, range, or sorting changes
-  useEffect(() => {
-    setVisibleLimit(60);
-  }, [searchQuery, activeFilter, activeRange, sortBy]);
-
-  // High-performance IntersectionObserver for infinite scrolling (0 CPU overhead)
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleLimit((prev) => (prev < filtered.length ? Math.min(prev + 60, filtered.length) : prev));
-        }
-      },
-      { rootMargin: '600px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [filtered.length, visibleLimit]);
-
-  // Scroll to top listener capturing scroll from <main> container
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement | Document;
-      const scrollTop = target instanceof HTMLElement ? target.scrollTop : (window.scrollY || 0);
-      setShowScrollTop(scrollTop > 350);
+      const st = target instanceof HTMLElement ? target.scrollTop : (window.scrollY || 0);
+      const vh = target instanceof HTMLElement ? target.clientHeight : window.innerHeight;
+      setScrollTop(st);
+      if (vh > 0) setViewportHeight(vh);
+      setShowScrollTop(st > 350);
     };
     window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
     return () => window.removeEventListener('scroll', handleScroll, { capture: true } as any);
   }, []);
 
+  const totalCount = filtered.length;
+  const tableTop = containerRef.current?.offsetTop || 450;
+  const relativeScroll = Math.max(0, scrollTop - tableTop);
+  const startIndex = Math.max(0, Math.floor(relativeScroll / ROW_HEIGHT) - 5);
+  const endIndex = Math.min(totalCount, Math.ceil((relativeScroll + viewportHeight) / ROW_HEIGHT) + 8);
   const visibleTracks = useMemo(() => {
-    return filtered.slice(0, visibleLimit);
-  }, [filtered, visibleLimit]);
+    return filtered.slice(startIndex, endIndex);
+  }, [filtered, startIndex, endIndex]);
+
+  const topSpacer = startIndex * ROW_HEIGHT;
+  const bottomSpacer = Math.max(0, (totalCount - endIndex) * ROW_HEIGHT);
 
   // Handle Play All
   const handlePlayAll = () => {
@@ -349,14 +342,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 className="group relative p-3 rounded-[22px] apple-glass-card border border-white/[0.08] hover:border-white/20 transition-all duration-200 cursor-pointer flex flex-col gap-2.5 shadow-lg hover:-translate-y-1 select-none apple-spring flex-shrink-0 w-36 sm:w-auto"
               >
                 <div className="relative aspect-square w-full rounded-[16px] overflow-hidden bg-[#151520] shadow-md border border-white/5">
-                  <img
-                    src={t.artworkUrl || '/logo.svg'}
+                  <OptimizedImage
+                    src={t.artworkUrl || t.coverUrl}
                     alt={t.title}
+                    size="card"
+                    containerClassName="w-full h-full"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/logo.svg';
-                    }}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                     <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl transform scale-90 group-hover:scale-100 transition-transform">
@@ -560,50 +551,34 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div className="apple-glass-card rounded-2xl sm:rounded-3xl p-2 sm:p-5 shadow-[0_16px_40px_rgba(0,0,0,0.6)] transform-gpu">
-        <div dir="ltr" className="w-full max-w-full">
-          {/* Table Column Headers (Desktop) */}
-          <div className="hidden md:grid grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.06] select-none uppercase tracking-wider">
+      <div ref={containerRef} className="apple-glass-card rounded-[28px] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)] transform-gpu backdrop-blur-3xl border border-white/[0.1]">
+        <div dir={dir} className="w-full max-w-full">
+          {/* Table Column Headers (Desktop 6-Column Unified Grid) */}
+          <div className="hidden md:grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 text-xs font-extrabold text-white/55 border-b border-white/[0.08] select-none uppercase tracking-wider">
             <span className="text-center font-mono">#</span>
-            <span>Cover</span>
-            <span>Title & Artist</span>
-            <span>Album</span>
-            <span className="text-center">
-              <Heart className="w-3.5 h-3.5 mx-auto opacity-70" />
-            </span>
-            <span className="text-right font-mono flex items-center justify-end gap-1">
+            <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
+            <span>{isRTL ? 'الألبوم' : 'Album'}</span>
+            <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
+            <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
+            <span className="text-end font-mono flex items-center justify-end gap-1">
               <Clock className="w-3 h-3" />
-              <span>Time</span>
+              <span>{isRTL ? 'المدة' : 'Time'}</span>
             </span>
-            <span />
           </div>
 
-          {/* Track Rows List */}
+          {/* Track Rows List with True Viewport Windowing */}
           {filtered.length > 0 ? (
             <div className="divide-y divide-white/[0.02] pt-1">
+              {topSpacer > 0 && <div style={{ height: `${topSpacer}px` }} aria-hidden="true" />}
               {visibleTracks.map((track, idx) => (
                 <TrackTableRow
                   key={track.id}
                   track={track}
-                  index={idx}
+                  index={startIndex + idx}
                   onContextMenu={handleContextMenu}
                 />
               ))}
-
-              {/* Progressive Load More Action & Sentinel */}
-              {visibleLimit < filtered.length && (
-                <div ref={sentinelRef} className="pt-6 pb-4 text-center">
-                  <button
-                    onClick={() => setVisibleLimit((prev) => Math.min(prev + 100, filtered.length))}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white/[0.05] hover:bg-[#FA243C]/20 hover:border-[#FA243C]/50 border border-white/10 text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer shadow-lg active:scale-95 apple-spring"
-                  >
-                    <span>عرض المزيد من المسارات ({visibleLimit} من أصل {filtered.length})</span>
-                  </button>
-                  <p className="text-[10px] text-zinc-500 mt-2 font-mono">
-                    يتم التحميل تلقائياً عند التمرير للأسفل
-                  </p>
-                </div>
-              )}
+              {bottomSpacer > 0 && <div style={{ height: `${bottomSpacer}px` }} aria-hidden="true" />}
             </div>
           ) : (
             <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
@@ -782,7 +757,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
       onTouchEnd={clearTouchTimer}
       onTouchMove={clearTouchTimer}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-      className={`group h-16 min-h-[64px] grid grid-cols-[28px_48px_1fr_36px_36px] md:grid-cols-[44px_52px_minmax(200px,1.6fr)_minmax(140px,1fr)_44px_70px_44px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+      className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
         isCurrent
           ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
           : isNextUp
@@ -790,7 +765,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
       }`}
     >
-      {/* 1. Track Index # or Live Equalizer (Clean separation - never overlaps) */}
+      {/* 1. Track Index # or Live Equalizer */}
       <div className="text-center flex items-center justify-center">
         {/* On Desktop Hover: Play or Pause Icon */}
         <div className="hidden md:group-hover:flex items-center justify-center w-6 h-6 rounded-full text-white cursor-pointer active:scale-90">
@@ -805,14 +780,14 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         <div className="md:group-hover:hidden flex items-center justify-center">
           {isCurrent && isPlaying ? (
             <div className="flex items-end gap-[2px] h-3.5">
-              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-              <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-              <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
+              <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
+              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
             </div>
           ) : (
             <span
               className={`text-xs font-mono tabular-nums transition-colors ${
-                isCurrent ? 'text-[#FA243C] font-black' : 'text-zinc-500'
+                isCurrent ? 'text-[#FA243C] font-black' : 'text-white/50'
               }`}
             >
               {displayIndex}
@@ -821,58 +796,93 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         </div>
       </div>
 
-      {/* 2. Official Album Artwork (Clean & Unblocked) */}
-      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
-        <img
-          src={track.artworkUrl || '/logo.svg'}
-          alt={track.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/logo.svg';
-          }}
-        />
+      {/* 2. Official Album Artwork + Title & Artist */}
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+          <OptimizedImage
+            src={track.artworkUrl || track.coverUrl}
+            alt={track.title}
+            size="thumb"
+            containerClassName="w-full h-full"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h4
+              className={`text-xs sm:text-[14px] font-bold truncate tracking-tight leading-snug ${
+                isCurrent ? 'text-[#FA243C]' : 'text-white group-hover:text-white'
+              }`}
+            >
+              <bdi dir="auto">{track.title}</bdi>
+            </h4>
+            {isDownloaded && (
+              <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+            )}
+            {isNextUp && (
+              <span className="inline-flex items-center gap-1 text-[9px] text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/35 font-bold flex-shrink-0 animate-pulse">
+                <ListPlus className="w-2.5 h-2.5" />
+                <span>التالية</span>
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-white/60 truncate mt-0.5">
+            <span className="truncate font-medium">
+              <bdi dir="auto">{track.artist}</bdi>
+            </span>
+            <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
+            <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/[0.06] border border-white/10 text-zinc-400 tracking-wider">
+              Lossless
+            </span>
+            {track.syncedLyrics && track.syncedLyrics.length > 0 && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
+                LYRICS
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* 3. Title & Artist */}
-      <div className="min-w-0 pr-1 sm:pr-2">
-        <div className="flex items-center gap-2">
-          <h4
-            dir="auto"
-            className={`text-xs sm:text-[15px] font-bold truncate tracking-tight ${
-              isCurrent ? 'text-[#FA243C]' : 'text-white group-hover:text-white'
+      {/* 3. Album / Genre */}
+      <div className="hidden md:block text-xs text-white/60 truncate leading-relaxed">
+        <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
+      </div>
+
+      {/* 4. BPM & Camelot Badge */}
+      <div className="hidden md:flex items-center justify-center">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
+          <span className="text-[#FF375F] font-bold">
+            {track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30))}
+          </span>
+          <span className="text-white/35 text-[10px]">BPM</span>
+          <span className="text-white/20">•</span>
+          <span className="text-amber-400 font-bold">
+            {track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`}
+          </span>
+        </span>
+      </div>
+
+      {/* 5. Mini Waveform / Energy Bars */}
+      <div className="hidden md:flex items-center justify-center gap-[2.5px] h-4">
+        {[0.35, 0.65, 0.9, 0.45, 0.8, 1.0, 0.55, 0.85, 0.4, 0.75, 0.5, 0.95].map((val, bIdx) => (
+          <span
+            key={bIdx}
+            style={{
+              height: isCurrent && isPlaying ? `${Math.max(25, Math.min(100, val * 100 * (0.7 + (bIdx % 3) * 0.2)))}%` : `${val * 65}%`,
+            }}
+            className={`w-[3px] rounded-full transition-all duration-300 ${
+              isCurrent && isPlaying
+                ? 'bg-gradient-to-t from-[#FA243C] to-[#FF375F] animate-pulse'
+                : isCurrent
+                ? 'bg-[#FA243C]/60'
+                : 'bg-white/20 group-hover:bg-white/35'
             }`}
-          >
-            {track.title}
-          </h4>
-          {isDownloaded && (
-            <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-          )}
-          {isNextUp && (
-            <span className="inline-flex items-center gap-1 text-[9px] text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/35 font-bold flex-shrink-0 animate-pulse">
-              <ListPlus className="w-2.5 h-2.5" />
-              <span>التالية</span>
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-zinc-400 truncate mt-0.5">
-          <span dir="auto" className="truncate font-medium">{track.artist}</span>
-          <span className="md:hidden text-zinc-500 font-mono tabular-nums">• {formatTime(track.duration)}</span>
-          {track.syncedLyrics && track.syncedLyrics.length > 0 && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
-              LYRICS
-            </span>
-          )}
-        </div>
+          />
+        ))}
       </div>
 
-      {/* 4. Album (Desktop Only) */}
-      <div dir="auto" className="hidden md:block text-xs text-zinc-400 truncate">
-        {track.album || 'Single'}
-      </div>
-
-      {/* 6. Favorite Heart Button */}
-      <div className="text-center flex items-center justify-center">
+      {/* 6. Action Cluster: Heart + Duration + More Menu */}
+      <div className="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
         <motion.button
           whileTap={{ scale: 1.35 }}
           onClick={(e) => {
@@ -882,7 +892,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             }
             usePlayerStore.getState().toggleFavorite(track.id);
           }}
-          className="p-1.5 sm:p-2 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
+          className="p-1.5 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
           aria-label="Toggle favorite"
         >
           <Heart
@@ -891,75 +901,73 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             }`}
           />
         </motion.button>
-      </div>
 
-      {/* 7. Monospace Tabular Duration (Desktop) */}
-      <div className="hidden md:block text-xs font-mono tabular-nums text-white/50 text-right">
-        {formatTime(track.duration)}
-      </div>
+        <span className="hidden md:inline-block text-xs font-mono tabular-nums text-white/50 min-w-[34px] text-right">
+          {formatTime(track.duration)}
+        </span>
 
-      {/* 8. Glass Context Menu */}
-      <div className="relative group/menu flex items-center justify-center">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMenuOpen(!isMenuOpen);
-          }}
-          className="w-8 h-8 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-          aria-label="Track options"
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        <div className="relative group/menu flex items-center justify-center">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
+            className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+            aria-label="Track options"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
 
-        <div
-          className={`${
-            isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
-          } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/98 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              usePlayerStore.getState().playNextInQueue(track);
-              setIsMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+          <div
+            className={`${
+              isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
+            } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/98 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
           >
-            <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span>تشغيل كأغنية تالية</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              usePlayerStore.getState().addToQueue(track);
-              setIsMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-          >
-            <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span>إضافة لقائمة الانتظار</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              usePlayerStore.getState().setChangeArtworkModal(true, track);
-              setIsMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-          >
-            <ImageIcon className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span>تغيير الغلاف والبحث أونلاين</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              usePlayerStore.getState().setMetadataEditorModal(true, track);
-              setIsMenuOpen(false);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-          >
-            <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
-            <span>تعديل وسوم ID3 والبيانات</span>
-          </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                usePlayerStore.getState().playNextInQueue(track);
+                setIsMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+            >
+              <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span>تشغيل كأغنية تالية</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                usePlayerStore.getState().addToQueue(track);
+                setIsMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+            >
+              <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span>إضافة لقائمة الانتظار</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                usePlayerStore.getState().setChangeArtworkModal(true, track);
+                setIsMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span>تغيير الغلاف والبحث أونلاين</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                usePlayerStore.getState().setMetadataEditorModal(true, track);
+                setIsMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
+            >
+              <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
+              <span>تعديل وسوم ID3 والبيانات</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -316,43 +316,74 @@ const SyncedLyricsModal: React.FC = () => {
               lyrics.map((line, idx) => {
                 const isActive = idx === activeIndex;
                 const isArabic = isArabicText(line.text);
+                const distance = activeIndex >= 0 ? Math.abs(idx - activeIndex) : idx;
+                
+                // Progressive Distance Blur & Opacity (Apple Music kinetic typography)
+                const blurPx = isActive ? 0 : Math.min(10, distance * 1.5);
+                const opacityVal = isActive ? 1.0 : Math.max(0.18, 1.0 - distance * 0.22);
+                const scaleVal = isActive ? 1.04 : Math.max(0.92, 1.0 - distance * 0.015);
+
+                const nextLine = lyrics[idx + 1];
+                const hasInstrumentalGap = nextLine && (nextLine.time - line.time > 4.5);
+                const isDuringInstrumental = hasInstrumentalGap && currentTime > line.time + 2.5 && currentTime < nextLine.time;
 
                 return (
-                  <motion.div
-                    key={`${line.time}_${idx}`}
-                    ref={isActive ? activeLineRef : null}
-                    onClick={() => {
-                      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                        try {
-                          navigator.vibrate(12);
-                        } catch {}
-                      }
-                      seek(line.time);
-                    }}
-                    initial={false}
-                    animate={{
-                      scale: isActive ? 1.05 : 0.98,
-                      opacity: isActive ? 1 : 0.22,
-                      filter: isActive ? 'blur(0px)' : 'blur(0.5px)',
-                    }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-                    className={`cursor-pointer transition-all duration-300 py-3.5 px-5 rounded-2xl overflow-visible origin-left ${
-                      isActive 
-                        ? 'bg-white/[0.06] shadow-[0_0_40px_rgba(255,255,255,0.15)] border border-white/[0.08]' 
-                        : 'hover:bg-white/[0.02]'
-                    } ${isArabic ? 'text-right origin-right' : 'text-left origin-left'}`}
-                    dir={isArabic ? 'rtl' : 'ltr'}
-                  >
-                    <p
-                      className={`tracking-tight font-sans transition-all duration-300 ${
-                        isActive
-                          ? 'text-white font-black text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_30px_rgba(255,255,255,0.85)]'
-                          : 'text-white/20 hover:text-white/45 font-bold text-lg sm:text-xl md:text-2xl'
-                      }`}
+                  <React.Fragment key={`${line.time}_${idx}`}>
+                    <motion.div
+                      ref={isActive ? activeLineRef : null}
+                      onClick={() => {
+                        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                          try {
+                            navigator.vibrate(12);
+                          } catch {}
+                        }
+                        seek(line.time);
+                      }}
+                      initial={false}
+                      animate={{
+                        scale: scaleVal,
+                        opacity: opacityVal,
+                        filter: `blur(${blurPx}px)`,
+                      }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 260,
+                        damping: 28,
+                        mass: 0.8,
+                      }}
+                      className={`cursor-pointer transition-all duration-300 py-4 px-6 rounded-3xl overflow-visible origin-left ${
+                        isActive 
+                          ? 'bg-white/[0.08] shadow-[0_0_50px_rgba(255,255,255,0.2)] border border-white/[0.12]' 
+                          : 'hover:bg-white/[0.02]'
+                      } ${isArabic ? 'text-right origin-right' : 'text-left origin-left'}`}
+                      dir={isArabic ? 'rtl' : 'ltr'}
                     >
-                      {line.text}
-                    </p>
-                  </motion.div>
+                      <p
+                        className={`tracking-tight font-sans transition-all duration-300 leading-relaxed ${
+                          isActive
+                            ? 'text-white font-black text-2xl sm:text-3xl md:text-5xl drop-shadow-[0_0_40px_rgba(255,255,255,0.85)]'
+                            : 'text-white/35 hover:text-white/60 font-bold text-lg sm:text-xl md:text-3xl'
+                        }`}
+                      >
+                        <bdi dir="auto">{line.text}</bdi>
+                      </p>
+                    </motion.div>
+
+                    {/* Animated Instrumental Interlude Dots (Apple Music Style) */}
+                    {hasInstrumentalGap && (
+                      <div className={`py-3 px-6 transition-opacity duration-500 ${isDuringInstrumental ? 'opacity-100' : 'opacity-30'} ${isArabic ? 'text-right' : 'text-left'}`}>
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-xs font-bold">
+                          <Music2 className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
+                          <span className="text-white/70">{isArabic ? 'فاصل موسيقي' : 'Instrumental Interlude'}</span>
+                          <span className="inline-flex items-center gap-1 ms-1 text-[#FA243C]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C] animate-ping" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C] animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C]" />
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
                 );
               })
             ) : currentTrack?.lyrics ? (

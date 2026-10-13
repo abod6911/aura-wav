@@ -30,6 +30,7 @@ export class DeckChannel {
   private preampGainNode: GainNode | null = null;
   private channelGainNode: GainNode | null = null;
   private filterNode: BiquadFilterNode | null = null;
+  private bassFilterNode: BiquadFilterNode | null = null;
   private pannerNode: StereoPannerNode | null = null;
 
   // State
@@ -38,6 +39,10 @@ export class DeckChannel {
   private bufferStartTime = 0;
   private bufferOffset = 0;
   private isBufferPlaying = false;
+
+  // DJ Performance FX State
+  private loopRollTimer: any = null;
+  private isVinylBraking = false;
 
   constructor(name: DeckChannelName) {
     this.name = name;
@@ -79,19 +84,27 @@ export class DeckChannel {
       this.filterNode.frequency.setValueAtTime(20000, ctx.currentTime);
       this.filterNode.Q.setValueAtTime(0, ctx.currentTime);
 
-      // 4. Stereo Panner Node
+      // 4. Dedicated Low-Shelf Filter for EQ-Assisted Bass-Swap & AutoMix (200Hz)
+      this.bassFilterNode = ctx.createBiquadFilter();
+      this.bassFilterNode.type = 'lowshelf';
+      this.bassFilterNode.frequency.setValueAtTime(200, ctx.currentTime);
+      this.bassFilterNode.gain.setValueAtTime(0, ctx.currentTime);
+
+      // 5. Stereo Panner Node
       if (typeof ctx.createStereoPanner === 'function') {
         this.pannerNode = ctx.createStereoPanner();
         this.pannerNode.pan.setValueAtTime(0, ctx.currentTime);
       }
 
-      // Connect sub-graph: Preamp -> Filter -> ChannelGain -> [Panner] -> Destination
+      // Connect sub-graph: Preamp -> Filter -> BassFilter -> [Panner] -> ChannelGain -> Destination
       this.preampGainNode.connect(this.filterNode);
+      this.filterNode.connect(this.bassFilterNode);
+
       if (this.pannerNode) {
-        this.filterNode.connect(this.pannerNode);
+        this.bassFilterNode.connect(this.pannerNode);
         this.pannerNode.connect(this.channelGainNode);
       } else {
-        this.filterNode.connect(this.channelGainNode);
+        this.bassFilterNode.connect(this.channelGainNode);
       }
       this.channelGainNode.connect(destination);
 
@@ -141,6 +154,13 @@ export class DeckChannel {
         this.filterNode.disconnect();
       } catch {}
       this.filterNode = null;
+    }
+
+    if (this.bassFilterNode) {
+      try {
+        this.bassFilterNode.disconnect();
+      } catch {}
+      this.bassFilterNode = null;
     }
 
     if (this.pannerNode) {
@@ -257,6 +277,92 @@ export class DeckChannel {
     this.filterNode.type = 'allpass';
     this.filterNode.frequency.setValueAtTime(20000, now);
     this.filterNode.Q.setValueAtTime(0, now);
+  }
+
+  /**
+   * Set dedicated low-shelf bass gain in dB (e.g. -18dB for Bass-Swap)
+   */
+  public setBassGain(gainDb: number, rampDuration = 0.05): void {
+    if (!this.bassFilterNode || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const clampedDb = Math.max(-24, Math.min(12, gainDb));
+    this.bassFilterNode.gain.cancelScheduledValues(now);
+    if (rampDuration > 0) {
+      this.bassFilterNode.gain.setValueAtTime(this.bassFilterNode.gain.value, now);
+      this.bassFilterNode.gain.linearRampToValueAtTime(clampedDb, now + rampDuration);
+    } else {
+      this.bassFilterNode.gain.setValueAtTime(clampedDb, now);
+    }
+  }
+
+  /**
+   * Reset dedicated bass shelf filter to 0dB
+   */
+  public resetBassGain(rampDuration = 0.05): void {
+    this.setBassGain(0, rampDuration);
+  }
+
+  /**
+   * Vinyl Brake / Turntable Power-Down
+   * Drops playbackRate exponentially from 1.0 to 0.01 over durationSec
+   */
+  public async triggerVinylBrake(durationSec = 0.75): Promise<void> {
+    if (this.isVinylBraking) return;
+    this.isVinylBraking = true;
+    const startRate = this.audio.playbackRate || 1.0;
+    const startTime = performance.now();
+    const durationMs = durationSec * 1000;
+
+    return new Promise<void>((resolve) => {
+      const step = () => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1.0, elapsed / durationMs);
+        
+        // Exponential deceleration curve
+        const rate = Math.max(0.01, startRate * Math.pow(1.0 - progress, 2.5));
+        this.setPlaybackRate(rate);
+
+        if (progress < 1.0) {
+          requestAnimationFrame(step);
+        } else {
+          this.pause();
+          this.setPlaybackRate(1.0);
+          this.isVinylBraking = false;
+          resolve();
+        }
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  /**
+   * Beat-Quantized Loop Roll (1/4, 1/2, 1 Bar)
+   * Repeats current beat segment with millisecond accuracy based on track BPM
+   */
+  public setLoopRoll(roll: null | '1/4' | '1/2' | '1', trackBpm = 120): void {
+    if (this.loopRollTimer) {
+      clearInterval(this.loopRollTimer);
+      this.loopRollTimer = null;
+    }
+
+    if (!roll || !this.isPlaying()) return;
+
+    const bpm = Math.max(60, Math.min(200, trackBpm || 120));
+    const singleBeatSec = 60.0 / bpm;
+    
+    let rollDurationSec = singleBeatSec;
+    if (roll === '1/4') rollDurationSec = singleBeatSec * 0.25;
+    else if (roll === '1/2') rollDurationSec = singleBeatSec * 0.5;
+    else if (roll === '1') rollDurationSec = singleBeatSec * 4.0; // 1 Bar = 4 beats
+
+    const loopStartSec = this.getCurrentTime();
+    const rollDurationMs = Math.max(40, rollDurationSec * 1000);
+
+    this.loopRollTimer = setInterval(() => {
+      if (this.isPlaying()) {
+        this.seek(loopStartSec);
+      }
+    }, rollDurationMs);
   }
 
   /**

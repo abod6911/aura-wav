@@ -16,6 +16,13 @@ export class SpatialReverbEngine {
   private panner: StereoPannerNode;
   private roomEq: BiquadFilterNode;
 
+  // 8D Binaural HRTF Crossover Subgraph (Center Bass Anchored < 140Hz)
+  private hrtfPanner: PannerNode;
+  private lowCrossover: BiquadFilterNode;
+  private highCrossover: BiquadFilterNode;
+  private centerBassGain: GainNode;
+  private hrtfGain: GainNode;
+
   private currentMode: SpatialMode = 'off';
   private animFrameId: number | null = null;
   private pannerAngle: number = 0;
@@ -39,6 +46,29 @@ export class SpatialReverbEngine {
     this.roomEq.frequency.value = 180;
     this.roomEq.gain.value = 0;
 
+    // 8D HRTF Binaural setup
+    this.hrtfPanner = ctx.createPanner();
+    this.hrtfPanner.panningModel = 'HRTF';
+    this.hrtfPanner.distanceModel = 'inverse';
+    this.hrtfPanner.refDistance = 1;
+    this.hrtfPanner.maxDistance = 10000;
+    this.hrtfPanner.rolloffFactor = 1;
+    this.hrtfPanner.coneInnerAngle = 360;
+
+    this.lowCrossover = ctx.createBiquadFilter();
+    this.lowCrossover.type = 'lowpass';
+    this.lowCrossover.frequency.value = 140;
+
+    this.highCrossover = ctx.createBiquadFilter();
+    this.highCrossover.type = 'highpass';
+    this.highCrossover.frequency.value = 140;
+
+    this.centerBassGain = ctx.createGain();
+    this.centerBassGain.gain.value = 0.0;
+
+    this.hrtfGain = ctx.createGain();
+    this.hrtfGain.gain.value = 0.0;
+
     // Direct dry path
     this.input.connect(this.dryGain);
     this.dryGain.connect(this.panner);
@@ -51,6 +81,18 @@ export class SpatialReverbEngine {
 
     // Panner to output
     this.panner.connect(this.output);
+
+    // 8D Crossover Paths:
+    // 1. Center Bass: input -> lowCrossover -> centerBassGain -> output (Zero panning vertigo!)
+    this.input.connect(this.lowCrossover);
+    this.lowCrossover.connect(this.centerBassGain);
+    this.centerBassGain.connect(this.output);
+
+    // 2. High 8D: input -> highCrossover -> hrtfPanner -> hrtfGain -> output
+    this.input.connect(this.highCrossover);
+    this.highCrossover.connect(this.hrtfPanner);
+    this.hrtfPanner.connect(this.hrtfGain);
+    this.hrtfGain.connect(this.output);
   }
 
   /**
@@ -92,6 +134,8 @@ export class SpatialReverbEngine {
         this.wetGain.gain.setTargetAtTime(0.0, now, rampTime);
         this.roomEq.gain.setTargetAtTime(0, now, rampTime);
         this.panner.pan.setTargetAtTime(0, now, rampTime);
+        this.centerBassGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.hrtfGain.gain.setTargetAtTime(0.0, now, rampTime);
         break;
 
       case 'concert':
@@ -101,6 +145,8 @@ export class SpatialReverbEngine {
         this.wetGain.gain.setTargetAtTime(0.44, now, rampTime);
         this.roomEq.gain.setTargetAtTime(2.5, now, rampTime);
         this.panner.pan.setTargetAtTime(0, now, rampTime);
+        this.centerBassGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.hrtfGain.gain.setTargetAtTime(0.0, now, rampTime);
         break;
 
       case 'studio':
@@ -110,6 +156,8 @@ export class SpatialReverbEngine {
         this.wetGain.gain.setTargetAtTime(0.20, now, rampTime);
         this.roomEq.gain.setTargetAtTime(1.0, now, rampTime);
         this.panner.pan.setTargetAtTime(0, now, rampTime);
+        this.centerBassGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.hrtfGain.gain.setTargetAtTime(0.0, now, rampTime);
         break;
 
       case 'club':
@@ -119,14 +167,17 @@ export class SpatialReverbEngine {
         this.wetGain.gain.setTargetAtTime(0.36, now, rampTime);
         this.roomEq.gain.setTargetAtTime(5.5, now, rampTime);
         this.panner.pan.setTargetAtTime(0, now, rampTime);
+        this.centerBassGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.hrtfGain.gain.setTargetAtTime(0.0, now, rampTime);
         break;
 
       case '8d':
-        // 8D rotating headphone experience
-        this.convolver.buffer = this.generateImpulse(1.2, 4.2);
-        this.dryGain.gain.setTargetAtTime(0.86, now, rampTime);
-        this.wetGain.gain.setTargetAtTime(0.32, now, rampTime);
-        this.roomEq.gain.setTargetAtTime(2.0, now, rampTime);
+        // 8D rotating binaural HRTF experience:
+        // Mid/Highs orbit 360 degrees around head, Sub-Bass (<140Hz) stays locked in center
+        this.dryGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.wetGain.gain.setTargetAtTime(0.0, now, rampTime);
+        this.centerBassGain.gain.setTargetAtTime(1.0, now, rampTime);
+        this.hrtfGain.gain.setTargetAtTime(1.0, now, rampTime);
         this.start8DAnimation();
         break;
     }
@@ -135,10 +186,21 @@ export class SpatialReverbEngine {
   private start8DAnimation(): void {
     const step = () => {
       if (this.currentMode !== '8d') return;
-      this.pannerAngle += 0.018; // Smooth 360 degree orbital speed
-      const pan = Math.sin(this.pannerAngle) * 0.88;
+      this.pannerAngle += 0.016; // Smooth ~6-second orbital cycle
+      const radius = 2.5;
+      const x = Math.sin(this.pannerAngle) * radius;
+      const z = -Math.cos(this.pannerAngle) * radius;
+
       if (this.ctx.state === 'running') {
-        this.panner.pan.setValueAtTime(pan, this.ctx.currentTime);
+        const now = this.ctx.currentTime;
+        if (this.hrtfPanner.positionX) {
+          this.hrtfPanner.positionX.setValueAtTime(x, now);
+          this.hrtfPanner.positionZ.setValueAtTime(z, now);
+          this.hrtfPanner.positionY.setValueAtTime(0, now);
+        } else {
+          // Fallback for older Web Audio implementations
+          (this.hrtfPanner as any).setPosition(x, 0, z);
+        }
       }
       this.animFrameId = requestAnimationFrame(step);
     };

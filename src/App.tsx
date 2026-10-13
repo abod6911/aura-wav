@@ -30,6 +30,7 @@ const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) =
 const DJFxSheet = lazy(() => import('./components/dj/DJFxSheet').then((m) => ({ default: m.DJFxSheet })));
 const AutoMixSelectorModal = lazy(() => import('./components/dj/AutoMixSelectorModal').then((m) => ({ default: m.AutoMixSelectorModal })));
 const CarPlayMode = lazy(() => import('./components/carplay/CarPlayMode').then((m) => ({ default: m.CarPlayMode })));
+const SpotlightCommandModal = lazy(() => import('./components/search/SpotlightCommandModal').then((m) => ({ default: m.SpotlightCommandModal })));
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -137,11 +138,21 @@ export function App() {
   const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
   const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
   const isCarModeOpen = usePlayerStore((state) => state.isCarModeOpen);
+  const isSpotlightOpen = usePlayerStore((state) => state.isSpotlightOpen);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const prevVolumeRef = useRef(0.8);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const importTracks = usePlayerStore((state) => state.importTracks);
+
+  // Synchronize dynamic Apple Liquid Accent with album artwork
+  useEffect(() => {
+    const accent = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
+    document.documentElement.style.setProperty('--aura-accent', accent);
+    document.documentElement.style.setProperty('--aura-accent-hover', accent);
+    document.documentElement.style.setProperty('--aura-accent-glow', `${accent}55`);
+  }, [currentTrack]);
 
   // Initialize DB and Service Worker
   useEffect(() => {
@@ -229,8 +240,15 @@ export function App() {
         state.setQueueOpen(false);
         state.setLyricsOpen(false);
         state.setMobilePlayerOpen(false);
+        state.setSpotlightOpen(false);
         setIsImportModalOpen(false);
         state.setSettingsOpen(false);
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        state.setSpotlightOpen(!state.isSpotlightOpen);
         return;
       }
 
@@ -437,6 +455,7 @@ export function App() {
         {isSoundboardOpen && <DJFxSheet />}
         {isAutoMixModalOpen && <AutoMixSelectorModal />}
         {isCarModeOpen && <CarPlayMode />}
+        {isSpotlightOpen && <SpotlightCommandModal />}
       </Suspense>
     </div>
   );

@@ -35,12 +35,14 @@ export class AutoMixController {
 
     if (deckA) {
       if (typeof deckA.resetFilter === 'function') deckA.resetFilter();
+      if (typeof deckA.resetBassGain === 'function') deckA.resetBassGain();
       if (typeof deckA.setPlaybackRate === 'function') deckA.setPlaybackRate(1.0);
       if (typeof deckA.setFaderGain === 'function') deckA.setFaderGain(1.0, 0);
       if (typeof deckA.setVolume === 'function') deckA.setVolume(1.0, 0);
     }
     if (deckB) {
       if (typeof deckB.resetFilter === 'function') deckB.resetFilter();
+      if (typeof deckB.resetBassGain === 'function') deckB.resetBassGain();
       if (typeof deckB.setPlaybackRate === 'function') deckB.setPlaybackRate(1.0);
       if (typeof deckB.setFaderGain === 'function') deckB.setFaderGain(0, 0);
       if (typeof deckB.setVolume === 'function') deckB.setVolume(0, 0);
@@ -250,22 +252,49 @@ export class AutoMixController {
     const durationMs = durationSec * 1000;
 
     incoming.setVolume(0);
+    // Start incoming deck with bass cut at -18dB to prevent bass clashing
+    if (typeof incoming.setBassGain === 'function') {
+      incoming.setBassGain(-18, 0);
+    }
     await incoming.play();
 
     return new Promise<void>((resolve, reject) => {
       const step = () => {
         if (signal.aborted) {
+          if (typeof outgoing.resetBassGain === 'function') outgoing.resetBassGain();
+          if (typeof incoming.resetBassGain === 'function') incoming.resetBassGain();
           return reject(new Error('AutoMix transition aborted'));
         }
 
         const elapsed = performance.now() - startTime;
         const progress = Math.min(1.0, elapsed / durationMs);
 
+        // Equal-Power Crossfade Faders
         const outVol = Math.cos(progress * 0.5 * Math.PI);
         const inVol = Math.sin(progress * 0.5 * Math.PI);
 
         outgoing.setVolume(outVol, 0.02);
         incoming.setVolume(inVol, 0.02);
+
+        // EQ-Assisted Bass-Swap Transition:
+        // Before 40%: Outgoing full bass (0dB), Incoming cut bass (-18dB)
+        // 40% - 60%: Smooth cross-swap over 20% of duration
+        // After 60%: Outgoing cut bass (-18dB), Incoming full bass (0dB)
+        if (typeof outgoing.setBassGain === 'function' && typeof incoming.setBassGain === 'function') {
+          if (progress < 0.4) {
+            outgoing.setBassGain(0, 0.05);
+            incoming.setBassGain(-18, 0.05);
+          } else if (progress <= 0.6) {
+            const swapProg = (progress - 0.4) / 0.2; // 0.0 to 1.0
+            const outBassDb = -18.0 * swapProg;
+            const inBassDb = -18.0 * (1.0 - swapProg);
+            outgoing.setBassGain(outBassDb, 0.05);
+            incoming.setBassGain(inBassDb, 0.05);
+          } else {
+            outgoing.setBassGain(-18, 0.05);
+            incoming.setBassGain(0, 0.05);
+          }
+        }
 
         if (onProgress) onProgress(progress);
 
@@ -274,7 +303,9 @@ export class AutoMixController {
         } else {
           outgoing.stop();
           outgoing.setVolume(0);
+          if (typeof outgoing.resetBassGain === 'function') outgoing.resetBassGain();
           incoming.setVolume(1.0);
+          if (typeof incoming.resetBassGain === 'function') incoming.resetBassGain();
           resolve();
         }
       };

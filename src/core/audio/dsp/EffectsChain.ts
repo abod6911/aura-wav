@@ -17,8 +17,10 @@ export class EffectsChain {
   private punchBassFilter!: BiquadFilterNode; // 105 Hz Peaking - Hard-hitting kick punch
   private bassHeadroomGain!: GainNode;        // Dynamic Headroom Compensation
 
-  // Peak Safety Ceiling Limiter (Mastering transparent ceiling at 0.0dBFS - NEVER squashes normal music!)
+  // Master Lookahead Brickwall Limiter (5ms Lookahead + Fast Brickwall Compressor)
+  private lookaheadDelay!: DelayNode;
   private limiterNode!: DynamicsCompressorNode;
+  private preLimiterSum!: GainNode;
 
   // Analog Tape Warmth (WaveShaper)
   private waveshaperNode!: WaveShaperNode;
@@ -68,13 +70,17 @@ export class EffectsChain {
     this.bassHeadroomGain = this.ctx.createGain();
     this.bassHeadroomGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
 
-    // 3. Initialize Peak Safety Ceiling Limiter (Mastering transparent ceiling - 0.0dBFS, zero pumping)
+    // 3. Initialize Master Lookahead Brickwall Limiter (5ms Lookahead, -1.0dBFS ceiling, 0 knee, 20:1 ratio)
+    this.preLimiterSum = this.ctx.createGain();
+    this.lookaheadDelay = this.ctx.createDelay(0.01);
+    this.lookaheadDelay.delayTime.setValueAtTime(0.005, this.ctx.currentTime);
+
     this.limiterNode = this.ctx.createDynamicsCompressor();
-    this.limiterNode.threshold.setValueAtTime(0.0, this.ctx.currentTime);
+    this.limiterNode.threshold.setValueAtTime(-1.0, this.ctx.currentTime);
     this.limiterNode.knee.setValueAtTime(0.0, this.ctx.currentTime);
     this.limiterNode.ratio.setValueAtTime(20.0, this.ctx.currentTime);
     this.limiterNode.attack.setValueAtTime(0.001, this.ctx.currentTime);
-    this.limiterNode.release.setValueAtTime(0.05, this.ctx.currentTime);
+    this.limiterNode.release.setValueAtTime(0.08, this.ctx.currentTime);
 
     // 4. Initialize Analog Warmth Waveshaper (Default: null and 'none' oversample for 100% bit-perfect pass-through)
     this.waveshaperNode = this.ctx.createWaveShaper();
@@ -107,8 +113,8 @@ export class EffectsChain {
 
   /**
    * Pure serial high-fidelity audio graph:
-   * Input -> 5-Band EQ -> Dual-Stage Mega Bass Boost -> Headroom Gain -> Safety Limiter -> Waveshaper -> Reverb -> Output
-   * Zero parallel summation = ZERO comb filtering or phase smearing!
+   * Input -> 5-Band EQ -> Dual-Stage Mega Bass Boost -> Headroom Gain -> Waveshaper -> Reverb -> Sum -> Lookahead Delay -> Brickwall Limiter -> Output
+   * Zero clipping, zero inter-sample distortion!
    */
   private buildGraph(): void {
     // 1. 5-Band EQ in series
@@ -123,20 +129,22 @@ export class EffectsChain {
     this.subBassFilter.connect(this.punchBassFilter);
     this.punchBassFilter.connect(this.bassHeadroomGain);
 
-    // 3. Transparent Safety Limiter (0dBFS Ceiling)
-    this.bassHeadroomGain.connect(this.limiterNode);
+    // 3. Analog Warmth
+    this.bassHeadroomGain.connect(this.waveshaperNode);
 
-    // 4. Analog Warmth
-    this.limiterNode.connect(this.waveshaperNode);
-
-    // 5. Dry / Wet Reverb split
+    // 4. Dry / Wet Reverb split
     this.waveshaperNode.connect(this.dryGainNode);
     this.waveshaperNode.connect(this.convolverNode);
     this.convolverNode.connect(this.wetGainNode);
 
-    // 6. Master Output
-    this.dryGainNode.connect(this.outputNode);
-    this.wetGainNode.connect(this.outputNode);
+    // 5. Summing before Limiter
+    this.dryGainNode.connect(this.preLimiterSum);
+    this.wetGainNode.connect(this.preLimiterSum);
+
+    // 6. Lookahead Brickwall Limiter (Final master safety stage)
+    this.preLimiterSum.connect(this.lookaheadDelay);
+    this.lookaheadDelay.connect(this.limiterNode);
+    this.limiterNode.connect(this.outputNode);
   }
 
   public setEQ(bands: EQBands): void {

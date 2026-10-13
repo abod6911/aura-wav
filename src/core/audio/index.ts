@@ -8,6 +8,8 @@ export * from './dsp/LoudnessNormalizer';
 export * from './workers/audioTimer.worker';
 export * from './dsp/SpatialReverbEngine';
 export * from './dsp/VocalAttenuator';
+export * from './worklets/auraDspProcessor';
+export * from './AudioBufferPool';
 export * from './AudioEngine';
 export * from './DJAudioEngineFacade';
 

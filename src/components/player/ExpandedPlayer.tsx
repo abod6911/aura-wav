@@ -306,17 +306,20 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </div>
         </div>
 
-        {/* 2. Main Dynamic Body Area (Tab Switcher) */}
-        <div className="flex-1 my-3 overflow-hidden flex flex-col justify-center">
-          {/* TAB A: MAIN COVER ART */}
-          {activeTab === 'player' && (
-            <motion.div
-              key="player"
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              className="flex-1 flex flex-col items-center justify-center relative min-h-0"
-            >
+        {/* 2. Apple Music Split Cinema Layout on Desktop, Fluid Ergonomic Sheet on Mobile */}
+        <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-stretch overflow-hidden px-2 sm:px-4 md:px-6 py-2 gap-6 lg:gap-10 min-h-0">
+          
+          {/* ========================================================================= */}
+          {/* COLUMN 1 (START): ARTWORK + TRACK META + SCRUBBER + TRANSPORT + VOLUME */}
+          {/* Always visible on Desktop (42% width), or when activeTab === 'player' on Mobile */}
+          {/* ========================================================================= */}
+          <div
+            className={`w-full lg:w-[42%] max-w-[420px] flex-col justify-between gap-3 sm:gap-4 shrink-0 ${
+              activeTab === 'player' ? 'flex' : 'hidden lg:flex'
+            }`}
+          >
+            {/* Grand Squircle Artwork */}
+            <div className="flex-1 flex items-center justify-center min-h-0 py-1">
               <motion.div
                 data-testid="expanded-artwork-container"
                 drag="x"
@@ -333,18 +336,12 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 onDragEnd={(_, info) => {
                   if (info.offset.x < -55 || info.velocity.x < -200) {
                     triggerHaptic();
-                    if (isRTL) {
-                      previousTrack();
-                    } else {
-                      nextTrack(false);
-                    }
+                    if (isRTL) previousTrack();
+                    else nextTrack(false);
                   } else if (info.offset.x > 55 || info.velocity.x > 200) {
                     triggerHaptic();
-                    if (isRTL) {
-                      nextTrack(false);
-                    } else {
-                      previousTrack();
-                    }
+                    if (isRTL) nextTrack(false);
+                    else previousTrack();
                   }
                 }}
                 style={{
@@ -352,19 +349,19 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   transformStyle: 'preserve-3d',
                   boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`,
                 }}
-                className="group relative w-60 h-60 xs:w-68 xs:h-68 sm:w-76 sm:h-76 md:w-80 md:h-80 max-h-[38vh] max-w-[38vh] aspect-square rounded-3xl overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)]"
+                className="group relative w-56 h-56 xs:w-64 xs:h-64 sm:w-72 sm:h-72 lg:w-full lg:max-w-[390px] aspect-square rounded-[28px] overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] mx-auto"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setChangeArtworkModal(true, currentTrack);
                 }}
               >
                 {/* Glossy Glass Light Sheen Sweep */}
-                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-3xl">
+                <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-[28px]">
                   <div className="absolute -inset-full bg-gradient-to-r from-transparent via-white/15 to-transparent transform -rotate-45 translate-x-[-150%] group-hover:translate-x-[250%] transition-transform duration-1000 ease-in-out" />
                 </div>
 
                 {/* Vinyl Spin Status Badge */}
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center gap-1.5 z-20 pointer-events-none shadow-md">
+                <div className="absolute top-3.5 right-3.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center gap-1.5 z-20 pointer-events-none shadow-md">
                   <Disc3 className={`w-3.5 h-3.5 text-white/90 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
                   <span className="text-[10px] font-mono text-white/80 font-bold uppercase tracking-wider">{isPlaying ? 'Vinyl 33' : 'Paused'}</span>
                 </div>
@@ -378,643 +375,643 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
                     exit={{ opacity: 0, scale: 1.05 }}
                     transition={{ duration: 0.28, ease: 'easeOut' }}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover select-none"
+                    draggable={false}
                   />
                 </AnimatePresence>
               </motion.div>
-
-              {/* Real-time Current Lyric Line Snippet */}
-              {lyrics.length > 0 && activeLyricIndex >= 0 && (
-                <p
-                  dir="auto"
-                  onClick={() => setActiveTab('lyrics')}
-                  className="text-xs sm:text-sm text-white font-semibold text-center mt-4 px-4 py-1.5 rounded-full bg-white/[0.08] border border-white/15 max-w-sm truncate cursor-pointer hover:bg-white/[0.14] transition-colors animate-fadeIn"
-                >
-                  "{lyrics[activeLyricIndex].text}"
-                </p>
-              )}
-            </motion.div>
-          )}
-
-          {/* TAB B: UP NEXT QUEUE */}
-          {activeTab === 'up_next' && (
-            <motion.div
-              key="up_next"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="flex-1 flex flex-col min-h-0 bg-white/[0.02] border border-white/[0.08] rounded-3xl p-4 overflow-hidden"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] flex-shrink-0">
-                <div className="flex items-center gap-2">
-                  <ListMusic className="w-4 h-4 text-[#FA243C]" />
-                  <span className="text-sm font-bold text-white">قائمة التالي ({queue.length})</span>
-                </div>
-
-                {/* Smart Autoplay Toggle */}
-                <button
-                  onClick={toggleSmartAutoplay}
-                  className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    smartAutoplay
-                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
-                      : 'bg-white/5 text-zinc-400'
-                  }`}
-                >
-                  <Zap className="w-3 h-3" />
-                  <span>تشغيل تلقائي ذكي</span>
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-2 py-2 pr-1" dir="ltr">
-                {queue.map((t, idx) => {
-                  const isCur = t.id === currentTrack.id;
-                  return (
-                    <div
-                      key={`${t.id}_${idx}`}
-                      onClick={() => playTrack(t)}
-                      className={`flex items-center justify-between p-2 rounded-2xl cursor-pointer transition-colors ${
-                        isCur ? 'bg-[#FA243C]/20 border border-[#FA243C]/35' : 'hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={t.artworkUrl || '/logo.svg'}
-                          alt={t.title}
-                          className="w-10 h-10 rounded-xl object-cover"
-                        />
-                        <div className="min-w-0 text-left">
-                          <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                            {t.title}
-                          </h5>
-                          <p className="text-[11px] text-zinc-400 truncate">{t.artist}</p>
-                        </div>
-                      </div>
-
-                      {!isCur && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromQueue(idx);
-                          }}
-                          className="p-1.5 text-zinc-500 hover:text-[#FA243C]"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-
-          {/* TAB C: INLINE SYNCHRONIZED LYRICS */}
-          {activeTab === 'lyrics' && (
-            <motion.div
-              key="lyrics"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="flex-1 flex flex-col min-h-0 bg-white/[0.02] border border-white/[0.08] rounded-3xl p-4 overflow-hidden"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.06] flex-shrink-0">
-                <span className="text-sm font-bold text-white flex items-center gap-2">
-                  <Mic2 className="w-4 h-4 text-[var(--apple-rose)]" />
-                  <span>الكلمات المتزامنة</span>
-                </span>
-                <span className="text-[11px] text-zinc-400">انقر على أي سطر للانتقال</span>
-              </div>
-
-              <div
-                className="flex-1 overflow-y-auto space-y-4 py-8 px-2 text-center scroll-smooth select-none"
-                dir="auto"
-                style={{
-                  maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                }}
-              >
-                {lyrics.length > 0 ? (
-                  lyrics.map((l, idx) => {
-                    const isActive = idx === activeLyricIndex;
-                    return (
-                      <p
-                        key={idx}
-                        ref={isActive ? inlineActiveLineRef : null}
-                        onClick={() => {
-                          triggerHaptic();
-                          seek(l.time);
-                        }}
-                        className={`cursor-pointer transition-all duration-300 py-2 px-3 rounded-2xl font-bold origin-center ${
-                          isActive
-                            ? 'text-white text-xl sm:text-2xl drop-shadow-[0_0_24px_rgba(255,255,255,0.85)] scale-105 bg-white/[0.06]'
-                            : 'text-zinc-500 hover:text-zinc-300 text-sm sm:text-base opacity-40 hover:opacity-80'
-                        }`}
-                      >
-                        {l.text}
-                      </p>
-                    );
-                  })
-                ) : (
-                  <div className="py-20 text-zinc-500 text-sm">لا توجد كلمات متزامنة لهذا المسار</div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* TAB D: RELATED SONGS (YouTube Music Style Discovery) */}
-          {activeTab === 'related' && (
-            <motion.div
-              key="related"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="flex-1 flex flex-col min-h-0 bg-white/[0.02] border border-white/[0.08] rounded-3xl p-4 overflow-y-auto space-y-4"
-            >
-              {/* More by this artist */}
-              {moreByArtist.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                    المزيد من أغاني {currentTrack.artist}:
-                  </span>
-                  <div className="grid grid-cols-1 gap-2" dir="ltr">
-                    {moreByArtist.map((t) => (
-                      <div
-                        key={t.id}
-                        onClick={() => playTrack(t)}
-                        className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/[0.05] cursor-pointer transition-colors"
-                      >
-                        <img src={t.artworkUrl || '/logo.svg'} alt={t.title} className="w-10 h-10 rounded-xl object-cover" />
-                        <div className="min-w-0 text-left">
-                          <h5 className="text-xs font-bold text-white truncate">{t.title}</h5>
-                          <p className="text-[11px] text-zinc-400 truncate">{t.album || 'Single'}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Similar vibe tracks */}
-              <div className="space-y-2 pt-2">
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  أغانٍ مقترحة بنفس النمط:
-                </span>
-                <div className="grid grid-cols-1 gap-2" dir="ltr">
-                  {similarTracks.map((t) => (
-                    <div
-                      key={t.id}
-                      onClick={() => playTrack(t)}
-                      className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/[0.05] cursor-pointer transition-colors"
-                    >
-                      <img src={t.artworkUrl || '/logo.svg'} alt={t.title} className="w-10 h-10 rounded-xl object-cover" />
-                      <div className="min-w-0 text-left">
-                        <h5 className="text-xs font-bold text-white truncate">{t.title}</h5>
-                        <p className="text-[11px] text-zinc-400 truncate">{t.artist}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* TAB E: AUDIOPHILE SOUND STUDIO */}
-          {activeTab === 'studio' && (
-            <motion.div
-              key="studio"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 15 }}
-              className="flex-1 flex flex-col min-h-0 bg-white/[0.03] border border-white/[0.08] rounded-3xl p-4 overflow-y-auto space-y-4 backdrop-blur-xl"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white">
-                    <Sparkles className="w-4 h-4" />
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-black text-white">استوديو الصوت ثلاثي الأبعاد</h4>
-                    <p className="text-[10px] text-zinc-400">Web Audio Hi-Fi DSP & Spatial Reverbs</p>
-                  </div>
-                </div>
-                <span className="apple-badge bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
-                  Hi-Res 24-bit
-                </span>
-              </div>
-
-              {/* Spatial Presets Grid */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-zinc-300">البيئة الصوتية ثلاثية الأبعاد (Spatial Reverb):</span>
-                <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
-                  {[
-                    { id: 'off', label: 'ستيريو مباشر', icon: '⏹️', desc: 'Stereo Direct' },
-                    { id: 'concert', label: 'قاعة حفلات', icon: '🏛️', desc: 'Live Concert' },
-                    { id: 'studio', label: 'استوديو نقي', icon: '🎙️', desc: 'Acoustic Studio' },
-                    { id: 'club', label: 'نادي ليلي', icon: '🎛️', desc: 'Club & Bass' },
-                    { id: '8d', label: 'صوت فضائي 8D', icon: '🎧', desc: '360° Orbit' },
-                  ].map((preset) => {
-                    const isSelected = spatialMode === preset.id;
-                    return (
-                      <button
-                        key={preset.id}
-                        onClick={() => {
-                          triggerHaptic();
-                          setSpatialMode(preset.id as any);
-                        }}
-                        className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                          isSelected
-                            ? 'bg-gradient-to-tr from-[#FA243C]/25 to-[#FF375F]/15 border-[#FA243C] shadow-lg shadow-[#FA243C]/20 text-white'
-                            : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
-                        }`}
-                      >
-                        <span className="text-base mb-1">{preset.icon}</span>
-                        <span className="text-xs font-bold block">{preset.label}</span>
-                        <span className="text-[9px] text-zinc-400">{preset.desc}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Karaoke Sing Mode Card */}
-              <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">🎤</span>
-                    <div>
-                      <h5 className="text-xs font-black text-white">وضع Apple Sing وعزل صوت المغني</h5>
-                      <p className="text-[10px] text-zinc-400">Apple Music Sing Center-Channel Cut</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      triggerHaptic();
-                      setKaraokeMode(!karaokeMode);
-                    }}
-                    className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
-                      karaokeMode
-                        ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/35'
-                        : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
-                  >
-                    {karaokeMode ? 'مفعل' : 'معطل'}
-                  </button>
-                </div>
-
-                {karaokeMode && (
-                  <div className="pt-2 border-t border-white/[0.08] space-y-1.5">
-                    <div className="flex justify-between text-[11px] text-zinc-300">
-                      <span>نسبة خفض صوت المغني:</span>
-                      <span className="font-mono font-bold text-[#FF375F]">
-                        {Math.round(karaokeVocalLevel * 100)}%
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={karaokeVocalLevel}
-                      onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Bass Boost & Analog Warmth */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-1.5">
-                  <div className="flex justify-between text-xs font-bold text-white">
-                    <span>⚡ Mega Bass Boost:</span>
-                    <span className="text-[#FA243C] font-mono">+{bassBoost} dB</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="12"
-                    step="0.5"
-                    value={bassBoost}
-                    onChange={(e) => setBassBoost(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-1.5">
-                  <div className="flex justify-between text-xs font-bold text-white">
-                    <span>📻 Analog Warmth:</span>
-                    <span className="text-amber-400 font-mono">{analogWarmth}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    value={analogWarmth}
-                    onChange={(e) => setAnalogWarmth(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-amber-500 cursor-pointer"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </div>
-
-        {/* 3. Track Details & Scrubber */}
-        <div className="space-y-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0 pr-3 text-right">
-              <h2 className="text-xl sm:text-2xl font-black text-white truncate tracking-tight">
-                {currentTrack.title}
-              </h2>
-              <p className="text-sm text-zinc-400 truncate mt-0.5 font-medium">
-                {currentTrack.artist}
-              </p>
-              {/* Apple Music Style Hi-Res Lossless & Spatial Audio Badges */}
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="apple-badge bg-white/[0.08] text-white/90">
-                  APPLE DIGITAL MASTER
-                </span>
-                
-                <div
-                  dir="ltr"
-                  className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
-                  title="صوت استوديو نقي عالي الدقة (Lossless 24-bit)"
-                >
-                  <Headphones className="w-2.5 h-2.5 text-emerald-400" />
-                  <span>LOSSLESS 24-BIT</span>
-                </div>
-
-                {spatialMode !== 'off' && (
-                  <span className="apple-badge bg-purple-500/15 border-purple-500/30 text-purple-300">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    <span>SPATIAL {spatialMode.toUpperCase()}</span>
-                  </span>
-                )}
-
-                {karaokeMode && (
-                  <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF375F]">
-                    <Mic2 className="w-2.5 h-2.5" />
-                    <span>SING ACTIVE</span>
-                  </span>
-                )}
-
-                {/* Total Duration Badge */}
-                {duration > 0 && (
-                  <div
-                    dir="ltr"
-                    className="apple-badge bg-white/[0.06] text-zinc-300 font-mono"
-                    title="المدة الإجمالية للأغنية"
-                  >
-                    <span>⏱️ {formatDuration(duration)}</span>
-                  </div>
-                )}
-
-                {/* BPM Badge */}
-                {currentTrack.bpm && (
-                  <span
-                    className="apple-badge bg-amber-500/15 border-amber-500/30 text-amber-300 tabular-nums font-mono"
-                    title={`سرعة الإيقاع: ${currentTrack.bpm} BPM`}
-                  >
-                    ⚡ {currentTrack.bpm} BPM
-                  </span>
-                )}
-
-                {/* Interactive Waveform Mode Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setShowWaveform(!showWaveform)}
-                  title={showWaveform ? 'الشريط الكلاسيكي' : 'عرض الموجة الصوتية التفاعلية'}
-                  className={`apple-badge apple-spring cursor-pointer ${
-                    showWaveform
-                      ? 'border-[#FA243C]/50 bg-[#FA243C]/20 text-white shadow-sm'
-                      : 'border-white/10 bg-white/[0.06] text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Activity className="w-2.5 h-2.5" />
-                  <span>{showWaveform ? 'WAVEFORM' : 'CLASSIC'}</span>
-                </button>
-              </div>
             </div>
 
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Favorite Heart with Apple Haptic & Glow */}
-              <motion.button
-                data-testid="expanded-favorite-btn"
-                whileTap={{ scale: 0.88 }}
-                onClick={() => {
-                  triggerHaptic();
-                  toggleFavorite(currentTrack.id);
-                }}
-                className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer rounded-full apple-spring"
-                aria-label={isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+            {/* Track Info & Badges */}
+            <div className="space-y-2.5 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0 pe-3 text-start">
+                  <h2 className="text-xl sm:text-2xl font-black text-white truncate tracking-tight">
+                    <bdi dir="auto">{currentTrack.title}</bdi>
+                  </h2>
+                  <p className="text-sm text-zinc-400 truncate mt-0.5 font-medium">
+                    <bdi dir="auto">{currentTrack.artist}</bdi>
+                  </p>
+                  
+                  {/* Apple Badges */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 mt-2 flex-wrap">
+                    <span className="apple-badge bg-white/[0.08] text-white/90 text-[9px] sm:text-[10px]">
+                      APPLE MASTER
+                    </span>
+                    <div
+                      dir="ltr"
+                      className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400 text-[9px] sm:text-[10px]"
+                      title="صوت استوديو نقي عالي الدقة (Lossless 24-bit)"
+                    >
+                      <Headphones className="w-2.5 h-2.5 text-emerald-400" />
+                      <span>LOSSLESS 24-BIT</span>
+                    </div>
+                    {spatialMode !== 'off' && (
+                      <span className="apple-badge bg-purple-500/15 border-purple-500/30 text-purple-300 text-[9px] sm:text-[10px]">
+                        <Sparkles className="w-2.5 h-2.5" />
+                        <span>SPATIAL {spatialMode.toUpperCase()}</span>
+                      </span>
+                    )}
+                    {karaokeMode && (
+                      <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF375F] text-[9px] sm:text-[10px]">
+                        <Mic2 className="w-2.5 h-2.5" />
+                        <span>SING ACTIVE</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Heart Button */}
+                <motion.button
+                  data-testid="expanded-favorite-btn"
+                  whileTap={{ scale: 0.88 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    toggleFavorite(currentTrack.id);
+                  }}
+                  className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer rounded-full apple-spring flex-shrink-0"
+                  aria-label={isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+                >
+                  <Heart
+                    className={`w-6 h-6 transition-transform ${
+                      isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_12px_rgba(250,36,60,0.65)] scale-110' : 'text-zinc-500'
+                    }`}
+                  />
+                </motion.button>
+              </div>
+
+              {/* Scrubber */}
+              <TimelineSlider
+                currentTime={currentTime}
+                duration={duration}
+                onSeek={seek}
+                showTimestamps={true}
+                showWaveform={showWaveform}
+                trackId={currentTrack.id}
+                accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#FA243C'}
+              />
+
+              {/* Playback Transport Buttons (Strictly LTR: Prev -> Play -> Next) */}
+              <div 
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center justify-between px-2 sm:px-3 pt-1 select-none w-full"
+                style={{ touchAction: 'manipulation' }}
+                dir="ltr"
               >
-                <Heart
-                  className={`w-6 h-6 transition-transform ${
-                    isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_12px_rgba(250,36,60,0.65)] scale-110' : 'text-zinc-500'
+                {/* 1. Shuffle Button */}
+                <motion.button
+                  data-testid="expanded-shuffle-btn"
+                  whileTap={{ scale: 0.86 }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    triggerHaptic();
+                    toggleShuffle();
+                  }}
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+                    shuffle 
+                      ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
+                      : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white'
                   }`}
+                  title="تشغيل عشوائي ذكي (Smart Shuffle)"
+                  aria-label="Shuffle"
+                >
+                  <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />}
+                </motion.button>
+
+                {/* 2. Previous Track */}
+                <motion.button
+                  data-testid="expanded-prev-btn"
+                  whileTap={{ scale: 0.88 }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    triggerHaptic();
+                    previousTrack();
+                  }}
+                  className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
+                  title="السابق (Previous)"
+                  aria-label="Previous track"
+                >
+                  <SkipBack className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-white" />
+                </motion.button>
+
+                {/* 3. Center Master Play/Pause Statement Button */}
+                <motion.button
+                  data-testid="expanded-play-pause-btn"
+                  whileTap={{ scale: 0.90 }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    triggerHaptic();
+                    togglePlayPause();
+                  }}
+                  className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  <div 
+                    className="absolute inset-0 rounded-full blur-xl opacity-45 group-hover:opacity-80 transition-opacity pointer-events-none -z-10"
+                    style={{ backgroundColor: currentTrack.accentColor || currentTrack.dominantColor || '#FA243C' }}
+                  />
+                  {isPlaying ? (
+                    <Pause className="w-7 h-7 sm:w-8 sm:h-8 fill-[#09090b] text-[#09090b]" />
+                  ) : (
+                    <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-[#09090b] text-[#09090b] translate-x-0.5" />
+                  )}
+                </motion.button>
+
+                {/* 4. Next Track */}
+                <motion.button
+                  data-testid="expanded-next-btn"
+                  whileTap={{ scale: 0.88 }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    triggerHaptic();
+                    nextTrack({ forceImmediate: true });
+                  }}
+                  className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
+                  title="التالي (Next)"
+                  aria-label="Next track"
+                >
+                  <SkipForward className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-white" />
+                </motion.button>
+
+                {/* 5. Repeat Button */}
+                <motion.button
+                  data-testid="expanded-repeat-btn"
+                  whileTap={{ scale: 0.86 }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    triggerHaptic();
+                    cycleRepeat();
+                  }}
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
+                    repeatMode !== 'off' 
+                      ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
+                      : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white'
+                  }`}
+                  title="تكرار (Repeat)"
+                  aria-label="Repeat"
+                >
+                  {repeatMode === 'one' ? <Repeat1 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />}
+                </motion.button>
+              </div>
+
+              {/* Volume Slider */}
+              <div className="flex items-center gap-3 px-3 pt-1">
+                <Volume1 className="w-4 h-4 text-white/50 flex-shrink-0" />
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer"
+                  style={{ background: `linear-gradient(to right, rgba(255,255,255,0.7) ${volume * 100}%, rgba(255,255,255,0.2) ${volume * 100}%)` }}
                 />
-              </motion.button>
+                <Volume2 className="w-4 h-4 text-white/50 flex-shrink-0" />
+              </div>
             </div>
           </div>
 
-          <TimelineSlider
-            currentTime={currentTime}
-            duration={duration}
-            onSeek={seek}
-            showTimestamps={true}
-            showWaveform={showWaveform}
-            trackId={currentTrack.id}
-            accentColor={currentTrack.accentColor || currentTrack.dominantColor || '#FA243C'}
-          />
-        </div>
-
-        {/* 4. Luxury Hi-Fi Master Playback Controls (Strictly dir="ltr": Left=Prev, Right=Next) */}
-        <div 
-          onPointerDown={(e) => e.stopPropagation()}
-          className="flex items-center justify-between px-3 my-2 flex-shrink-0 select-none"
-          style={{ touchAction: 'manipulation' }}
-          dir="ltr"
-        >
-          {/* 1. Shuffle Button (Far Left) */}
-          <motion.button
-            data-testid="expanded-shuffle-btn"
-            whileTap={{ scale: 0.86 }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              triggerHaptic();
-              toggleShuffle();
-            }}
-            style={{ touchAction: 'manipulation' }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
-              shuffle 
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
-                : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
+          {/* ========================================================================= */}
+          {/* COLUMN 2 (END): DYNAMIC STAGE (58% Width on Desktop) */}
+          {/* Lyrics, 3D Studio, Queue, or Related. Seamless side-by-side transition! */}
+          {/* ========================================================================= */}
+          <div
+            className={`w-full lg:w-[58%] flex-1 flex flex-col min-w-0 h-full overflow-hidden ${
+              activeTab !== 'player' ? 'flex' : 'hidden lg:flex'
             }`}
-            title="تشغيل عشوائي ذكي (Smart Shuffle)"
-            aria-label="Shuffle"
           >
-            <Shuffle className="w-5 h-5" />
-            {shuffle && (
-              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />
-            )}
-          </motion.button>
+            {/* Desktop & Mobile Dynamic Stage Tabs Bar */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] flex-shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  onClick={() => setActiveTab('lyrics')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    activeTab === 'lyrics' || (activeTab === 'player' && typeof window !== 'undefined' && window.innerWidth >= 1024)
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08]'
+                  }`}
+                >
+                  <Mic2 className="w-3.5 h-3.5" />
+                  <span>{t.syncedLyrics}</span>
+                </button>
 
-          {/* 2. Previous Track Button (Left of Play -> |<<) */}
-          <motion.button
-            data-testid="expanded-prev-btn"
-            whileTap={{ scale: 0.88 }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              triggerHaptic();
-              previousTrack();
-            }}
-            style={{ touchAction: 'manipulation' }}
-            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
-            title="السابق (Previous)"
-            aria-label="Previous track"
-          >
-            <SkipBack className="w-6 h-6 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
-          </motion.button>
+                <button
+                  onClick={() => setActiveTab('studio')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    activeTab === 'studio'
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08]'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'الاستوديو 3D' : 'Studio 3D'}</span>
+                </button>
 
-          {/* 3. Master Luxury Hi-Fi Play/Pause Button (Center with Dynamic Depth) */}
-          <motion.button
-            data-testid="expanded-play-pause-btn"
-            whileTap={{ scale: 0.90 }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              triggerHaptic();
-              togglePlayPause();
-            }}
-            style={{ 
-              touchAction: 'manipulation',
-              ['--aura-glow' as any]: currentTrack.accentColor || currentTrack.dominantColor || 'rgba(250, 36, 60, 0.45)'
-            }}
-            className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90 duration-150"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >
-            {/* Dynamic artwork aura backlight */}
-            <div 
-              className="absolute inset-0 rounded-full blur-xl opacity-45 group-hover:opacity-80 transition-opacity pointer-events-none -z-10"
-              style={{ backgroundColor: currentTrack.accentColor || currentTrack.dominantColor || '#FA243C' }}
-            />
-            {isPlaying ? (
-              <Pause className="w-8 h-8 fill-[#09090b] text-[#09090b] transition-transform active:scale-95" />
-            ) : (
-              <Play className="w-8 h-8 fill-[#09090b] text-[#09090b] translate-x-0.5 transition-transform active:scale-95" />
-            )}
-          </motion.button>
+                <button
+                  onClick={() => setActiveTab('up_next')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    activeTab === 'up_next'
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08]'
+                  }`}
+                >
+                  <ListMusic className="w-3.5 h-3.5" />
+                  <span>{t.queue}</span>
+                </button>
 
-          {/* 4. Next Track Button (Right of Play -> >>|) */}
-          <motion.button
-            data-testid="expanded-next-btn"
-            whileTap={{ scale: 0.88 }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              triggerHaptic();
-              nextTrack({ forceImmediate: true });
-            }}
-            style={{ touchAction: 'manipulation' }}
-            className="w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] active:bg-white/[0.22] backdrop-blur-xl border border-white/[0.14] shadow-[0_8px_24px_rgba(0,0,0,0.45),inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
-            title="التالي (Next)"
-            aria-label="Next track"
-          >
-            <SkipForward className="w-6 h-6 fill-white text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
-          </motion.button>
+                <button
+                  onClick={() => setActiveTab('related')}
+                  className={`px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    activeTab === 'related'
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.05] text-zinc-300 hover:text-white border border-white/[0.08]'
+                  }`}
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'مقترحة' : 'Related'}</span>
+                </button>
+              </div>
 
-          {/* 5. Repeat Button (Far Right) */}
-          <motion.button
-            data-testid="expanded-repeat-btn"
-            whileTap={{ scale: 0.86 }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => {
-              triggerHaptic();
-              cycleRepeat();
-            }}
-            style={{ touchAction: 'manipulation' }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none ${
-              repeatMode !== 'off' 
-                ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-[#FF375F] shadow-[0_0_18px_rgba(250,36,60,0.45)]' 
-                : 'bg-white/[0.05] border border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.1]'
-            }`}
-            title="تكرار (Repeat)"
-            aria-label="Repeat"
-          >
-            {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
-            {repeatMode !== 'off' && (
-              <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FF375F]" />
-            )}
-          </motion.button>
+              {/* Mobile Back-to-Artwork Button */}
+              <button
+                onClick={() => setActiveTab('player')}
+                className="lg:hidden text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-white/[0.06] cursor-pointer"
+              >
+                {isRTL ? 'عرض الغلاف' : 'Cover Art'}
+              </button>
+            </div>
+
+            {/* Dynamic Stage Viewport */}
+            <div className="flex-1 overflow-hidden relative pt-2">
+              <AnimatePresence mode="wait">
+                {/* STAGE A: SYNCHRONIZED LYRICS (Border-none, transparent background, optical gradient mask) */}
+                {(activeTab === 'lyrics' || (activeTab === 'player' && typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+                  <motion.div
+                    key="stage-lyrics"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full flex flex-col overflow-hidden"
+                  >
+                    <div
+                      className="flex-1 overflow-y-auto space-y-6 py-12 px-4 text-start scroll-smooth select-none no-scrollbar"
+                      dir="auto"
+                      style={{
+                        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                      }}
+                    >
+                      {lyrics.length > 0 ? (
+                        lyrics.map((l, idx) => {
+                          const isActive = idx === activeLyricIndex;
+                          return (
+                            <p
+                              key={idx}
+                              ref={isActive ? inlineActiveLineRef : null}
+                              onClick={() => {
+                                triggerHaptic();
+                                seek(l.time);
+                              }}
+                              className={`cursor-pointer transition-all duration-300 py-2.5 px-4 rounded-2xl font-black origin-start leading-relaxed ${
+                                isActive
+                                  ? 'text-white text-2xl sm:text-3xl lg:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.9)] scale-[1.03] bg-white/[0.04]'
+                                  : 'text-white/35 hover:text-white/70 text-base sm:text-xl lg:text-2xl filter blur-[0.4px]'
+                              }`}
+                            >
+                              <bdi dir="auto">{l.text}</bdi>
+                            </p>
+                          );
+                        })
+                      ) : (
+                        <div className="py-24 text-center text-zinc-500 font-bold text-sm">
+                          {isRTL ? 'لا توجد كلمات متزامنة لهذا المسار' : 'No synced lyrics available for this track'}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STAGE B: 3D SOUND STUDIO (Embedded side-by-side without moving cover!) */}
+                {activeTab === 'studio' && (
+                  <motion.div
+                    key="stage-studio"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full overflow-y-auto p-3 sm:p-5 space-y-5 apple-glass-card rounded-[28px] border border-white/[0.08]"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                      <div className="flex items-center gap-2.5">
+                        <span className="p-2 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white">
+                          <Sparkles className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-base font-black text-white">استوديو الصوت ثلاثي الأبعاد</h4>
+                          <p className="text-[11px] text-zinc-400">Web Audio Hi-Fi DSP & Spatial Reverbs</p>
+                        </div>
+                      </div>
+                      <span className="apple-badge bg-emerald-500/15 border-emerald-500/30 text-emerald-400">
+                        Hi-Res 24-bit
+                      </span>
+                    </div>
+
+                    {/* Spatial Presets Grid */}
+                    <div className="space-y-2">
+                      <span className="text-xs font-bold text-zinc-300">البيئة الصوتية ثلاثية الأبعاد (Spatial Reverb):</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        {[
+                          { id: 'off', label: 'ستيريو مباشر', icon: '⏹️', desc: 'Stereo Direct' },
+                          { id: 'concert', label: 'قاعة حفلات', icon: '🏛️', desc: 'Live Concert' },
+                          { id: 'studio', label: 'استوديو نقي', icon: '🎙️', desc: 'Acoustic Studio' },
+                          { id: 'club', label: 'نادي ليلي', icon: '🎛️', desc: 'Club & Bass' },
+                          { id: '8d', label: 'صوت فضائي 8D', icon: '🎧', desc: '360° Orbit' },
+                        ].map((preset) => {
+                          const isSelected = spatialMode === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              onClick={() => {
+                                triggerHaptic();
+                                setSpatialMode(preset.id as any);
+                              }}
+                              className={`p-3 rounded-2xl border text-start transition-all cursor-pointer flex flex-col justify-between ${
+                                isSelected
+                                  ? 'bg-gradient-to-tr from-[#FA243C]/25 to-[#FF375F]/15 border-[#FA243C] shadow-lg shadow-[#FA243C]/20 text-white'
+                                  : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
+                              }`}
+                            >
+                              <span className="text-lg mb-1">{preset.icon}</span>
+                              <span className="text-xs font-bold block">{preset.label}</span>
+                              <span className="text-[10px] text-zinc-400">{preset.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Karaoke Sing Mode Card */}
+                    <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-xl">🎤</span>
+                          <div>
+                            <h5 className="text-sm font-black text-white">وضع Apple Sing وعزل صوت المغني</h5>
+                            <p className="text-[11px] text-zinc-400">Center-Channel Vocal Attenuation Filter</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            triggerHaptic();
+                            setKaraokeMode(!karaokeMode);
+                          }}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                            karaokeMode
+                              ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/35'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          {karaokeMode ? 'مفعل' : 'معطل'}
+                        </button>
+                      </div>
+
+                      {karaokeMode && (
+                        <div className="pt-2 border-t border-white/[0.08] space-y-2">
+                          <div className="flex justify-between text-xs text-zinc-300">
+                            <span>نسبة خفض صوت المغني:</span>
+                            <span className="font-mono font-bold text-[#FF375F]">
+                              {Math.round(karaokeVocalLevel * 100)}%
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={karaokeVocalLevel}
+                            onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
+                            className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bass Boost & Analog Warmth */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2">
+                        <div className="flex justify-between text-xs font-bold text-white">
+                          <span>⚡ Mega Bass Boost:</span>
+                          <span className="text-[#FA243C] font-mono">+{bassBoost} dB</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="12"
+                          step="0.5"
+                          value={bassBoost}
+                          onChange={(e) => setBassBoost(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-[#FA243C] cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2">
+                        <div className="flex justify-between text-xs font-bold text-white">
+                          <span>📻 Analog Warmth:</span>
+                          <span className="text-amber-400 font-mono">{analogWarmth}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="5"
+                          value={analogWarmth}
+                          onChange={(e) => setAnalogWarmth(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-white/20 rounded-full appearance-none accent-amber-500 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STAGE C: QUEUE */}
+                {activeTab === 'up_next' && (
+                  <motion.div
+                    key="stage-queue"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full flex flex-col apple-glass-card rounded-[28px] border border-white/[0.08] p-4 overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-white/[0.06] flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <ListMusic className="w-4 h-4 text-[#FA243C]" />
+                        <span className="text-sm font-bold text-white">قائمة التالي ({queue.length})</span>
+                      </div>
+                      <button
+                        onClick={toggleSmartAutoplay}
+                        className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          smartAutoplay
+                            ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
+                            : 'bg-white/5 text-zinc-400'
+                        }`}
+                      >
+                        <Zap className="w-3 h-3" />
+                        <span>تشغيل تلقائي ذكي</span>
+                      </button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-2 py-2 pe-1">
+                      {queue.map((t, idx) => {
+                        const isCur = t.id === currentTrack.id;
+                        return (
+                          <div
+                            key={`${t.id}_${idx}`}
+                            onClick={() => playTrack(t)}
+                            className={`flex items-center justify-between p-2.5 rounded-2xl cursor-pointer transition-colors ${
+                              isCur ? 'bg-[#FA243C]/20 border border-[#FA243C]/35' : 'hover:bg-white/[0.04]'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img src={t.artworkUrl || '/logo.svg'} alt={t.title} className="w-10 h-10 rounded-xl object-cover" />
+                              <div className="min-w-0 text-start">
+                                <h5 className={`text-xs font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                                  <bdi dir="auto">{t.title}</bdi>
+                                </h5>
+                                <p className="text-[11px] text-zinc-400 truncate"><bdi dir="auto">{t.artist}</bdi></p>
+                              </div>
+                            </div>
+                            {!isCur && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFromQueue(idx);
+                                }}
+                                className="p-1.5 text-zinc-500 hover:text-[#FA243C]"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STAGE D: RELATED */}
+                {activeTab === 'related' && (
+                  <motion.div
+                    key="stage-related"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full overflow-y-auto apple-glass-card rounded-[28px] border border-white/[0.08] p-4 space-y-5"
+                  >
+                    {moreByArtist.length > 0 && (
+                      <div className="space-y-2.5">
+                        <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                          المزيد من أغاني {currentTrack.artist}:
+                        </span>
+                        <div className="grid grid-cols-1 gap-2">
+                          {moreByArtist.map((t) => (
+                            <div
+                              key={t.id}
+                              onClick={() => playTrack(t)}
+                              className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/[0.05] cursor-pointer transition-colors"
+                            >
+                              <img src={t.artworkUrl || '/logo.svg'} alt={t.title} className="w-10 h-10 rounded-xl object-cover" />
+                              <div className="min-w-0 text-start">
+                                <h5 className="text-xs font-bold text-white truncate"><bdi dir="auto">{t.title}</bdi></h5>
+                                <p className="text-[11px] text-zinc-400 truncate"><bdi dir="auto">{t.album || 'Single'}</bdi></p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2.5 pt-2">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                        أغانٍ مقترحة بنفس النمط:
+                      </span>
+                      <div className="grid grid-cols-1 gap-2">
+                        {similarTracks.map((t) => (
+                          <div
+                            key={t.id}
+                            onClick={() => playTrack(t)}
+                            className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/[0.05] cursor-pointer transition-colors"
+                          >
+                            <img src={t.artworkUrl || '/logo.svg'} alt={t.title} className="w-10 h-10 rounded-xl object-cover" />
+                            <div className="min-w-0 text-start">
+                              <h5 className="text-xs font-bold text-white truncate"><bdi dir="auto">{t.title}</bdi></h5>
+                              <p className="text-[11px] text-zinc-400 truncate"><bdi dir="auto">{t.artist}</bdi></p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
 
-        {/* Volume Control */}
-        <div className="flex items-center gap-3 px-6 mt-3">
-          <Volume1 className="w-4 h-4 text-white/50 flex-shrink-0" />
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer
-              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3
-              [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white
-              [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,0.5)]"
-            style={{ background: `linear-gradient(to right, rgba(255,255,255,0.7) ${volume * 100}%, rgba(255,255,255,0.2) ${volume * 100}%)` }}
-          />
-          <Volume2 className="w-4 h-4 text-white/50 flex-shrink-0" />
-        </div>
-
-        {/* 5. 3 Tabs Selector */}
-        <div className="flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
+        {/* 5. Mobile Only Tab Dock Indicator */}
+        <div className="lg:hidden flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
-            onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
-            className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
-              activeTab === 'up_next'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
+            onClick={() => setActiveTab(activeTab === 'player' ? 'lyrics' : 'player')}
+            className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
+              activeTab === 'player'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <ListMusic className="w-4 h-4" />
-            <span>{t.queue}</span>
+            <Disc3 className="w-4 h-4" />
+            <span>المشغل</span>
           </button>
 
           <button
             onClick={() => setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics')}
-            className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
+            className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'lyrics'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Mic2 className="w-4 h-4" />
-            <span>{t.syncedLyrics}</span>
+            <span>الكلمات</span>
           </button>
 
           <button
             onClick={() => setActiveTab(activeTab === 'studio' ? 'player' : 'studio')}
-            className={`flex items-center gap-1.5 h-11 px-3 sm:px-4 rounded-full transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 h-10 px-3.5 rounded-full transition-all cursor-pointer ${
               activeTab === 'studio'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            <span>{isRTL ? 'الاستوديو 3D' : 'Studio 3D'}</span>
+            <span>3D Studio</span>
           </button>
 
           <button
-            onClick={() => setActiveTab(activeTab === 'related' ? 'player' : 'related')}
-            className={`flex items-center gap-2 h-11 px-4 rounded-full transition-all cursor-pointer ${
-              activeTab === 'related'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/30'
+            onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
+            className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
+              activeTab === 'up_next'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <Compass className="w-4 h-4" />
-            <span>{isRTL ? 'مقترحة' : 'Related'}</span>
+            <ListMusic className="w-4 h-4" />
+            <span>التالي</span>
           </button>
         </div>
 

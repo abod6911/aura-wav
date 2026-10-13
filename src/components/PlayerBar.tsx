@@ -24,9 +24,12 @@ import {
 } from 'lucide-react';
 import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
+import { getOptimizedCoverUrl } from '../utils/imageOptimizer';
+import { AuraProDspHud } from './player/AuraProDspHud';
+import { HarmonicSetGenerator } from './player/HarmonicSetGenerator';
 
 export const PlayerBar: React.FC = () => {
-  const { t, isRTL } = useTranslation();
+  const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackState = usePlayerStore((state) => state.playbackState);
@@ -59,6 +62,7 @@ export const PlayerBar: React.FC = () => {
   const [prevVolume, setPrevVolume] = useState(volume);
   const [isAudioSettingsOpen, setIsAudioSettingsOpen] = useState(false);
   const [showWaveformScrubber, setShowWaveformScrubber] = useState(false);
+  const [showDspHud, setShowDspHud] = useState(false);
 
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
   const isFav = currentTrack ? favorites.includes(currentTrack.id) : false;
@@ -87,24 +91,24 @@ export const PlayerBar: React.FC = () => {
     <>
       <footer
         data-testid="player-bar"
-        dir="ltr"
+        dir={dir}
         style={{
-          boxShadow: `0 24px 60px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
+          boxShadow: `0 24px 64px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
         }}
-        className="hidden md:flex fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[86px] z-40 bg-[#0d0d15]/85 backdrop-blur-3xl px-6 sm:px-8 items-center justify-between border border-white/[0.14] rounded-[28px] select-none transition-shadow duration-500 apple-glass-dock"
+        className="hidden md:grid grid-cols-[minmax(200px,1fr)_minmax(340px,2fr)_minmax(200px,1fr)] fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-5 sm:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock"
       >
-        {/* 1. Track Info (Left) */}
-        <div className="flex items-center gap-3.5 w-[260px] min-w-0 flex-shrink-0">
+        {/* 1. Track Info (Start Column) */}
+        <div className="flex items-center gap-3.5 min-w-0 w-full justify-self-start pr-1">
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className={`relative w-14 h-14 rounded-[18px] overflow-hidden bg-black/60 border border-white/15 shadow-xl flex-shrink-0 group cursor-pointer transition-transform ${
+            className={`relative w-13 h-13 rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-xl shrink-0 group cursor-pointer transition-transform ${
               isPlaying ? 'ring-2 ring-[#FA243C]/50 shadow-[#FA243C]/30' : ''
             }`}
           >
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentTrack?.id || 'none'}
-                src={currentTrack?.coverUrl || currentTrack?.artworkUrl || '/logo.svg'}
+                src={getOptimizedCoverUrl(currentTrack?.coverUrl || currentTrack?.artworkUrl, 'thumb')}
                 alt={currentTrack?.title || 'No Track'}
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -121,23 +125,23 @@ export const PlayerBar: React.FC = () => {
             <div className="flex items-center gap-1.5 min-w-0">
               <h4
                 onClick={() => setMobilePlayerOpen(true)}
-                className="text-sm font-black text-white truncate hover:underline cursor-pointer tracking-tight"
+                className="text-sm font-black text-white truncate hover:underline cursor-pointer tracking-tight leading-normal"
                 title={currentTrack?.title}
               >
-                {currentTrack?.title || (isRTL ? 'اختر أغنية للتشغيل' : 'Select a track to play')}
+                <bdi dir="auto">{currentTrack?.title || (isRTL ? 'اختر أغنية للتشغيل' : 'Select a track to play')}</bdi>
               </h4>
               <span className="apple-badge text-[8px] bg-white/[0.08] text-white/80 shrink-0">
                 LOSSLESS
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-xs text-zinc-400 truncate hover:underline cursor-pointer font-medium">
-                {currentTrack?.artist || 'AURA.WAV'}
+              <p className="text-xs text-white/65 truncate hover:underline cursor-pointer font-medium">
+                <bdi dir="auto">{currentTrack?.artist || 'AURA.WAV'}</bdi>
               </p>
               {isDownloaded && (
                 <span
                   className="apple-badge text-[8px] bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shrink-0"
-                  title="محفوظة أوفلاين للأبد"
+                  title={isRTL ? 'محفوظة أوفلاين للأبد' : 'Offline ready'}
                 >
                   <CheckCircle2 className="w-2 h-2" />
                   <span>OFFLINE</span>
@@ -149,8 +153,9 @@ export const PlayerBar: React.FC = () => {
           {currentTrack && (
             <button
               onClick={() => toggleFavorite(currentTrack.id)}
-              className="p-2 text-zinc-400 hover:text-[#FA243C] transition-colors cursor-pointer apple-spring"
+              className="p-1.5 text-white/60 hover:text-[#FA243C] transition-colors cursor-pointer apple-spring shrink-0"
               title={isFav ? t.favoriteRemoved : t.favoriteAdded}
+              aria-label="Toggle favorite"
             >
               <Heart
                 className={`w-4.5 h-4.5 transition-transform active:scale-125 ${
@@ -161,10 +166,10 @@ export const PlayerBar: React.FC = () => {
           )}
         </div>
 
-        {/* 2. Main Playback Controls & Scrubber (Center) */}
-        <div className="flex-1 max-w-xl mx-4 min-w-0 flex flex-col items-center gap-1.5">
+        {/* 2. Main Playback Controls & Scrubber (Center Column - Mathematically Centered) */}
+        <div className="flex flex-col items-center justify-center w-full max-w-xl mx-auto px-2 justify-self-center min-w-0 gap-1">
           {/* Controls Row */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center justify-center gap-3.5 sm:gap-4.5">
             {/* Waveform Toggle */}
             <button
               onClick={() => setShowWaveformScrubber(!showWaveformScrubber)}
@@ -191,7 +196,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={previousTrack}
               title={t.previous}
-              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer"
+              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer active:scale-90"
             >
               <SkipBack className="w-5 h-5 fill-current" />
             </button>
@@ -200,7 +205,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={togglePlayPause}
               title={isPlaying ? t.pause : t.play}
-              className="hi-fi-play-button w-12 h-12 rounded-full text-black flex items-center justify-center apple-spring shadow-[0_4px_24px_rgba(250,36,60,0.35)] cursor-pointer"
+              className="hi-fi-play-button w-10.5 h-10.5 sm:w-11 sm:h-11 rounded-full text-black flex items-center justify-center apple-spring shadow-[0_4px_20px_rgba(250,36,60,0.35)] hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-black text-black" />
@@ -215,7 +220,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={() => nextTrack({ forceImmediate: true })}
               title={t.next}
-              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer"
+              className="p-1.5 text-zinc-300 hover:text-white apple-spring cursor-pointer active:scale-90"
             >
               <SkipForward className="w-5 h-5 fill-current" />
             </button>
@@ -232,7 +237,7 @@ export const PlayerBar: React.FC = () => {
             </button>
           </div>
 
-          {/* Minimal or Waveform Scrubber */}
+          {/* Compact Inline Scrubber with left/right timestamps */}
           <TimelineSlider
             currentTime={currentTime}
             duration={duration}
@@ -240,37 +245,38 @@ export const PlayerBar: React.FC = () => {
             accentColor={accentColor}
             showWaveform={showWaveformScrubber}
             trackId={currentTrack?.id}
+            layout="inline"
             className="w-full"
           />
         </div>
 
-        {/* 3. Utility Tools & Volume (Right) */}
-        <div className="flex-shrink-0 flex items-center justify-end gap-2 sm:gap-2.5">
-          {/* Spatial Audio Quick Pill (Apple Music Spatial Style) */}
+        {/* 3. Utility Tools & Volume (End Column) */}
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 w-full justify-self-end shrink-0 pl-1">
+          {/* Spatial Audio Quick Pill */}
           <button
             onClick={cycleSpatialMode}
             title={`الصوت المكاني: ${spatialMode.toUpperCase()}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-black apple-spring cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-full text-[10px] font-black apple-spring cursor-pointer flex items-center gap-1 border transition-all ${
               spatialMode !== 'off'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/30 border border-white/20'
-                : 'apple-glass-pill text-zinc-400 hover:text-white'
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30 border-white/20'
+                : 'apple-glass-pill text-zinc-400 hover:text-white border-white/10'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span className="tracking-wider text-[11px]">{spatialMode === 'off' ? 'SPATIAL' : spatialMode.toUpperCase()}</span>
+            <Sparkles className="w-3 h-3 text-amber-300" />
+            <span className="tracking-wider">{spatialMode === 'off' ? '3D' : spatialMode.toUpperCase()}</span>
           </button>
 
-          {/* Karaoke Mode Quick Toggle (Apple Music Sing Style) */}
+          {/* Karaoke Mode Quick Toggle */}
           <button
             onClick={() => setKaraokeMode(!karaokeMode)}
             title={karaokeMode ? 'إيقاف وضع Apple Sing' : 'تفعيل وضع Apple Sing وعزل صوت المغني'}
-            className={`p-2 rounded-xl apple-spring cursor-pointer ${
+            className={`p-1.5 sm:p-2 rounded-xl apple-spring cursor-pointer transition-all ${
               karaokeMode
-                ? 'bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/40 shadow-lg shadow-[#FA243C]/30 ring-1 ring-[#FA243C]/50'
+                ? 'bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/40 shadow-md shadow-[#FA243C]/30 ring-1 ring-[#FA243C]/50'
                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.06]'
             }`}
           >
-            <Mic2 className="w-4.5 h-4.5" />
+            <Mic2 className="w-4 h-4" />
           </button>
 
           {/* Synced Lyrics Toggle */}
@@ -278,38 +284,54 @@ export const PlayerBar: React.FC = () => {
             data-testid="lyrics-toggle-btn"
             onClick={() => setLyricsOpen(!isLyricsOpen)}
             title={t.syncedLyrics}
-            className={`px-2.5 py-1.5 rounded-xl apple-spring cursor-pointer text-xs font-bold ${
-              isLyricsOpen ? 'bg-white/[0.12] text-white border border-white/15' : 'text-zinc-400 hover:text-white'
+            className={`px-2 py-1 rounded-xl apple-spring cursor-pointer text-[11px] font-black border transition-all ${
+              isLyricsOpen 
+                ? 'bg-white/[0.16] text-white border-white/25 shadow-sm' 
+                : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/[0.06]'
             }`}
           >
-            <span>LYRICS</span>
+            <span>LRC</span>
+          </button>
+
+          {/* AURA Pro DSP & DJ Live HUD Toggle */}
+          <button
+            onClick={() => setShowDspHud(!showDspHud)}
+            title="AURA Pro DSP & DJ Live HUD"
+            className={`p-1.5 sm:p-2 rounded-xl apple-spring cursor-pointer transition-all ${
+              showDspHud
+                ? 'bg-gradient-to-r from-red-500/30 to-purple-500/30 text-white border border-white/20 shadow-md shadow-purple-500/20'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-purple-400" />
           </button>
 
           {/* Equalizer Quick Modal */}
           <button
             onClick={() => setIsAudioSettingsOpen(true)}
             title={t.equalizer}
-            className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
+            className="p-1.5 sm:p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
           >
-            <Sliders className="w-4.5 h-4.5" />
+            <Sliders className="w-4 h-4" />
           </button>
 
           {/* Right Sidebar Queue Toggle */}
           <button
             onClick={toggleRightSidebar}
             title={t.queue}
-            className={`p-2 rounded-xl transition-colors cursor-pointer ${
-              isRightSidebarOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white'
+            className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer ${
+              isRightSidebarOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
-            <ListMusic className="w-4.5 h-4.5" />
+            <ListMusic className="w-4 h-4" />
           </button>
 
           {/* Volume Control */}
-          <div className="flex items-center gap-2 ml-1">
+          <div className="flex items-center gap-1.5 ms-0.5">
             <button
               onClick={toggleMute}
-              className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="text-white/60 hover:text-white transition-colors cursor-pointer p-1"
+              aria-label="Mute toggle"
             >
               {isMuted || volume === 0 ? (
                 <VolumeX className="w-4 h-4 text-red-400" />
@@ -328,7 +350,8 @@ export const PlayerBar: React.FC = () => {
                 setVolume(val);
                 if (isMuted && val > 0) setIsMuted(false);
               }}
-              className="w-18 accent-[#FA243C] cursor-pointer"
+              className="w-16 sm:w-20 accent-[#FA243C] cursor-pointer h-1.5 bg-white/20 rounded-full"
+              aria-label="Volume slider"
             />
           </div>
 
@@ -336,12 +359,31 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => setMobilePlayerOpen(true)}
             title={isRTL ? 'تكبير المشغل' : 'Expand Player'}
-            className="p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
+            className="p-1.5 text-white/60 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.08] rounded-xl"
+            aria-label="Expand player"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
         </div>
       </footer>
+
+      {/* Floating Aura Pro DSP & DJ Live HUD */}
+      <AnimatePresence>
+        {showDspHud && (
+          <motion.div
+            initial={{ opacity: 0, y: 25, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 25, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            className="hidden md:block fixed bottom-28 inset-x-8 max-w-5xl mx-auto z-40"
+          >
+            <AuraProDspHud />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Smart Harmonic Journey Modal */}
+      <HarmonicSetGenerator />
 
       {isAudioSettingsOpen && (
         <AudioSettingsModal isOpen={isAudioSettingsOpen} onClose={() => setIsAudioSettingsOpen(false)} />

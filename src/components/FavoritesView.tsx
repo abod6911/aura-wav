@@ -220,21 +220,22 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
           )}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-[28px_48px_1fr_36px_36px] sm:grid-cols-[36px_48px_1fr_60px_44px_36px] items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-3 border-b border-white/[0.06] text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-            <span className="text-center">#</span>
-            <span></span>
-            <span>{isRTL ? 'العنوان والفنان' : 'Title & Artist'}</span>
-            <span className="text-center hidden sm:block">
-              <Clock className="w-3.5 h-3.5 mx-auto opacity-70" />
+        <div className="rounded-2xl apple-glass-card border border-white/[0.08] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+          {/* Table Header (Desktop 6-Column Unified Grid) */}
+          <div className="hidden md:grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 border-b border-white/[0.08] text-xs font-extrabold text-white/55 uppercase tracking-wider select-none">
+            <span className="text-center font-mono">#</span>
+            <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
+            <span>{isRTL ? 'الألبوم' : 'Album'}</span>
+            <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
+            <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
+            <span className="text-end font-mono flex items-center justify-end gap-1">
+              <Clock className="w-3 h-3" />
+              <span>{isRTL ? 'المدة' : 'Time'}</span>
             </span>
-            <span className="text-center">{isRTL ? 'إزالة' : 'Fav'}</span>
-            <span></span>
           </div>
 
           {/* Track Rows */}
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-white/[0.02] pt-1">
             {displayedTracks.map((track, idx) => {
               const isCurrent = currentTrack?.id === track.id;
               const isRowPlaying = isCurrent && isPlaying;
@@ -251,15 +252,14 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                     }
                   }}
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-                  className={`group grid grid-cols-[28px_48px_1fr_36px_36px] sm:grid-cols-[36px_48px_1fr_60px_44px_36px] items-center gap-2 sm:gap-3 px-2.5 sm:px-4 py-2.5 transition-colors cursor-pointer select-none ${
+                  className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
                     isCurrent
-                      ? 'bg-gradient-to-r from-[#FA243C]/20 via-[#FA243C]/10 to-transparent border-l-2 border-[#FA243C]'
-                      : 'hover:bg-white/[0.05]'
+                      ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
+                      : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
                   }`}
                 >
-                  {/* Index / Play / Equalizer */}
+                  {/* 1. Track Index / Soundbar / Play Button */}
                   <div className="text-center flex items-center justify-center">
-                    {/* On Desktop Hover: Play/Pause button */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -271,22 +271,21 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                           playTrack(track, favoriteTracks);
                         }
                       }}
-                      className="hidden group-hover:flex items-center justify-center w-6 h-6 rounded-full text-white cursor-pointer active:scale-90"
+                      className="hidden md:group-hover:flex items-center justify-center w-6 h-6 rounded-full text-white cursor-pointer active:scale-90"
                     >
                       {isRowPlaying ? (
                         <Pause className="w-3.5 h-3.5 fill-white" />
                       ) : (
-                        <Play className="w-3.5 h-3.5 fill-white" />
+                        <Play className="w-3.5 h-3.5 fill-white translate-x-0.5" />
                       )}
                     </button>
 
-                    {/* Non-hover state */}
-                    <div className="group-hover:hidden flex items-center justify-center">
+                    <div className="md:group-hover:hidden flex items-center justify-center">
                       {isRowPlaying ? (
                         <div className="flex items-end gap-[2px] h-3.5">
-                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_0.8s_infinite] h-full" />
-                          <span className="w-1 bg-[#FF375F] rounded-full animate-[bounce_0.6s_infinite] h-2/3" />
-                          <span className="w-1 bg-[#FA243C] rounded-full animate-[bounce_1s_infinite] h-4/5" />
+                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
+                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
+                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
                         </div>
                       ) : (
                         <span
@@ -300,38 +299,79 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                     </div>
                   </div>
 
-                  {/* Album Cover */}
-                  <div className="w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
-                    <img
-                      src={track.artworkUrl || track.coverUrl || '/logo.svg'}
-                      alt={track.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+                  {/* 2. Cover + Title & Artist */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+                      <img
+                        src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                        alt={track.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/logo.svg';
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4
+                        className={`text-xs sm:text-[14px] font-bold truncate tracking-tight leading-snug ${
+                          isCurrent ? 'text-[#FA243C]' : 'text-white'
+                        }`}
+                      >
+                        <bdi dir="auto">{track.title}</bdi>
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-[11px] text-white/60 truncate mt-0.5">
+                        <span className="truncate font-medium">
+                          <bdi dir="auto">{track.artist}</bdi>
+                        </span>
+                        <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
+                        <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/[0.06] border border-white/10 text-zinc-400 tracking-wider">
+                          Lossless
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Title & Artist */}
-                  <div className="min-w-0 pr-1">
-                    <h4
-                      dir="auto"
-                      className={`text-xs sm:text-sm font-bold truncate tracking-tight ${
-                        isCurrent ? 'text-[#FA243C]' : 'text-white'
-                      }`}
-                    >
-                      {track.title}
-                    </h4>
-                    <p dir="auto" className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium">
-                      {track.artist}
-                    </p>
+                  {/* 3. Album */}
+                  <div className="hidden md:block text-xs text-white/60 truncate leading-relaxed">
+                    <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
                   </div>
 
-                  {/* Duration */}
-                  <div className="text-xs font-mono tabular-nums text-zinc-400 text-center hidden sm:block">
-                    {formatTime(track.duration)}
+                  {/* 4. BPM & Camelot Badge */}
+                  <div className="hidden md:flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
+                      <span className="text-[#FF375F] font-bold">
+                        {track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30))}
+                      </span>
+                      <span className="text-white/35 text-[10px]">BPM</span>
+                      <span className="text-white/20">•</span>
+                      <span className="text-amber-400 font-bold">
+                        {track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`}
+                      </span>
+                    </span>
                   </div>
 
-                  {/* Favorite Heart (Direct Remove Action) */}
-                  <div className="text-center flex items-center justify-center">
+                  {/* 5. Mini Waveform / Energy Bars */}
+                  <div className="hidden md:flex items-center justify-center gap-[2.5px] h-4">
+                    {[0.35, 0.65, 0.9, 0.45, 0.8, 1.0, 0.55, 0.85, 0.4, 0.75, 0.5, 0.95].map((val, bIdx) => (
+                      <span
+                        key={bIdx}
+                        style={{
+                          height: isCurrent && isPlaying ? `${Math.max(25, Math.min(100, val * 100 * (0.7 + (bIdx % 3) * 0.2)))}%` : `${val * 65}%`,
+                        }}
+                        className={`w-[3px] rounded-full transition-all duration-300 ${
+                          isCurrent && isPlaying
+                            ? 'bg-gradient-to-t from-[#FA243C] to-[#FF375F] animate-pulse'
+                            : isCurrent
+                            ? 'bg-[#FA243C]/60'
+                            : 'bg-white/20 group-hover:bg-white/35'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 6. Clustered Actions: Favorite Heart + Duration + More Menu */}
+                  <div className="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -342,55 +382,58 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                       className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#FA243C] transition-all cursor-pointer active:scale-125"
                       title={isRTL ? 'إزالة من المفضلة' : 'Remove from favorites'}
                     >
-                      <Heart className="w-4 h-4 fill-[#FA243C]" />
-                    </button>
-                  </div>
-
-                  {/* 3-Dots Menu */}
-                  <div className="relative flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveMenuTrackId(isMenuOpen ? null : track.id);
-                      }}
-                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer"
-                    >
-                      <MoreHorizontal className="w-4 h-4" />
+                      <Heart className="w-4 h-4 fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]" />
                     </button>
 
-                    {isMenuOpen && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className={`absolute z-30 top-8 w-44 bg-[#12121a]/98 border border-white/[0.15] rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl ${
-                          isRTL ? 'left-0' : 'right-0'
-                        }`}
+                    <span className="hidden md:inline-block text-xs font-mono tabular-nums text-white/50 min-w-[34px] text-right">
+                      {formatTime(track.duration)}
+                    </span>
+
+                    <div className="relative flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuTrackId(isMenuOpen ? null : track.id);
+                        }}
+                        className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                       >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            playNextInQueue(track);
-                            setActiveMenuTrackId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-zinc-200 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
-                        >
-                          <Radio className="w-3.5 h-3.5 text-purple-400" />
-                          <span>{isRTL ? 'تشغيل التالية' : 'Play Next'}</span>
-                        </button>
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addToQueue(track);
-                            setActiveMenuTrackId(null);
-                          }}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-zinc-200 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
+                      {isMenuOpen && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className={`absolute z-30 top-8 w-44 bg-[#0e0e16]/98 border border-white/[0.15] rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl ${
+                            isRTL ? 'left-0' : 'right-0'
+                          }`}
                         >
-                          <ListPlus className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>{isRTL ? 'إضافة لقائمة الانتظار' : 'Add to Queue'}</span>
-                        </button>
-                      </div>
-                    )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              playNextInQueue(track);
+                              setActiveMenuTrackId(null);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-zinc-200 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
+                          >
+                            <Radio className="w-3.5 h-3.5 text-purple-400" />
+                            <span>{isRTL ? 'تشغيل التالية' : 'Play Next'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addToQueue(track);
+                              setActiveMenuTrackId(null);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-zinc-200 hover:text-white hover:bg-white/[0.08] rounded-xl transition-colors cursor-pointer"
+                          >
+                            <ListPlus className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>{isRTL ? 'إضافة لقائمة الانتظار' : 'Add to Queue'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

@@ -30,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
+  const setSpotlightOpen = usePlayerStore((state) => state.setSpotlightOpen);
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
@@ -92,6 +93,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
                 <span>{usagePercentage}%</span>
               </button>
             )}
+            {/* Spotlight Search Mobile Button */}
+            <button
+              onClick={() => setSpotlightOpen(true)}
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full apple-glass-pill text-white/80 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
+              title={t.search}
+              aria-label="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
@@ -198,49 +209,49 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* Unified Library Status Pill */}
             <button
               onClick={onOpenImport}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white text-xs font-medium apple-spring cursor-pointer"
-              title={t.importFolder}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl apple-glass-pill hover:bg-white/[0.12] text-zinc-300 hover:text-white text-xs font-medium apple-spring cursor-pointer border border-white/10 shadow-sm"
+              title={`${t.importFolder} - انقر لتغيير أو استيراد مجلد الموسيقى`}
             >
-              <FolderOpen className="w-3.5 h-3.5 text-[#FA243C]" />
+              <FolderOpen className="w-4 h-4 text-[#FA243C]" />
               <span className="font-bold text-white">{savedFolderName || 'Liked_Songs'}</span>
-              <span className="text-zinc-400 font-mono text-[11px]">({tracks.length} {t.songs})</span>
+              <span className="text-white/30">•</span>
+              <span className="text-zinc-300 font-mono text-[11px]">{tracks.length} {t.songs}</span>
+              <span className="text-white/30">•</span>
+              <span className="text-[#FF375F] font-bold text-[11px]">{t.importFolder}</span>
             </button>
             <span className="hidden lg:inline-flex items-center gap-2 text-[11px] text-zinc-400">
               <span className="font-mono">{totalHours > 0 ? `${totalHours}h ` : ''}{totalMins}m</span>
               <span>•</span>
               <span className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400">
                 <ShieldCheck className="w-2.5 h-2.5" />
-                LOSSLESS AUDIO
+                LOSSLESS ALAC
               </span>
             </span>
           </div>
         </div>
 
-        {/* Right: Desktop Actions */}
-        <div className="flex items-center gap-2.5 flex-shrink-0">
-          {/* Cupertino Search Pill */}
-          {activeTab !== 'search' && (
-            <button
-              onClick={() => {
-                setActiveTab('search');
-                setTimeout(() => document.getElementById('library-search-input')?.focus(), 50);
-              }}
-              className="flex items-center gap-3 px-3.5 py-1.5 rounded-full apple-glass-pill text-zinc-400 hover:text-white text-xs font-medium apple-spring cursor-pointer group"
-              title={t.quickSearch}
-            >
-              <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
-              <span>{t.quickSearch}</span>
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-zinc-400 font-mono">⌘K</kbd>
-            </button>
-          )}
+        {/* Right: Desktop Actions (Uniform w-10 h-10 rounded-2xl Controls) */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Cupertino Search Pill (Spotlight Command Palette) */}
+          <button
+            onClick={() => setSpotlightOpen(true)}
+            className="flex items-center gap-3 px-3.5 py-2 rounded-2xl apple-glass-pill text-white/70 hover:text-white text-xs font-medium apple-spring cursor-pointer group border border-white/10"
+            title={t.quickSearch}
+            aria-label="Spotlight search"
+          >
+            <Search className="w-3.5 h-3.5 text-white/50 group-hover:text-white transition-colors" />
+            <span>{t.quickSearch}</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/60 font-mono">⌘K</kbd>
+          </button>
 
           {/* Storage Quota Warning Badge */}
           {isQuotaWarning && (
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs font-bold transition-all animate-pulse cursor-pointer shadow-md"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs font-bold transition-all animate-pulse cursor-pointer shadow-md"
               title={`تحذير الذاكرة: تم استهلاك ${usagePercentage}% من المساحة التخزينية`}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
@@ -248,38 +259,26 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             </button>
           )}
 
-          {/* Import Folder Action */}
-          <button
-            onClick={onOpenImport}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold apple-spring shadow-lg shadow-[#FA243C]/25 cursor-pointer"
-            title={t.importFolder}
-          >
-            <FolderPlus className="w-4 h-4" />
-            <span>{t.importFolder}</span>
-          </button>
-
           {/* Sleep Timer */}
           <button
             onClick={() => setSleepTimerOpen(true)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 apple-spring cursor-pointer ${
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center apple-spring cursor-pointer relative ${
               sleepTimerRemaining !== null
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
+                ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
                 : 'apple-glass-pill text-zinc-300 hover:text-white'
             }`}
-            title={t.sleepTimer}
+            title={sleepTimerRemaining !== null ? `مؤقت النوم: ${formatTimerRemaining(sleepTimerRemaining)}` : t.sleepTimer}
           >
-            <Moon className="w-3.5 h-3.5" />
-            {sleepTimerRemaining !== null ? (
-              <span className="font-mono text-xs">{formatTimerRemaining(sleepTimerRemaining)}</span>
-            ) : (
-              <span className="hidden md:inline">{t.sleepTimer}</span>
+            <Moon className="w-4 h-4" />
+            {sleepTimerRemaining !== null && (
+              <span className="font-mono text-[8px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
             )}
           </button>
 
           {/* Equalizer */}
           <button
             onClick={() => setEqualizerOpen(true)}
-            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
+            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
             title={t.equalizer}
           >
             <Sliders className="w-4 h-4" />
@@ -288,8 +287,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* CarPlay / Car Mode Trigger */}
           <button
             onClick={() => setCarModeOpen(true)}
-            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-            title="وضع السيارة / CarPlay Mode"
+            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
+            title="وضع القيادة في السيارة / Apple CarPlay Mode"
           >
             <Car className="w-4 h-4 text-[#FA243C]" />
           </button>
@@ -297,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Settings Modal Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-8.5 h-8.5 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
+            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
             title={t.settings}
           >
             <Settings className="w-4 h-4" />
@@ -306,10 +305,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           {/* Profile Avatar Trigger */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-8.5 h-8.5 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer apple-spring"
+            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer apple-spring"
             title={t.profile}
           >
-            <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-black">
+            <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black">
               A
             </div>
           </button>

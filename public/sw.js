@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   '/favicon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/fonts/fonts.css',
   /* __BUILD_ASSETS__ */
 ];
 
@@ -53,21 +54,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Artwork images: cache-first (precache included), bounded to 500 entries
-  if (event.request.destination === 'image' || /\.(png|jpe?g|gif|webp)(\?|$)/i.test(url)) {
+  // Artwork images: Cache-first with stale-while-revalidate and cross-origin opaque support
+  if (event.request.destination === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) {
     event.respondWith(
       (async () => {
         const cached = await caches.match(event.request);
         if (cached) return cached;
         try {
           const resp = await fetch(event.request);
-          if (resp && resp.status === 200) {
+          if (resp && (resp.status === 200 || resp.type === 'opaque')) {
             const cache = await caches.open(IMAGE_CACHE_NAME);
-            await cache.put(event.request, resp.clone());
-            const keys = await cache.keys();
-            if (keys.length > 500) {
-              await cache.delete(keys[0]);
-            }
+            cache.put(event.request, resp.clone()).catch(() => {});
           }
           return resp;
         } catch {

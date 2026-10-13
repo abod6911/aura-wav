@@ -30,5 +30,8 @@ dist/songs
 public/stream-cache
 Liked_Songs
 scratch/
+*.png
+scripts/verify_*.mjs
+scripts/take_screenshots.mjs
+scripts/test_expanded_player.mjs
 
-.vercel
