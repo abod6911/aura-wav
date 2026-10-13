@@ -15,7 +15,7 @@ import {
   StorageManager,
   StorageStats,
 } from '../services/storageManager';
-import { resolvePlayableStream, clearResolvedStreamCache } from '../services/streamingEngine';
+import { resolvePlayableStream, resolvePlayableStreamInfo, clearResolvedStreamCache } from '../services/streamingEngine';
 import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
@@ -1064,35 +1064,37 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.cancelActiveTransitions(true);
       const state = get();
 
-      let playableTrack = track;
+      let playableTrack: Track = { ...track };
 
-      // Fast-path: If track already has an online stream or direct audioUrl, bypass slow offline DB queries!
-      // (Tracks saved for offline always prefer the local copy — works with no connection and saves data.)
-      const isSavedOffline = state.downloadedTrackIds.includes(track.id);
-      const hasDirectStream = !isSavedOffline && !!(playableTrack.audioUrl && (
-        playableTrack.audioUrl.startsWith('/api/stream') ||
-        playableTrack.audioUrl.startsWith('http') ||
-        playableTrack.audioUrl.startsWith('blob:')
-      ));
+      const isLocalHost = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.')
+      );
 
-      // 1. Check in-memory file/blob
-      // 2. Retrieve saved audio from OPFS or IndexedDB (works 100% offline!)
-      if (!hasDirectStream && !playableTrack.file && !playableTrack.blob) {
+      // 1. Check in-memory file/blob or stored audio in OPFS / Dexie / IDB
+      if (!playableTrack.file && !playableTrack.blob) {
         try {
-          let blob = await getAudioFileFromStorage(track.id);
-          if (!blob && track.trackNumber) {
-            blob = await getAudioFileFromStorage(`track_catalog_${track.trackNumber}`);
+          let blob = await getAudioFileFromStorage(playableTrack.id);
+          if (!blob && playableTrack.trackNumber) {
+            blob = await getAudioFileFromStorage(`track_catalog_${playableTrack.trackNumber}`);
           }
           if (blob) {
-            playableTrack = { ...track, blob };
+            playableTrack = {
+              ...playableTrack,
+              blob,
+              audioUrl: URL.createObjectURL(blob),
+              isPreview: false,
+              streamSource: 'local-blob',
+            };
           }
         } catch (err) {
           console.warn('Error retrieving audio blob from storage:', err);
         }
       }
 
-      // 3. If still no audio source, check if we have a saved FileSystemDirectoryHandle
-      if (!hasDirectStream && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl && playableTrack.fileName) {
+      // 2. Saved Directory Handle
+      if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl && playableTrack.fileName) {
         try {
           const db = await getDB();
           const dirHandle = await db.get('settings', 'savedDirectoryHandle');
@@ -1101,7 +1103,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             if (perm === 'granted') {
               const fileHandle = await dirHandle.getFileHandle(playableTrack.fileName);
               const file = await fileHandle.getFile();
-              playableTrack = { ...playableTrack, file };
+              playableTrack = {
+                ...playableTrack,
+                file,
+                blob: file,
+                audioUrl: URL.createObjectURL(file),
+                isPreview: false,
+                streamSource: 'local-blob',
+              };
             }
           }
         } catch (err) {
@@ -1109,30 +1118,58 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }
 
-      // 3.5 Check local catalog for direct /songs/ local audioUrl (only on localhost where local files exist)
-      const isLocalHost = typeof window !== 'undefined' && (
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname.startsWith('192.168.')
-      );
-
-      if (!hasDirectStream && isLocalHost && !playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
-        const catItem = resolveCatalogTrackItem(playableTrack.fileName, playableTrack.title, playableTrack.artist, playableTrack.trackNumber);
-        if (catItem && catItem.audioUrl) {
-          playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
+      // 3. Localhost path (only when on localhost where files are served)
+      if (!playableTrack.file && !playableTrack.blob) {
+        if (!isLocalHost) {
+          // On remote production hosts (Vercel), strip invalid /songs/ paths so it streams online
+          if (playableTrack.audioUrl && playableTrack.audioUrl.startsWith('/songs/')) {
+            playableTrack = { ...playableTrack, audioUrl: undefined };
+          }
+        } else if (!playableTrack.audioUrl) {
+          const catItem = resolveCatalogTrackItem(playableTrack.fileName, playableTrack.title, playableTrack.artist, playableTrack.trackNumber);
+          if (catItem && catItem.audioUrl) {
+            playableTrack = { ...playableTrack, audioUrl: catItem.audioUrl, fileName: catItem.fileName };
+          }
         }
       }
 
-      // 4. Ensure we have a valid playable stream (local blob, verified local path, or high-speed online stream)
+      // 4. Resolve playable stream via SoundCloud -> Archive.org -> iTunes Preview
+      let isPreviewNoticeNeeded = false;
       if (!playableTrack.file && !playableTrack.blob && (!playableTrack.audioUrl || playableTrack.audioUrl.startsWith('/api/stream'))) {
         try {
-          const resolvedStream = await resolvePlayableStream(playableTrack);
-          if (resolvedStream) {
-            playableTrack = { ...playableTrack, audioUrl: resolvedStream };
+          const streamInfo = await resolvePlayableStreamInfo(playableTrack);
+          if (streamInfo && streamInfo.url) {
+            playableTrack = {
+              ...playableTrack,
+              audioUrl: streamInfo.url,
+              duration: streamInfo.duration && streamInfo.duration > 30 ? streamInfo.duration : playableTrack.duration,
+              isPreview: streamInfo.isPreview,
+              streamSource: streamInfo.source,
+            };
+            if (streamInfo.isPreview) {
+              isPreviewNoticeNeeded = true;
+            }
           }
         } catch (streamErr) {
           console.warn('[Stream Resolver] Error resolving stream:', streamErr);
         }
+      }
+
+      // Detect if track is an iTunes preview (by flag or URL signature)
+      if (
+        playableTrack.isPreview ||
+        isPreviewNoticeNeeded ||
+        (playableTrack.audioUrl && (
+          playableTrack.audioUrl.includes('mzstatic.com') ||
+          playableTrack.audioUrl.includes('/AudioPreview')
+        ))
+      ) {
+        playableTrack.isPreview = true;
+        get().addToast(
+          '⚠️ جاري تشغيل عينة رسمية (30 ثانية) — اسحب ملف الأغنية للاستماع للنسخة الكاملة',
+          undefined,
+          'warning'
+        );
       }
 
       // If still completely unplayable, inform the user with an actionable toast
@@ -1169,10 +1206,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           // 1. Direct Apple Music / AAC stream fallback (instant, guaranteed playable anywhere)
           if (playableTrack.previewUrl) {
             console.log('[Audio Engine] Playing direct preview stream:', playableTrack.previewUrl);
-            const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl };
+            const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl, isPreview: true };
             const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
             if (fallbackSuccess) {
               set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+              get().addToast(
+                '⚠️ جاري تشغيل عينة رسمية (30 ثانية) — اسحب ملف الأغنية للاستماع للنسخة الكاملة',
+                undefined,
+                'warning'
+              );
               // Asynchronously resolve full-length stream and upgrade seamlessly at current position
               resolvePlayableStream({ ...playableTrack, audioUrl: undefined }).then((fullUrl) => {
                 if (fullUrl && fullUrl !== fallbackTrack.audioUrl && !fullUrl.includes('mzstatic.com') && !fullUrl.includes('AudioPreview')) {
@@ -1197,10 +1239,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
               const prevUrl = urlObj.searchParams.get('preview');
               if (prevUrl) {
                 console.log('[Audio Engine] Playing query preview stream:', prevUrl);
-                const fallbackTrack = { ...playableTrack, audioUrl: prevUrl };
+                const fallbackTrack = { ...playableTrack, audioUrl: prevUrl, isPreview: true };
                 const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
                 if (fallbackSuccess) {
                   set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+                  get().addToast(
+                    '⚠️ جاري تشغيل عينة رسمية (30 ثانية) — اسحب ملف الأغنية للاستماع للنسخة الكاملة',
+                    undefined,
+                    'warning'
+                  );
                   resolvePlayableStream({ ...playableTrack, audioUrl: undefined }).then((fullUrl) => {
                     if (fullUrl && fullUrl !== fallbackTrack.audioUrl && !fullUrl.includes('mzstatic.com') && !fullUrl.includes('AudioPreview')) {
                       console.log('[Audio Engine] Seamlessly upgrading query preview to full-length stream:', fullUrl);
@@ -1238,10 +1285,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }).catch(async (err) => {
         console.warn('Play track notice, trying direct stream fallback:', err);
         if (playableTrack.previewUrl) {
-          const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl };
+          const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl, isPreview: true };
           const fallbackSuccess = await djAudioEngine.playTrack(fallbackTrack);
           if (fallbackSuccess) {
             set({ isPlaying: true, playbackState: 'playing', currentTrack: fallbackTrack });
+            get().addToast(
+              '⚠️ جاري تشغيل عينة رسمية (30 ثانية) — اسحب ملف الأغنية للاستماع للنسخة الكاملة',
+              undefined,
+              'warning'
+            );
             return;
           }
         }

@@ -860,15 +860,21 @@ export class DJAudioEngineFacade {
       }
     } catch {}
 
-    // 4. Local songs folder path (when online / localhost)
-    if (track.audioUrl && track.audioUrl.startsWith('/songs/')) {
+    const isLocalHost = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.')
+    );
+
+    // 4. Local songs folder path (ONLY on localhost where files are mounted)
+    if (isLocalHost && track.audioUrl && track.audioUrl.startsWith('/songs/')) {
       return track.audioUrl;
     }
 
     // 5. Online stream resolver
     const stream = await resolvePlayableStream(track);
     if (stream) return stream;
-    if (track.audioUrl) return track.audioUrl;
+    if (track.audioUrl && !track.audioUrl.startsWith('/songs/')) return track.audioUrl;
     return '';
   }
 }

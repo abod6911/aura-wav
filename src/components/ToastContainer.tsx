@@ -8,16 +8,16 @@ export const ToastContainer: React.FC = () => {
   const removeToast = usePlayerStore((state) => state.removeToast);
 
   return (
-    <div className="fixed bottom-24 md:bottom-28 right-4 md:right-8 z-50 flex flex-col gap-2 pointer-events-none select-none max-w-sm w-full">
+    <div className="fixed top-[calc(env(safe-area-inset-top,0px)+12px)] inset-x-4 max-w-sm mx-auto md:top-auto md:bottom-28 md:right-8 md:left-auto md:mx-0 z-[105] flex flex-col gap-2 pointer-events-none select-none w-full">
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div
             key={t.id}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: -16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#14141e]/90 backdrop-blur-2xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.6)] text-white text-xs font-semibold"
+            className="pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#14141e]/95 backdrop-blur-2xl border border-white/[0.12] shadow-[0_12px_32px_rgba(0,0,0,0.6)] text-white text-xs font-semibold"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               {t.type === 'success' ? (

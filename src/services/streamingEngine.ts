@@ -197,7 +197,14 @@ class BoundedMap<K, V> extends Map<K, V> {
     return super.set(key, value);
   }
 }
-const resolvedStreamCache = new BoundedMap<string, string>();
+export interface ResolvedStreamInfo {
+  url: string;
+  duration?: number;
+  source: 'local-blob' | 'local-server' | 'soundcloud-cdn' | 'archive-org' | 'itunes-preview' | 'external';
+  isPreview: boolean;
+}
+
+const resolvedStreamCache = new BoundedMap<string, ResolvedStreamInfo>();
 
 /**
  * Invalidate cached stream URL for track if a stream fails or retry is requested.
@@ -209,73 +216,93 @@ export function clearResolvedStreamCache(track: Partial<Track>): void {
 }
 
 /**
- * Resolves a high-bitrate playable audio stream URL for any track.
- * Strictly guarantees full-length track playback (never 30-second previews).
+ * Resolves full playable stream info for any track according to the playback chain:
+ * 1. Local file (blob / OPFS)
+ * 2. SoundCloud CDN
+ * 3. Archive.org
+ * 4. iTunes Official 30s Preview
  */
-export async function resolvePlayableStream(track: Track): Promise<string | null> {
+export async function resolvePlayableStreamInfo(track: Track): Promise<ResolvedStreamInfo | null> {
   if (!track) return null;
 
   // 1. Direct blob in track object
   if (track.blob) {
     try {
-      return URL.createObjectURL(track.blob);
-    } catch (err) { console.warn('[resolvePlayableStream] Blob error:', err); }
+      return {
+        url: URL.createObjectURL(track.blob),
+        duration: track.duration,
+        source: 'local-blob',
+        isPreview: false,
+      };
+    } catch (err) {
+      console.warn('[resolvePlayableStream] Blob error:', err);
+    }
   }
 
-  const cacheKey = `${track.title}:::${track.artist}`.toLowerCase().trim();
+  const cacheKey = `${track.title}:::${track.artist || ''}`.toLowerCase().trim();
   if (resolvedStreamCache.has(cacheKey)) {
     return resolvedStreamCache.get(cacheKey)!;
   }
 
-  // 2. Direct local /songs/ path
-  if (track.audioUrl && track.audioUrl.startsWith('/songs/')) {
+  const isLocalHost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  );
+
+  // 2. Local /songs/ path ONLY on localhost (production Vercel does not host static songs)
+  if (isLocalHost && track.audioUrl && track.audioUrl.startsWith('/songs/')) {
     try {
       const decoded = decodeURIComponent(track.audioUrl);
-      return encodeURI(decoded);
+      const info: ResolvedStreamInfo = {
+        url: encodeURI(decoded),
+        duration: track.duration,
+        source: 'local-server',
+        isPreview: false,
+      };
+      resolvedStreamCache.set(cacheKey, info);
+      return info;
     } catch (err) {
       console.warn('[resolvePlayableStream] Decode error:', err);
-      return track.audioUrl;
     }
   }
 
-  // 3. /api/stream endpoint (our full-length backend streamer)
-  if (track.audioUrl && track.audioUrl.startsWith('/api/stream')) {
-    try {
-      const sep = track.audioUrl.includes('?') ? '&' : '?';
-      const jsonUrl = `${track.audioUrl}${sep}format=json`;
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(jsonUrl, { signal: controller.signal });
-      clearTimeout(timer);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.url) {
-          if (data.duration && data.duration > 30) {
-            track.duration = data.duration;
-          }
-          resolvedStreamCache.set(cacheKey, data.url);
-          return data.url;
-        }
-      }
-    } catch (err) { console.warn('[resolvePlayableStream] stream endpoint error:', err); }
-    return track.audioUrl;
+  // 3. Check if track matches catalog item (on localhost only)
+  if (isLocalHost) {
+    const catItem = resolveCatalogTrackItem(track.fileName, track.title, track.artist, track.trackNumber);
+    if (catItem && catItem.audioUrl) {
+      const info: ResolvedStreamInfo = {
+        url: catItem.audioUrl,
+        duration: catItem.durationSecs || track.duration,
+        source: 'local-server',
+        isPreview: false,
+      };
+      resolvedStreamCache.set(cacheKey, info);
+      return info;
+    }
   }
 
-  // 4. Check if track matches catalog item
-  const catItem = resolveCatalogTrackItem(track.fileName, track.title, track.artist, track.trackNumber);
-  if (catItem && catItem.audioUrl) {
-    resolvedStreamCache.set(cacheKey, catItem.audioUrl);
-    return catItem.audioUrl;
-  }
-
-  // 5. If track has an iTunes 30s preview URL (e.g. mzstatic.com / AudioPreview):
-  // DO NOT return the 30-second preview! Re-route through full stream endpoint
-  const isItunesPreview = track.audioUrl && (
-    track.audioUrl.includes('mzstatic.com') ||
-    track.audioUrl.includes('itunes.apple.com') ||
-    track.audioUrl.includes('/AudioPreview')
+  // 4. Direct HTTP/HTTPS audio URL that is already a full external stream
+  const isItunesPreview = !!(
+    (track.audioUrl && (
+      track.audioUrl.includes('mzstatic.com') ||
+      track.audioUrl.includes('itunes.apple.com') ||
+      track.audioUrl.includes('/AudioPreview')
+    )) ||
+    track.isPreview
   );
 
+  if (track.audioUrl && track.audioUrl.startsWith('http') && !isItunesPreview && !track.audioUrl.includes('/api/stream')) {
+    const info: ResolvedStreamInfo = {
+      url: track.audioUrl,
+      duration: track.duration,
+      source: 'external',
+      isPreview: false,
+    };
+    return info;
+  }
+
+  // 5. Query /api/stream with clean artist and title
   const cleanTitle = (track.title || '')
     .replace(/^\d+\s*[-_.]\s*/, '')
     .replace(/\(.*?\)/g, '')
@@ -291,47 +318,54 @@ export async function resolvePlayableStream(track: Track): Promise<string | null
     .trim();
 
   const fullStreamQuery = `${cleanArtist} ${cleanTitle}`.trim();
+  const previewParam = track.previewUrl || (isItunesPreview ? track.audioUrl : '') || '';
 
-  if (isItunesPreview) {
-    const fullStreamUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}&preview=${encodeURIComponent(track.audioUrl || '')}`;
-    try {
-      const res = await fetch(`${fullStreamUrl}&format=json`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.url) {
-          if (data.duration && data.duration > 30) {
-            track.duration = data.duration;
-          }
-          resolvedStreamCache.set(cacheKey, data.url);
-          return data.url;
-        }
-      }
-    } catch (err) { console.warn('[resolvePlayableStream] iTunes preview full stream error:', err); }
-    resolvedStreamCache.set(cacheKey, fullStreamUrl);
-    return fullStreamUrl;
-  }
+  const apiUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}&preview=${encodeURIComponent(previewParam || '')}&format=json`;
 
-  // 6. Direct HTTP/HTTPS audio URL that is NOT a preview
-  if (track.audioUrl && track.audioUrl.startsWith('http') && !isItunesPreview) {
-    return track.audioUrl;
-  }
-
-  // 7. Fallback to full stream endpoint for any track
-  const fallbackUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}`;
   try {
-    const res = await fetch(`${fallbackUrl}&format=json`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(apiUrl, { signal: controller.signal });
+    clearTimeout(timer);
+
     if (res.ok) {
       const data = await res.json();
       if (data.success && data.url) {
-        if (data.duration && data.duration > 30) {
-          track.duration = data.duration;
+        const info: ResolvedStreamInfo = {
+          url: data.url,
+          duration: data.duration || track.duration,
+          source: (data.source as any) || (data.isPreview ? 'itunes-preview' : 'soundcloud-cdn'),
+          isPreview: !!data.isPreview,
+        };
+        if (info.duration && info.duration > 30) {
+          track.duration = info.duration;
         }
-        resolvedStreamCache.set(cacheKey, data.url);
-        return data.url;
+        track.isPreview = info.isPreview;
+        resolvedStreamCache.set(cacheKey, info);
+        return info;
       }
     }
-  } catch (err) { console.warn('[resolvePlayableStream] fallback full stream error:', err); }
-  resolvedStreamCache.set(cacheKey, fallbackUrl);
-  return fallbackUrl;
+  } catch (err) {
+    console.warn('[resolvePlayableStream] API stream resolution error:', err);
+  }
+
+  // 6. Direct 307 redirect fallback
+  const redirectFallbackUrl = `/api/stream?query=${encodeURIComponent(fullStreamQuery)}&preview=${encodeURIComponent(previewParam || '')}`;
+  const fallbackInfo: ResolvedStreamInfo = {
+    url: redirectFallbackUrl,
+    duration: track.duration,
+    source: isItunesPreview ? 'itunes-preview' : 'soundcloud-cdn',
+    isPreview: isItunesPreview,
+  };
+  resolvedStreamCache.set(cacheKey, fallbackInfo);
+  return fallbackInfo;
+}
+
+/**
+ * Resolves a high-bitrate playable audio stream URL for any track.
+ */
+export async function resolvePlayableStream(track: Track): Promise<string | null> {
+  const info = await resolvePlayableStreamInfo(track);
+  return info ? info.url : null;
 }
 

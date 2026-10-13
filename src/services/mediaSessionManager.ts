@@ -63,7 +63,7 @@ export class MediaSessionManager {
       return;
     }
 
-    const cover = track.coverUrl || '/icons/default_album_art.png';
+    const cover = track.coverUrl || '/icons/icon-512.png';
 
     // Multi-scale icons for Wearables, Smart Displays & Lock Screens
     const artwork: MediaImage[] = [

@@ -33,6 +33,8 @@ export interface Track {
   key?: string; // Camelot standard (e.g. '8A', '8B')
   lufs?: number; // Integrated loudness (e.g. -14.0)
   gain?: number; // ReplayGain track gain in dB (e.g. -2.5)
+  isPreview?: boolean;
+  streamSource?: string;
 }
 
 export interface Playlist {
