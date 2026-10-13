@@ -80,7 +80,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       style={{
         boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 1px rgba(255,255,255,0.2)`,
       }}
-      className="md:hidden fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] inset-x-3 sm:inset-x-4 max-w-md mx-auto z-30 apple-glass-dock rounded-[28px] p-2 sm:p-2.5 flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform transform-gpu border border-white/[0.14]"
+      className="md:hidden fixed bottom-[calc(88px+env(safe-area-inset-bottom,0px))] inset-x-3 sm:inset-x-4 max-w-md mx-auto z-30 apple-glass-dock rounded-[28px] p-2 sm:p-2.5 flex items-center gap-3 select-none overflow-hidden touch-pan-y cursor-pointer active:scale-[0.99] transition-transform transform-gpu border border-white/[0.14]"
       dir={dir}
     >
       {/* Top Hairline Progress Line with Dynamic Glowing Color */}

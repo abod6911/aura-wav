@@ -230,58 +230,61 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.14) 0%, transparent 70%)' }}
           />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-3.5 sm:gap-6 md:gap-8">
-            {/* Mosaic 4-Art Cover */}
-            <div className="w-24 h-24 sm:w-36 sm:h-36 md:w-52 md:h-52 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.8)] border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
-              {heroCovers.map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt={`Cover ${i + 1}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/logo.svg';
-                  }}
-                />
-              ))}
-            </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-stretch md:items-end gap-3.5 sm:gap-6 md:gap-8">
+            {/* Top row on mobile: Cover + Info side-by-side */}
+            <div className="flex items-center md:items-end gap-3.5 sm:gap-6 md:gap-8 flex-1 min-w-0">
+              {/* Mosaic 4-Art Cover */}
+              <div className="w-20 h-20 sm:w-36 sm:h-36 md:w-52 md:h-52 rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.8)] border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
+                {heroCovers.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Cover ${i + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/logo.svg';
+                    }}
+                  />
+                ))}
+              </div>
 
-            {/* Playlist Editorial Metadata */}
-            <div className="flex-1 text-center md:text-right space-y-1.5 sm:space-y-3 min-w-0">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 sm:gap-2">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] border border-white/[0.1] text-zinc-300 text-[10px] sm:text-xs font-semibold">
-                  <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FA243C]" />
-                  <span>المجلد: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
+              {/* Playlist Editorial Metadata */}
+              <div className="flex-1 text-start space-y-1 sm:space-y-3 min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] border border-white/[0.1] text-zinc-300 text-[10px] sm:text-xs font-semibold">
+                    <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FA243C]" />
+                    <span>المجلد: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
+                  </div>
+
+                  <button
+                    onClick={onOpenImport}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" />
+                    <span>تغيير</span>
+                  </button>
                 </div>
 
-                <button
-                  onClick={onOpenImport}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white text-[10px] sm:text-xs font-semibold transition-all active:scale-95 cursor-pointer"
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  <span>تغيير المجلد</span>
-                </button>
-              </div>
+                <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-md truncate">
+                  مكتبتي الموسيقية
+                </h1>
 
-              <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
-                مكتبتي الموسيقية
-              </h1>
+                <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed max-w-2xl hidden sm:block">
+                  مجموعتك الخاصة كاملة مع أغلفة الألبومات الأصلية عالية الدقة والكلمات المتزامنة، مع تقنية الدمج الاحترافي True DJ AutoMix دون أي انقطاع.
+                </p>
 
-              <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed max-w-2xl hidden sm:block">
-                مجموعتك الخاصة كاملة مع أغلفة الألبومات الأصلية عالية الدقة والكلمات المتزامنة، مع تقنية الدمج الاحترافي True DJ AutoMix دون أي انقطاع.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-zinc-400 pt-0.5">
-                <span className="text-white font-bold">{tracks.length} مسار</span>
-                <span>•</span>
-                <span>{formattedTotalTime}</span>
-                <span>•</span>
-                <span className="text-emerald-400 font-bold">Studio Master Hi-Fi</span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-zinc-400 pt-0.5">
+                  <span className="text-white font-bold">{tracks.length} مسار</span>
+                  <span>•</span>
+                  <span>{formattedTotalTime}</span>
+                  <span className="hidden xs:inline">•</span>
+                  <span className="text-emerald-400 font-bold hidden xs:inline">Studio Master Hi-Fi</span>
+                </div>
               </div>
             </div>
 
-            {/* Play & Shuffle Big Action Controls */}
-            <div className="flex items-center justify-center md:justify-start gap-2.5 sm:gap-3 flex-shrink-0 w-full md:w-auto pt-1 sm:pt-0">
+            {/* Play & Shuffle Action Controls */}
+            <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0 w-full md:w-auto pt-1 sm:pt-0">
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}

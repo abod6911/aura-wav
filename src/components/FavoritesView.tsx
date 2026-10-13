@@ -112,7 +112,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
           style={{ background: 'radial-gradient(circle, rgba(250,36,60,0.18) 0%, transparent 70%)' }}
         />
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-center sm:text-start">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-end gap-3.5 sm:gap-6 text-start">
           {/* Heart Art Tile */}
           <div className="w-20 h-20 sm:w-40 sm:h-40 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#FA243C] via-[#FF375F] to-[#E00028] flex items-center justify-center flex-shrink-0 shadow-[0_12px_40px_rgba(250,36,60,0.4)] border border-white/20">
             <Heart className="w-10 h-10 sm:w-20 sm:h-20 fill-white text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] animate-pulse" />
@@ -126,7 +126,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
             <h1 className="text-xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
               {isRTL ? 'أغانيك المفضلة' : 'Liked Songs'}
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-300 mt-1 sm:mt-2 font-medium flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <p className="text-xs sm:text-sm text-zinc-300 mt-1 sm:mt-2 font-medium flex items-center justify-start gap-2 flex-wrap">
               <span>{favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'}</span>
               <span>•</span>
               <span className="text-zinc-400">{formattedTotalDuration}</span>
@@ -135,7 +135,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
             </p>
 
             {/* Quick Actions */}
-            <div className="flex items-center justify-center sm:justify-start gap-2.5 sm:gap-3 mt-3.5 sm:mt-5 flex-wrap">
+            <div className="flex items-center justify-start gap-2.5 sm:gap-3 mt-3.5 sm:mt-5 flex-wrap">
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={handlePlayAll}

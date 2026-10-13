@@ -72,7 +72,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             </button>
             <div className="flex flex-col min-w-0">
               <span className="font-black text-white text-base tracking-tight leading-none flex items-center gap-1.5 truncate">
-                AURA<span className="text-[#FA243C]">.WAV</span>
+                <bdi dir="ltr" className="inline-flex items-center">
+                  AURA<span className="text-[#FA243C]">.WAV</span>
+                </bdi>
                 <span className="apple-badge text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C]">ALAC</span>
               </span>
               <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
@@ -82,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
@@ -93,24 +95,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
                 <span>{usagePercentage}%</span>
               </button>
             )}
-            {/* Spotlight Search Mobile Button */}
-            <button
-              onClick={() => setSpotlightOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full apple-glass-pill text-white/80 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-              title={t.search}
-              aria-label="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
 
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer min-h-[36px]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer min-h-[36px]"
               title={t.importFolder}
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span className="text-[11px] hidden xs:inline">{t.importMusic}</span>
+              <span className="text-[11px] font-bold hidden xs:inline">{t.importMusic}</span>
             </button>
 
             {/* Sleep Timer */}
@@ -129,62 +122,56 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
               )}
             </button>
 
-            {/* CarPlay / Car Mode Trigger */}
-            <button
-              onClick={() => setCarModeOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
-              title="وضع السيارة / CarPlay Mode"
-            >
-              <Car className="w-4 h-4 text-[#FA243C]" />
-            </button>
-
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
               className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
               title={t.settings}
+              aria-label={t.settings}
             >
               <Settings className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-0.5">
-          <button
-            onClick={() => setActiveFilterPill('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
-              activeFilterPill === 'all'
-                ? 'bg-white text-black shadow-md'
-                : 'apple-glass-pill text-zinc-300'
-            }`}
-          >
-            {t.all}
-          </button>
-          <button
-            onClick={() => setActiveFilterPill('music')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
-              activeFilterPill === 'music'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
-                : 'apple-glass-pill text-zinc-300'
-            }`}
-          >
-            {t.music}
-          </button>
-          <button
-            onClick={() => {
-              setActiveFilterPill('podcasts');
-              addToast(isRTL ? 'قسم البودكاست قيد التطوير' : 'Podcasts section coming soon', undefined, 'info');
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
-              activeFilterPill === 'podcasts'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
-                : 'apple-glass-pill text-zinc-300'
-            }`}
-          >
-            {t.podcasts}
-          </button>
-        </div>
+        {/* Mobile Filter Pills - only on Home feed */}
+        {activeTab === 'home' && (
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-0.5">
+            <button
+              onClick={() => setActiveFilterPill('all')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
+                activeFilterPill === 'all'
+                  ? 'bg-white text-black shadow-md'
+                  : 'apple-glass-pill text-zinc-300'
+              }`}
+            >
+              {t.all}
+            </button>
+            <button
+              onClick={() => setActiveFilterPill('music')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
+                activeFilterPill === 'music'
+                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                  : 'apple-glass-pill text-zinc-300'
+              }`}
+            >
+              {t.music}
+            </button>
+            <button
+              onClick={() => {
+                setActiveFilterPill('podcasts');
+                addToast(isRTL ? 'قسم البودكاست قيد التطوير' : 'Podcasts section coming soon', undefined, 'info');
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold apple-spring cursor-pointer ${
+                activeFilterPill === 'podcasts'
+                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                  : 'apple-glass-pill text-zinc-300'
+              }`}
+            >
+              {t.podcasts}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Desktop Header Bar */}

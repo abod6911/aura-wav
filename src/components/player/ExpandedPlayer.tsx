@@ -349,7 +349,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   transformStyle: 'preserve-3d',
                   boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`,
                 }}
-                className="group relative w-56 h-56 xs:w-64 xs:h-64 sm:w-72 sm:h-72 lg:w-full lg:max-w-[390px] aspect-square rounded-[28px] overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] mx-auto"
+                className="group relative w-56 h-56 xs:w-64 xs:h-64 sm:w-72 sm:h-72 max-h-[36vh] lg:w-full lg:max-w-[390px] aspect-square rounded-[28px] overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] mx-auto"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setChangeArtworkModal(true, currentTrack);
@@ -967,7 +967,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         {/* 5. Mobile Only Tab Dock Indicator */}
         <div className="lg:hidden flex items-center justify-around pt-2 pb-1 border-t border-white/[0.08] text-xs font-bold flex-shrink-0 select-none">
           <button
-            onClick={() => setActiveTab(activeTab === 'player' ? 'lyrics' : 'player')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('player');
+            }}
             className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'player'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
@@ -979,7 +982,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </button>
 
           <button
-            onClick={() => setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('lyrics');
+            }}
             className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'lyrics'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
@@ -991,7 +997,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </button>
 
           <button
-            onClick={() => setActiveTab(activeTab === 'studio' ? 'player' : 'studio')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('studio');
+            }}
             className={`flex items-center gap-1.5 h-10 px-3.5 rounded-full transition-all cursor-pointer ${
               activeTab === 'studio'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
@@ -1003,7 +1012,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </button>
 
           <button
-            onClick={() => setActiveTab(activeTab === 'up_next' ? 'player' : 'up_next')}
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab('up_next');
+            }}
             className={`flex items-center gap-2 h-10 px-4 rounded-full transition-all cursor-pointer ${
               activeTab === 'up_next'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md'
