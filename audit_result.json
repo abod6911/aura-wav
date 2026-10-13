@@ -1,0 +1,165 @@
+{
+  "consoleLogs": [
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x72ec001cdc00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "https://aura-wav.vercel.app/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "log",
+      "text": "AURA.WAV PWA Service Worker Registered",
+      "location": {
+        "url": "https://aura-wav.vercel.app/assets/index-D0Br8eMK.js",
+        "line": 65,
+        "column": 20415,
+        "lineNumber": 65,
+        "columnNumber": 20415
+      }
+    },
+    {
+      "type": "log",
+      "text": "AURA.WAV PWA Service Worker Registered",
+      "location": {
+        "url": "https://aura-wav.vercel.app/assets/index-D0Br8eMK.js",
+        "line": 65,
+        "column": 20415,
+        "lineNumber": 65,
+        "columnNumber": 20415
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x72ec00a14000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "https://aura-wav.vercel.app/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x72ec00a14000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "https://aura-wav.vercel.app/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x72ec00a14000]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "location": {
+        "url": "https://aura-wav.vercel.app/",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[DJAudioEngine] Playback error: NotSupportedError: Failed to load because no supported source was found.",
+      "location": {
+        "url": "https://aura-wav.vercel.app/assets/usePlayerStore-DQ9KTQPA.js",
+        "line": 0,
+        "column": 45251,
+        "lineNumber": 0,
+        "columnNumber": 45251
+      }
+    },
+    {
+      "type": "warning",
+      "text": "[Audio Engine] Primary stream failed, attempting resilient direct stream fallback...",
+      "location": {
+        "url": "https://aura-wav.vercel.app/assets/usePlayerStore-DQ9KTQPA.js",
+        "line": 0,
+        "column": 74321,
+        "lineNumber": 0,
+        "columnNumber": 74321
+      }
+    },
+    {
+      "type": "mobile-log",
+      "text": "AURA.WAV PWA Service Worker Registered"
+    },
+    {
+      "type": "mobile-log",
+      "text": "AURA.WAV PWA Service Worker Registered"
+    },
+    {
+      "type": "mobile-warning",
+      "text": "[DJAudioEngine] Playback error: NotSupportedError: Failed to load because no supported source was found."
+    },
+    {
+      "type": "mobile-warning",
+      "text": "[Audio Engine] Primary stream failed, attempting resilient direct stream fallback..."
+    }
+  ],
+  "networkErrors": [],
+  "desktopChecks": {
+    "status": 200,
+    "metaViewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+    "htmlDir": "rtl",
+    "htmlLang": "ar",
+    "manifestHref": "/manifest.json",
+    "hadSplash": true,
+    "navButtons": [
+      {
+        "text": "استمع الآن",
+        "ariaLabel": null
+      },
+      {
+        "text": "بحث",
+        "ariaLabel": null
+      },
+      {
+        "text": "",
+        "ariaLabel": null
+      },
+      {
+        "text": "المفضلة\n\n261 أغنية",
+        "ariaLabel": null
+      },
+      {
+        "text": "مكتبتك\n\n1750 أغنية",
+        "ariaLabel": null
+      },
+      {
+        "text": "المعادل الصوتي",
+        "ariaLabel": null
+      },
+      {
+        "text": "الإعدادات",
+        "ariaLabel": null
+      },
+      {
+        "text": "استمع الآن",
+        "ariaLabel": null
+      },
+      {
+        "text": "بحث",
+        "ariaLabel": null
+      },
+      {
+        "text": "مكتبتك",
+        "ariaLabel": null
+      },
+      {
+        "text": "المفضلة",
+        "ariaLabel": null
+      }
+    ],
+    "trackClicked": true
+  },
+  "mobileChecks": {}
+}
