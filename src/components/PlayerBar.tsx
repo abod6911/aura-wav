@@ -95,13 +95,13 @@ export const PlayerBar: React.FC = () => {
         style={{
           boxShadow: `0 24px 64px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
         }}
-        className="hidden md:grid grid-cols-[240px_1fr_260px] lg:grid-cols-[280px_1fr_290px] fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-5 sm:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock overflow-hidden"
+        className="hidden md:grid grid-cols-[200px_1fr_220px] lg:grid-cols-[250px_1fr_260px] xl:grid-cols-[280px_1fr_290px] fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 lg:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-4 sm:px-6 lg:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock overflow-hidden"
       >
         {/* 1. Track Info (Start Column) */}
-        <div className="flex items-center gap-3.5 min-w-0 w-full justify-self-start pr-1">
+        <div className="flex items-center gap-3 min-w-0 w-full justify-self-start pr-1">
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className={`relative w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-xl shrink-0 group cursor-pointer transition-transform ${
+            className={`relative w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] aspect-square rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-xl shrink-0 group cursor-pointer transition-transform ${
               isPlaying ? 'ring-2 ring-[#FA243C]/50 shadow-[#FA243C]/30' : ''
             }`}
           >
@@ -174,7 +174,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={() => setShowWaveformScrubber(!showWaveformScrubber)}
               title={showWaveformScrubber ? 'العودة للشريط الكلاسيكي' : 'عرض الموجة الصوتية التفاعلية'}
-              className={`p-1.5 rounded-xl apple-spring cursor-pointer ${
+              className={`hidden lg:inline-flex p-1.5 rounded-xl apple-spring cursor-pointer ${
                 showWaveformScrubber ? 'text-[#FA243C] bg-white/[0.1] border border-white/10' : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -297,7 +297,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => setShowDspHud(!showDspHud)}
             title="AURA Pro DSP & DJ Live HUD"
-            className={`p-1.5 sm:p-2 rounded-xl apple-spring cursor-pointer transition-all ${
+            className={`hidden xl:inline-flex p-1.5 sm:p-2 rounded-xl apple-spring cursor-pointer transition-all ${
               showDspHud
                 ? 'bg-gradient-to-r from-red-500/30 to-purple-500/30 text-white border border-white/20 shadow-md shadow-purple-500/20'
                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
@@ -310,7 +310,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={() => setIsAudioSettingsOpen(true)}
             title={t.equalizer}
-            className="p-1.5 sm:p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
+            className="hidden lg:inline-flex p-1.5 sm:p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
           >
             <Sliders className="w-4 h-4" />
           </button>
