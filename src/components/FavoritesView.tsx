@@ -181,11 +181,14 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
           <div className="relative flex-1 max-w-md">
             <Search className={`w-4 h-4 text-zinc-400 absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-3.5' : 'left-3.5'}`} />
             <input
-              type="text"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isRTL ? 'ابحث داخل أغانيك المفضلة...' : 'Search within favorites...'}
-              className={`w-full py-2.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-all ${
+              style={{ fontSize: '16px' }}
+              className={`w-full py-2.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-all [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
                 isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'
               }`}
             />

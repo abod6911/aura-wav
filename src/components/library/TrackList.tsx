@@ -379,11 +379,14 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           <Search className="w-4 h-4 text-zinc-500 absolute right-3.5 top-3.5" />
           <input
             id="library-search-input"
-            type="text"
-            placeholder="ابحث برقم المسار، العنوان، الفنان، أو الألبوم... (اضغط / للبحث)"
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
+            placeholder={isRTL ? 'ابحث في مكتبتك (مسار، فنان، ألبوم)...' : 'Search tracks, artists, albums...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-2xl py-2.5 pr-10 pl-10 text-sm text-white placeholder-zinc-500 focus:outline-none transition-all"
+            style={{ fontSize: '16px' }}
+            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-2xl py-2.5 pr-10 pl-10 text-white placeholder-zinc-500 focus:outline-none transition-all [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
           />
           {searchQuery && (
             <button
