@@ -94,22 +94,21 @@ export const InfiniteSearchView: React.FC = () => {
 
   return (
     <div className="w-full text-white pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24 px-3 sm:px-6 md:px-8 pt-4 select-none" dir={dir}>
-      {/* Search Input Bar */}
-      <div className="relative max-w-2xl mx-auto mb-5">
-        <div className="relative flex items-center bg-white/[0.06] hover:bg-white/[0.1] focus-within:bg-white/[0.12] focus-within:ring-2 focus-within:ring-[#FA243C]/50 rounded-full transition-all shadow-xl border border-white/[0.1] px-4 py-1.5">
-          <Search className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+      {/* Search Input Bar - Ergonomic iOS 18 Design */}
+      <div className="relative max-w-xl mx-auto mb-4 sm:mb-6">
+        <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 py-1 sm:py-1.5 h-11 sm:h-12">
+          <Search className="w-4.5 h-4.5 text-zinc-400 flex-shrink-0" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={isRTL ? 'ابحث عن أي أغنية، فنان، ألبوم أو نوع موسيقي (تشغيل كامل)...' : 'Search any song, artist, album (Full Length)...'}
-            className="w-full py-2.5 px-3 bg-transparent text-sm sm:text-base font-medium text-white placeholder-zinc-400 focus:outline-none"
-            autoFocus
+            placeholder={isRTL ? 'ابحث عن أغانٍ، فنانين أو ألبومات...' : 'Search songs, artists, albums...'}
+            className="w-full h-full px-2.5 sm:px-3 bg-transparent text-xs sm:text-sm font-medium text-white placeholder-zinc-400 focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full"
               aria-label={t.clearSearch}
             >
               <X className="w-4 h-4" />
@@ -140,13 +139,13 @@ export const InfiniteSearchView: React.FC = () => {
       {/* State 1: Empty Search -> Browse Genres */}
       {!query.trim() && (
         <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-black text-white">
+          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-2xl font-black text-white">
               {isRTL ? 'استكشف الأنواع والموسيقى' : 'Browse Categories & Genres'}
             </h2>
-            <span className="text-xs text-[#FA243C] font-bold flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              {isRTL ? 'تشغيل كامل بدون حدود 30 ثانية' : '100% Full Length Audio'}
+            <span className="text-[11px] sm:text-xs text-[#FA243C] font-bold flex items-center gap-1 self-start xs:self-auto">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>{isRTL ? 'تشغيل كامل بدون حدود 30 ثانية' : '100% Full Length Audio'}</span>
             </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
@@ -241,37 +240,37 @@ export const InfiniteSearchView: React.FC = () => {
               </h3>
               <div
                 onClick={() => handlePlaySong(results.topResult!)}
-                className="p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
+                className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group min-w-0"
               >
-                <div className="flex items-center gap-4 min-w-0">
-                    <div className="relative flex-shrink-0">
-                      <OptimizedImage
-                        src={results.topResult.coverUrl || results.topResult.artworkUrl}
-                        alt={results.topResult.title}
-                        size="card"
-                        containerClassName="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-2xl"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Play className="w-8 h-8 text-white fill-current translate-x-0.5" />
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                  <div className="relative flex-shrink-0">
+                    <OptimizedImage
+                      src={results.topResult.coverUrl || results.topResult.artworkUrl}
+                      alt={results.topResult.title}
+                      size="card"
+                      containerClassName="w-14 h-14 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl shadow-xl flex-shrink-0"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Play className="w-6 h-6 text-white fill-current translate-x-0.5" />
                     </div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 flex items-center gap-1 shrink-0">
+                        <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         {results.topResult.source === 'local'
-                          ? (isRTL ? 'استوديو كامل • HQ' : 'Studio Master • HQ')
+                          ? (isRTL ? 'استوديو • HQ' : 'Studio Master • HQ')
                           : (isRTL ? 'مسار كامل • HD' : 'Full Track • HD')}
                       </span>
                     </div>
-                    <h2 className="text-lg sm:text-2xl font-black text-white truncate group-hover:text-[#FA243C] transition-colors">
+                    <h2 className="text-sm sm:text-xl font-black text-white truncate group-hover:text-[#FA243C] transition-colors leading-tight">
                       {results.topResult.title}
                     </h2>
-                    <p className="text-sm text-zinc-300 font-medium truncate mt-0.5">
-                      {results.topResult.artist} • {results.topResult.album}
+                    <p className="text-xs sm:text-sm text-zinc-300 font-medium truncate mt-0.5">
+                      {results.topResult.artist} {results.topResult.album ? `• ${results.topResult.album}` : ''}
                     </p>
-                    <span className="text-xs text-zinc-400 font-mono mt-1 inline-block">
+                    <span className="text-[10px] sm:text-xs text-zinc-400 font-mono mt-0.5 inline-block">
                       {formatDuration(results.topResult.duration)}
                     </span>
                   </div>
@@ -282,14 +281,15 @@ export const InfiniteSearchView: React.FC = () => {
                     e.stopPropagation();
                     handlePlaySong(results.topResult!);
                   }}
-                  className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-all self-end sm:self-auto cursor-pointer"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                  aria-label="Play song"
                 >
                   {currentTrack?.id === results.topResult.id && isPlaying ? (
-                    <Pause className="w-5 h-5 fill-current" />
+                    <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   ) : currentTrack?.id === results.topResult.id && playbackState === 'buffering' ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
                   ) : (
-                    <Play className="w-5 h-5 fill-current translate-x-0.5" />
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current translate-x-0.5" />
                   )}
                 </button>
               </div>

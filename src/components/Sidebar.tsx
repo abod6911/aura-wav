@@ -42,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
               <Radio className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-white leading-tight flex items-center gap-1.5">
+              <span className="text-base font-black tracking-tight text-white leading-tight flex items-center gap-1.5" dir="ltr">
                 AURA<span className="text-[#FA243C]">.WAV</span>
                 <span className="apple-badge text-[8px] bg-[#FA243C]/20 border-[#FA243C]/30 text-[#FA243C]">PRO</span>
               </span>

@@ -95,13 +95,13 @@ export const PlayerBar: React.FC = () => {
         style={{
           boxShadow: `0 24px 64px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
         }}
-        className="hidden md:grid grid-cols-[minmax(200px,1fr)_minmax(340px,2fr)_minmax(200px,1fr)] fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-5 sm:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock"
+        className="hidden md:grid grid-cols-[240px_1fr_260px] lg:grid-cols-[280px_1fr_290px] fixed bottom-3 inset-x-4 sm:bottom-4 sm:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-5 sm:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock overflow-hidden"
       >
         {/* 1. Track Info (Start Column) */}
         <div className="flex items-center gap-3.5 min-w-0 w-full justify-self-start pr-1">
           <div
             onClick={() => setMobilePlayerOpen(true)}
-            className={`relative w-13 h-13 rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-xl shrink-0 group cursor-pointer transition-transform ${
+            className={`relative w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] rounded-2xl overflow-hidden bg-black/60 border border-white/15 shadow-xl shrink-0 group cursor-pointer transition-transform ${
               isPlaying ? 'ring-2 ring-[#FA243C]/50 shadow-[#FA243C]/30' : ''
             }`}
           >
@@ -205,7 +205,7 @@ export const PlayerBar: React.FC = () => {
             <button
               onClick={togglePlayPause}
               title={isPlaying ? t.pause : t.play}
-              className="hi-fi-play-button w-10.5 h-10.5 sm:w-11 sm:h-11 rounded-full text-black flex items-center justify-center apple-spring shadow-[0_4px_20px_rgba(250,36,60,0.35)] hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+              className="hi-fi-play-button w-11 h-11 sm:w-12 sm:h-12 rounded-full text-black flex items-center justify-center apple-spring shadow-[0_4px_20px_rgba(250,36,60,0.35)] hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             >
               {isPlaying ? (
                 <Pause className="w-5 h-5 fill-black text-black" />
