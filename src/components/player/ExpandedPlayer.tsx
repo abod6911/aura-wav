@@ -488,7 +488,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     triggerHaptic();
                     previousTrack();
                   }}
-                  className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
                   title="السابق (Previous)"
                   aria-label="Previous track"
                 >
@@ -504,7 +504,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     triggerHaptic();
                     togglePlayPause();
                   }}
-                  className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90"
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   <div 
@@ -527,7 +527,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     triggerHaptic();
                     nextTrack({ forceImmediate: true });
                   }}
-                  className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.14] flex items-center justify-center text-white cursor-pointer select-none transition-all active:scale-90"
                   title="التالي (Next)"
                   aria-label="Next track"
                 >

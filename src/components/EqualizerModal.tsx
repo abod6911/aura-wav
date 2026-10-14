@@ -492,7 +492,7 @@ export const EqualizerModal: React.FC = () => {
 
                   <button
                     onClick={() => setLoudnessNormalization(!loudnessNormalization)}
-                    className={`w-13 h-7 rounded-full p-1 transition-colors relative flex items-center cursor-pointer shadow-inner ${
+                    className={`w-[52px] h-7 rounded-full p-1 transition-colors relative flex items-center cursor-pointer shadow-inner ${
                       loudnessNormalization ? 'bg-cyan-500 shadow-cyan-500/30' : 'bg-white/10'
                     }`}
                   >
@@ -611,7 +611,7 @@ export const EqualizerModal: React.FC = () => {
 
                   <button
                     onClick={() => setKaraokeMode(!karaokeMode)}
-                    className={`w-13 h-7 rounded-full p-1 transition-colors relative flex items-center cursor-pointer shadow-inner ${
+                    className={`w-[52px] h-7 rounded-full p-1 transition-colors relative flex items-center cursor-pointer shadow-inner ${
                       karaokeMode ? 'bg-purple-500 shadow-purple-500/30' : 'bg-white/10'
                     }`}
                   >

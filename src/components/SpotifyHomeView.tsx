@@ -488,7 +488,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           src={trk.coverUrl || trk.artworkUrl}
                           alt={trk.title}
                           size="thumb"
-                          containerClassName="w-13 h-13 rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
+                          containerClassName="w-12 h-12 min-w-[48px] max-w-[48px] min-h-[48px] max-h-[48px] aspect-square rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="min-w-0">
@@ -613,7 +613,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                           src={trk.coverUrl || trk.artworkUrl}
                           alt={trk.title}
                           size="thumb"
-                          containerClassName="w-13 h-13 rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
+                          containerClassName="w-12 h-12 min-w-[48px] max-w-[48px] min-h-[48px] max-h-[48px] aspect-square rounded-2xl flex-shrink-0 shadow-md overflow-hidden bg-black/40"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="min-w-0">

@@ -575,7 +575,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('all')}
-                  className={`h-13 sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
                     filterMode === 'all'
                       ? 'bg-white text-black border-white shadow-white/20'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -596,7 +596,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('favorites')}
-                  className={`h-13 sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
                     filterMode === 'favorites'
                       ? 'bg-rose-600 text-white border-rose-500 shadow-rose-600/30'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -617,7 +617,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('energy')}
-                  className={`h-13 sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
                     filterMode === 'energy'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-amber-500/30 font-black'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -638,7 +638,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('chill')}
-                  className={`h-13 sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
                     filterMode === 'chill'
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-600/30'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
