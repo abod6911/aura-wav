@@ -97,18 +97,21 @@ export const InfiniteSearchView: React.FC = () => {
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
       <div className="relative max-w-xl mx-auto mb-4 sm:mb-6">
         <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 py-1 sm:py-1.5 h-11 sm:h-12">
-          <Search className="w-4.5 h-4.5 text-zinc-400 flex-shrink-0" />
+          <Search className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           <input
-            type="text"
+            type="search"
+            inputMode="search"
+            enterKeyHint="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={isRTL ? 'ابحث عن أغانٍ، فنانين أو ألبومات...' : 'Search songs, artists, albums...'}
-            className="w-full h-full px-2.5 sm:px-3 bg-transparent text-xs sm:text-sm font-medium text-white placeholder-zinc-400 focus:outline-none"
+            style={{ fontSize: '16px' }}
+            className="w-full h-full px-2.5 sm:px-3 bg-transparent font-medium text-white placeholder-zinc-400/80 focus:outline-none [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full"
+              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full flex-shrink-0"
               aria-label={t.clearSearch}
             >
               <X className="w-4 h-4" />

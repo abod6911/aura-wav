@@ -273,21 +273,21 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
             onClick={() => playTrack(spotlightTrack)}
-            className="relative w-full rounded-[28px] sm:rounded-[32px] p-5 sm:p-8 md:p-10 border border-white/[0.14] overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.85)] cursor-pointer group mb-5 sm:mb-6 apple-spring"
+            className="relative w-full rounded-[24px] sm:rounded-[32px] p-4 sm:p-8 md:p-10 border border-white/[0.14] overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.85)] cursor-pointer group mb-4 sm:mb-6 apple-spring"
           >
             {/* Cinematic Full Background with Dark Obsidian Gradient Overlay */}
             <div
-              className="absolute inset-0 -z-10 bg-cover bg-center scale-105 group-hover:scale-110 transition-transform duration-1000 transform-gpu"
+              className="absolute inset-0 -z-10 bg-cover bg-center md:group-hover:scale-110 md:transition-transform md:duration-1000 transform-gpu"
               style={{
                 backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})`,
               }}
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060609] via-[#060609]/85 to-[#060609]/50 backdrop-blur-[14px]" />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060609] via-[#060609]/85 to-[#060609]/60 md:backdrop-blur-[14px] backdrop-blur-[8px]" />
 
             <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
               {/* Left Column: Artwork + Title + Badges */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 min-w-0 w-full md:w-auto text-center sm:text-start">
-                <div className="relative w-24 h-24 sm:w-36 sm:h-36 rounded-[22px] overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 group-hover:scale-105 transition-transform duration-300">
+              <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6 min-w-0 w-full md:w-auto text-center sm:text-start">
+                <div className="relative w-16 h-16 sm:w-36 sm:h-36 rounded-[16px] sm:rounded-[22px] overflow-hidden shadow-2xl flex-shrink-0 border border-white/20 md:group-hover:scale-105 md:transition-transform md:duration-300">
                   <OptimizedImage
                     src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl}
                     alt={spotlightTrack.title}
@@ -299,35 +299,35 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 mb-2">
-                    <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[9px] sm:text-[10px] font-black">
-                      <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1 sm:gap-2 mb-1.5">
+                    <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[8px] sm:text-[10px] font-black">
+                      <Sparkles className="w-2 h-2 sm:w-3 sm:h-3" />
                       APPLE MUSIC EXCLUSIVE
                     </span>
-                    <span className="apple-badge bg-white/10 text-white/90 text-[9px] sm:text-[10px]">
+                    <span className="apple-badge bg-white/10 text-white/90 text-[8px] sm:text-[10px]">
                       LOSSLESS
                     </span>
-                    <span className="apple-badge bg-white/10 text-white/90 text-[9px] sm:text-[10px]">
+                    <span className="apple-badge bg-white/10 text-white/90 text-[8px] sm:text-[10px]">
                       SPATIAL AUDIO
                     </span>
                   </div>
 
-                  <h3 className="text-xl sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
+                  <h3 className="text-base sm:text-3xl md:text-4xl font-black text-white truncate tracking-tight">
                     <bdi dir="auto">{spotlightTrack.title}</bdi>
                   </h3>
-                  <p className="text-sm sm:text-base text-zinc-300 font-bold truncate mt-1">
+                  <p className="text-xs sm:text-base text-zinc-300 font-bold truncate mt-0.5">
                     <bdi dir="auto">{spotlightTrack.artist}</bdi>
                   </p>
-                  <p className="text-xs text-zinc-400 truncate mt-0.5 font-mono">
+                  <p className="hidden sm:block text-xs text-zinc-400 truncate mt-0.5 font-mono">
                     <bdi dir="auto">{spotlightTrack.album || 'Apple Digital Master'}</bdi>
                   </p>
                 </div>
               </div>
 
-              {/* Right Column: 3-Column Stats & Action Buttons */}
-              <div className="flex flex-col items-center md:items-end gap-4 w-full md:w-auto">
-                {/* 3-Column Balanced Stats Grid */}
-                <div className="grid grid-cols-3 gap-3 sm:gap-5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-2xl px-4 py-2.5 text-center w-full sm:w-auto">
+              {/* Right Column: Stats & Action Buttons */}
+              <div className="flex flex-col items-center md:items-end gap-3 w-full md:w-auto">
+                {/* 3-Column Balanced Stats Grid - hidden on mobile for perf */}
+                <div className="hidden sm:grid grid-cols-3 gap-3 sm:gap-5 bg-white/[0.06] backdrop-blur-md border border-white/[0.1] rounded-2xl px-4 py-2.5 text-center w-full sm:w-auto">
                   <div className="px-1.5">
                     <span className="block text-xs sm:text-sm font-black text-white font-mono">{totalStats.totalTracks}</span>
                     <span className="text-[10px] text-zinc-400 font-medium">{isRTL ? 'مسار' : 'Tracks'}</span>
@@ -343,7 +343,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                 </div>
 
                 {/* Big Action Controls */}
-                <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-center md:justify-end">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-center md:justify-end">
                   <motion.button
                     whileTap={{ scale: 0.94 }}
                     onClick={(e) => {
@@ -354,16 +354,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                         playTrack(spotlightTrack);
                       }
                     }}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 sm:gap-2.5 px-6 sm:px-8 py-3 rounded-full bg-white text-black font-black text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3 rounded-full bg-white text-black font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all cursor-pointer"
                   >
                     {isPlaying && currentTrack?.id === spotlightTrack.id ? (
                       <>
-                        <Pause className="w-4 h-4 fill-black text-black" />
+                        <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />
                         <span>{t.pause}</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                        <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black translate-x-0.5" />
                         <span>{t.heroPlayNow}</span>
                       </>
                     )}
@@ -375,9 +375,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = ({ onOpenImport }
                       e.stopPropagation();
                       usePlayerStore.getState().setAutoMixModalOpen(true);
                     }}
-                    className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 text-white font-extrabold text-xs sm:text-sm shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/[0.08] border border-white/15 text-white font-extrabold text-xs sm:text-sm shadow-lg active:scale-95 transition-all cursor-pointer"
                   >
-                    <Disc3 className="w-4 h-4 text-[#FA243C] animate-spin" style={{ animationDuration: '6s' }} />
+                    <Disc3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FA243C] animate-spin" style={{ animationDuration: '6s' }} />
                     <span>{isRTL ? 'دمج ذكي DJ' : 'Smart AutoMix'}</span>
                   </motion.button>
                 </div>

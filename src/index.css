@@ -115,6 +115,23 @@ button, a, input, select, [role="button"], .cursor-pointer {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
+
+  /* ── CRITICAL: Prevent iOS viewport zoom on input focus ── */
+  input, textarea, select {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent mobile bounce scroll lag */
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent layout jump when virtual keyboard opens */
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Apple Music Lossless / Spatial / Dolby Capsule Badge */
