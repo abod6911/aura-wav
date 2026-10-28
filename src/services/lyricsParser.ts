@@ -64,7 +64,7 @@ export function getActiveLyricIndex(lyrics: LyricLine[], currentTime: number): n
  */
 function cleanSongSearchString(str: string): string {
   return str
-    .replace(/\s*[\(\[](?:feat|with|remastered|bonus|version|slowed|sped up|remix).*?[\)\]]/gi, '')
+    .replace(/\s*[([](?:feat|with|remastered|bonus|version|slowed|sped up|remix).*?[)\]]/gi, '')
     .replace(/[^\w\s\u0600-\u06FF]/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -129,7 +129,7 @@ export async function fetchLyricsOnline(
     }
 
     return null;
-  } catch (err) {
+  } catch (_err) {
     // Quietly fail offline or if network is blocked
     return null;
   }

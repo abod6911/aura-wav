@@ -55,6 +55,11 @@ export class DeckChannel {
     (this.audio as any).mozPreservesPitch = true;
     (this.audio as any).webkitPreservesPitch = true;
     (this.audio as any).playsInline = true;
+    (this.audio as any).webkitPlaysInline = true;
+    try {
+      this.audio.setAttribute('playsinline', 'true');
+      this.audio.setAttribute('webkit-playsinline', 'true');
+    } catch {}
   }
 
   /**
@@ -379,7 +384,7 @@ export class DeckChannel {
    * Play deck
    */
   public async play(): Promise<void> {
-    if (this.ctx && this.ctx.state === 'suspended') {
+    if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted')) {
       await this.ctx.resume().catch(() => {});
     }
 

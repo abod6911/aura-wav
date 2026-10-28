@@ -22,7 +22,6 @@ import {
   Zap
 } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { Track } from '../../types';
 
 const CarPlayScrubber: React.FC = () => {
   const currentTime = usePlayerStore((s) => s.currentTime);

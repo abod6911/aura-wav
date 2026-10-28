@@ -93,8 +93,9 @@ export const AtmosphereBackground: React.FC = () => {
     a: '#7D12FF',
   });
 
-  // Extract track palette asynchronously outside render loop
+  // Extract track palette asynchronously outside render loop (Desktop only)
   useEffect(() => {
+    if (isMobile) return;
     if (currentTrack?.artworkUrl) {
       extractPaletteFromImage(currentTrack.artworkUrl).then((p) => {
         setRawColors({
@@ -104,7 +105,7 @@ export const AtmosphereBackground: React.FC = () => {
         });
       });
     }
-  }, [currentTrack?.artworkUrl]);
+  }, [currentTrack?.artworkUrl, isMobile]);
 
   const rgbColors = useMemo(() => {
     return {
@@ -247,13 +248,28 @@ export const AtmosphereBackground: React.FC = () => {
     };
   }, [rgbColors, isPlaying, reactiveVisualsEnabled, isMobile]);
 
+  // On Mobile: pure static luxury CSS gradient (0 requestAnimationFrame, 0 WebGL, 0 blur filter)
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060609]">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, #FA243C1a 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, #7D12FF12 0%, transparent 65%)`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#050508] transform-gpu">
       {/* Deep Obsidian Base */}
       <div className="absolute inset-0 bg-[#06060a]" />
 
-      {/* Real-Time Frequency-Reactive Canvas Mesh */}
-      {reactiveVisualsEnabled && (
+      {/* Real-Time Frequency-Reactive Canvas Mesh (Desktop only to guarantee 120fps on mobile) */}
+      {reactiveVisualsEnabled && !isMobile && (
         <AudioReactiveBackground
           primaryColor={rawColors.p}
           secondaryColor={rawColors.s}
@@ -274,9 +290,9 @@ export const AtmosphereBackground: React.FC = () => {
           }}
         />
       ) : (
-        /* CSS GPU Compositing Fallback */
+        /* CSS GPU Compositing Fallback with 120fps ambient breathing */
         <div
-          className="absolute inset-0 transition-opacity duration-1000 ease-out will-change-transform"
+          className={`absolute inset-0 transition-opacity duration-1000 ease-out will-change-transform ${isPlaying ? 'aura-ambient-breathing' : ''}`}
           style={{
             opacity: isPlaying ? (reactiveVisualsEnabled ? 0.35 : 0.9) : 0.4,
             backgroundImage: `

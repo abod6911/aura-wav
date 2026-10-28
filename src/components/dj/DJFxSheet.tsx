@@ -7,7 +7,6 @@ import {
   X,
   Flame,
   Zap,
-  Sliders,
   RotateCcw,
   Gauge,
   SlidersHorizontal,
@@ -180,14 +179,22 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 100 || info.velocity.y > 350) {
+              handleClose();
+            }
+          }}
           style={{ touchAction: 'manipulation' }}
           className="relative w-full max-w-2xl max-h-[88dvh] overflow-y-auto scrollbar-none bg-[#0c0c14]/95 border-t border-x border-white/[0.12] rounded-t-[32px] shadow-[0_-25px_80px_rgba(0,0,0,0.9)] backdrop-blur-3xl p-5 sm:p-7 space-y-6 pb-[max(2rem,env(safe-area-inset-bottom,2rem))] z-10"
           dir="rtl"
         >
           {/* Top Grab Handle */}
           <div className="flex justify-center -mt-2 mb-1">
-            <div className="w-12 h-1.5 rounded-full bg-white/20" />
+            <div onClick={handleClose} className="w-10 h-1.5 bg-white/20 hover:bg-white/40 rounded-full mx-auto mb-4 cursor-pointer transition-colors" />
           </div>
 
           {/* Header */}

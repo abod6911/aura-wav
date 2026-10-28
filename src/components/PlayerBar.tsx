@@ -26,14 +26,12 @@ import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
 import { getOptimizedCoverUrl } from '../utils/imageOptimizer';
 import { AuraProDspHud } from './player/AuraProDspHud';
-import { HarmonicSetGenerator } from './player/HarmonicSetGenerator';
 
 export const PlayerBar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackState = usePlayerStore((state) => state.playbackState);
-  const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const volume = usePlayerStore((state) => state.volume);
   const shuffle = usePlayerStore((state) => state.shuffle);
@@ -239,7 +237,6 @@ export const PlayerBar: React.FC = () => {
 
           {/* Compact Inline Scrubber with left/right timestamps */}
           <TimelineSlider
-            currentTime={currentTime}
             duration={duration}
             onSeek={seek}
             accentColor={accentColor}
@@ -382,8 +379,6 @@ export const PlayerBar: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Smart Harmonic Journey Modal */}
-      <HarmonicSetGenerator />
 
       {isAudioSettingsOpen && (
         <AudioSettingsModal isOpen={isAudioSettingsOpen} onClose={() => setIsAudioSettingsOpen(false)} />

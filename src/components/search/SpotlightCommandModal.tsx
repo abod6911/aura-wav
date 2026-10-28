@@ -6,20 +6,12 @@ import { Track } from '../../types';
 import {
   Search,
   X,
-  Play,
-  Music,
-  User,
   Disc,
   Sparkles,
   Mic2,
   Compass,
   Shuffle,
-  Radio,
-  Command,
-  ArrowRight,
-  Sliders,
-  CheckCircle2,
-} from 'lucide-react';
+  } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 
 // Normalizes Arabic characters (hamzas, tashkeel, etc.) for lightning-fast matching

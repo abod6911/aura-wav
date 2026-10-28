@@ -65,6 +65,7 @@ export interface EngineCallbacks {
   onAutoMixEnd?: () => void;
   onPreloadRequest?: (nextTrack: Track) => void;
   onBufferPreloaded?: (trackId: string, channel: DeckChannelName) => void;
+  onTrackError?: (track: Track | null, error: any) => void;
 }
 
 export interface DeckChannelState {

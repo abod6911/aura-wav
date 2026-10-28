@@ -204,6 +204,79 @@ async function resolveViaArchive(query) {
 /**
  * Fallback to official iTunes 30-second preview stream if all full-length sources fail.
  */
+
+/**
+ * Resolves full-length audio stream via Audius Open API (320kbps MP3).
+ */
+async function resolveViaAudius(query) {
+  try {
+    const cleanQ = cleanQueryString(query);
+    const searchUrl = `https://discoveryprovider.audius.co/v1/tracks/search?query=${encodeURIComponent(cleanQ)}&app_name=AURA_WAV`;
+    const res = await fetchJson(searchUrl, {}, 2500);
+    const tracks = res.data?.data || [];
+    const valid = tracks.find((t) => t.is_streamable !== false && (t.duration || 0) > 60);
+    if (valid && valid.id) {
+      const streamUrl = `https://discoveryprovider.audius.co/v1/tracks/${valid.id}/stream?app_name=AURA_WAV`;
+      return {
+        url: streamUrl,
+        duration: Math.round(valid.duration || 210),
+        title: valid.title || query,
+        source: 'audius-open',
+        isPreview: false,
+      };
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Resolves full-length audio stream via open Invidious/Piped API instances.
+ */
+async function resolveViaPipedOrInvidious(query) {
+  const cleanQ = cleanQueryString(query);
+  const instances = [
+    'https://pipedapi.kavin.rocks',
+    'https://api.piped.privacydev.net',
+    'https://invidious.nerdvpn.de',
+  ];
+
+  for (const host of instances) {
+    try {
+      const isPiped = host.includes('piped');
+      const searchUrl = isPiped
+        ? `${host}/search?q=${encodeURIComponent(cleanQ)}&filter=music_songs`
+        : `${host}/api/v1/search?q=${encodeURIComponent(cleanQ)}&type=video`;
+
+      const searchRes = await fetchJson(searchUrl, {}, 2000);
+      const items = isPiped ? (searchRes.data?.items || []) : (searchRes.data || []);
+      const first = items.find((it) => ((it.duration || 0) > 60 || (it.lengthSeconds || 0) > 60));
+
+      if (first) {
+        const videoId = isPiped ? first.url?.replace('/watch?v=', '') : first.videoId;
+        if (videoId) {
+          const streamUrl = isPiped ? `${host}/streams/${videoId}` : `${host}/api/v1/videos/${videoId}`;
+          const streamRes = await fetchJson(streamUrl, {}, 2000);
+          const audioStreams = streamRes.data?.audioStreams || streamRes.data?.adaptiveFormats || [];
+          const bestAudio = audioStreams
+            .filter((s) => s.url && (s.mimeType?.includes('audio') || s.format?.includes('audio') || s.type?.includes('audio')))
+            .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+
+          if (bestAudio && bestAudio.url) {
+            return {
+              url: bestAudio.url,
+              duration: isPiped ? (first.duration || 210) : (first.lengthSeconds || 210),
+              title: first.title || query,
+              source: 'open-stream-cdn',
+              isPreview: false,
+            };
+          }
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
 async function resolveViaItunes(query) {
   try {
     const cleanQ = cleanQueryString(query);
@@ -273,7 +346,17 @@ export default async function handler(req, res) {
     resolved = await resolveViaSoundCloud(query);
   }
 
-  // 2. Fallback to Archive.org for Arabic classical / Tarab catalog
+  // 2. Fallback to Audius Open Music API (320kbps full stream)
+  if (!resolved && query) {
+    resolved = await resolveViaAudius(query);
+  }
+
+  // 3. Fallback to Invidious / Piped open streaming CDNs
+  if (!resolved && query) {
+    resolved = await resolveViaPipedOrInvidious(query);
+  }
+
+  // 4. Fallback to Archive.org for Arabic classical / Tarab catalog
   if (!resolved && query) {
     resolved = await resolveViaArchive(query);
   }

@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
-import { Track } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
+import { triggerHaptic } from '../utils/haptics';
 
 export const PlaylistsView: React.FC = () => {
   const { isRTL, dir } = useTranslation();
@@ -49,19 +49,19 @@ export const PlaylistsView: React.FC = () => {
 
   if (selectedPlaylist) {
     return (
-      <div className="space-y-6 pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24">
+      <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2">
         {/* Back Button & Playlist Info */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSelectedPlaylistId(null)}
-              className="p-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white transition-colors"
+              className="p-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white transition-colors cursor-pointer aura-tap-btn"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">{selectedPlaylist.name}</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">{selectedPlaylist.name}</h2>
+              <p className="text-xs text-zinc-400 mt-0.5 font-medium">
                 {playlistTracks.length} مسار في هذه القائمة
               </p>
             </div>
@@ -71,7 +71,7 @@ export const PlaylistsView: React.FC = () => {
             {playlistTracks.length > 0 && (
               <button
                 onClick={handlePlayAll}
-                className="px-5 py-2.5 rounded-2xl bg-white text-black font-extrabold text-xs flex items-center gap-2 shadow-lg hover:bg-zinc-200 transition-all"
+                className="px-5 py-2.5 rounded-full bg-white text-black font-extrabold text-xs flex items-center gap-2 shadow-lg aura-tap-btn cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-black" />
                 <span>تشغيل الكل</span>
@@ -83,7 +83,7 @@ export const PlaylistsView: React.FC = () => {
                 addToast('تم حذف قائمة التشغيل', undefined, 'info');
                 setSelectedPlaylistId(null);
               }}
-              className="p-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+              className="p-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer aura-tap-btn"
               title="حذف القائمة"
             >
               <Trash2 className="w-4 h-4" />
@@ -220,19 +220,22 @@ export const PlaylistsView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24">
+    <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-white">قوائم التشغيل الخاصة</h2>
-          <p className="text-xs text-zinc-400 mt-0.5">قم بتنظيم أغانيك حسب المود والأنواع</p>
+          <h2 className="text-xl sm:text-2xl font-black text-white">قوائم التشغيل الخاصة</h2>
+          <p className="text-xs text-zinc-400 mt-0.5 font-medium">قم بتنظيم أغانيك حسب المود والأنواع</p>
         </div>
 
         <button
-          onClick={() => setIsCreating(!isCreating)}
-          className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-[0_4px_16px_rgba(250,36,60,0.35)] active:scale-95 cursor-pointer"
+          onClick={() => {
+            triggerHaptic('light');
+            setIsCreating(!isCreating);
+          }}
+          className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#FA243C]/30 aura-tap-btn cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span>قائمة جديدة</span>
         </button>
       </div>
@@ -241,49 +244,52 @@ export const PlaylistsView: React.FC = () => {
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="p-4 rounded-[22px] apple-glass-card border border-[var(--apple-rose)]/30 flex items-center gap-3 animate-fadeIn"
+          className="p-3.5 rounded-2xl bg-white/[0.04] border border-[#FA243C]/30 flex items-center gap-2.5 animate-fadeIn"
         >
           <input
             type="text"
             placeholder="اسم قائمة التشغيل (مثال: أغاني الخط السريع، ليلية...)"
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--apple-rose)] transition-colors"
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C] transition-colors"
             autoFocus
           />
-          <button type="submit" className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white text-xs font-semibold transition-all shadow-md shadow-[var(--apple-red)]/30 active:scale-95 cursor-pointer">
+          <button type="submit" className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md aura-tap-btn cursor-pointer">
             إنشاء
           </button>
-          <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2.5 rounded-full bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer transition-colors">
+          <button type="button" onClick={() => setIsCreating(false)} className="px-3 py-2 rounded-full bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer aura-tap-btn">
             إلغاء
           </button>
         </form>
       )}
 
-      {/* Playlists Grid */}
+      {/* Playlists Grid (Standardized 2-Column Mobile Grid) */}
       {playlists.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {playlists.map((pl) => (
             <div
               key={pl.id}
-              onClick={() => setSelectedPlaylistId(pl.id)}
-              className="group p-4 rounded-[24px] apple-glass-card border border-white/[0.08] hover:border-[var(--apple-rose)]/40 hover:shadow-[0_12px_32px_rgba(250,36,60,0.15)] transition-all cursor-pointer space-y-3"
+              onClick={() => {
+                triggerHaptic('light');
+                setSelectedPlaylistId(pl.id);
+              }}
+              className="group p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] border border-white/[0.08] hover:border-[#FA243C]/40 transition-colors cursor-pointer space-y-2.5 aura-tap-btn"
             >
-              <div className="w-full aspect-square rounded-[18px] bg-gradient-to-tr from-[var(--apple-red)]/20 via-[var(--apple-rose)]/15 to-[var(--apple-violet)]/10 border border-white/10 flex items-center justify-center group-hover:scale-[1.03] transition-transform">
-                <ListMusic className="w-10 h-10 text-[var(--apple-rose)] group-hover:scale-110 transition-transform" />
+              <div className="w-full aspect-square rounded-xl bg-gradient-to-tr from-[#FA243C]/20 via-[#FF375F]/15 to-purple-500/10 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <ListMusic className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF375F]" />
               </div>
-              <div>
-                <h4 className="font-bold text-white text-sm truncate">{pl.name}</h4>
-                <p className="text-xs text-zinc-400 mt-0.5">{pl.trackIds.length} أغنية</p>
+              <div className="min-w-0">
+                <h4 className="font-bold text-white text-xs sm:text-sm truncate">{pl.name}</h4>
+                <p className="text-[10px] sm:text-xs text-zinc-400 mt-0.5">{pl.trackIds.length} أغنية</p>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 space-y-3 apple-glass-card border border-dashed border-white/10 rounded-[28px]">
-          <ListMusic className="w-12 h-12 mx-auto text-zinc-600" />
-          <h4 className="text-base font-bold text-white">لا توجد قوائم تشغيل بعد</h4>
-          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+        <div className="text-center py-16 space-y-3 rounded-2xl bg-white/[0.03] border border-dashed border-white/10 p-6">
+          <ListMusic className="w-10 h-10 mx-auto text-zinc-500" />
+          <h4 className="text-sm sm:text-base font-bold text-white">لا توجد قوائم تشغيل بعد</h4>
+          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
             اضغط على &quot;قائمة جديدة&quot; لإنشاء قائمة تشغيل مخصصة لمجموعتك المفضلة من الأغاني.
           </p>
         </div>

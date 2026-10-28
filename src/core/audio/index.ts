@@ -10,17 +10,15 @@ export * from './dsp/SpatialReverbEngine';
 export * from './dsp/VocalAttenuator';
 export * from './worklets/auraDspProcessor';
 export * from './AudioBufferPool';
-export * from './AudioEngine';
 export * from './DJAudioEngineFacade';
 
 import { DJAudioEngineFacade } from './DJAudioEngineFacade';
-import { AudioEngine } from './AudioEngine';
 
 export const djAudioEngine = new DJAudioEngineFacade();
 export const DJAudioEngine = DJAudioEngineFacade;
-export { AudioEngine };
+export const AudioEngine = DJAudioEngineFacade;
 
 if (typeof window !== 'undefined') {
   (window as any).djAudioEngine = djAudioEngine;
-  (window as any).AudioEngine = AudioEngine;
+  (window as any).AudioEngine = DJAudioEngineFacade;
 }

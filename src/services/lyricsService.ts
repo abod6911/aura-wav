@@ -7,7 +7,7 @@ import { getLyricsFromDexie, saveLyricsToDexie } from '../db/dexieDB';
  */
 function cleanSearchQuery(text: string): string {
   return text
-    .replace(/\s*[\(\[](?:feat|with|remastered|bonus|version|slowed|sped up|remix).*?[\)\]]/gi, '')
+    .replace(/\s*[([](?:feat|with|remastered|bonus|version|slowed|sped up|remix).*?[)\]]/gi, '')
     .replace(/[^\w\s\u0600-\u06FF]/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();

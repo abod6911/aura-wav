@@ -1,70 +1,7 @@
 import * as mm from 'music-metadata-browser';
-import { Track } from '../types';
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { getDB } from '../db/indexedDB';
 
-interface AuraDB extends DBSchema {
-  tracks: {
-    key: string;
-    value: Track;
-    indexes: { 'by-artist': string; 'by-album': string; 'by-date': number };
-  };
-  audioBlobs: {
-    key: string;
-    value: { id: string; blob: Blob };
-  };
-  artworkBlobs: {
-    key: string;
-    value: { id: string; blob: Blob };
-  };
-  playlists: {
-    key: string;
-    value: any;
-  };
-  favorites: {
-    key: string;
-    value: { id: string; addedAt: number };
-  };
-  settings: {
-    key: string;
-    value: any;
-  };
-}
-
-const DB_NAME = 'aura_wav_db_v2';
-const DB_VERSION = 2;
-
-let dbPromise: Promise<IDBPDatabase<AuraDB>> | null = null;
-
-export const getDB = () => {
-  if (!dbPromise) {
-    dbPromise = openDB<AuraDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
-        if (!db.objectStoreNames.contains('tracks')) {
-          const trackStore = db.createObjectStore('tracks', { keyPath: 'id' });
-          trackStore.createIndex('by-artist', 'artist');
-          trackStore.createIndex('by-album', 'album');
-          trackStore.createIndex('by-date', 'dateAdded');
-        }
-        if (!db.objectStoreNames.contains('audioBlobs')) {
-          db.createObjectStore('audioBlobs', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('artworkBlobs')) {
-          db.createObjectStore('artworkBlobs', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('playlists')) {
-          db.createObjectStore('playlists', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('favorites')) {
-          db.createObjectStore('favorites', { keyPath: 'id' });
-        }
-        if (!db.objectStoreNames.contains('settings')) {
-          db.createObjectStore('settings');
-        }
-      },
-    });
-  }
-  return dbPromise;
-};
+export { getDB };
 
 /**
  * Generates a deterministic, luxurious geometric gradient cover using the track's title hash
@@ -287,7 +224,7 @@ export async function fetchOnlineArtwork(title: string, artist: string): Promise
   try {
     const cleanTitle = title
       .replace(/^\d+[\s-_.]+/g, '') // Remove track numbers like "01 - "
-      .replace(/\s*[\(\[].*?[\)\]]/g, '') // Remove (Official Video), [Remix], etc.
+      .replace(/\s*[(\[].*?[)\]]/g, '') // Remove (Official Video), [Remix], etc.
       .replace(/\.[a-zA-Z0-9]{2,4}$/, '') // Remove extension
       .trim();
 
@@ -297,7 +234,7 @@ export async function fetchOnlineArtwork(title: string, artist: string): Promise
       artist.toLowerCase().startsWith('track_') ||
       artist.toLowerCase() === 'audio';
 
-    const cleanArtist = isUnknownArtist ? '' : artist.replace(/\s*[\(\[].*?[\)\]]/g, '').trim();
+    const cleanArtist = isUnknownArtist ? '' : artist.replace(/\s*[(\[].*?[)\]]/g, '').trim();
 
     const queries: string[] = [];
     if (cleanArtist && cleanTitle) {
@@ -416,7 +353,7 @@ export async function parseAudioMetadata(file: File): Promise<{
       artworkUrl,
       lyrics,
     };
-  } catch (err) {
+  } catch (_err) {
     // Graceful fallback on parse error
     return {
       title: fallback.title,

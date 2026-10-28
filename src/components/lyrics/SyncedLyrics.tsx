@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import { TimelineSlider } from '../player/TimelineSlider';
@@ -16,8 +16,7 @@ import {
   Volume2,
   VolumeX,
   Mic2,
-  MicOff,
-} from 'lucide-react';
+  } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { extractPaletteFromImage } from '../../lib/colorSampler';
 
@@ -34,8 +33,7 @@ export const SyncedLyrics: React.FC = () => {
 
 const SyncedLyricsModal: React.FC = () => {
   const currentTrack = usePlayerStore((state) => state.currentTrack!);
-  const currentTime = usePlayerStore((state) => state.currentTime);
-  const duration = usePlayerStore((state) => state.duration);
+    const duration = usePlayerStore((state) => state.duration);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const volume = usePlayerStore((state) => state.volume);
   const shuffle = usePlayerStore((state) => state.shuffle);
@@ -62,10 +60,20 @@ const SyncedLyricsModal: React.FC = () => {
   const [userIsScrolling, setUserIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<any>(null);
 
-  const lyrics = currentTrack.syncedLyrics || [];
-  const activeIndex = getActiveLyricIndex(lyrics, currentTime);
-  const isAutoMixing =
-    automixEnabled && duration > 15 && duration - currentTime <= automixDuration;
+  const lyrics = useMemo(() => currentTrack.syncedLyrics || [], [currentTrack.syncedLyrics]);
+  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
+  const isAutoMixing = isAutoMixingLive;
+
+  const [activeIndex, setActiveIndex] = useState(() =>
+    getActiveLyricIndex(lyrics, usePlayerStore.getState().currentTime)
+  );
+
+  useEffect(() => {
+    return usePlayerStore.subscribe((state) => {
+      const nextIdx = getActiveLyricIndex(lyrics, state.currentTime);
+      setActiveIndex((prev) => (prev !== nextIdx ? nextIdx : prev));
+    });
+  }, [lyrics]);
 
   // Auto-scroll active line to optical center unless user is manually dragging/scrolling
   useEffect(() => {
@@ -201,7 +209,6 @@ const SyncedLyricsModal: React.FC = () => {
             {/* Scrubber */}
             <div className="pt-2">
               <TimelineSlider
-                currentTime={currentTime}
                 duration={duration}
                 onSeek={seek}
                 showTimestamps={true}
@@ -325,7 +332,7 @@ const SyncedLyricsModal: React.FC = () => {
 
                 const nextLine = lyrics[idx + 1];
                 const hasInstrumentalGap = nextLine && (nextLine.time - line.time > 4.5);
-                const isDuringInstrumental = hasInstrumentalGap && currentTime > line.time + 2.5 && currentTime < nextLine.time;
+                const isDuringInstrumental = isActive && hasInstrumentalGap;
 
                 return (
                   <React.Fragment key={`${line.time}_${idx}`}>
@@ -409,7 +416,6 @@ const SyncedLyricsModal: React.FC = () => {
         {/* Mobile Floating Mini-Controls (Shown only on small screens) */}
         <div className="lg:hidden w-full px-6 py-4 border-t border-white/[0.08] bg-[#07070a]/90 backdrop-blur-2xl flex flex-col gap-2 z-20">
           <TimelineSlider
-            currentTime={currentTime}
             duration={duration}
             onSeek={seek}
             showTimestamps={true}

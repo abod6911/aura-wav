@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { searchWorldwideMusic, SearchResultsCategorized } from '../services/streamingEngine';
-import { Search, Play, Pause, X, Disc, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
+import { Search, Play, Pause, X, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
 import { Track } from '../types';
 import { OptimizedImage } from './common/OptimizedImage';
 
@@ -92,11 +92,45 @@ export const InfiniteSearchView: React.FC = () => {
     { id: 'albums' as const, label: isRTL ? 'الألبومات' : 'Albums' },
   ];
 
+  // Strictly memoize genre stats to avoid 14,000 loop passes on every keystroke
+  const genreStats = useMemo(() => {
+    return GENRES.map((g) => {
+      const q = g.query.toLowerCase();
+      const matched = tracks.filter((t) => {
+        const genre = (t.genre || '').toLowerCase();
+        const title = (t.title || '').toLowerCase();
+        const artist = (t.artist || '').toLowerCase();
+        return genre.includes(q) || title.includes(q) || artist.includes(q);
+      });
+      const count = matched.length;
+      const covers: string[] = [];
+      const seenArt = new Set<string>();
+      for (const t of matched) {
+        const art = t.artworkUrl || t.coverUrl;
+        if (art && !seenArt.has(art)) {
+          seenArt.add(art);
+          covers.push(art);
+          if (covers.length === 3) break;
+        }
+      }
+      let idx = 0;
+      while (covers.length < 3 && idx < tracks.length) {
+        const fb = tracks[idx]?.artworkUrl || tracks[idx]?.coverUrl;
+        if (fb && !seenArt.has(fb)) {
+          seenArt.add(fb);
+          covers.push(fb);
+        }
+        idx++;
+      }
+      return { ...g, count, covers };
+    });
+  }, [tracks]);
+
   return (
-    <div className="w-full text-white pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24 px-3 sm:px-6 md:px-8 pt-4 select-none" dir={dir}>
+    <div className="w-full text-white pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
-      <div className="relative max-w-xl mx-auto mb-4 sm:mb-6">
-        <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 py-1 sm:py-1.5 h-11 sm:h-12">
+      <div className="relative max-w-xl mx-auto mb-3">
+        <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 h-12">
           <Search className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           <input
             type="search"
@@ -111,7 +145,7 @@ export const InfiniteSearchView: React.FC = () => {
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full flex-shrink-0"
+              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full flex-shrink-0 aura-tap-btn"
               aria-label={t.clearSearch}
             >
               <X className="w-4 h-4" />
@@ -122,12 +156,12 @@ export const InfiniteSearchView: React.FC = () => {
 
       {/* Filter Category Pills */}
       {query.trim() && (
-        <div className="flex items-center justify-center gap-2 mb-6 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer aura-tap-btn shrink-0 ${
                 activeCategory === cat.id
                   ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
                   : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
@@ -141,77 +175,52 @@ export const InfiniteSearchView: React.FC = () => {
 
       {/* State 1: Empty Search -> Browse Genres */}
       {!query.trim() && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 mb-3 sm:mb-4">
-            <h2 className="text-lg sm:text-2xl font-black text-white">
+        <div className="max-w-5xl mx-auto space-y-4">
+          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 mb-2">
+            <h2 className="text-base sm:text-xl font-black text-white">
               {isRTL ? 'استكشف الأنواع والموسيقى' : 'Browse Categories & Genres'}
             </h2>
-            <span className="text-[11px] sm:text-xs text-[#FA243C] font-bold flex items-center gap-1 self-start xs:self-auto">
-              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span className="text-[11px] text-[#FA243C] font-bold flex items-center gap-1 self-start xs:self-auto">
+              <Sparkles className="w-3 h-3" />
               <span>{isRTL ? 'تشغيل كامل بدون حدود 30 ثانية' : '100% Full Length Audio'}</span>
             </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
-            {GENRES.map((g) => {
-              const q = g.query.toLowerCase();
-              const matched = tracks.filter((t) => {
-                const genre = (t.genre || '').toLowerCase();
-                const title = (t.title || '').toLowerCase();
-                const artist = (t.artist || '').toLowerCase();
-                return genre.includes(q) || title.includes(q) || artist.includes(q);
-              });
-              const count = matched.length;
-              const covers: string[] = [];
-              const seenArt = new Set<string>();
-              for (const t of matched) {
-                const art = t.artworkUrl || t.coverUrl;
-                if (art && !seenArt.has(art)) {
-                  seenArt.add(art);
-                  covers.push(art);
-                  if (covers.length === 3) break;
-                }
-              }
-              while (covers.length < 3 && tracks.length > covers.length) {
-                const fb = tracks[covers.length]?.artworkUrl || tracks[covers.length]?.coverUrl || '/logo.svg';
-                covers.push(fb);
-              }
-
-              return (
-                <div
-                  key={g.name}
-                  onClick={() => setQuery(g.query)}
-                  className={`h-36 sm:h-40 rounded-[24px] p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 shadow-xl relative overflow-hidden flex flex-col justify-between group apple-spring select-none`}
-                >
-                  <div className="z-10 relative">
-                    <span className="text-sm sm:text-base font-black text-white leading-tight drop-shadow-md block">
-                      {g.name}
-                    </span>
-                    <span className="text-[11px] font-bold text-white/80 mt-1 block">
-                      {count > 0 ? (isRTL ? `${count} مسار` : `${count} tracks`) : (isRTL ? 'استكشف الآن' : 'Explore')}
-                    </span>
-                  </div>
-
-                  {/* 3D Tilted Artwork Cascade in Bottom Corner */}
-                  <div className="absolute -bottom-3 -end-3 w-28 h-28 pointer-events-none transform rotate-12 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-out">
-                    {covers[0] && (
-                      <div className="absolute top-0 end-0 w-16 h-16 rounded-xl overflow-hidden shadow-2xl border border-white/20 z-30">
-                        <img src={covers[0]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    {covers[1] && (
-                      <div className="absolute top-3 end-5 w-14 h-14 rounded-xl overflow-hidden shadow-xl border border-white/15 opacity-80 z-20">
-                        <img src={covers[1]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    {covers[2] && (
-                      <div className="absolute top-6 end-10 w-12 h-12 rounded-xl overflow-hidden shadow-lg border border-white/10 opacity-60 z-10">
-                        <img src={covers[2]} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                  </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+            {genreStats.map((g) => (
+              <div
+                key={g.name}
+                onClick={() => setQuery(g.query)}
+                className={`h-32 sm:h-36 rounded-2xl p-3 sm:p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer aura-tap-btn shadow-lg relative overflow-hidden flex flex-col justify-between group select-none`}
+              >
+                <div className="z-10 relative">
+                  <span className="text-sm font-black text-white leading-tight drop-shadow-md block">
+                    {g.name}
+                  </span>
+                  <span className="text-[10px] font-bold text-white/80 mt-1 block">
+                    {g.count > 0 ? (isRTL ? `${g.count} مسار` : `${g.count} tracks`) : (isRTL ? 'استكشف الآن' : 'Explore')}
+                  </span>
                 </div>
-              );
-            })}
+
+                {/* 3D Tilted Artwork Cascade in Bottom Corner */}
+                <div className="absolute -bottom-2 -end-2 w-24 h-24 pointer-events-none transform rotate-12 group-hover:scale-105 transition-transform duration-300 ease-out">
+                  {g.covers[0] && (
+                    <div className="absolute top-0 end-0 w-14 h-14 rounded-xl overflow-hidden shadow-2xl border border-white/20 z-30">
+                      <img src={g.covers[0]} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  {g.covers[1] && (
+                    <div className="absolute top-2.5 end-4 w-12 h-12 rounded-xl overflow-hidden shadow-xl border border-white/15 opacity-80 z-20">
+                      <img src={g.covers[1]} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  {g.covers[2] && (
+                    <div className="absolute top-5 end-8 w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-white/10 opacity-60 z-10">
+                      <img src={g.covers[2]} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

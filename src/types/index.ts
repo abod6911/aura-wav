@@ -35,6 +35,8 @@ export interface Track {
   gain?: number; // ReplayGain track gain in dB (e.g. -2.5)
   isPreview?: boolean;
   streamSource?: string;
+  unavailable?: boolean;
+  isCorrupted?: boolean;
 }
 
 export interface Playlist {

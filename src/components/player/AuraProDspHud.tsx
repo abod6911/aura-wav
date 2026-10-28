@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
@@ -10,10 +9,7 @@ import {
   Repeat,
   Compass,
   Radio,
-  SlidersHorizontal,
-  ChevronDown,
-  Volume2,
-} from 'lucide-react';
+  } from 'lucide-react';
 
 interface AuraProDspHudProps {
   compact?: boolean;

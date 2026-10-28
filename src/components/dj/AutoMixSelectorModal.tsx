@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
-import { Sliders, X, Check, Disc, Waves, Sparkles, Radio, Zap, SlidersHorizontal } from 'lucide-react';
+import { Sliders, X, Check, Disc, Waves, Sparkles, Zap, SlidersHorizontal } from 'lucide-react';
 
 interface TransitionOption {
   id: AutoMixStyle;
@@ -84,10 +84,20 @@ export const AutoMixSelectorModal: React.FC = () => {
           initial={{ y: '100%', opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 100 || info.velocity.y > 350) {
+              setAutoMixModalOpen(false);
+            }
+          }}
           style={{ touchAction: 'manipulation' }}
           className="relative w-full max-w-lg apple-glass-card border border-white/[0.12] rounded-t-[32px] sm:rounded-[28px] shadow-[0_25px_60px_rgba(0,0,0,0.95)] overflow-hidden p-5 sm:p-6 space-y-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
         >
+          {/* Top iOS Grab Handle */}
+          <div onClick={() => setAutoMixModalOpen(false)} className="w-10 h-1.5 bg-white/20 hover:bg-white/40 rounded-full mx-auto mb-4 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
             <div className="flex items-center gap-3">

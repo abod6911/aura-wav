@@ -23,6 +23,11 @@ export interface LyricsRecord {
   updatedAt: number;
 }
 
+export interface FavoriteRecord {
+  id: string;
+  addedAt: number;
+}
+
 export class SpotifyAuraDB extends Dexie {
   tracks!: Table<Track, string>;
   audioBlobs!: Table<AudioBlobRecord, string>;
@@ -30,6 +35,7 @@ export class SpotifyAuraDB extends Dexie {
   playlists!: Table<Playlist, string>;
   settings!: Table<SettingRecord, string>;
   lyrics!: Table<LyricsRecord, string>;
+  favorites!: Table<FavoriteRecord, string>;
 
   constructor() {
     super('SpotifyAuraDexieDB');
@@ -44,6 +50,10 @@ export class SpotifyAuraDB extends Dexie {
     this.version(2).stores({
       tracks: 'id, title, artist, album, duration, trackNumber, genre, dateAdded, bpm, key',
       lyrics: 'id, updatedAt',
+    });
+
+    this.version(3).stores({
+      favorites: 'id, addedAt',
     });
   }
 }
@@ -122,15 +132,112 @@ export async function saveLyricsToDexie(id: string, lrc: string): Promise<void> 
 }
 
 /**
+ * Settings helpers
+ */
+export async function getSettingFromDexie<T = any>(key: string): Promise<T | null> {
+  try {
+    const record = await dexieDB.settings.get(key);
+    return record ? (record.value as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSettingToDexie(key: string, value: any): Promise<void> {
+  try {
+    await dexieDB.settings.put({ key, value });
+  } catch (err) {
+    console.warn('[DexieDB] Failed to save setting:', key, err);
+  }
+}
+
+export async function deleteSettingFromDexie(key: string): Promise<void> {
+  try {
+    await dexieDB.settings.delete(key);
+  } catch (err) {
+    console.warn('[DexieDB] Failed to delete setting:', key, err);
+  }
+}
+
+/**
+ * Playlists helpers
+ */
+export async function getAllPlaylistsFromDexie(): Promise<Playlist[]> {
+  try {
+    return await dexieDB.playlists.toArray();
+  } catch {
+    return [];
+  }
+}
+
+export async function savePlaylistToDexie(playlist: Playlist): Promise<void> {
+  try {
+    await dexieDB.playlists.put(playlist);
+  } catch (err) {
+    console.warn('[DexieDB] Failed to save playlist:', err);
+  }
+}
+
+export async function deletePlaylistFromDexie(id: string): Promise<void> {
+  try {
+    await dexieDB.playlists.delete(id);
+  } catch (err) {
+    console.warn('[DexieDB] Failed to delete playlist:', err);
+  }
+}
+
+/**
+ * Favorites helpers
+ */
+export async function getFavoritesFromDexie(): Promise<FavoriteRecord[]> {
+  try {
+    return await dexieDB.favorites.toArray();
+  } catch {
+    return [];
+  }
+}
+
+export async function toggleFavoriteInDexie(trackId: string): Promise<boolean> {
+  try {
+    const existing = await dexieDB.favorites.get(trackId);
+    if (existing) {
+      await dexieDB.favorites.delete(trackId);
+      return false;
+    } else {
+      await dexieDB.favorites.put({ id: trackId, addedAt: Date.now() });
+      return true;
+    }
+  } catch {
+    return false;
+  }
+}
+
+export async function isFavoriteInDexie(trackId: string): Promise<boolean> {
+  try {
+    const rec = await dexieDB.favorites.get(trackId);
+    return !!rec;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Clear all local music library data
  */
 export async function clearDexieLibrary(): Promise<void> {
-  await dexieDB.transaction('rw', [dexieDB.tracks, dexieDB.audioBlobs, dexieDB.artworkBlobs, dexieDB.lyrics], async () => {
-    await dexieDB.tracks.clear();
-    await dexieDB.audioBlobs.clear();
-    await dexieDB.artworkBlobs.clear();
-    await dexieDB.lyrics.clear();
-  });
+  await dexieDB.transaction(
+    'rw',
+    [dexieDB.tracks, dexieDB.audioBlobs, dexieDB.artworkBlobs, dexieDB.lyrics, dexieDB.playlists, dexieDB.settings, dexieDB.favorites],
+    async () => {
+      await dexieDB.tracks.clear();
+      await dexieDB.audioBlobs.clear();
+      await dexieDB.artworkBlobs.clear();
+      await dexieDB.lyrics.clear();
+      await dexieDB.playlists.clear();
+      await dexieDB.settings.clear();
+      await dexieDB.favorites.clear();
+    }
+  );
 }
 
 /**

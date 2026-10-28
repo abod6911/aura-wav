@@ -21,19 +21,42 @@
   display: none !important;
 }
 
-body {
+/* Strict Native App Root Enclosure (Zero-Web-Feel) */
+html, body, #root {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
   margin: 0;
   padding: 0;
-  background-color: var(--app-bg);
+  background-color: #060609;
   color: #f4f4f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Readex Pro", "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.015em;
   user-select: none;
   -webkit-user-select: none;
-  overflow-x: hidden;
-  height: 100%;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+img, a, button {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Allow text selection strictly inside input and textarea elements */
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* Tabular Numerals for strictly aligned music clocks and counters */
@@ -46,13 +69,6 @@ body {
 button, a, input, select, [role="button"], .cursor-pointer {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-}
-
-#root {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Apple Liquid Glass Tier 1: Cards & Panels */
@@ -102,18 +118,20 @@ button, a, input, select, [role="button"], .cursor-pointer {
   .apple-glass-card,
   .glass-obsidian-1,
   .glass-panel {
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .apple-glass-dock,
   .glass-obsidian-2,
   .glass-ios-dock {
-    backdrop-filter: blur(18px) saturate(170%);
-    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
   }
   .apple-glass-pill {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   /* ── CRITICAL: Prevent iOS viewport zoom on input focus ── */
@@ -188,12 +206,12 @@ button, a, input, select, [role="button"], .cursor-pointer {
 /* iOS & Mobile Safe Area Layout Utility with 120Hz Native ProMotion Scroll */
 .main-safe-area {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: none;
   touch-action: pan-y;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  padding-top: calc(max(env(safe-area-inset-top, 0px), 12px) + 4px);
-  padding-bottom: calc(210px + env(safe-area-inset-bottom, 0px));
+  padding-top: max(env(safe-area-inset-top, 0px), 14px);
+  padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
   padding-left: max(env(safe-area-inset-left, 0px), 12px);
   padding-right: max(env(safe-area-inset-right, 0px), 12px);
 }
@@ -269,14 +287,103 @@ input[type=range]::-webkit-slider-thumb:hover {
   contain-intrinsic-size: 64px;
 }
 
-@keyframes auraBarBounce {
-  0% { height: 25%; }
-  100% { height: 100%; }
+/* 120fps GPU-Accelerated Live Equalizer Bars (scaleY transforms, 0ms reflow) */
+@keyframes auraSoundbarBounce1 {
+  0% { transform: scaleY(0.25) translateZ(0); }
+  100% { transform: scaleY(1) translateZ(0); }
 }
-.aura-soundbar-1 { animation: auraBarBounce 0.65s ease-in-out infinite alternate; }
-.aura-soundbar-2 { animation: auraBarBounce 0.45s ease-in-out 0.15s infinite alternate; }
-.aura-soundbar-3 { animation: auraBarBounce 0.85s ease-in-out 0.3s infinite alternate; }
-.aura-soundbar-4 { animation: auraBarBounce 0.55s ease-in-out 0.1s infinite alternate; }
+@keyframes auraSoundbarBounce2 {
+  0% { transform: scaleY(0.4) translateZ(0); }
+  100% { transform: scaleY(0.9) translateZ(0); }
+}
+@keyframes auraSoundbarBounce3 {
+  0% { transform: scaleY(0.2) translateZ(0); }
+  100% { transform: scaleY(1) translateZ(0); }
+}
+@keyframes auraSoundbarBounce4 {
+  0% { transform: scaleY(0.35) translateZ(0); }
+  100% { transform: scaleY(0.85) translateZ(0); }
+}
+
+.aura-soundbar-1 {
+  transform-origin: bottom;
+  animation: auraSoundbarBounce1 0.65s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  will-change: transform;
+}
+.aura-soundbar-2 {
+  transform-origin: bottom;
+  animation: auraSoundbarBounce2 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.15s infinite alternate;
+  will-change: transform;
+}
+.aura-soundbar-3 {
+  transform-origin: bottom;
+  animation: auraSoundbarBounce3 0.85s cubic-bezier(0.4, 0, 0.2, 1) 0.3s infinite alternate;
+  will-change: transform;
+}
+.aura-soundbar-4 {
+  transform-origin: bottom;
+  animation: auraSoundbarBounce4 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.1s infinite alternate;
+  will-change: transform;
+}
+
+/* 0ms Ultra-Fast Tactile Response */
+.aura-tap-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 100ms cubic-bezier(0.16, 1, 0.3, 1), filter 100ms ease-out;
+  will-change: transform;
+}
+.aura-tap-btn:active {
+  transform: scale(0.92) translate3d(0, 0, 0);
+  filter: brightness(1.25);
+}
+
+/* 120fps Glowing Aura & Ambient Breathing */
+@keyframes auraPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(250, 36, 60, 0.4), 0 0 28px rgba(250, 36, 60, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(250, 36, 60, 0.75), 0 0 45px rgba(250, 36, 60, 0.4);
+  }
+}
+.aura-glow-pulse {
+  animation: auraPulseGlow 2.5s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+@keyframes ambientBreath {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) scale(1.05);
+    opacity: 0.55;
+  }
+}
+.aura-ambient-breathing {
+  animation: ambientBreath 6s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Uniform Mobile Page Container */
+.mobile-page-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: calc(155px + env(safe-area-inset-bottom, 20px));
+}
+@media (min-width: 768px) {
+  .mobile-page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 7rem;
+  }
+}
 
 /* Apple Music Live Aurora Mesh Animations */
 @keyframes auroraDrift1 {
@@ -366,6 +473,29 @@ input[type=range]::-webkit-slider-thumb:hover {
   backface-visibility: hidden;
   perspective: 1000px;
   will-change: transform, opacity;
+}
+
+/* Instant Zero-Lag Physical Tactile Response for All Clickable Elements */
+button:not(:disabled), [role="button"], .interactive-press {
+  transition: transform 100ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+button:not(:disabled):active, [role="button"]:active, .interactive-press:active {
+  transform: scale(0.95);
+}
+
+/* 180ms Ultra-Smooth Tab Transition */
+@keyframes nativeTabEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-tab-enter {
+  animation: nativeTabEnter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Tactile Spring Physics */

@@ -1,5 +1,4 @@
 import * as mm from 'music-metadata-browser';
-import { Track } from '../types';
 
 /**
  * Memory Management: Registry of active Object URLs created for album art and audio blobs.

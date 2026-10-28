@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { TimelineSlider, formatDuration } from './TimelineSlider';
+import { TimelineSlider } from './TimelineSlider';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import {
   Play,
@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Heart,
   Mic2,
-  Sliders,
   SlidersHorizontal,
   ListMusic,
   Compass,
@@ -22,8 +21,6 @@ import {
   Trash2,
   Zap,
   Gauge,
-  Download,
-  CheckCircle2,
   Disc3,
   MoreVertical,
   Palette,
@@ -32,10 +29,13 @@ import {
   Car,
   Volume1,
   Volume2,
+  Sparkles,
+  Radio,
   Activity,
-  Sparkles
 } from 'lucide-react';
+import { syncPartyService, SyncRoomState } from '../../services/syncPartyService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { triggerHaptic } from '../../utils/haptics';
 
 interface ExpandedPlayerProps {
   isOpen: boolean;
@@ -56,17 +56,88 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
   );
 };
 
+
+interface InlineLyricsTabProps {
+  lyrics: any[];
+  onSeek: (time: number) => void;
+  triggerHaptic: () => void;
+  isRTL: boolean;
+}
+
+const InlineLyricsTab: React.FC<InlineLyricsTabProps> = ({
+  lyrics,
+  onSeek,
+  triggerHaptic,
+  isRTL,
+}) => {
+  const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
+  const [activeLyricIndex, setActiveLyricIndex] = useState(() =>
+    getActiveLyricIndex(lyrics, usePlayerStore.getState().currentTime)
+  );
+
+  useEffect(() => {
+    return usePlayerStore.subscribe((state) => {
+      const nextIdx = getActiveLyricIndex(lyrics, state.currentTime);
+      setActiveLyricIndex((prev) => (prev !== nextIdx ? nextIdx : prev));
+    });
+  }, [lyrics]);
+
+  useEffect(() => {
+    if (inlineActiveLineRef.current) {
+      inlineActiveLineRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [activeLyricIndex]);
+
+  return (
+    <div
+      className="flex-1 overflow-y-auto space-y-6 py-12 px-4 text-start scroll-smooth select-none no-scrollbar"
+      dir="auto"
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+      }}
+    >
+      {lyrics.length > 0 ? (
+        lyrics.map((l, idx) => {
+          const isActive = idx === activeLyricIndex;
+          return (
+            <p
+              key={idx}
+              ref={isActive ? inlineActiveLineRef : null}
+              onClick={() => {
+                triggerHaptic();
+                onSeek(l.time);
+              }}
+              className={`cursor-pointer transition-all duration-300 py-2.5 px-4 rounded-2xl font-black origin-start leading-relaxed ${
+                isActive
+                  ? 'text-white text-2xl sm:text-3xl lg:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.9)] scale-[1.03] bg-white/[0.04]'
+                  : 'text-white/35 hover:text-white/70 text-base sm:text-xl lg:text-2xl filter blur-[0.4px]'
+              }`}
+            >
+              <bdi dir="auto">{l.text}</bdi>
+            </p>
+          );
+        })
+      ) : (
+        <div className="py-24 text-center text-zinc-500 font-bold text-sm">
+          {isRTL ? 'لا توجد كلمات متزامنة لهذا المسار' : 'No synced lyrics available for this track'}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack!);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const currentTime = usePlayerStore((state) => state.currentTime);
-  const duration = usePlayerStore((state) => state.duration);
+    const duration = usePlayerStore((state) => state.duration);
   const shuffle = usePlayerStore((state) => state.shuffle);
   const repeatMode = usePlayerStore((state) => state.repeatMode);
-  const automixEnabled = usePlayerStore((state) => state.automixEnabled);
-  const automixDuration = usePlayerStore((state) => state.automixDuration);
-  const playbackRate = usePlayerStore((state) => state.playbackRate);
+      const playbackRate = usePlayerStore((state) => state.playbackRate);
   const setPlaybackRate = usePlayerStore((state) => state.setPlaybackRate);
   const volume = usePlayerStore((state) => state.volume);
   const setVolume = usePlayerStore((state) => state.setVolume);
@@ -89,14 +160,15 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
+  const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
+  const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
+  const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
-  const playDJSound = usePlayerStore((state) => state.playDJSound);
-  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
-
+    
   const spatialMode = usePlayerStore((state) => state.spatialMode);
   const setSpatialMode = usePlayerStore((state) => state.setSpatialMode);
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
@@ -107,12 +179,29 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const setBassBoost = usePlayerStore((state) => state.setBassBoost);
   const analogWarmth = usePlayerStore((state) => state.analogWarmth);
   const setAnalogWarmth = usePlayerStore((state) => state.setAnalogWarmth);
+  const setHarmonicJourneyOpen = usePlayerStore((state) => state.setHarmonicJourneyOpen);
+  const setSyncPartyOpen = usePlayerStore((state) => state.setSyncPartyOpen);
+  const playDJSound = usePlayerStore((state) => state.playDJSound);
+  const setSoundboardOpen = usePlayerStore((state) => state.setSoundboardOpen);
+  const addToast = usePlayerStore((state) => state.addToast);
 
   const [activeTab, setActiveTab] = useState<TabType>('player');
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
-  const [activeDJPHand, setActiveDJPHand] = useState<string | null>(null);
   const [showWaveform, setShowWaveform] = useState(false);
-  const inlineActiveLineRef = useRef<HTMLParagraphElement | null>(null);
+  const [syncRoomState, setSyncRoomState] = useState<SyncRoomState>(syncPartyService.getState());
+
+  useEffect(() => {
+    return syncPartyService.subscribe(setSyncRoomState);
+  }, []);
+
+  const cyclePlaybackRate = () => {
+    triggerHaptic();
+    const rates = [1.0, 1.1, 1.25, 0.85];
+    const currentIndex = rates.findIndex((r) => Math.abs(r - playbackRate) < 0.05);
+    const nextRate = currentIndex >= 0 && currentIndex < rates.length - 1 ? rates[currentIndex + 1] : rates[0];
+    setPlaybackRate(nextRate);
+    addToast(`${t.speed}: ${nextRate}x${nextRate === 0.85 ? ' (Slowed + Reverb)' : ''}`, undefined, 'info');
+  };
 
   // 3D Artwork Tilt Reaction
   const [artworkTilt, setArtworkTilt] = useState({ x: 0, y: 0 });
@@ -140,32 +229,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     setArtworkTilt({ x: 0, y: 0 });
   };
 
-  // Trigger subtle mobile haptic feedback if available
-  const triggerHaptic = () => {
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate(10);
-      } catch {}
-    }
-  };
 
-  const djTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (djTimeoutRef.current) clearTimeout(djTimeoutRef.current);
-    };
-  }, []);
 
-  const handleQuickDJDrop = (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => {
-    triggerHaptic();
-    setActiveDJPHand(effect);
-    playDJSound(effect);
-    if (djTimeoutRef.current) clearTimeout(djTimeoutRef.current);
-    djTimeoutRef.current = setTimeout(() => {
-      setActiveDJPHand((curr) => (curr === effect ? null : curr));
-    }, 350);
-  };
 
   // Related songs computation (More by same artist, or matching genre)
   const moreByArtist = useMemo(() => {
@@ -174,7 +240,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     return tracks.filter(
       (t) => t.id !== currentTrack.id && t.artist.toLowerCase().includes(primaryArtist)
     ).slice(0, 6);
-  }, [currentTrack?.id, tracks.length]);
+  }, [currentTrack, tracks]);
 
   const similarTracks = useMemo(() => {
     if (!currentTrack) return [];
@@ -184,7 +250,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       if (currentTrack.genre && t.genre === currentTrack.genre) return true;
       return Math.abs(t.duration - currentTrack.duration) < 25;
     }).slice(0, 6);
-  }, [currentTrack?.id, tracks.length]);
+  }, [currentTrack, tracks]);
 
   const handleClose = () => {
     setMobilePlayerOpen(false);
@@ -192,28 +258,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const lyrics = currentTrack?.syncedLyrics || [];
-  const activeLyricIndex = getActiveLyricIndex(lyrics, currentTime);
 
-  // Auto-scroll active lyric in Expanded Player inline view
-  useEffect(() => {
-    if (activeTab === 'lyrics' && inlineActiveLineRef.current) {
-      inlineActiveLineRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
-  }, [activeTab, activeLyricIndex]);
 
   const isFav = currentTrack ? favorites.includes(currentTrack.id) : false;
-  const isAutoMixing =
-    isAutoMixingLive ||
-    (automixEnabled && duration > 10 && duration - currentTime <= automixDuration && duration - currentTime > 0.2);
 
-  const cycleRate = () => {
-    const rates = [0.75, 1.0, 1.25, 1.5];
-    const nextIdx = (rates.indexOf(playbackRate) + 1) % rates.length;
-    setPlaybackRate(rates[nextIdx]);
-  };
+
 
   return (
     <motion.div
@@ -231,7 +280,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             handleClose();
           }
         }}
-        className="fixed inset-0 z-50 bg-[#0c0c14] flex flex-col justify-between px-4 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
+        className="fixed inset-0 z-50 bg-[#08080c] flex flex-col justify-between h-[100dvh] px-5 sm:px-6 pt-[calc(12px+env(safe-area-inset-top,0px))] pb-[calc(16px+env(safe-area-inset-bottom,0px))] select-none overflow-hidden touch-pan-y contain-paint-layout gpu-accelerated"
         dir={dir}
       >
         {/* Drag Handle Pill */}
@@ -276,6 +325,27 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
           <div className="flex items-center gap-1.5">
             <motion.button
+              data-testid="expanded-sync-party-btn"
+              whileTap={{ scale: 0.88 }}
+              onClick={() => {
+                triggerHaptic();
+                setSyncPartyOpen(true);
+              }}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl flex items-center justify-center transition-colors cursor-pointer relative ${
+                syncRoomState.roomId
+                  ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
+                  : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/90'
+              }`}
+              title={syncRoomState.roomId ? `${t.syncParty}: ${syncRoomState.roomId}` : t.inviteFriends}
+              aria-label={t.syncParty}
+            >
+              <Radio className="w-5 h-5" strokeWidth={1.8} />
+              {syncRoomState.roomId && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-1.5 right-1.5 border border-black" />
+              )}
+            </motion.button>
+
+            <motion.button
               data-testid="carplay-mode-btn"
               whileTap={{ scale: 0.88 }}
               onClick={() => {
@@ -314,13 +384,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           {/* Always visible on Desktop (42% width), or when activeTab === 'player' on Mobile */}
           {/* ========================================================================= */}
           <div
-            className={`w-full lg:w-[42%] max-w-[420px] flex-col justify-between gap-3 sm:gap-4 shrink-0 ${
+            className={`w-full lg:w-[42%] max-w-[420px] flex-col justify-between gap-2 sm:gap-3 shrink-0 h-full overflow-hidden ${
               activeTab === 'player' ? 'flex' : 'hidden lg:flex'
             }`}
           >
             {/* Grand Squircle Artwork */}
             <div className="flex-1 flex items-center justify-center min-h-0 py-1">
               <motion.div
+                layoutId="shared-track-artwork"
                 data-testid="expanded-artwork-container"
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
@@ -330,16 +401,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 animate={{
                   rotateX: artworkTilt.x,
                   rotateY: artworkTilt.y,
-                  scale: isPlaying ? 1.03 : 1,
+                  scale: isPlaying ? 1 : 0.86,
                 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
                 onDragEnd={(_, info) => {
                   if (info.offset.x < -55 || info.velocity.x < -200) {
-                    triggerHaptic();
+                    triggerHaptic('light');
                     if (isRTL) previousTrack();
                     else nextTrack(false);
                   } else if (info.offset.x > 55 || info.velocity.x > 200) {
-                    triggerHaptic();
+                    triggerHaptic('light');
                     if (isRTL) nextTrack(false);
                     else previousTrack();
                   }
@@ -347,9 +418,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 style={{
                   perspective: 1000,
                   transformStyle: 'preserve-3d',
-                  boxShadow: `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`,
+                  boxShadow: isPlaying
+                    ? `0 25px 80px -10px ${currentTrack.dominantColor || currentTrack.accentColor || 'rgba(250, 36, 60, 0.45)'}`
+                    : '0 10px 30px -10px rgba(0, 0, 0, 0.6)',
                 }}
-                className="group relative w-56 h-56 xs:w-64 xs:h-64 sm:w-72 sm:h-72 max-h-[36vh] lg:w-full lg:max-w-[390px] aspect-square rounded-[28px] overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] mx-auto"
+                className="group relative w-[min(76vw,310px)] h-[min(76vw,310px)] aspect-square rounded-[28px] overflow-hidden border border-white/[0.14] cursor-grab active:cursor-grabbing touch-pan-y shadow-[0_20px_60px_-15px_rgba(0,0,0,0.85)] mx-auto my-auto flex-shrink-0"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setChangeArtworkModal(true, currentTrack);
@@ -386,9 +459,13 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             <div className="space-y-2.5 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0 pe-3 text-start">
-                  <h2 className="text-xl sm:text-2xl font-black text-white truncate tracking-tight">
+                  <motion.h2
+                    layoutId="shared-track-title"
+                    className="text-xl sm:text-2xl font-black text-white truncate tracking-tight"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+                  >
                     <bdi dir="auto">{currentTrack.title}</bdi>
-                  </h2>
+                  </motion.h2>
                   <p className="text-sm text-zinc-400 truncate mt-0.5 font-medium">
                     <bdi dir="auto">{currentTrack.artist}</bdi>
                   </p>
@@ -442,7 +519,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
               {/* Scrubber */}
               <TimelineSlider
-                currentTime={currentTime}
                 duration={duration}
                 onSeek={seek}
                 showTimestamps={true}
@@ -504,7 +580,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     triggerHaptic();
                     togglePlayPause();
                   }}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90"
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-white via-zinc-100 to-zinc-200 border border-white/80 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_35px_rgba(255,255,255,0.45)] text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative group transition-transform active:scale-90 aura-tap-btn ${
+                    isPlaying ? 'aura-glow-pulse' : ''
+                  }`}
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   <div 
@@ -570,6 +648,150 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   style={{ background: `linear-gradient(to right, rgba(255,255,255,0.7) ${volume * 100}%, rgba(255,255,255,0.2) ${volume * 100}%)` }}
                 />
                 <Volume2 className="w-4 h-4 text-white/50 flex-shrink-0" />
+              </div>
+
+              {/* Thumb-Zone Direct Quick Access Buttons (Queue, Lyrics, AutoMix) */}
+              <div 
+                data-testid="quick-studio-pill-bar"
+                className="flex items-center justify-between gap-1.5 px-1 pt-0.5 overflow-x-auto no-scrollbar select-none"
+                dir={dir}
+              >
+                {/* 0. Direct Queue Drawer Button */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setQueueOpen(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.14] text-zinc-200 border border-white/10 transition-colors cursor-pointer flex-shrink-0 active:scale-95"
+                  title={t.queue}
+                  aria-label={t.queue}
+                >
+                  <ListMusic className="w-3.5 h-3.5 text-[#FA243C]" />
+                  <span>{t.queue}</span>
+                </motion.button>
+
+                {/* 0.5. Direct Synced Lyrics Button */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setActiveTab(activeTab === 'lyrics' ? 'player' : 'lyrics');
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 active:scale-95 ${
+                    activeTab === 'lyrics'
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.06] hover:bg-white/[0.14] text-zinc-200 border border-white/10'
+                  }`}
+                  title={t.syncedLyrics}
+                  aria-label={t.syncedLyrics}
+                >
+                  <Mic2 className="w-3.5 h-3.5 text-white/90" />
+                  <span>{t.syncedLyrics}</span>
+                </motion.button>
+
+                {/* 0.8. Direct AutoMix DJ Button */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setAutoMixModalOpen(true);
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 active:scale-95 ${
+                    automixEnabled
+                      ? 'bg-gradient-to-r from-purple-500/25 to-rose-500/20 border border-purple-500/40 text-purple-200'
+                      : 'bg-white/[0.06] hover:bg-white/[0.14] text-zinc-200 border border-white/10'
+                  }`}
+                  title="AutoMix DJ"
+                  aria-label="AutoMix DJ"
+                >
+                  <Disc3 className={`w-3.5 h-3.5 text-purple-400 ${automixEnabled ? 'animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
+                  <span>AutoMix</span>
+                </motion.button>
+                {/* 1. Playback Speed Cycle */}
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={cyclePlaybackRate}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer flex-shrink-0 ${
+                    playbackRate !== 1.0
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/10'
+                  }`}
+                  title="تغيير سرعة الإيقاع (Playback Speed)"
+                >
+                  <Gauge className="w-3 h-3 text-cyan-400" />
+                  <span>{playbackRate}x</span>
+                </motion.button>
+
+                {/* 2. Waveform Toggle */}
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setShowWaveform(!showWaveform);
+                    addToast(!showWaveform ? 'تم تفعيل شكل الموجة' : 'تم إخفاء شكل الموجة', undefined, 'info');
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
+                    showWaveform
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/10'
+                  }`}
+                  title="تفعيل/إلغاء الشكل الموجي الصوتي"
+                >
+                  <Activity className="w-3 h-3 text-emerald-400" />
+                  <span>{t.waveform}</span>
+                </motion.button>
+
+                {/* 3. Quick DJ Drops */}
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    playDJSound('scratch');
+                    addToast('🎛️ DJ Scratch Drop', undefined, 'info');
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setSoundboardOpen(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/10 transition-all cursor-pointer flex-shrink-0 active:text-amber-400"
+                  title="مؤثر صوتي DJ سريع (انقر للتشغيل، مطولاً للوحة الكاملة)"
+                >
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  <span>{t.djDrops}</span>
+                </motion.button>
+
+                {/* 4. Smart Harmonic Mix */}
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setHarmonicJourneyOpen(true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/10 transition-all cursor-pointer flex-shrink-0"
+                  title={t.smartHarmonicMix}
+                >
+                  <Compass className="w-3 h-3 text-purple-400" />
+                  <span className="hidden xs:inline">{t.smartHarmonicMix}</span>
+                </motion.button>
+
+                {/* 5. Sync Party */}
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => {
+                    triggerHaptic();
+                    setSyncPartyOpen(true);
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
+                    syncRoomState.roomId
+                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25 animate-pulse'
+                      : 'bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/10'
+                  }`}
+                  title={t.syncParty}
+                >
+                  <Radio className="w-3 h-3 text-[#FA243C]" />
+                  <span>{t.syncParty}</span>
+                </motion.button>
               </div>
             </div>
           </div>
@@ -657,41 +879,12 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     transition={{ duration: 0.2 }}
                     className="h-full flex flex-col overflow-hidden"
                   >
-                    <div
-                      className="flex-1 overflow-y-auto space-y-6 py-12 px-4 text-start scroll-smooth select-none no-scrollbar"
-                      dir="auto"
-                      style={{
-                        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                      }}
-                    >
-                      {lyrics.length > 0 ? (
-                        lyrics.map((l, idx) => {
-                          const isActive = idx === activeLyricIndex;
-                          return (
-                            <p
-                              key={idx}
-                              ref={isActive ? inlineActiveLineRef : null}
-                              onClick={() => {
-                                triggerHaptic();
-                                seek(l.time);
-                              }}
-                              className={`cursor-pointer transition-all duration-300 py-2.5 px-4 rounded-2xl font-black origin-start leading-relaxed ${
-                                isActive
-                                  ? 'text-white text-2xl sm:text-3xl lg:text-4xl drop-shadow-[0_0_28px_rgba(255,255,255,0.9)] scale-[1.03] bg-white/[0.04]'
-                                  : 'text-white/35 hover:text-white/70 text-base sm:text-xl lg:text-2xl filter blur-[0.4px]'
-                              }`}
-                            >
-                              <bdi dir="auto">{l.text}</bdi>
-                            </p>
-                          );
-                        })
-                      ) : (
-                        <div className="py-24 text-center text-zinc-500 font-bold text-sm">
-                          {isRTL ? 'لا توجد كلمات متزامنة لهذا المسار' : 'No synced lyrics available for this track'}
-                        </div>
-                      )}
-                    </div>
+                    <InlineLyricsTab
+                      lyrics={lyrics}
+                      onSeek={seek}
+                      triggerHaptic={triggerHaptic}
+                      isRTL={isRTL}
+                    />
                   </motion.div>
                 )}
 
@@ -1072,6 +1265,40 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
                 {/* Action Items */}
                 <div className="space-y-1 text-sm font-medium">
+                  {/* Sync Party */}
+                  <button
+                    onClick={() => {
+                      triggerHaptic();
+                      setIsOptionsSheetOpen(false);
+                      setSyncPartyOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Radio className="w-5 h-5 text-[#FA243C]" />
+                      <span>{t.syncParty}</span>
+                    </div>
+                    {syncRoomState.roomId && (
+                      <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        {syncRoomState.roomId}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Smart Harmonic Mix */}
+                  <button
+                    onClick={() => {
+                      triggerHaptic();
+                      setIsOptionsSheetOpen(false);
+                      setHarmonicJourneyOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-white/[0.06] text-white transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Compass className="w-5 h-5 text-purple-400" />
+                      <span>{t.smartHarmonicMix}</span>
+                    </div>
+                  </button>
                   {/* Equalizer */}
                   <button
                     onClick={() => {

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { formatTimerRemaining } from '../utils/formatters';
@@ -9,25 +9,33 @@ import {
   Sliders,
   Settings,
   Search,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
   AlertTriangle,
   Car,
+  Radio,
 } from 'lucide-react';
+import { syncPartyService, SyncRoomState } from '../services/syncPartyService';
 import { useStorageStore } from '../stores/useStorageStore';
 
 interface HeaderProps {
   onOpenImport: () => void;
+  isScrolled?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false }) => {
   const { t, language, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
+  const setSyncPartyOpen = usePlayerStore((state) => state.setSyncPartyOpen);
+  const [syncRoomState, setSyncRoomState] = React.useState<SyncRoomState>(syncPartyService.getState());
+
+  React.useEffect(() => {
+    return syncPartyService.subscribe(setSyncRoomState);
+  }, []);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setSpotlightOpen = usePlayerStore((state) => state.setSpotlightOpen);
@@ -40,21 +48,24 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
   const isQuotaWarning = useStorageStore((state) => state.isQuotaWarning);
   const usagePercentage = useStorageStore((state) => state.usagePercentage);
 
+  const [hour] = useState(() => new Date().getHours());
   // Time-aware dynamic greeting
   const greeting = useMemo(() => {
-    const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return t.goodMorning;
     if (hour >= 12 && hour < 17) return t.goodAfternoon;
     if (hour >= 17 && hour < 22) return t.goodEvening;
     return t.peacefulNight;
-  }, [t]);
+  }, [t, hour]);
 
   const totalDurationSecs = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
   const totalHours = Math.floor(totalDurationSecs / 3600);
   const totalMins = Math.floor((totalDurationSecs % 3600) / 60);
 
   return (
-    <header className="py-2.5 sm:py-3 border-b border-white/[0.08] select-none mb-3 sm:mb-4 w-full min-w-0" dir={dir}>
+    <header
+      className="select-none w-full min-w-0 bg-[#060609]/95 backdrop-blur-xl border-b border-white/[0.08] px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 shrink-0 z-30 transition-all"
+      dir={dir}
+    >
       {/* Mobile Header Bar */}
       <div className="flex flex-col sm:hidden w-full gap-2.5">
         <div className="flex items-center justify-between w-full">
@@ -62,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer aura-tap-btn"
               title={t.settings}
               aria-label={t.settings}
             >
@@ -88,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer aura-tap-btn"
                 title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
               >
                 <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -99,17 +110,34 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white apple-spring cursor-pointer min-h-[36px]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white aura-tap-btn cursor-pointer min-h-[36px]"
               title={t.importFolder}
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
               <span className="text-[11px] font-bold hidden xs:inline">{t.importMusic}</span>
             </button>
 
+            {/* Sync Party */}
+            <button
+              onClick={() => setSyncPartyOpen(true)}
+              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative ${
+                syncRoomState.roomId
+                  ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
+              }`}
+              title={syncRoomState.roomId ? `${t.syncParty}: ${syncRoomState.roomId}` : t.syncParty}
+              aria-label={t.syncParty}
+            >
+              <Radio className="w-4 h-4" />
+              {syncRoomState.roomId && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-1 right-1 border border-black" />
+              )}
+            </button>
+
             {/* Sleep Timer */}
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center apple-spring cursor-pointer relative ${
+              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative ${
                 sleepTimerRemaining !== null
                   ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
@@ -125,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center apple-spring cursor-pointer"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center aura-tap-btn cursor-pointer"
               title={t.settings}
               aria-label={t.settings}
             >
@@ -259,6 +287,23 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport }) => {
             <Moon className="w-4 h-4" />
             {sleepTimerRemaining !== null && (
               <span className="font-mono text-[8px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
+            )}
+          </button>
+
+          {/* Sync Party Trigger */}
+          <button
+            onClick={() => setSyncPartyOpen(true)}
+            className={`w-10 h-10 rounded-2xl flex items-center justify-center apple-spring cursor-pointer relative ${
+              syncRoomState.roomId
+                ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
+                : 'apple-glass-pill text-zinc-300 hover:text-white'
+            }`}
+            title={syncRoomState.roomId ? `${t.syncParty}: ${syncRoomState.roomId}` : t.syncParty}
+            aria-label={t.syncParty}
+          >
+            <Radio className="w-4 h-4" />
+            {syncRoomState.roomId && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-1.5 right-1.5 border border-black" />
             )}
           </button>
 

@@ -4,15 +4,12 @@ import { useTranslation } from '../i18n/useTranslation';
 import {
   Radio,
   Search,
-  Library,
   Heart,
   Plus,
   Music,
   Sliders,
-  FolderPlus,
   SlidersHorizontal,
-  FolderOpen,
-} from 'lucide-react';
+  } from 'lucide-react';
 
 interface SidebarProps {
   onOpenImport: () => void;

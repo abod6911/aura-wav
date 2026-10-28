@@ -1,5 +1,4 @@
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
-import { Track } from '../types';
 import { djAudioEngine } from '../lib/audioEngine';
 
 export interface RoomSyncPayload {
@@ -47,6 +46,7 @@ export class SyncPartyService {
   private driftCheckInterval: any = null;
 
   private onStateChangeCb: ((state: SyncRoomState) => void) | null = null;
+  private listeners: Set<(state: SyncRoomState) => void> = new Set();
   private lastHostPayload: RoomSyncPayload | null = null;
   private currentDriftMs = 0;
 
@@ -70,8 +70,17 @@ export class SyncPartyService {
     return SyncPartyService.instance;
   }
 
+  public subscribe(cb: (state: SyncRoomState) => void): () => void {
+    this.listeners.add(cb);
+    cb(this.getState());
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+
   public onStateChange(cb: (state: SyncRoomState) => void): void {
     this.onStateChangeCb = cb;
+    this.subscribe(cb);
   }
 
   public getState(): SyncRoomState {
@@ -270,9 +279,17 @@ export class SyncPartyService {
   }
 
   private notifyState(): void {
+    const state = this.getState();
     if (this.onStateChangeCb) {
-      this.onStateChangeCb(this.getState());
+      this.onStateChangeCb(state);
     }
+    this.listeners.forEach((listener) => {
+      try {
+        listener(state);
+      } catch (err) {
+        console.error('[SyncParty] Listener error:', err);
+      }
+    });
   }
 }
 

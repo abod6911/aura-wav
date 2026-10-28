@@ -1,3 +1,5 @@
+import { TrackActionSheet } from './TrackActionSheet';
+import { triggerHaptic } from '../../utils/haptics';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Track } from '../../types';
@@ -17,15 +19,14 @@ import {
   Shuffle,
   Clock,
   Mic2,
-  HardDrive,
   CheckCircle2,
   Image as ImageIcon,
   ArrowUp,
-  Tag,
   Sliders,
   ListEnd,
   Pencil,
   Download,
+  AlertCircle,
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -59,6 +60,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const [sortBy, setSortBy] = useState<SortOption>('number');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
+  const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   useEffect(() => {
     const handleClose = () => setContextMenu(null);
@@ -70,11 +72,17 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     };
   }, []);
 
-  const handleContextMenu = useCallback((track: Track, clientX: number, clientY: number) => {
+  const handleContextMenu = useCallback((track: Track, clientX?: number, clientY?: number) => {
+    if (window.innerWidth < 768 || clientX === undefined) {
+      triggerHaptic('light');
+      setActionSheetTrack(track);
+      setContextMenu(null);
+      return;
+    }
     const menuWidth = 250;
     const menuHeight = 280;
     let x = clientX;
-    let y = clientY;
+    let y = clientY || 0;
     
     if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
     if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
@@ -216,7 +224,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-6 pb-[calc(200px+env(safe-area-inset-bottom,24px))] md:pb-28 w-full max-w-full">
+    <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2">
       {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 apple-glass-card shadow-[0_20px_60px_rgba(0,0,0,0.7)] transform-gpu">
@@ -693,6 +701,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           </button>
         </div>
       )}
+      {/* iOS Native Track Action Sheet */}
+      <TrackActionSheet
+        track={actionSheetTrack}
+        isOpen={!!actionSheetTrack}
+        onClose={() => setActionSheetTrack(null)}
+      />
     </div>
   );
 };
@@ -700,15 +714,18 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 interface TrackTableRowProps {
   track: Track;
   index: number;
-  onContextMenu?: (track: Track, clientX: number, clientY: number) => void;
+  onContextMenu?: (track: Track, clientX?: number, clientY?: number) => void;
 }
 
 const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, onContextMenu }) => {
+  const { t } = useTranslation();
   const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
   const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
   const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
   const isNextUp = usePlayerStore((state) => state.nextUpTrackId === track.id);
   const isDownloaded = usePlayerStore((state) => state.downloadedTrackIds.includes(track.id));
+  const unavailableTrackIds = usePlayerStore((state) => state.unavailableTrackIds);
+  const isUnavailable = unavailableTrackIds.includes(track.id) || !!track.unavailable;
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -744,8 +761,9 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
     const clientX = touch.clientX;
     const clientY = touch.clientY;
     touchTimerRef.current = setTimeout(() => {
+      triggerHaptic('medium');
       if (onContextMenu) onContextMenu(track, clientX, clientY);
-    }, 500);
+    }, 450);
   };
 
   const clearTouchTimer = () => {
@@ -763,7 +781,9 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
       onTouchEnd={clearTouchTimer}
       onTouchMove={clearTouchTimer}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-      className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+      className={`group h-16 min-h-[64px] grid grid-cols-[26px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-75 select-none active:scale-[0.98] active:bg-white/[0.06] my-1 ${
+        isUnavailable ? 'opacity-50 hover:opacity-80 ' : ''
+      }${
         isCurrent
           ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
           : isNextUp
@@ -804,7 +824,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
 
       {/* 2. Official Album Artwork + Title & Artist */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+        <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
           <OptimizedImage
             src={track.artworkUrl || track.coverUrl}
             alt={track.title}
@@ -812,11 +832,18 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             containerClassName="w-full h-full"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+          {isCurrent && isPlaying && (
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center gap-[2px]">
+              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-3.5" />
+              <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2.5" />
+              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4" />
+            </div>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <h4
-              className={`text-xs sm:text-[14px] font-bold truncate tracking-tight leading-snug ${
+              className={`text-[14px] sm:text-[15px] font-semibold truncate tracking-tight leading-snug ${
                 isCurrent ? 'text-[#FA243C]' : 'text-white group-hover:text-white'
               }`}
             >
@@ -824,6 +851,15 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             </h4>
             {isDownloaded && (
               <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+            )}
+            {isUnavailable && (
+              <span
+                className="inline-flex items-center gap-1 text-[9px] text-amber-400 bg-amber-500/15 px-1.5 py-0.5 rounded-full border border-amber-500/35 font-bold flex-shrink-0"
+                title={t.unavailableTrack}
+              >
+                <AlertCircle className="w-2.5 h-2.5 text-amber-400" />
+                <span className="hidden xs:inline">{t.unavailableTrack}</span>
+              </span>
             )}
             {isNextUp && (
               <span className="inline-flex items-center gap-1 text-[9px] text-purple-400 bg-purple-500/15 px-2 py-0.5 rounded-full border border-purple-500/35 font-bold flex-shrink-0 animate-pulse">
@@ -887,10 +923,28 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         ))}
       </div>
 
-      {/* 6. Action Cluster: Heart + Duration + More Menu */}
-      <div className="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
+      {/* 6. Action Cluster: Play Next (44x44px) + Heart (44x44px) + More Menu */}
+      <div className="flex items-center justify-end gap-0.5 sm:gap-1.5 flex-shrink-0" style={{ touchAction: 'manipulation' }}>
+        {/* Play Next / Add to Queue 44x44px Button */}
         <motion.button
-          whileTap={{ scale: 1.35 }}
+          whileTap={{ scale: 0.86 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              try { navigator.vibrate(12); } catch {}
+            }
+            usePlayerStore.getState().playNext(track);
+          }}
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full hover:bg-white/[0.08] active:bg-white/[0.14] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+          title={t.playNext}
+          aria-label={t.playNext}
+        >
+          <ListPlus className="w-5 h-5 text-white/80 hover:text-[#FA243C]" />
+        </motion.button>
+
+        {/* Favorite 44x44px Button */}
+        <motion.button
+          whileTap={{ scale: 1.3 }}
           onClick={(e) => {
             e.stopPropagation();
             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -898,11 +952,11 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             }
             usePlayerStore.getState().toggleFavorite(track.id);
           }}
-          className="p-1.5 rounded-full hover:bg-white/[0.08] transition-all cursor-pointer"
-          aria-label="Toggle favorite"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full hover:bg-white/[0.08] active:bg-white/[0.14] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+          aria-label={isFav ? "إزالة من المفضلة" : "إضافة للمفضلة"}
         >
           <Heart
-            className={`w-4 h-4 transition-colors ${
+            className={`w-5 h-5 transition-colors ${
               isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
             }`}
           />
@@ -916,7 +970,12 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsMenuOpen(!isMenuOpen);
+              triggerHaptic('light');
+              if (window.innerWidth < 768 && onContextMenu) {
+                onContextMenu(track);
+              } else {
+                setIsMenuOpen(!isMenuOpen);
+              }
             }}
             className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
             aria-label="Track options"

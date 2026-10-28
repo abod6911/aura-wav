@@ -1,11 +1,19 @@
 import { Track } from '../types';
-import { fetchOnlineArtwork, generateLuxuriousGeometricCover, generateLuxuryCanvasArtwork, getDB } from '../lib/metadata';
+import { fetchOnlineArtwork } from '../lib/metadata';
+import { dexieDB, bulkSaveTracksToDexie } from '../db/dexieDB';
 import { parseAudioFileMetadata, registerObjectUrl } from './metadataParser';
 import { parseLRC } from './lyricsParser';
 import { extractPaletteFromImage } from '../lib/colorSampler';
 import { resolveCatalogCover, resolveCatalogTrackItem } from '../data/tracksCatalog';
 import { saveAudioFileToStorage } from './storageManager';
-import { bulkSaveTracksToDexie } from '../db/dexieDB';
+
+
+function yieldToMainThread(): Promise<void> {
+  if (typeof requestIdleCallback !== 'undefined') {
+    return new Promise((resolve) => requestIdleCallback(() => resolve(), { timeout: 35 }));
+  }
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
 
 const SUPPORTED_EXTENSIONS = ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac', '.webm'];
 
@@ -81,10 +89,8 @@ export async function processAudioFiles(
   const audioFiles = files.filter((f) => isAudioFile(f.name));
   const total = audioFiles.length;
   const tracks: Track[] = [];
-  const db = await getDB();
-
   // Load existing tracks to match and enrich rather than creating duplicate entries
-  const existingTracks = (await db.getAll('tracks')) as Track[];
+  const existingTracks = await dexieDB.tracks.toArray();
   const trackByFile = new Map<string, Track>();
   const trackByNumber = new Map<number, Track>();
   const trackBySignature = new Map<string, Track>();
@@ -105,6 +111,7 @@ export async function processAudioFiles(
   for (let i = 0; i < total; i += CHUNK_SIZE) {
     const chunk = audioFiles.slice(i, i + CHUNK_SIZE);
     const chunkTracks: Track[] = [];
+    const chunkArtworks: { id: string; blob: Blob }[] = [];
 
     await Promise.all(
       chunk.map(async (file, chunkIdx) => {
@@ -185,10 +192,12 @@ export async function processAudioFiles(
             ? await extractPaletteFromImage(artworkUrl)
             : { primary: '#FA243C', secondary: '#FF375F' };
 
-          // Use file.slice() to create a clean Blob without duplicating full audio binary in RAM
+          // 1. Permanently store raw audio into storage engine (OPFS / IndexedDB)
           const pureAudioBlob = file.slice(0, file.size, file.type || 'audio/mpeg');
+          const storageEngine = await saveAudioFileToStorage(trackId, pureAudioBlob);
 
-          const track: Track = {
+          // 2. Build lightweight metadata-only Track record (no raw binary file/blob kept in RAM)
+          const cleanTrack: Track = {
             id: trackId,
             title: finalTitle,
             artist: finalArtist,
@@ -202,34 +211,18 @@ export async function processAudioFiles(
             secondaryColor: palette.secondary,
             lyrics: lyricsText,
             syncedLyrics,
-            file,
-            blob: pureAudioBlob,
             fileName: file.name,
             source: 'local',
+            storageType: storageEngine,
             dateAdded: Date.now(),
           };
 
-          chunkTracks.push(track);
-          tracks.push(track);
+          chunkTracks.push(cleanTrack);
+          tracks.push(cleanTrack);
 
-          // 1. Permanently store raw audio into storage engine
-          const storageEngine = await saveAudioFileToStorage(trackId, pureAudioBlob);
-
-          // 2. Save serializable track metadata
-          const { file: _f, blob: _b, ...serializable } = track;
-          try {
-            await db.put('tracks', { ...serializable, storageType: storageEngine } as Track);
-          } catch (err) {
-            console.warn(`Could not store track metadata for ${file.name}:`, err);
-          }
-
-          // 3. Store artwork blob if custom
+          // 3. Queue custom artwork blob for batch write to Dexie
           if (artworkBlob) {
-            try {
-              await db.put('artworkBlobs', { id: trackId, blob: artworkBlob });
-            } catch {
-              // ignore
-            }
+            chunkArtworks.push({ id: trackId, blob: artworkBlob });
           }
         } catch (err) {
           console.warn(`Failed to process ${file.name}:`, err);
@@ -240,21 +233,22 @@ export async function processAudioFiles(
     // Save batch to Dexie incrementally to prevent memory spike
     if (chunkTracks.length > 0) {
       try {
-        await bulkSaveTracksToDexie(chunkTracks);
+        await bulkSaveTracksToDexie(chunkTracks, [], chunkArtworks);
       } catch (dexieErr) {
         console.warn('Could not save chunk to Dexie:', dexieErr);
       }
     }
 
     // Yield control to main thread so browser renders smoothly and garbage collects
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await yieldToMainThread();
   }
 
   try {
-    const dbSettings = await getDB();
-    await dbSettings.put('settings', resolvedFolderName, 'savedFolderName');
-    await dbSettings.put('settings', tracks.length, 'savedFolderTrackCount');
-    await dbSettings.put('settings', Date.now(), 'savedFolderTimestamp');
+    await dexieDB.settings.bulkPut([
+      { key: 'savedFolderName', value: resolvedFolderName },
+      { key: 'savedFolderTrackCount', value: tracks.length },
+      { key: 'savedFolderTimestamp', value: Date.now() },
+    ]);
   } catch (err) {
     console.warn('Could not persist folder settings:', err);
   }
@@ -276,10 +270,11 @@ export async function pickLocalDirectory(
       const dirHandle = await (window as any).showDirectoryPicker({ mode: 'read' });
       // Persist directory handle and name in IndexedDB
       try {
-        const db = await getDB();
-        await db.put('settings', dirHandle, 'savedDirectoryHandle');
-        await db.put('settings', dirHandle.name, 'savedDirectoryName');
-        await db.put('settings', dirHandle.name, 'savedFolderName');
+        await dexieDB.settings.bulkPut([
+          { key: 'savedDirectoryHandle', value: dirHandle },
+          { key: 'savedDirectoryName', value: dirHandle.name },
+          { key: 'savedFolderName', value: dirHandle.name },
+        ]);
       } catch (err) {
         console.warn('Could not persist directory handle:', err);
       }
@@ -295,5 +290,33 @@ export async function pickLocalDirectory(
     }
   } else {
     throw new Error('DIRECTORY_PICKER_NOT_SUPPORTED');
+  }
+}
+
+/**
+ * Query persistent FileSystemDirectoryHandle read permission without triggering a UI prompt
+ */
+export async function queryDirectoryPermission(dirHandle: any): Promise<'granted' | 'prompt' | 'denied'> {
+  if (!dirHandle || typeof dirHandle.queryPermission !== 'function') return 'denied';
+  try {
+    return await dirHandle.queryPermission({ mode: 'read' });
+  } catch (err) {
+    console.warn('[FileScanner] queryPermission notice:', err);
+    return 'denied';
+  }
+}
+
+/**
+ * Request persistent FileSystemDirectoryHandle read permission from user.
+ * MUST be invoked inside a direct user-gesture event (e.g. click/tap).
+ */
+export async function requestDirectoryPermission(dirHandle: any): Promise<boolean> {
+  if (!dirHandle || typeof dirHandle.requestPermission !== 'function') return false;
+  try {
+    const res = await dirHandle.requestPermission({ mode: 'read' });
+    return res === 'granted';
+  } catch (err) {
+    console.warn('[FileScanner] requestPermission notice:', err);
+    return false;
   }
 }

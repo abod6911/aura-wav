@@ -144,7 +144,7 @@ export const AudioReactiveBackground: React.FC<{
         );
 
         grad.addColorStop(0, blob.color);
-        grad.addColorStop(0.5, blob.color.replace(/[\d\.]+\)$/, '0.12)'));
+        grad.addColorStop(0.5, blob.color.replace(/[\d.]+\)$/, '0.12)'));
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
         ctx.fillStyle = grad;

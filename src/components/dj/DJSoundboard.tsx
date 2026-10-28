@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { Sparkles, X, Disc, Volume2, Flame, Sliders, Zap, Activity, Radio, SlidersHorizontal } from 'lucide-react';
+import { X, Disc, Volume2, Flame, Zap, Activity, Radio, SlidersHorizontal } from 'lucide-react';
 
 interface SoundPad {
   id: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer';

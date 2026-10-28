@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef, lazy, Suspense } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, lazy, Suspense } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from './store/usePlayerStore';
 import { AtmosphereBackground } from './components/AtmosphereBackground';
 import { Sidebar } from './components/Sidebar';
@@ -31,6 +32,8 @@ const DJFxSheet = lazy(() => import('./components/dj/DJFxSheet').then((m) => ({ 
 const AutoMixSelectorModal = lazy(() => import('./components/dj/AutoMixSelectorModal').then((m) => ({ default: m.AutoMixSelectorModal })));
 const CarPlayMode = lazy(() => import('./components/carplay/CarPlayMode').then((m) => ({ default: m.CarPlayMode })));
 const SpotlightCommandModal = lazy(() => import('./components/search/SpotlightCommandModal').then((m) => ({ default: m.SpotlightCommandModal })));
+const SyncPartyModal = lazy(() => import('./components/party/SyncPartyModal').then((m) => ({ default: m.SyncPartyModal })));
+const HarmonicSetGenerator = lazy(() => import('./components/player/HarmonicSetGenerator').then((m) => ({ default: m.HarmonicSetGenerator })));
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -76,6 +79,39 @@ function OfflineBanner() {
   }
 
   return null;
+}
+
+
+function DirectoryPermissionBanner() {
+  const needsPermission = usePlayerStore((state) => state.needsDirectoryPermission);
+  const requestAccess = usePlayerStore((state) => state.requestDirectoryAccess);
+  const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+  const { t } = useTranslation();
+
+  if (!needsPermission) return null;
+
+  return (
+    <div className="sticky top-0 z-[105] w-full px-4 py-2.5 bg-gradient-to-r from-amber-500/25 via-orange-500/20 to-amber-500/25 border-b border-amber-500/40 text-white backdrop-blur-2xl flex items-center justify-between gap-3 shadow-xl animate-fadeIn">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-base flex-shrink-0 animate-bounce">🔑</span>
+        <div className="min-w-0">
+          <span className="text-xs font-bold text-amber-200 block truncate">
+            {t.directoryPermissionPrompt}
+          </span>
+          <span className="text-[10px] text-amber-300/80 block truncate font-mono">
+            {savedFolderName || 'Liked_Songs'}
+          </span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={() => requestAccess()}
+        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black text-xs font-black shadow-md apple-spring cursor-pointer flex-shrink-0 active:scale-95 transition-transform"
+      >
+        {t.grantDirectoryAccess}
+      </button>
+    </div>
+  );
 }
 
 function DownloadProgressPill() {
@@ -139,12 +175,57 @@ export function App() {
   const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
   const isCarModeOpen = usePlayerStore((state) => state.isCarModeOpen);
   const isSpotlightOpen = usePlayerStore((state) => state.isSpotlightOpen);
+  const isSyncPartyOpen = usePlayerStore((state) => state.isSyncPartyOpen);
+  const isHarmonicJourneyOpen = usePlayerStore((state) => state.isHarmonicJourneyOpen);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const prevVolumeRef = useRef(0.8);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const importTracks = usePlayerStore((state) => state.importTracks);
+
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+  const tabScrollMap = useRef<Record<string, number>>({});
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+
+  const handleMainScroll = (e: React.UIEvent<HTMLElement>) => {
+    const st = e.currentTarget.scrollTop;
+    tabScrollMap.current[activeTab] = st;
+    if (st > 20 && !isHeaderScrolled) {
+      setIsHeaderScrolled(true);
+    } else if (st <= 20 && isHeaderScrolled) {
+      setIsHeaderScrolled(false);
+    }
+  };
+
+  // Restore scroll position synchronously when activeTab mounts without keeping inactive tabs in DOM
+  useLayoutEffect(() => {
+    const mainEl = mainScrollRef.current;
+    if (!mainEl) return;
+    const targetScroll = tabScrollMap.current[activeTab] || 0;
+    mainEl.scrollTop = targetScroll;
+    setIsHeaderScrolled(targetScroll > 20);
+  }, [activeTab]);
+
+  const isModalActive =
+    isMobilePlayerOpen ||
+    isQueueOpen ||
+    isEqualizerOpen ||
+    isSoundboardOpen ||
+    isAutoMixModalOpen ||
+    isSleepTimerOpen ||
+    isChangeArtworkOpen ||
+    isMetadataEditorOpen;
 
   // Synchronize dynamic Apple Liquid Accent with album artwork
   useEffect(() => {
@@ -154,9 +235,17 @@ export function App() {
     document.documentElement.style.setProperty('--aura-accent-glow', `${accent}55`);
   }, [currentTrack]);
 
-  // Initialize DB and Service Worker
+  // Initialize DB, Party URL invite, and Service Worker
   useEffect(() => {
     initStore();
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const partyCode = params.get('party');
+      if (partyCode) {
+        usePlayerStore.getState().setSyncPartyOpen(true);
+      }
+    }
 
     // Enable system background playback session for iOS 16.4+ / iPadOS / macOS / Android
     if (typeof navigator !== 'undefined' && 'audioSession' in navigator) {
@@ -354,7 +443,9 @@ export function App() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       dir={dir}
-      className="relative min-h-screen min-h-[100dvh] w-full flex bg-[#08080c] text-[#f4f4f5] overflow-x-hidden font-sans selection:bg-[#FA243C]/25"
+      className={`fixed inset-0 w-full h-[100dvh] overflow-hidden select-none overscroll-none bg-[#060609] text-[#f4f4f7] font-sans selection:bg-[#FA243C]/25 ${
+        isMobile ? 'flex flex-col' : 'flex flex-row'
+      }`}
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
@@ -369,20 +460,43 @@ export function App() {
         </div>
       )}
 
-      {/* 1. Dynamic Album Art Ambient Mesh */}
+      {/* 1. Dynamic Album Art Ambient Mesh (CSS-only on mobile, WebGL on desktop) */}
       <AtmosphereBackground />
 
-      {/* 2. Desktop Left Sidebar */}
-      <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />
+      {/* 2. Desktop Left Sidebar (Only rendered on desktop) */}
+      {!isMobile && <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />}
 
-      {/* 3. Main View Area */}
-      <main className="main-safe-area flex-1 flex flex-col min-w-0 h-[100dvh] overflow-y-auto overscroll-y-contain touch-pan-y transform-gpu px-3 sm:px-6 md:px-8 z-10 scrollbar-thin scrollbar-thumb-white/10">
+      {/* 3. Header on Mobile (Stays fixed at top of column) */}
+      {isMobile && (
+        <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
+      )}
+
+      {/* 4. Main View Area (iOS Recessed Card Depth on Sheet Open) */}
+      <main
+        ref={mainScrollRef}
+        onScroll={handleMainScroll}
+        style={{
+          transform: isModalActive ? 'scale(0.94)' : 'scale(1)',
+          borderRadius: isModalActive ? '28px' : '0px',
+          filter: isModalActive ? 'brightness(0.7)' : 'brightness(1)',
+          transformOrigin: 'top center',
+          transition: 'transform 340ms cubic-bezier(0.32, 0.72, 0, 1), border-radius 340ms ease, filter 340ms ease',
+        }}
+        className="flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10"
+      >
         <OfflineBanner />
+        <DirectoryPermissionBanner />
         <DownloadProgressPill />
-        <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
-          <Header onOpenImport={() => setIsImportModalOpen(true)} />
 
-          {/* Dynamic Tab Views */}
+        {/* Desktop Header sits inside main */}
+        {!isMobile && (
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
+          </div>
+        )}
+
+        <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
+          {/* Dynamic Tab Views (Strict Conditional Rendering: ONLY activeTab in DOM) */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
               <div className="w-12 h-12 rounded-full border-4 border-[var(--apple-rose)]/20 border-t-[var(--apple-rose)] animate-spin" />
@@ -391,38 +505,63 @@ export function App() {
           ) : (
             <div className="flex-1 w-full min-w-0">
               {activeTab === 'home' && (
-                <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />
+                <div key="tab-home" className="animate-tab-enter">
+                  <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />
+                </div>
               )}
-              {activeTab === 'search' && <InfiniteSearchView />}
+              {activeTab === 'search' && (
+                <div key="tab-search" className="animate-tab-enter">
+                  <InfiniteSearchView />
+                </div>
+              )}
               {activeTab === 'library' && (
-                <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
+                <div key="tab-library" className="animate-tab-enter">
+                  <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
+                </div>
               )}
               {activeTab === 'favorites' && (
-                <FavoritesView onExplore={() => usePlayerStore.getState().setActiveTab('library')} />
+                <div key="tab-favorites" className="animate-tab-enter">
+                  <FavoritesView onExplore={() => usePlayerStore.getState().setActiveTab('library')} />
+                </div>
               )}
-              {activeTab === 'playlists' && <PlaylistsView />}
+              {activeTab === 'playlists' && (
+                <div key="tab-playlists" className="animate-tab-enter">
+                  <PlaylistsView />
+                </div>
+              )}
             </div>
           )}
         </div>
       </main>
 
-      {/* 3.5 Desktop Right Sidebar (Collapsible Queue & Details) */}
-      <RightSidebar />
+      {/* 5. Desktop Right Sidebar (Only rendered on desktop) */}
+      {!isMobile && <RightSidebar />}
 
-      {/* 4. Desktop Persistent Player Bar */}
-      <PlayerBar />
+      {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
+      {!isMobile && <PlayerBar />}
 
-      {/* 5. Mobile Floating Mini-Player */}
-      <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
+      {/* 7. Mobile Bottom Controls (MiniPlayer + NavDock in rigid shrink-0 container) */}
+      {isMobile && (
+        <div className="shrink-0 w-full z-40 bg-gradient-to-t from-[#060609] via-[#060609]/95 to-transparent pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))] flex flex-col items-center">
+          <AnimatePresence>
+            {!isMobilePlayerOpen && currentTrack && (
+              <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
+            )}
+          </AnimatePresence>
 
-      {/* 6. Mobile Expandable Full-Screen Sheet */}
+          <AnimatePresence>
+            {!isMobilePlayerOpen && (
+              <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* 8. Mobile Expandable Full-Screen Sheet */}
       <ExpandedPlayer
         isOpen={isMobilePlayerOpen}
         onClose={() => setMobilePlayerOpen(false)}
       />
-
-      {/* 7. Mobile Bottom Navigation Dock */}
-      <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
 
       {/* 8. Drawers & Modals (Lazy-loaded and mounted only when active) */}
       <ToastContainer />
@@ -456,6 +595,8 @@ export function App() {
         {isAutoMixModalOpen && <AutoMixSelectorModal />}
         {isCarModeOpen && <CarPlayMode />}
         {isSpotlightOpen && <SpotlightCommandModal />}
+        {isSyncPartyOpen && <SyncPartyModal />}
+        {isHarmonicJourneyOpen && <HarmonicSetGenerator />}
       </Suspense>
     </div>
   );

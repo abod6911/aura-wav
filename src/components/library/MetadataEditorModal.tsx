@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { searchOnlineArtworkCandidates, ArtworkCandidate } from '../../lib/metadata';
-import { X, Save, Upload, Sparkles, Music, Disc, User, Calendar, Tag, Check, Loader2 } from 'lucide-react';
+import { X, Save, Upload, Sparkles, Music, Disc, User, Calendar, Tag, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const MetadataEditorModal: React.FC = () => {
@@ -105,7 +105,7 @@ export const MetadataEditorModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-2xl select-none overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl select-none overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

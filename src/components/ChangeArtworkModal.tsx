@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { searchOnlineArtworkCandidates, generateLuxuryCanvasArtwork, ArtworkCandidate } from '../lib/metadata';
 import { X, Search, Upload, Sparkles, Image as ImageIcon, Loader2, Check } from 'lucide-react';
@@ -16,20 +16,7 @@ export const ChangeArtworkModal: React.FC = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [selectedArtworkUrl, setSelectedArtworkUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (targetTrack && isOpen) {
-      const initialQuery = `${targetTrack.artist !== 'Unknown Artist' ? targetTrack.artist : ''} ${targetTrack.title}`.trim();
-      setQuery(initialQuery);
-      setSelectedArtworkUrl(targetTrack.artworkUrl || null);
-      handleSearch(initialQuery);
-    } else {
-      setCandidates([]);
-    }
-  }, [targetTrack, isOpen]);
-
-  if (!isOpen || !targetTrack) return null;
-
-  const handleSearch = async (searchTerm?: string) => {
+  const handleSearch = useCallback(async (searchTerm?: string) => {
     const q = (searchTerm !== undefined ? searchTerm : query).trim();
     if (!q) return;
     setIsSearching(true);
@@ -41,7 +28,20 @@ export const ChangeArtworkModal: React.FC = () => {
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [query]);
+
+  useEffect(() => {
+    if (targetTrack && isOpen) {
+      const initialQuery = `${targetTrack.artist !== 'Unknown Artist' ? targetTrack.artist : ''} ${targetTrack.title}`.trim();
+      setQuery(initialQuery);
+      setSelectedArtworkUrl(targetTrack.artworkUrl || null);
+      handleSearch(initialQuery);
+    } else {
+      setCandidates([]);
+    }
+  }, [targetTrack, isOpen, handleSearch]);
+
+  if (!isOpen || !targetTrack) return null;
 
   const handleSelectCandidate = async (candidate: ArtworkCandidate) => {
     setIsApplying(true);
@@ -99,14 +99,24 @@ export const ChangeArtworkModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-2xl select-none overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none overflow-y-auto">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="w-full max-w-xl bg-[#09090e]/95 border border-white/[0.1] rounded-3xl p-5 sm:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 relative overflow-hidden my-auto"
+          initial={{ opacity: 0, y: '100%' }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: '100%' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 100 || info.velocity.y > 350) {
+              setChangeArtworkModal(false);
+            }
+          }}
+          className="w-full max-w-xl bg-[#09090e]/95 border-t sm:border border-white/[0.1] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 relative overflow-hidden my-auto"
         >
+          {/* iOS Grab Handle */}
+          <div onClick={() => setChangeArtworkModal(false)} className="w-10 h-1.5 bg-white/20 hover:bg-white/40 rounded-full mx-auto mb-4 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
           {/* Top Ambient Glow */}
           <div className="absolute top-0 right-1/3 w-72 h-72 bg-[var(--apple-rose)]/10 rounded-full blur-3xl pointer-events-none" />
 

@@ -9,8 +9,7 @@
  *    - Atomic per-track transactions avoiding single-transaction timeout/quota bugs
  */
 
-import { create } from 'zustand';
-import { getDB } from '../db/indexedDB';
+import { clearDexieLibrary } from '../db/dexieDB';
 import { dexieDB } from '../db/dexieDB';
 
 type StorageChangeCallback = () => void;
@@ -113,18 +112,11 @@ export async function saveAudioFileToStorage(
     }
   }
 
-  // Dual-persist: Always record in IndexedDB / Dexie so audioBlobs keys are tracked by the store on restart
+  // Persist into Dexie audioBlobs as storage fallback
   try {
     await dexieDB.audioBlobs.put({ id: trackId, blob: blobOrFile });
-  } catch {}
-
-  try {
-    const db = await getDB();
-    const tx = db.transaction('audioBlobs', 'readwrite');
-    await tx.store.put({ id: trackId, blob: blobOrFile });
-    await tx.done;
-  } catch (idbErr) {
-    console.warn(`[StorageManager] IndexedDB save error for ${trackId}:`, idbErr);
+  } catch (err) {
+    console.warn(`[StorageManager] Dexie fallback save error for ${trackId}:`, err);
   }
 
   notifyStorageChange();
@@ -132,7 +124,7 @@ export async function saveAudioFileToStorage(
 }
 
 /**
- * Retrieve raw audio Blob from OPFS, Dexie.js, or IndexedDB
+ * Retrieve raw audio Blob from OPFS or Dexie.js
  */
 export async function getAudioFileFromStorage(trackId: string): Promise<Blob | null> {
   // 1. Try OPFS first
@@ -158,22 +150,11 @@ export async function getAudioFileFromStorage(trackId: string): Promise<Blob | n
     }
   } catch {}
 
-  // 3. Try IndexedDB audioBlobs
-  try {
-    const db = await getDB();
-    const item = await db.get('audioBlobs', trackId);
-    if (item && item.blob) {
-      return item.blob;
-    }
-  } catch (idbErr) {
-    console.warn(`[StorageManager] IndexedDB retrieval error for ${trackId}:`, idbErr);
-  }
-
   return null;
 }
 
 /**
- * Delete an audio file from OPFS and IndexedDB
+ * Delete an audio file from OPFS and Dexie
  */
 export async function deleteAudioFileFromStorage(trackId: string): Promise<void> {
   const opfsDir = await getOPFSDirectory();
@@ -186,11 +167,6 @@ export async function deleteAudioFileFromStorage(trackId: string): Promise<void>
 
   try {
     await dexieDB.audioBlobs.delete(trackId);
-  } catch {}
-
-  try {
-    const db = await getDB();
-    await db.delete('audioBlobs', trackId);
   } catch {}
 
   notifyStorageChange();
@@ -210,23 +186,11 @@ export async function clearAllLocalStorage(): Promise<void> {
     }
   }
 
-  // Clear IndexedDB tables
+  // Clear Dexie tables
   try {
-    const db = await getDB();
-    const tx = db.transaction(['tracks', 'audioBlobs', 'favorites', 'playlists'], 'readwrite');
-    await tx.objectStore('tracks').clear();
-    await tx.objectStore('audioBlobs').clear();
-    await tx.objectStore('favorites').clear();
-    await tx.objectStore('playlists').clear();
-    await tx.done;
-
-    await db.delete('settings', 'savedFolderName');
-    await db.delete('settings', 'savedFolderTrackCount');
-    await db.delete('settings', 'savedFolderTimestamp');
-    await db.delete('settings', 'savedDirectoryHandle');
-    await db.delete('settings', 'savedDirectoryName');
-  } catch (idbErr) {
-    console.warn('[StorageManager] Clear IndexedDB error:', idbErr);
+    await clearDexieLibrary();
+  } catch (err) {
+    console.warn('[StorageManager] Clear Dexie error:', err);
   }
 
   notifyStorageChange();
@@ -238,17 +202,14 @@ export async function clearAllLocalStorage(): Promise<void> {
 export async function getStorageStatistics(): Promise<StorageStats> {
   let trackCount = 0;
   try {
-    const db = await getDB();
-    const allTracks = await db.getAll('tracks');
-    trackCount = allTracks.length;
+    trackCount = await dexieDB.tracks.count();
   } catch {}
 
   let totalSizeBytes = 0;
 
-  // 1. Calculate actual sizes of stored blobs in IndexedDB
+  // 1. Calculate actual sizes of stored blobs in Dexie
   try {
-    const db = await getDB();
-    const allBlobs = await db.getAll('audioBlobs');
+    const allBlobs = await dexieDB.audioBlobs.toArray();
     for (const item of allBlobs) {
       if (item && item.blob) {
         totalSizeBytes += item.blob.size;

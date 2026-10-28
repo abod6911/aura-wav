@@ -2,7 +2,6 @@ import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { X, Trash2, ListMusic, Heart, Play, Radio, Sparkles, Disc, ArrowUp, ArrowDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export const RightSidebar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();

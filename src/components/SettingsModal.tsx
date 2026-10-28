@@ -3,7 +3,6 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import {
   X,
-  HardDrive,
   FolderPlus,
   RefreshCw,
   Trash2,

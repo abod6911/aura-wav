@@ -104,7 +104,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-[calc(185px+env(safe-area-inset-bottom,20px))] md:pb-24 space-y-6 select-none" dir={dir}>
+    <div className="w-full max-w-7xl mx-auto py-2 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 space-y-4 select-none overflow-x-hidden" dir={dir}>
       {/* 1. Hero Header Banner */}
       <div className="relative overflow-hidden rounded-3xl apple-glass-card p-4 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] transform-gpu">
         <div
@@ -287,8 +287,9 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                       {isRowPlaying ? (
                         <div className="flex items-end gap-[2px] h-3.5">
                           <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
-                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
-                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
+                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-full" />
+                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-full" />
+                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-4 h-full" />
                         </div>
                       ) : (
                         <span

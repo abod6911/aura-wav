@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { usePlayerStore, EQ_PRESETS } from '../store/usePlayerStore';
 import { EQ_BANDS, ReverbSpace } from '../lib/audioEngine';
-import { AudioVisualizer } from './AudioVisualizer';
 import {
   X,
   Sliders,
@@ -137,17 +136,22 @@ export const EqualizerModal: React.FC = () => {
       {isEqualizerOpen && (
         <div data-testid="equalizer-modal" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: '100%' }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 40 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="w-full sm:max-w-4xl w-[92vw] bg-[#09090e]/95 border-t sm:border border-white/[0.1] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 sm:space-y-5 relative overflow-hidden max-h-[92vh] sm:max-h-[88vh] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
+          exit={{ opacity: 0, y: '100%' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 100 || info.velocity.y > 350) {
+              setEqualizerOpen(false);
+            }
+          }}
+          className="w-full sm:max-w-4xl bg-[#09090e]/95 border-t sm:border border-white/[0.1] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 sm:space-y-5 relative overflow-hidden max-h-[92vh] sm:max-h-[88vh] pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10"
         >
           {/* iOS Mobile Drag Pill */}
-          <div
-            onClick={() => setEqualizerOpen(false)}
-            className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
-          />
+          <div onClick={() => setEqualizerOpen(false)} className="w-10 h-1.5 bg-white/20 hover:bg-white/40 rounded-full mx-auto mb-4 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
 
           {/* Top Ambient Glow */}
           <div className="absolute top-0 right-1/4 w-80 h-80 bg-[var(--apple-rose)]/10 rounded-full blur-3xl pointer-events-none" />

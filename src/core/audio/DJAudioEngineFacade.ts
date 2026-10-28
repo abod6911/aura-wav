@@ -5,7 +5,7 @@ import { EffectsChain } from './dsp/EffectsChain';
 import { HapticsEngine } from './dsp/HapticsEngine';
 import { LoudnessNormalizer } from './dsp/LoudnessNormalizer';
 import { createAudioTimerWorker, AudioTimerController } from './workers/audioTimer.worker';
-import { AutoMixStyle, DeckChannelName, ReverbSpace, EQ_BANDS } from './types';
+import { AutoMixStyle, DeckChannelName, ReverbSpace } from './types';
 import { getAudioFileFromStorage } from '../../services/storageManager';
 import { resolvePlayableStream } from '../../services/streamingEngine';
 import { SpatialReverbEngine, SpatialMode } from './dsp/SpatialReverbEngine';
@@ -21,6 +21,7 @@ export interface DJEngineCallbacks {
   onMidpointReached?: (track: Track) => void;
   onTransitionComplete?: (track: Track) => void;
   onAutoMixStateChange?: (isMixing: boolean, style: AutoMixStyle) => void;
+  onTrackError?: (track: Track | null, error: any) => void;
 }
 
 export class DJAudioEngineFacade {
@@ -65,6 +66,11 @@ export class DJAudioEngineFacade {
   // Timing throttle
   private lastTimeUpdate = 0;
 
+  // iOS Background Survival & Keep-Alive Bridge
+  private keepAliveAudio: HTMLAudioElement | null = null;
+  private managedAudioObjectUrls = new Set<string>();
+
+
   constructor() {
     this.channelA = new DeckChannel('A');
     this.channelB = new DeckChannel('B');
@@ -78,6 +84,75 @@ export class DJAudioEngineFacade {
     this.setupAudioListeners(this.channelB);
     this.setupTimerLoop();
     this.setupVisibilityAndResumeHandlers();
+  }
+
+  
+  // --- Managed Audio ObjectURLs (Zero-Leak Lifecycle) ---
+  public createManagedAudioUrl(blob: Blob): string {
+    const url = URL.createObjectURL(blob);
+    this.managedAudioObjectUrls.add(url);
+    return url;
+  }
+
+  public revokeManagedAudioUrl(url?: string | null): void {
+    if (!url || !url.startsWith('blob:')) return;
+    if (this.managedAudioObjectUrls.has(url)) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {}
+      this.managedAudioObjectUrls.delete(url);
+    }
+  }
+
+  public purgeUnusedObjectUrls(): void {
+    const activeUrlA = this.channelA.objectUrl;
+    const activeUrlB = this.channelB.objectUrl;
+    for (const url of this.managedAudioObjectUrls) {
+      if (url !== activeUrlA && url !== activeUrlB) {
+        try {
+          URL.revokeObjectURL(url);
+        } catch {}
+        this.managedAudioObjectUrls.delete(url);
+      }
+    }
+  }
+
+  // --- iOS Background Survival & Keep-Alive Bridge ---
+  public initIosKeepAliveBridge(): void {
+    if (typeof document === 'undefined') return;
+    if (!this.keepAliveAudio) {
+      let el = document.getElementById('aura-ios-keepalive') as HTMLAudioElement;
+      if (!el) {
+        el = document.createElement('audio');
+        el.id = 'aura-ios-keepalive';
+        el.style.position = 'fixed';
+        el.style.width = '1px';
+        el.style.height = '1px';
+        el.style.opacity = '0.001';
+        el.style.pointerEvents = 'none';
+        el.style.zIndex = '-1';
+        el.setAttribute('playsinline', 'true');
+        el.setAttribute('webkit-playsinline', 'true');
+        el.loop = true;
+        el.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+        document.body.appendChild(el);
+      }
+      this.keepAliveAudio = el;
+    }
+  }
+
+  public startIosKeepAlive(): void {
+    this.initIosKeepAliveBridge();
+    if (this.keepAliveAudio && this.keepAliveAudio.paused) {
+      this.keepAliveAudio.volume = 0.001;
+      this.keepAliveAudio.play().catch(() => {});
+    }
+  }
+
+  public pauseIosKeepAlive(): void {
+    if (this.keepAliveAudio && !this.keepAliveAudio.paused) {
+      this.keepAliveAudio.pause();
+    }
   }
 
   // --- AudioContext Initialization & Priming ---
@@ -140,8 +215,9 @@ export class DJAudioEngineFacade {
 
     if (this.ctx) {
       this.ctx.onstatechange = () => {
-        if (this.ctx?.state === 'suspended' && this.isPlaying()) {
+        if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted') && this.isPlaying()) {
           this.ctx.resume().catch(() => {});
+          this.startIosKeepAlive();
         }
       };
     }
@@ -181,6 +257,7 @@ export class DJAudioEngineFacade {
 
       this.ensureChannelsAttached();
       this.initContext().catch(() => {});
+      this.startIosKeepAlive();
 
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
@@ -226,6 +303,10 @@ export class DJAudioEngineFacade {
     this.autoMixTriggered = false;
     this.preloadTriggered = false;
 
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
+
     const active = this.getActiveDeck();
     const inactive = this.getInactiveDeck();
 
@@ -242,6 +323,8 @@ export class DJAudioEngineFacade {
         await newActive.play();
         this.notifyPlaybackState(true);
         this.timerWorker.start(20);
+        this.startIosKeepAlive();
+        this.purgeUnusedObjectUrls();
         this.isSwitchingTrack = false;
         return true;
       } catch (err) {
@@ -298,6 +381,7 @@ export class DJAudioEngineFacade {
     this.getActiveDeck().pause();
     this.getInactiveDeck().pause();
     this.timerWorker.stop();
+    this.pauseIosKeepAlive();
     if (typeof document !== 'undefined') {
       const bridge = document.getElementById('aura-background-bridge') as HTMLAudioElement;
       if (bridge && !bridge.paused) {
@@ -399,6 +483,9 @@ export class DJAudioEngineFacade {
       }
 
       this.isAutoMixing = true;
+      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
       if (this.callbacks.onAutoMixStateChange) {
         this.callbacks.onAutoMixStateChange(true, style);
       }
@@ -410,6 +497,9 @@ export class DJAudioEngineFacade {
         durationSec,
         this.ctx,
         (progress) => {
+          if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'playing';
+          }
           if (progress >= 0.5 && this.callbacks.onMidpointReached && incoming.track) {
             this.callbacks.onMidpointReached(incoming.track);
           }
@@ -450,7 +540,7 @@ export class DJAudioEngineFacade {
     try {
       const blob = await getAudioFileFromStorage(track.id);
       if (blob) {
-        const url = URL.createObjectURL(blob);
+        const url = this.createManagedAudioUrl(blob);
         idleDeck.loadTrackUrl(track, url, true);
         idleDeck.setVolume(0);
       } else {
@@ -799,6 +889,16 @@ export class DJAudioEngineFacade {
         this.notifyPlaybackState(false);
       }
     });
+
+    channel.audio.addEventListener('error', (e) => {
+      const audioErr = channel.audio.error;
+      console.warn(`[DJAudioEngine] DeckChannel ${channel.name} audio error:`, audioErr, e);
+      if (this.activeChannelName === channel.name) {
+        if (this.callbacks.onTrackError) {
+          this.callbacks.onTrackError(channel.track, audioErr || new Error('Audio playback error'));
+        }
+      }
+    });
   }
 
   private setupTimerLoop(): void {
@@ -853,8 +953,11 @@ export class DJAudioEngineFacade {
     if (typeof window === 'undefined') return;
 
     const handleResume = () => {
-      if (this.ctx && this.ctx.state === 'suspended' && this.isPlaying()) {
+      if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted') && this.isPlaying()) {
         this.ctx.resume().catch(() => {});
+      }
+      if (this.isPlaying()) {
+        this.startIosKeepAlive();
       }
     };
 
@@ -862,14 +965,23 @@ export class DJAudioEngineFacade {
     window.addEventListener('pageshow', handleResume);
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        handleResume();
+        if (document.visibilityState === 'visible') {
+          handleResume();
+        } else if (document.visibilityState === 'hidden') {
+          if (this.isPlaying()) {
+            this.startIosKeepAlive();
+            if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted')) {
+              this.ctx.resume().catch(() => {});
+            }
+          }
+        }
       });
     }
   }
 
   private async resolveTrackUrl(track: Track): Promise<string> {
     // 1. Direct in-memory Blob
-    if (track.blob) return URL.createObjectURL(track.blob);
+    if (track.blob) return this.createManagedAudioUrl(track.blob);
 
     // 2. Direct Blob URL
     if (track.audioUrl && track.audioUrl.startsWith('blob:')) {
@@ -883,7 +995,7 @@ export class DJAudioEngineFacade {
         storedBlob = await getAudioFileFromStorage(`track_catalog_${track.trackNumber}`);
       }
       if (storedBlob) {
-        return URL.createObjectURL(storedBlob);
+        return this.createManagedAudioUrl(storedBlob);
       }
     } catch {}
 

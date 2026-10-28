@@ -1,5 +1,4 @@
 import { DeckChannel as CoreDeckChannel } from '../core/DeckChannel';
-import { DeckChannel as LegacyDeckChannel } from '../DeckChannel';
 import { AutoMixMode, AutoMixStyle } from '../types';
 
 export class AutoMixController {

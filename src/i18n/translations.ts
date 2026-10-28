@@ -104,6 +104,8 @@ export interface Translations {
   durationSort: string;
   addToQueue: string;
   playNext: string;
+  addedToPlayNext: string;
+  autoplayQueue: string;
   favoriteAdded: string;
   favoriteRemoved: string;
 
@@ -113,6 +115,40 @@ export interface Translations {
   minutes: string;
   endOfTrack: string;
   timerActive: string;
+  // Sync Party & DJ Features
+  syncParty: string;
+  hostParty: string;
+  joinParty: string;
+  roomCode: string;
+  enterRoomCode: string;
+  partyActive: string;
+  listenersCount: string;
+  leaveParty: string;
+  copyInviteLink: string;
+  linkCopied: string;
+  shareInvite: string;
+  liveSynced: string;
+  connectingParty: string;
+  noActiveParty: string;
+  partyHostDesc: string;
+  partyJoinDesc: string;
+  inviteFriends: string;
+  syncPartyTip: string;
+  smartHarmonicMix: string;
+  harmonicMixDesc: string;
+  quickStudio: string;
+  speed: string;
+  waveform: string;
+  djDrops: string;
+
+  // Phase 4: Edge Cases & Offline Continuity
+  trackCorruptedSkipping: string;
+  circuitBreakerTriggered: string;
+  offlineFallbackActive: string;
+  directoryPermissionPrompt: string;
+  grantDirectoryAccess: string;
+  directoryAccessRestored: string;
+  unavailableTrack: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -220,6 +256,8 @@ export const translations: Record<Language, Translations> = {
     durationSort: 'المدة',
     addToQueue: 'إضافة لقائمة الانتظار',
     playNext: 'تشغيل تالياً',
+    addedToPlayNext: 'تمت الإضافة للتشغيل التالي',
+    autoplayQueue: 'التشغيل التلقائي من المكتبة',
     favoriteAdded: 'تمت الإضافة إلى المفضلة',
     favoriteRemoved: 'تمت الإزالة من المفضلة',
 
@@ -229,6 +267,41 @@ export const translations: Record<Language, Translations> = {
     minutes: 'دقيقة',
     endOfTrack: 'في نهاية الأغنية الحالية',
     timerActive: 'مؤقت النوم نشط',
+
+    // Sync Party & DJ Features
+    syncParty: 'جلسة استماع جماعي',
+    hostParty: 'إنشاء غرفة استماع',
+    joinParty: 'الانضمام لغرفة',
+    roomCode: 'رمز الغرفة',
+    enterRoomCode: 'أدخل رمز الغرفة (مثال: AURA_8F2B)',
+    partyActive: 'جلسة الاستماع نشطة الآن',
+    listenersCount: 'مستمع متصل',
+    leaveParty: 'إنهاء / مغادرة الجلسة',
+    copyInviteLink: 'نسخ رابط الدعوة',
+    linkCopied: 'تم نسخ رابط الدعوة بنجاح!',
+    shareInvite: 'مشاركة الجلسة',
+    liveSynced: 'متزامن حياً',
+    connectingParty: 'جاري الاتصال بالجلسة...',
+    noActiveParty: 'لا توجد جلسة نشطة حالياً',
+    partyHostDesc: 'استضف أصدقاءك واستمعوا معاً لنفس الموسيقى بنفس اللحظة دون أي تأخير.',
+    partyJoinDesc: 'أدخل رمز الغرفة لمزامنة المشغل مع المضيف فوراً.',
+    inviteFriends: 'دعوة الأصدقاء للاستماع',
+    syncPartyTip: 'تعتمد المزامنة على توقيت حقيقي عالي الدقة وتصحيح الانجراف الزمني التلقائي.',
+    smartHarmonicMix: 'توليد ميكس هارموني ذكي',
+    harmonicMixDesc: 'ترتيب الأغاني تلقائياً وفق عجلة Camelot ومطابقة سرعة الـ BPM',
+    quickStudio: 'استوديو DJ السريع',
+    speed: 'السرعة',
+    waveform: 'الموجة',
+    djDrops: 'مؤثرات DJ',
+
+    // Phase 4: Edge Cases & Offline Continuity
+    trackCorruptedSkipping: 'تعذر تشغيل المسار، جاري التخطي للتالي تلقائياً...',
+    circuitBreakerTriggered: 'تم إيقاف التشغيل مؤقتاً: تعذر تشغيل 3 مسارات متتالية. يرجى التحقق من الملفات أو الشبكة.',
+    offlineFallbackActive: 'وضع الأوفلاين نشط — تم تحويل التشغيل إلى المكتبة المحفوظة',
+    directoryPermissionPrompt: 'مطلوب تأكيد إذن الوصول لمجلد الموسيقى المحلي',
+    grantDirectoryAccess: 'استعادة إذن المجلد',
+    directoryAccessRestored: 'تمت استعادة إذن قراءة المجلد بنجاح!',
+    unavailableTrack: 'المسار غير متوفر أو تالف',
   },
 
   en: {
@@ -335,6 +408,8 @@ export const translations: Record<Language, Translations> = {
     durationSort: 'Duration',
     addToQueue: 'Add to Queue',
     playNext: 'Play Next',
+    addedToPlayNext: 'Added to play next',
+    autoplayQueue: 'Autoplay Queue',
     favoriteAdded: 'Added to favorites',
     favoriteRemoved: 'Removed from favorites',
 
@@ -344,5 +419,40 @@ export const translations: Record<Language, Translations> = {
     minutes: 'min',
     endOfTrack: 'At end of current track',
     timerActive: 'Sleep Timer Active',
+
+    // Sync Party & DJ Features
+    syncParty: 'Sync Party',
+    hostParty: 'Host Listening Room',
+    joinParty: 'Join Room',
+    roomCode: 'Room Code',
+    enterRoomCode: 'Enter room code (e.g. AURA_8F2B)',
+    partyActive: 'Listening Party Active',
+    listenersCount: 'listeners connected',
+    leaveParty: 'Leave Party',
+    copyInviteLink: 'Copy Invite Link',
+    linkCopied: 'Invite link copied to clipboard!',
+    shareInvite: 'Share Party',
+    liveSynced: 'Live Synced',
+    connectingParty: 'Connecting to party...',
+    noActiveParty: 'No active listening party',
+    partyHostDesc: 'Host your friends and enjoy synchronized hi-fi audio in real-time with zero drift.',
+    partyJoinDesc: 'Enter a room code to instantly lock your player clock to the host.',
+    inviteFriends: 'Invite Friends to Listen',
+    syncPartyTip: 'Playback synchronization is precision clock-locked with auto-drift correction.',
+    smartHarmonicMix: 'Smart Harmonic Mix',
+    harmonicMixDesc: 'Auto-sort queue by Camelot harmonic keys and BPM tempo matching',
+    quickStudio: 'Quick Studio',
+    speed: 'Speed',
+    waveform: 'Waveform',
+    djDrops: 'DJ Drops',
+
+    // Phase 4: Edge Cases & Offline Continuity
+    trackCorruptedSkipping: 'Unable to play track, auto-skipping to next...',
+    circuitBreakerTriggered: 'Playback paused: 3 consecutive tracks failed. Please check files or network.',
+    offlineFallbackActive: 'Offline Mode Active — Switched to cached library',
+    directoryPermissionPrompt: 'Permission confirmation required for local music folder',
+    grantDirectoryAccess: 'Restore Folder Access',
+    directoryAccessRestored: 'Folder read permission restored successfully!',
+    unavailableTrack: 'Track unavailable or corrupted',
   },
 };

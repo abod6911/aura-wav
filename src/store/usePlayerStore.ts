@@ -1,11 +1,9 @@
 import { create } from 'zustand';
 import { Track, Playlist, RepeatMode, ViewTab, EqualizerPreset, PlaybackState } from '../types';
-import { djAudioEngine, EQ_BANDS, AutoMixStyle, ReverbSpace, SpatialMode, audioBufferPool } from '../lib/audioEngine';
+import { djAudioEngine, AutoMixStyle, ReverbSpace, SpatialMode, audioBufferPool } from '../lib/audioEngine';
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
-import { DEMO_TRACKS } from '../data/demoTracks';
-import { generateDemoAudioBlob } from '../audio/demoSynth';
 import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
 import {
   getAudioFileFromStorage,
@@ -16,9 +14,11 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream, resolvePlayableStreamInfo, clearResolvedStreamCache } from '../services/streamingEngine';
-import { bulkSaveTracksToDexie, getAllTracksFromDexie, dexieDB } from '../db/dexieDB';
+import { bulkSaveTracksToDexie, dexieDB } from '../db/dexieDB';
+import { queryDirectoryPermission, requestDirectoryPermission } from '../services/fileScanner';
 import { wakeLockManager } from '../services/wakeLockManager';
-import { syncLibraryToCarPlay, syncFavoritesToCarPlay, syncStateToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
+import { syncLibraryToCarPlay, syncFavoritesToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
+import { triggerHaptic } from '../utils/haptics';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
@@ -154,12 +154,18 @@ interface PlayerState {
   isSoundboardOpen: boolean;
   isAutoMixModalOpen: boolean;
   isHarmonicJourneyOpen: boolean;
+  isSyncPartyOpen: boolean;
   isSpotlightOpen: boolean;
   isCarModeOpen: boolean;
   isOnline: boolean;
   downloadedTrackIds: string[];
   downloadAllProgress: { current: number; total: number } | null;
   toasts: ToastItem[];
+
+  // Phase 4: Edge Cases & Offline Resilience
+  unavailableTrackIds: string[];
+  consecutivePlaybackErrors: number;
+  needsDirectoryPermission: boolean;
 
   // Persistent Folder Engine
   savedFolderName: string | null;
@@ -201,6 +207,7 @@ interface PlayerState {
   triggerVinylBrake: () => Promise<void>;
   setLoopRoll: (roll: null | '1/4' | '1/2' | '1') => void;
   setHarmonicJourneyOpen: (open: boolean) => void;
+  setSyncPartyOpen: (open: boolean) => void;
   setActiveMoodFilter: (filter: string | null) => void;
   setReverbSpace: (space: ReverbSpace) => void;
   setHapticFeedbackEnabled: (enabled: boolean) => void;
@@ -210,6 +217,7 @@ interface PlayerState {
   reorderQueue: (startIndex: number, endIndex: number) => void;
   removeFromQueue: (index: number) => void;
   addToQueue: (track: Track) => void;
+  playNext: (track: Track) => void;
   playNextInQueue: (track: Track) => void;
   removeFromUserQueue: (index: number) => void;
   reorderUserQueue: (startIndex: number, endIndex: number) => void;
@@ -257,9 +265,13 @@ interface PlayerState {
   clearQueue: () => void;
   setCarModeOpen: (open: boolean) => void;
   toggleCarMode: () => void;
+  handleTrackPlaybackError: (failedTrack: Track | null, error?: any) => Promise<void>;
+  handleOfflineTransition: () => Promise<void>;
+  requestDirectoryAccess: () => Promise<boolean>;
 }
 
 let sleepTimerInterval: any = null;
+let activePlayRequestId = 0;
 
 export const resolveTrackAudioSource = async (tr: Track): Promise<Track> => {
   let resolved = tr;
@@ -440,6 +452,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
       set({ currentTime: cur, duration: dur });
+      if (typeof localStorage !== 'undefined' && Math.floor(cur) % 4 === 0) {
+        try {
+          localStorage.setItem('aura_last_track_position', String(Math.floor(cur)));
+        } catch {}
+      }
     },
     onPlaybackStateChange: (isPlaying) => {
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
@@ -452,6 +469,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (current) {
         updateMediaSession(current, isPlaying, getMediaSessionCallbacks(get));
       }
+    },
+    onTrackError: (failedTrack, error) => {
+      get().handleTrackPlaybackError(failedTrack, error).catch(() => {});
     },
     onTrackEnded: () => {
       const { repeatMode, currentTrack, sleepTimerSetting, addToast, volume } = get();
@@ -592,6 +612,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isSoundboardOpen: false,
     isAutoMixModalOpen: false,
     isHarmonicJourneyOpen: false,
+    isSyncPartyOpen: false,
     isSpotlightOpen: false,
     activeLoopRoll: null,
     isCarModeOpen: false,
@@ -599,6 +620,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     downloadedTrackIds: [],
     downloadAllProgress: null,
     toasts: [],
+    unavailableTrackIds: [],
+    consecutivePlaybackErrors: 0,
+    needsDirectoryPermission: false,
     savedFolderName: 'Liked_Songs',
     savedFolderTrackCount: 0,
     savedFolderTimestamp: null,
@@ -659,7 +683,30 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       try {
         initMediaSessionHandlers(getMediaSessionCallbacks(get));
         initCarPlayBridge();
+
+        // Listen for online/offline events for seamless offline continuity
+        if (typeof window !== 'undefined') {
+          window.addEventListener('offline', () => {
+            set({ isOnline: false });
+            get().handleOfflineTransition().catch(() => {});
+          });
+          window.addEventListener('online', () => {
+            set({ isOnline: true });
+          });
+        }
+
         const db = await getDB();
+
+        // Check persistent FileSystemDirectoryHandle permissions
+        try {
+          const dirHandle = await db.get('settings', 'savedDirectoryHandle');
+          if (dirHandle) {
+            const perm = await queryDirectoryPermission(dirHandle);
+            if (perm === 'prompt') {
+              set({ needsDirectoryPermission: true });
+            }
+          }
+        } catch {}
         const [
           cachedTracks,
           favs,
@@ -686,7 +733,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         const resolvedFolderName = savedFolderNameVal || savedDirNameVal || 'Liked_Songs';
 
-        let favIds = (favs || []).map((f) => f.id);
+        let favIds = (favs || []).map((f: any) => f.id);
         // If favorites is empty, auto-populate with the 261 Liked Songs!
         if (favIds.length === 0) {
           favIds = Array.from({ length: 261 }, (_, i) => `track_catalog_${i + 1}`);
@@ -714,7 +761,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         });
 
         // Filter out and purge any demo tracks from previous sessions
-        for (const t of cachedTracks) {
+        for (const t of (cachedTracks as any[])) {
           if (t.source === 'demo' || t.id.startsWith('demo_')) {
             try {
               await db.delete('tracks', t.id);
@@ -727,7 +774,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
 
         const realTracks = cachedTracks.filter(
-          (t) => t.source !== 'demo' && !t.id.startsWith('demo_')
+          (t: any) => t.source !== 'demo' && !t.id.startsWith('demo_')
         );
 
         // Canonical Catalog Slot Mapping & Auto-Healing Deduplication:
@@ -915,6 +962,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           } catch {}
         }
 
+        // Restore last played track & position for native instant-boot experience (Apple Music style)
+        let initialTrack: Track | null = null;
+        let initialTime = 0;
+        try {
+          const savedLastTrackId = typeof localStorage !== 'undefined' ? localStorage.getItem('aura_last_track_id') : null;
+          const savedLastPos = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('aura_last_track_position') || '0') : 0;
+          if (savedLastTrackId) {
+            initialTrack = finalTracks.find((t) => t.id === savedLastTrackId) || null;
+          }
+          if (!initialTrack && finalTracks.length > 0) {
+            initialTrack = finalTracks[0];
+          }
+          if (initialTrack && !isNaN(savedLastPos) && savedLastPos > 0) {
+            initialTime = Math.min(initialTrack.duration || 180, savedLastPos);
+          }
+        } catch {}
+
         set({
           tracks: finalTracks,
           filteredTracks: finalTracks,
@@ -928,6 +992,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           savedFolderTrackCount: finalFolderCount,
           savedFolderTimestamp: savedFolderTimestampVal || Date.now(),
           isLoadingLibrary: false,
+          ...(initialTrack && !get().currentTrack
+            ? {
+                currentTrack: initialTrack,
+                currentTime: initialTime,
+                duration: initialTrack.duration || 180,
+                queue: finalTracks,
+                isPlaying: false,
+                playbackState: 'paused' as PlaybackState,
+              }
+            : {}),
         });
 
         // Sync to CarPlay on init
@@ -1078,6 +1152,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
+      const currentRequestId = ++activePlayRequestId;
+
+      // 0ms INSTANT OPTIMISTIC UI UPDATE: Immediately switch currentTrack, artwork, and status
+      set({
+        currentTrack: track,
+        isPlaying: true,
+        playbackState: 'buffering',
+        currentTime: 0,
+        duration: track.duration || 0,
+      });
+
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('aura_last_track_id', track.id);
+          localStorage.setItem('aura_last_track_position', '0');
+        }
+      } catch {}
+
       djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
       const state = get();
@@ -1101,7 +1193,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             playableTrack = {
               ...playableTrack,
               blob,
-              audioUrl: URL.createObjectURL(blob),
+              audioUrl: djAudioEngine.createManagedAudioUrl(blob),
               isPreview: false,
               streamSource: 'local-blob',
             };
@@ -1125,7 +1217,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
                 ...playableTrack,
                 file,
                 blob: file,
-                audioUrl: URL.createObjectURL(file),
+                audioUrl: djAudioEngine.createManagedAudioUrl(file),
                 isPreview: false,
                 streamSource: 'local-blob',
               };
@@ -1217,8 +1309,35 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         playbackState: 'buffering',
       });
 
+      // Abort stale requests if a newer track was triggered rapidly
+      if (currentRequestId !== activePlayRequestId) {
+        console.log('[playTrack] Aborted stale load request for:', track.title);
+        return;
+      }
+
+      djAudioEngine.purgeUnusedObjectUrls();
+
+      // Phase 4: Watchdog timeout (8s local, 12s remote stream) to prevent silent hangs
+      const isRemoteStream = !playableTrack.file && !playableTrack.blob;
+      const timeoutMs = isRemoteStream ? 12000 : 8000;
+      let watchdogHandled = false;
+      const watchdogTimer = setTimeout(() => {
+        const curState = get();
+        if (!watchdogHandled && curState.playbackState === 'buffering' && curState.currentTrack?.id === playableTrack.id) {
+          watchdogHandled = true;
+          console.warn(`[Audio Engine] Watchdog timeout (${timeoutMs}ms) exceeded for: ${playableTrack.title}`);
+          get().handleTrackPlaybackError(playableTrack, new Error('Playback timeout'));
+        }
+      }, timeoutMs);
+
+      const cancelWatchdog = () => {
+        watchdogHandled = true;
+        clearTimeout(watchdogTimer);
+      };
+
       // Launch audio playback asynchronously with auto-retry fallback
       djAudioEngine.playTrack(playableTrack).then(async (success) => {
+        cancelWatchdog();
         if (!success) {
           console.warn('[Audio Engine] Primary stream failed, attempting resilient direct stream fallback...');
           // 1. Direct Apple Music / AAC stream fallback (instant, guaranteed playable anywhere)
@@ -1296,11 +1415,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             }
           }
           set({ isPlaying: false, playbackState: 'error' });
-          get().addToast(`تعذر تشغيل "${playableTrack.title}" تلقائياً`, undefined, 'warning');
+          await get().handleTrackPlaybackError(playableTrack, new Error('Stream resolution failed'));
         } else {
-          set({ isPlaying: true, playbackState: 'playing' });
+          set({ isPlaying: true, playbackState: 'playing', consecutivePlaybackErrors: 0 });
+
+          // Instant Pre-buffering: Prepare the upcoming track in idle DeckChannel for <15ms skip
+          const nextUpcoming = get().userQueue[0] || (get().queue[0]?.id !== playableTrack.id ? get().queue[0] : get().queue[1]);
+          if (nextUpcoming && nextUpcoming.id !== playableTrack.id) {
+            resolveTrackAudioSource(nextUpcoming).then((res) => {
+              if (res.file || res.blob || res.audioUrl) {
+                djAudioEngine.preloadNextTrack(res);
+              }
+            });
+          }
         }
       }).catch(async (err) => {
+        cancelWatchdog();
         console.warn('Play track notice, trying direct stream fallback:', err);
         if (playableTrack.previewUrl) {
           const fallbackTrack = { ...playableTrack, audioUrl: playableTrack.previewUrl, isPreview: true };
@@ -1316,6 +1446,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
         set({ isPlaying: false, playbackState: 'error' });
+        await get().handleTrackPlaybackError(playableTrack, err);
       });
 
       // Background cover art enrichment if track has fallback cover
@@ -1348,6 +1479,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     togglePlayPause: async () => {
+      triggerHaptic('medium');
       djAudioEngine.primeDecks();
       const { isPlaying, currentTrack, tracks, playbackState } = get();
       if (!currentTrack && tracks.length > 0) {
@@ -1392,6 +1524,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
+      triggerHaptic('light');
       djAudioEngine.primeDecks();
       const state = get();
       const { currentTrack, automixEnabled, isPlaying, automixStyle } = state;
@@ -1414,6 +1547,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
 
       const { targetTrack, fromUserQueue, remainingUserQueue, effectiveQueue } = resolution;
+
+      // 0ms Optimistic UI update on Next button tap
+      set({
+        currentTrack: targetTrack,
+        isPlaying: true,
+        playbackState: 'buffering',
+        currentTime: 0,
+        duration: targetTrack.duration || 0,
+      });
 
       if (fromUserQueue) {
         const nextUpCleared = remainingUserQueue?.[0]?.id || null;
@@ -1452,6 +1594,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     previousTrack: async () => {
+      triggerHaptic('light');
       djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
       const { queue, currentTrack, currentTime } = get();
@@ -1486,6 +1629,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     seek: (time: number) => {
       djAudioEngine.seek(time);
       set({ currentTime: time });
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('aura_last_track_position', String(Math.floor(time)));
+        }
+      } catch {}
       const { duration } = get();
       updateMediaSessionPosition(duration, time);
     },
@@ -1543,6 +1691,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     setAutoMix: (enabled: boolean, duration?: number) => {
+      triggerHaptic('medium');
       const dur = duration !== undefined ? duration : get().automixDuration;
       djAudioEngine.setAutoMix(enabled, dur);
       set({ automixEnabled: enabled, automixDuration: dur });
@@ -1566,6 +1715,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     toggleFavorite: async (trackId: string) => {
+      triggerHaptic('success');
       const db = await getDB();
       const existing = await db.get('favorites', trackId);
       let isFav = false;
@@ -1699,6 +1849,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setHarmonicJourneyOpen: (open: boolean) => {
       set({ isHarmonicJourneyOpen: open });
     },
+    setSyncPartyOpen: (open: boolean) => {
+      set({ isSyncPartyOpen: open });
+    },
 
     setActiveMoodFilter: (filter: string | null) => {
       set({ activeMoodFilter: filter });
@@ -1801,14 +1954,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         });
       }
 
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(15); } catch {}
-      }
+      triggerHaptic('success');
 
       get().addToast(`تمت إضافة "${track.title}" إلى قائمة الانتظار (${updated.length}/${MAX_USER_QUEUE})`, undefined, 'success');
     },
 
-    playNextInQueue: (track: Track) => {
+    playNext: (track: Track) => {
       const { userQueue, currentTrack } = get();
       if (!currentTrack) {
         get().playTrack(track);
@@ -1826,20 +1977,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         nextUpTrackId: track.id,
       });
 
-      // Immediately preload this next track into the audio engine
+      // Immediately preload this next track into the audio engine idle deck
       resolveTrackAudioSource(track).then((resolved) => {
         if (resolved.file || resolved.blob || resolved.audioUrl) {
           djAudioEngine.preloadNextTrack(resolved);
         }
       });
 
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          navigator.vibrate([20, 30, 20]);
-        } catch {}
-      }
+      triggerHaptic('success');
 
-      get().addToast(`تم تحديد "${track.title}" لتكون الأغنية التالية مباشرة`, undefined, 'success');
+      get().addToast(`تمت إضافة "${track.title}" للتشغيل التالي مباشرة`, undefined, 'success');
+    },
+
+    playNextInQueue: (track: Track) => {
+      get().playNext(track);
     },
 
     removeFromUserQueue: (index: number) => {
@@ -2267,6 +2418,94 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
     setCarModeOpen: (open: boolean) => set({ isCarModeOpen: open }),
     toggleCarMode: () => set((state) => ({ isCarModeOpen: !state.isCarModeOpen })),
+
+    handleTrackPlaybackError: async (failedTrack: Track | null, error?: any) => {
+      const state = get();
+      const current = failedTrack || state.currentTrack;
+      console.warn('[handleTrackPlaybackError] Handling playback error for track:', current?.title, error);
+
+      if (current && current.id) {
+        const unavail = new Set(state.unavailableTrackIds);
+        unavail.add(current.id);
+        set({ unavailableTrackIds: Array.from(unavail) });
+      }
+
+      const errors = state.consecutivePlaybackErrors + 1;
+      set({ consecutivePlaybackErrors: errors });
+
+      // Circuit Breaker: 3 consecutive errors halts auto-skip to prevent infinite loops
+      if (errors >= 3) {
+        set({ isPlaying: false, playbackState: 'error', consecutivePlaybackErrors: 0 });
+        state.addToast(
+          'تم إيقاف التشغيل مؤقتاً: تعذر تشغيل 3 مسارات متتالية. يرجى التحقق من الملفات أو الشبكة.',
+          undefined,
+          'warning'
+        );
+        return;
+      }
+
+      state.addToast(
+        'تعذر تشغيل المسار، جاري التخطي للتالي تلقائياً...',
+        undefined,
+        'info'
+      );
+
+      // If offline, try offline fallback queue switch
+      if (!state.isOnline) {
+        await state.handleOfflineTransition();
+      } else {
+        await state.nextTrack({ forceImmediate: true });
+      }
+    },
+
+    handleOfflineTransition: async () => {
+      const state = get();
+      state.addToast(
+        'وضع الأوفلاين نشط — تم تحويل التشغيل إلى المكتبة المحفوظة',
+        undefined,
+        'info'
+      );
+
+      // Filter offline-playable tracks
+      const localCandidates = state.tracks.filter((t) => {
+        return (
+          t.file ||
+          t.blob ||
+          state.downloadedTrackIds.includes(t.id) ||
+          (t.audioUrl && (t.audioUrl.startsWith('blob:') || t.audioUrl.startsWith('/songs/')))
+        );
+      });
+
+      if (localCandidates.length > 0) {
+        set({ queue: localCandidates });
+        const cur = state.currentTrack;
+        const isCurOffline = cur && localCandidates.some((t) => t.id === cur.id);
+        if (!isCurOffline) {
+          await state.playTrack(localCandidates[0], localCandidates);
+        }
+      }
+    },
+
+    requestDirectoryAccess: async () => {
+      try {
+        const db = await getDB();
+        const dirHandle = await db.get('settings', 'savedDirectoryHandle');
+        if (!dirHandle) return false;
+        const granted = await requestDirectoryPermission(dirHandle);
+        if (granted) {
+          set({ needsDirectoryPermission: false });
+          get().addToast('تمت استعادة إذن قراءة المجلد بنجاح!', undefined, 'success');
+          get().rescanLibrary().catch(() => {});
+          return true;
+        } else {
+          get().addToast('لم يتم منح إذن الوصول للمجلد', undefined, 'warning');
+          return false;
+        }
+      } catch (err) {
+        console.warn('requestDirectoryAccess error:', err);
+        return false;
+      }
+    },
   };
 });
 
