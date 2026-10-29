@@ -20,6 +20,7 @@ import {
   Clock,
   Mic2,
   CheckCircle2,
+  Check,
   Image as ImageIcon,
   ArrowUp,
   Sliders,
@@ -319,16 +320,28 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         /* Empty State Hero CTA */
         <div className="relative overflow-hidden rounded-[28px] p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-[#07070a] border border-white/[0.1] text-center space-y-4 backdrop-blur-2xl">
           <FolderOpen className="w-14 h-14 mx-auto text-[#FA243C] animate-bounce" />
-          <h2 className="text-2xl md:text-3xl font-black text-white">لا توجد أغانٍ محملة حالياً</h2>
+          <h2 className="text-2xl md:text-3xl font-black text-white">{isRTL ? 'مكتبتك فارغة حالياً' : 'Your Library is Empty'}</h2>
           <p className="text-sm text-zinc-400 max-w-md mx-auto">
-            قم باستيراد مجلد أغانيك المحلي <code className="text-[#FF375F] bg-white/10 px-2 py-0.5 rounded font-mono">Liked_Songs</code> للاستماع فوراً بدون اتصال مع كافة الأغلفة.
+            {isRTL
+              ? 'يمكنك استيراد أغانيك من جهازك للاستماع دون اتصال، أو استكشاف الأغاني الشائعة والبحث عنها وإضافتها لحسابك.'
+              : 'Import songs from your device for offline listening, or explore trending catalog tracks and add them to your account.'}
           </p>
-          <button
-            onClick={onOpenImport}
-            className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-sm transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer"
-          >
-            استيراد المجلد المحلي ({tracks.length || 1750} أغنية)
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <button
+              onClick={onOpenImport}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <FolderOpen className="w-4 h-4" />
+              <span>{isRTL ? 'استيراد أغاني من جهازي' : 'Import Local Songs'}</span>
+            </button>
+            <button
+              onClick={() => usePlayerStore.getState().setActiveTab('search')}
+              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Search className="w-4 h-4" />
+              <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -718,7 +731,7 @@ interface TrackTableRowProps {
 }
 
 const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, onContextMenu }) => {
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
   const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
   const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
@@ -728,6 +741,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
   const isUnavailable = unavailableTrackIds.includes(track.id) || !!track.unavailable;
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAddedFeedback, setIsAddedFeedback] = useState(false);
 
   const handleRowClick = () => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -930,16 +944,24 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           whileTap={{ scale: 0.86 }}
           onClick={(e) => {
             e.stopPropagation();
-            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-              try { navigator.vibrate(12); } catch {}
-            }
-            usePlayerStore.getState().playNext(track);
+            triggerHaptic('success');
+            usePlayerStore.getState().addToQueue(track);
+            setIsAddedFeedback(true);
+            setTimeout(() => setIsAddedFeedback(false), 1200);
           }}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full hover:bg-white/[0.08] active:bg-white/[0.14] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-          title={t.playNext}
-          aria-label={t.playNext}
+          className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            isAddedFeedback
+              ? 'bg-emerald-500 text-white scale-110 shadow-md shadow-emerald-500/40'
+              : 'hover:bg-white/[0.08] active:bg-white/[0.14] text-zinc-400 hover:text-white'
+          }`}
+          title={isAddedFeedback ? (isRTL ? 'تمت الإضافة' : 'Added!') : t.addToQueue}
+          aria-label={t.addToQueue}
         >
-          <ListPlus className="w-5 h-5 text-white/80 hover:text-[#FA243C]" />
+          {isAddedFeedback ? (
+            <Check className="w-5 h-5 text-white stroke-[3]" />
+          ) : (
+            <ListPlus className="w-5 h-5 text-white/80 hover:text-[#FA243C]" />
+          )}
         </motion.button>
 
         {/* Favorite 44x44px Button */}

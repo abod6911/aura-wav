@@ -16,6 +16,7 @@ import { ExpandedPlayer } from './components/player/ExpandedPlayer';
 import { MobileNavDock } from './components/MobileNavDock';
 import { ToastContainer } from './components/ToastContainer';
 import { WelcomeSplash } from './components/WelcomeSplash';
+import { AuthScreen } from './components/auth/AuthScreen';
 import { useTranslation } from './i18n/useTranslation';
 
 // Code-split heavy modals and sheets for ultra-fast initial load & minimal memory
@@ -158,6 +159,10 @@ export function App() {
   const isLoadingLibrary = usePlayerStore((state) => state.isLoadingLibrary);
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+  const currentUser = usePlayerStore((state) => state.currentUser);
+  const isAuthScreenOpen = usePlayerStore((state) => state.isAuthScreenOpen);
+  const setCurrentUser = usePlayerStore((state) => state.setCurrentUser);
+  const setAuthScreenOpen = usePlayerStore((state) => state.setAuthScreenOpen);
 
   // Modal visibility states (boolean subscriptions only)
   const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
@@ -521,7 +526,10 @@ export function App() {
               )}
               {activeTab === 'favorites' && (
                 <div key="tab-favorites" className="animate-tab-enter">
-                  <FavoritesView onExplore={() => usePlayerStore.getState().setActiveTab('library')} />
+                  <FavoritesView
+                    onOpenImport={() => setIsImportModalOpen(true)}
+                    onExplore={() => usePlayerStore.getState().setActiveTab('search')}
+                  />
                 </div>
               )}
               {activeTab === 'playlists' && (
@@ -598,6 +606,21 @@ export function App() {
         {isSyncPartyOpen && <SyncPartyModal />}
         {isHarmonicJourneyOpen && <HarmonicSetGenerator />}
       </Suspense>
+
+      {/* 9. Real Authentication & Account Screen */}
+      <AnimatePresence>
+        {(!currentUser || isAuthScreenOpen) && (
+          <AuthScreen
+            onSuccess={(user) => {
+              setCurrentUser(user);
+              setAuthScreenOpen(false);
+            }}
+            onContinueAsGuest={() => {
+              setAuthScreenOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

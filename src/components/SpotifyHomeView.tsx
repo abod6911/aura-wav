@@ -1,9 +1,11 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { Play, Pause, Heart, Sparkles, ChevronRight } from 'lucide-react';
 import { Track } from '../types';
 import { triggerHaptic } from '../utils/haptics';
+import { MobileTrackRow } from './common/MobileTrackRow';
+import { TrackActionSheet } from './library/TrackActionSheet';
 
 interface SpotifyHomeViewProps {
   onOpenImport?: () => void;
@@ -12,6 +14,7 @@ interface SpotifyHomeViewProps {
 export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   const { t, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
+  const catalogTracks = usePlayerStore((state) => state.catalogTracks);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playTrack = usePlayerStore((state) => state.playTrack);
@@ -19,6 +22,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   const favorites = usePlayerStore((state) => state.favorites);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+
+  const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
+
+  const sourcePool = useMemo(() => {
+    return tracks.length > 0 ? tracks : (catalogTracks.length > 0 ? catalogTracks : []);
+  }, [tracks, catalogTracks]);
 
   // Time-aware greeting
   const greeting = useMemo(() => {
@@ -38,8 +47,8 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
     const seenArtists = new Set<string>();
 
-    for (let i = 0; i < tracks.length; i++) {
-      const trk = tracks[i];
+    for (let i = 0; i < sourcePool.length; i++) {
+      const trk = sourcePool[i];
       const art = (trk.artist || '').toLowerCase().trim();
 
       if (quick.length < 4 && !seenArtists.has(art)) {
@@ -68,10 +77,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
       trendingHits: trending,
       topTen: top,
     };
-  }, [tracks]);
+  }, [sourcePool]);
 
   // Spotlight Track
-  const spotlightTrack = currentTrack || (tracks.length > 0 ? tracks[0] : null);
+  const spotlightTrack = currentTrack || (sourcePool.length > 0 ? sourcePool[0] : null);
 
   const handleTrackClick = useCallback((track: Track, contextList?: Track[]) => {
     triggerHaptic('light');
@@ -327,74 +336,45 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          {topTen.map((trk, idx) => {
-            const isCur = currentTrack?.id === trk.id;
-            return (
-              <div
-                key={trk.id}
-                onClick={() => handleTrackClick(trk, tracks)}
-                className={`flex items-center justify-between p-2 rounded-xl border active:scale-[0.98] transition-all cursor-pointer ${
-                  isCur
-                    ? 'bg-[#FA243C]/15 border-[#FA243C]/40'
-                    : 'bg-[#14141c]/60 hover:bg-[#14141c] border-white/[0.05]'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-2">
-                  <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 ${isCur ? 'text-[#FA243C]' : 'text-white/40'}`}>
-                    {idx + 1}
-                  </span>
-                  <img
-                    src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
-                    alt={trk.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-10 h-10 rounded-lg object-cover shrink-0 bg-black/40"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h4 className={`text-[13px] font-semibold truncate leading-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                      <bdi dir="auto">{trk.title}</bdi>
-                    </h4>
-                    <p className="text-[11px] text-white/50 truncate mt-0.5">
-                      <bdi dir="auto">{trk.artist}</bdi>
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTrackClick(trk, tracks);
-                  }}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-transform ${
-                    isCur && isPlaying
-                      ? 'bg-[#FA243C] text-white'
-                      : 'bg-white/10 hover:bg-white text-white hover:text-black'
-                  }`}
-                  aria-label={isCur && isPlaying ? t.pause : t.play}
-                >
-                  {isCur && isPlaying ? (
-                    <Pause className="w-3.5 h-3.5 fill-current" />
-                  ) : (
-                    <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
-                  )}
-                </button>
-              </div>
-            );
-          })}
+          {topTen.map((trk, idx) => (
+            <MobileTrackRow
+              key={trk.id}
+              track={trk}
+              index={idx}
+              showIndex={true}
+              contextList={sourcePool}
+              onOpenActionSheet={setActionSheetTrack}
+            />
+          ))}
         </div>
 
-        {/* View All Library Button */}
+        {/* View All Library / Explore Button */}
         <button
           onClick={() => {
             triggerHaptic('medium');
-            setActiveTab('library');
+            if (tracks.length > 0) {
+              setActiveTab('library');
+            } else {
+              setActiveTab('search');
+            }
           }}
           className="mt-3 w-full py-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] active:scale-[0.98] transition-all border border-white/[0.08] text-center text-xs font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <span>{isRTL ? `عرض كل مكتبتك (${tracks.length} أغنية)` : `View All Library (${tracks.length} songs)`}</span>
+          <span>
+            {tracks.length > 0
+              ? (isRTL ? `عرض كل مكتبتك (${tracks.length} أغنية)` : `View All Library (${tracks.length} songs)`)
+              : (isRTL ? `استكشف كامل كتالوج الأغاني (${catalogTracks.length} أغنية)` : `Explore Full Catalog (${catalogTracks.length} songs)`)}
+          </span>
           <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
         </button>
       </section>
+
+      {/* Track Action Sheet */}
+      <TrackActionSheet
+        track={actionSheetTrack}
+        isOpen={!!actionSheetTrack}
+        onClose={() => setActionSheetTrack(null)}
+      />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio
 import { formatTime } from './player/TimelineSlider';
 import { useTranslation } from '../i18n/useTranslation';
 import { triggerHaptic } from '../utils/haptics';
+import { TrackActionSheet } from './library/TrackActionSheet';
+import { Track } from '../types';
 
 export const PlaylistsView: React.FC = () => {
   const { isRTL, dir } = useTranslation();
@@ -25,6 +27,7 @@ export const PlaylistsView: React.FC = () => {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
   const playlistTracks = selectedPlaylist
@@ -188,10 +191,34 @@ export const PlaylistsView: React.FC = () => {
                       </button>
                     </div>
 
+                    {/* Quick Add to Queue */}
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic('success');
+                          addToQueue(track);
+                        }}
+                        className="p-2 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white cursor-pointer active:scale-90"
+                        title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
+                      >
+                        <ListPlus className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     <div className="text-xs font-mono text-zinc-400 text-end tabular-nums">{formatTime(track.duration)}</div>
 
-                    <div className="relative hidden md:block group/menu">
-                      <button onClick={(e) => e.stopPropagation()} className="p-2 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100 cursor-pointer">
+                    <div className="relative group/menu">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.innerWidth < 768) {
+                            setActionSheetTrack(track);
+                          }
+                        }}
+                        className="p-2 text-zinc-400 hover:text-white cursor-pointer"
+                      >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                       <div className="hidden group-hover/menu:block absolute end-0 top-8 z-30 w-44 bg-[#0d0d14]/95 border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-1.5 shadow-2xl space-y-1">
@@ -215,6 +242,13 @@ export const PlaylistsView: React.FC = () => {
             لا توجد أغانٍ في هذه القائمة بعد. يمكنك إضافة أي أغنية من القائمة الرئيسية عبر قائمة الخيارات (...).
           </div>
         )}
+
+        {/* Track Action Sheet */}
+        <TrackActionSheet
+          track={actionSheetTrack}
+          isOpen={!!actionSheetTrack}
+          onClose={() => setActionSheetTrack(null)}
+        />
       </div>
     );
   }
@@ -286,14 +320,41 @@ export const PlaylistsView: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 space-y-3 rounded-2xl bg-white/[0.03] border border-dashed border-white/10 p-6">
-          <ListMusic className="w-10 h-10 mx-auto text-zinc-500" />
-          <h4 className="text-sm sm:text-base font-bold text-white">لا توجد قوائم تشغيل بعد</h4>
+        <div className="text-center py-16 space-y-4 rounded-3xl bg-white/[0.03] border border-dashed border-white/10 p-6">
+          <ListMusic className="w-12 h-12 mx-auto text-[#FA243C]" />
+          <h4 className="text-sm sm:text-base font-bold text-white">{isRTL ? 'لا توجد قوائم تشغيل بعد' : 'No playlists yet'}</h4>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-            اضغط على &quot;قائمة جديدة&quot; لإنشاء قائمة تشغيل مخصصة لمجموعتك المفضلة من الأغاني.
+            {isRTL
+              ? 'اضغط على "قائمة جديدة" لإنشاء قائمة مخصصة، أو استكشف الأغاني في البحث وأضفها لقوائمك.'
+              : 'Tap "New Playlist" to create a custom list, or explore songs in search and add them.'}
           </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setIsCreating(true);
+              }}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'إنشاء قائمة جديدة' : 'Create New Playlist'}</span>
+            </button>
+            <button
+              onClick={() => usePlayerStore.getState().setActiveTab('search')}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Track Action Sheet */}
+      <TrackActionSheet
+        track={actionSheetTrack}
+        isOpen={!!actionSheetTrack}
+        onClose={() => setActionSheetTrack(null)}
+      />
     </div>
   );
 };

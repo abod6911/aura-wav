@@ -17,13 +17,14 @@ import {
 } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { Track } from '../types';
+import { TrackActionSheet } from './library/TrackActionSheet';
 
 interface FavoritesViewProps {
   onOpenImport?: () => void;
   onExplore?: () => void;
 }
 
-export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
+export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onExplore }) => {
   const { isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const favorites = usePlayerStore((state) => state.favorites);
@@ -39,6 +40,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenuTrackId, setActiveMenuTrackId] = useState<string | null>(null);
+  const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   // Get favorite track objects in the order of favorite IDs
   const favoriteTracks = useMemo(() => {
@@ -213,14 +215,23 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
               ? 'اضغط على أيقونة القلب ❤️ بجانب أي أغنية في مكتبتك لإضافتها إلى قائمتك المفضلة والوصول إليها فوراً.'
               : 'Tap the heart icon next to any track in your library to add it here for fast instant access.'}
           </p>
-          {onExplore && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
             <button
-              onClick={onExplore}
-              className="mt-6 px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-all cursor-pointer hover:scale-105 active:scale-95"
+              onClick={() => usePlayerStore.getState().setActiveTab('search')}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
-              {isRTL ? 'استكشف مكتبتك الموسيقية' : 'Browse Music Library'}
+              <Search className="w-3.5 h-3.5" />
+              <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
             </button>
-          )}
+            {onOpenImport && (
+              <button
+                onClick={onOpenImport}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span>{isRTL ? 'استيراد أغانٍ من جهازي' : 'Import Local Songs'}</span>
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl apple-glass-card border border-white/[0.08] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
@@ -374,8 +385,21 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                     ))}
                   </div>
 
-                  {/* 6. Clustered Actions: Favorite Heart + Duration + More Menu */}
+                  {/* 6. Clustered Actions: Add to Queue + Favorite Heart + Duration + More Menu */}
                   <div className="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerHaptic();
+                        addToQueue(track);
+                      }}
+                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+                      title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
+                    >
+                      <ListPlus className="w-4 h-4" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={(e) => {
@@ -398,7 +422,11 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setActiveMenuTrackId(isMenuOpen ? null : track.id);
+                          if (window.innerWidth < 768) {
+                            setActionSheetTrack(track);
+                          } else {
+                            setActiveMenuTrackId(isMenuOpen ? null : track.id);
+                          }
                         }}
                         className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                       >
@@ -445,6 +473,13 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onExplore }) => {
           </div>
         </div>
       )}
+
+      {/* Track Action Sheet */}
+      <TrackActionSheet
+        track={actionSheetTrack}
+        isOpen={!!actionSheetTrack}
+        onClose={() => setActionSheetTrack(null)}
+      />
     </div>
   );
 };

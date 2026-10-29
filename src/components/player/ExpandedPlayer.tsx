@@ -161,6 +161,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
+  const userQueue = usePlayerStore((state) => state.userQueue);
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
@@ -663,12 +664,17 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     triggerHaptic();
                     setQueueOpen(true);
                   }}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.14] text-zinc-200 border border-white/10 transition-colors cursor-pointer flex-shrink-0 active:scale-95"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/[0.06] hover:bg-white/[0.14] text-zinc-200 border border-white/10 transition-colors cursor-pointer flex-shrink-0 active:scale-95 relative"
                   title={t.queue}
                   aria-label={t.queue}
                 >
                   <ListMusic className="w-3.5 h-3.5 text-[#FA243C]" />
                   <span>{t.queue}</span>
+                  {userQueue.length > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-[#FA243C] text-white text-[9px] font-mono font-black flex items-center justify-center border border-black shadow">
+                      {userQueue.length}
+                    </span>
+                  )}
                 </motion.button>
 
                 {/* 0.5. Direct Synced Lyrics Button */}

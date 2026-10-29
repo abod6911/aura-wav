@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
+import { authService } from '../services/authService';
 import {
   X,
   FolderPlus,
@@ -18,6 +19,8 @@ import {
   Check,
   Zap,
   Volume2,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -74,6 +77,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const { t, language, setLanguage, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+  const currentUser = usePlayerStore((state) => state.currentUser);
+  const setCurrentUser = usePlayerStore((state) => state.setCurrentUser);
+  const setAuthScreenOpen = usePlayerStore((state) => state.setAuthScreenOpen);
   const storageStats = usePlayerStore((state) => state.storageStats);
   const refreshStorageStats = usePlayerStore((state) => state.refreshStorageStats);
   const clearLocalLibrary = usePlayerStore((state) => state.clearLocalLibrary);
@@ -141,6 +147,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     );
   };
 
+  const handleSignOut = async () => {
+    await authService.signOut();
+    setCurrentUser(null);
+    onClose();
+    setAuthScreenOpen(true);
+    addToast(isRTL ? 'تم تسجيل الخروج بنجاح' : 'Signed out successfully', undefined, 'info');
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
@@ -197,6 +211,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          {/* 0. Account & Profile Group */}
+          <div className="rounded-2xl bg-gradient-to-r from-white/[0.04] to-white/[0.02] border border-white/[0.08] p-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0">
+                <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-sm font-black overflow-hidden">
+                  {currentUser?.avatarUrl ? (
+                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    currentUser?.name?.[0]?.toUpperCase() || 'A'
+                  )}
+                </div>
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-white truncate">
+                  {currentUser ? currentUser.name : (isRTL ? 'زائر AURA' : 'AURA Guest')}
+                </h4>
+                <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono">
+                  {currentUser?.email || (isRTL ? 'جلسة محلية مؤقتة' : 'Local Session')}
+                </p>
+              </div>
+            </div>
+
+            {currentUser ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setAuthScreenOpen(true);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
+              </button>
+            )}
           </div>
 
           {/* 1. Language & Display Group */}

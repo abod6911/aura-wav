@@ -149,6 +149,19 @@ export interface Translations {
   grantDirectoryAccess: string;
   directoryAccessRestored: string;
   unavailableTrack: string;
+
+  // Real Auth & Spotify Queue
+  signIn: string;
+  signUp: string;
+  signOut: string;
+  createAccount: string;
+  continueAsGuest: string;
+  emptyLibraryTitle: string;
+  emptyLibrarySub: string;
+  importLocalSongs: string;
+  exploreAndSearch: string;
+  nextInQueue: string;
+  nextFromContext: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -302,6 +315,19 @@ export const translations: Record<Language, Translations> = {
     grantDirectoryAccess: 'استعادة إذن المجلد',
     directoryAccessRestored: 'تمت استعادة إذن قراءة المجلد بنجاح!',
     unavailableTrack: 'المسار غير متوفر أو تالف',
+
+    // Real Auth & Spotify Queue
+    signIn: 'تسجيل الدخول',
+    signUp: 'إنشاء حساب جديد',
+    signOut: 'تسجيل الخروج',
+    createAccount: 'إنشاء حساب جديد',
+    continueAsGuest: 'متابعة كـ ضيف',
+    emptyLibraryTitle: 'مكتبتك الموسيقية فارغة',
+    emptyLibrarySub: 'استورد ملفاتك الصوتية من جهازك أو استكشف الأغاني الشائعة والكتالوج العام.',
+    importLocalSongs: 'استيراد أغاني من جهازي',
+    exploreAndSearch: 'استكشف الأغاني في البحث',
+    nextInQueue: 'التالي في قائمة الانتظار',
+    nextFromContext: 'التالي من القائمة الحالية',
   },
 
   en: {
@@ -454,5 +480,18 @@ export const translations: Record<Language, Translations> = {
     grantDirectoryAccess: 'Restore Folder Access',
     directoryAccessRestored: 'Folder read permission restored successfully!',
     unavailableTrack: 'Track unavailable or corrupted',
+
+    // Real Auth & Spotify Queue
+    signIn: 'Sign In',
+    signUp: 'Sign Up',
+    signOut: 'Sign Out',
+    createAccount: 'Create Account',
+    continueAsGuest: 'Continue as Guest',
+    emptyLibraryTitle: 'Your Library is Empty',
+    emptyLibrarySub: 'Import local audio files from your device or explore and search the global catalog.',
+    importLocalSongs: 'Import Local Songs',
+    exploreAndSearch: 'Explore & Search',
+    nextInQueue: 'Next in Queue',
+    nextFromContext: 'Next From Context',
   },
 };

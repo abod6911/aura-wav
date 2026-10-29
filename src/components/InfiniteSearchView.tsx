@@ -5,6 +5,8 @@ import { searchWorldwideMusic, SearchResultsCategorized } from '../services/stre
 import { Search, Play, Pause, X, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
 import { Track } from '../types';
 import { OptimizedImage } from './common/OptimizedImage';
+import { MobileTrackRow } from './common/MobileTrackRow';
+import { TrackActionSheet } from './library/TrackActionSheet';
 
 export const InfiniteSearchView: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -17,6 +19,7 @@ export const InfiniteSearchView: React.FC = () => {
     albums: [],
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
   const [, startTransition] = useTransition();
 
   const tracks = usePlayerStore((state) => state.tracks);
@@ -362,72 +365,27 @@ export const InfiniteSearchView: React.FC = () => {
                   {results.songs.length} {isRTL ? 'مسار' : 'tracks'}
                 </span>
               </div>
-              <div className="divide-y divide-white/[0.06] rounded-2xl bg-white/[0.03] border border-white/[0.08] overflow-hidden">
-                {results.songs.map((trk) => {
-                  const isCur = currentTrack?.id === trk.id;
-                  const isLocal = trk.source === 'local';
-                  return (
-                    <div
-                      key={trk.id}
-                      onClick={() => handlePlaySong(trk)}
-                      style={{ contentVisibility: 'auto', containIntrinsicSize: '58px' }}
-                      className={`flex items-center justify-between p-3 cursor-pointer transition-colors ${
-                        isCur ? 'bg-[#FA243C]/15' : 'hover:bg-white/[0.05]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <OptimizedImage
-                          src={trk.coverUrl || trk.artworkUrl}
-                          alt={trk.title}
-                          size="thumb"
-                          containerClassName="w-11 h-11 rounded-xl flex-shrink-0 shadow-md"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <h4 className={`text-xs sm:text-sm font-bold truncate ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                              {trk.title}
-                            </h4>
-                            <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold flex-shrink-0 ${
-                              isLocal ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                            }`}>
-                              {isLocal ? (isRTL ? 'استوديو' : 'Master') : (isRTL ? 'كامل' : 'Full')}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-zinc-400 truncate mt-0.5">
-                            {trk.artist}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs text-zinc-400 font-mono">
-                          {formatDuration(trk.duration)}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlePlaySong(trk);
-                          }}
-                          className="w-8 h-8 rounded-full bg-white/[0.08] hover:bg-white/[0.16] flex items-center justify-center text-white cursor-pointer transition-all hover:scale-105 active:scale-95"
-                        >
-                          {isCur && isPlaying ? (
-                            <Pause className="w-3.5 h-3.5 fill-current" />
-                          ) : isCur && playbackState === 'buffering' ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                          ) : (
-                            <Play className="w-3.5 h-3.5 fill-current translate-x-0.5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="flex flex-col gap-1.5">
+                {results.songs.map((trk) => (
+                  <MobileTrackRow
+                    key={trk.id}
+                    track={trk}
+                    contextList={results.songs}
+                    onOpenActionSheet={setActionSheetTrack}
+                  />
+                ))}
               </div>
             </div>
           )}
         </div>
       )}
+
+      {/* Track Action Sheet */}
+      <TrackActionSheet
+        track={actionSheetTrack}
+        isOpen={!!actionSheetTrack}
+        onClose={() => setActionSheetTrack(null)}
+      />
     </div>
   );
 };

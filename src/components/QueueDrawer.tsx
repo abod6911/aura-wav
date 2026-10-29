@@ -174,7 +174,7 @@ export const QueueDrawer: React.FC = () => {
                     {t.playNext}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 font-mono">
-                    {userQueue.length}/{MAX_USER_QUEUE}
+                    {userQueue.length}
                   </span>
                 </div>
 
@@ -204,7 +204,12 @@ export const QueueDrawer: React.FC = () => {
                   {userQueue.map((track, idx) => (
                     <div
                       key={`${track.id}_queue_${idx}`}
-                      className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 flex items-center gap-2.5 sm:gap-3 transition-colors active:scale-[0.99]"
+                      onClick={() => {
+                        triggerHaptic(8);
+                        playTrack(track);
+                        removeFromUserQueue(idx);
+                      }}
+                      className="p-2 sm:p-2.5 rounded-2xl bg-white/[0.05] hover:bg-white/[0.08] border border-white/10 flex items-center gap-2.5 sm:gap-3 transition-colors active:scale-[0.99] cursor-pointer"
                     >
                       <span className="text-xs font-mono font-bold text-[#FA243C] w-4 text-center flex-shrink-0">
                         {idx + 1}
@@ -221,7 +226,7 @@ export const QueueDrawer: React.FC = () => {
                         <p className="text-[11px] text-zinc-400 truncate mt-0.5">{track.artist}</p>
                       </div>
 
-                      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         {idx > 0 && (
                           <button
                             onClick={() => {

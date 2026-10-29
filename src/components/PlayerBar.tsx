@@ -39,6 +39,7 @@ export const PlayerBar: React.FC = () => {
   const favorites = usePlayerStore((state) => state.favorites);
   const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
   const isRightSidebarOpen = usePlayerStore((state) => state.isRightSidebarOpen);
+  const userQueue = usePlayerStore((state) => state.userQueue);
   const spatialMode = usePlayerStore((state) => state.spatialMode);
   const setSpatialMode = usePlayerStore((state) => state.setSpatialMode);
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
@@ -316,11 +317,16 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={toggleRightSidebar}
             title={t.queue}
-            className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer ${
+            className={`p-1.5 sm:p-2 rounded-xl transition-colors cursor-pointer relative ${
               isRightSidebarOpen ? 'text-[#FA243C] bg-white/[0.08]' : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
             }`}
           >
             <ListMusic className="w-4 h-4" />
+            {userQueue.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#FA243C] text-white text-[8px] font-mono font-bold flex items-center justify-center border border-black shadow">
+                {userQueue.length}
+              </span>
+            )}
           </button>
 
           {/* Volume Control */}

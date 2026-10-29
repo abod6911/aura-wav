@@ -27,6 +27,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false }) => {
   const { t, language, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
+  const currentUser = usePlayerStore((state) => state.currentUser);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
@@ -74,11 +75,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             <button
               onClick={() => setSettingsOpen(true)}
               className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer aura-tap-btn"
-              title={t.settings}
+              title={currentUser ? currentUser.name : t.settings}
               aria-label={t.settings}
             >
-              <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black">
-                A
+              <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
+                {currentUser?.avatarUrl ? (
+                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                ) : (
+                  currentUser?.name?.[0]?.toUpperCase() || 'A'
+                )}
               </div>
             </button>
             <div className="flex flex-col min-w-0">
@@ -89,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
                 <span className="apple-badge text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C]">ALAC</span>
               </span>
               <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
-                {activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting}
+                {currentUser ? `مرحباً، ${currentUser.name}` : (activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting)}
               </span>
             </div>
           </div>
@@ -338,10 +343,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           <button
             onClick={() => setSettingsOpen(true)}
             className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer apple-spring"
-            title={t.profile}
+            title={currentUser ? currentUser.name : t.profile}
           >
-            <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black">
-              A
+            <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
+              {currentUser?.avatarUrl ? (
+                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+              ) : (
+                currentUser?.name?.[0]?.toUpperCase() || 'A'
+              )}
             </div>
           </button>
         </div>

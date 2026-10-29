@@ -5,6 +5,7 @@ import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandler
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
 import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
+import { authService, AuthUser } from '../services/authService';
 import {
   getAudioFileFromStorage,
   getStorageStatistics,
@@ -79,11 +80,16 @@ export interface ToastItem {
 
 export type SleepTimerSetting = number | 'end_of_track' | null;
 
-export const MAX_USER_QUEUE = 9;
+export const MAX_USER_QUEUE = 100;
 
 interface PlayerState {
+  // User Auth & Session
+  currentUser: AuthUser | null;
+  isAuthScreenOpen: boolean;
+
   // Library & Data
-  tracks: Track[];
+  tracks: Track[]; // User's private personal library
+  catalogTracks: Track[]; // Global exploration catalog (1,750 tracks)
   filteredTracks: Track[];
   searchQuery: string;
   playlists: Playlist[];
@@ -95,7 +101,7 @@ interface PlayerState {
   // Playback State
   currentTrack: Track | null;
   nextUpTrackId: string | null;
-  userQueue: Track[]; // Dedicated Spotify-style dynamic queue (Max 9 tracks)
+  userQueue: Track[]; // Dedicated Spotify-style dynamic queue (Max 100 tracks)
   queue: Track[]; // Sequential playlist / album context
   originalQueue: Track[];
   history: Track[];
@@ -222,6 +228,10 @@ interface PlayerState {
   removeFromUserQueue: (index: number) => void;
   reorderUserQueue: (startIndex: number, endIndex: number) => void;
   clearUserQueue: () => void;
+  setCurrentUser: (user: AuthUser | null) => void;
+  setAuthScreenOpen: (open: boolean) => void;
+  addTrackToLibrary: (track: Track) => Promise<void>;
+  removeTrackFromLibrary: (trackId: string) => Promise<void>;
   setActiveTab: (tab: ViewTab) => void;
   setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') => void;
   setLyricsOpen: (open: boolean) => void;
@@ -547,7 +557,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   });
 
   return {
+    currentUser: authService.getCurrentUser(),
+    isAuthScreenOpen: false,
     tracks: [],
+    catalogTracks: getDefaultLibraryTracks(),
     filteredTracks: [],
     searchQuery: '',
     playlists: [],
@@ -839,24 +852,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           }
         }
 
-        // Fill any missing catalog slots (1 to TRACKS_CATALOG.length) with default catalog templates
-        const defaultTracks = getDefaultLibraryTracks();
-        for (let num = 1; num <= TRACKS_CATALOG.length; num++) {
-          if (!catalogSlots.has(num)) {
-            const defTrack = defaultTracks[num - 1];
-            if (defTrack) {
-              catalogSlots.set(num, defTrack);
-            }
-          }
-        }
-
-        // Combine all catalog tracks strictly sorted 1..TRACKS_CATALOG.length, followed by non-catalog tracks
-        const uniqueRealTracks: Track[] = [];
-        for (let num = 1; num <= TRACKS_CATALOG.length; num++) {
-          const t = catalogSlots.get(num);
-          if (t) uniqueRealTracks.push(t);
-        }
-        uniqueRealTracks.push(...nonCatalogTracks);
+        // Combine existing catalog tracks and non-catalog tracks from user storage
+        const uniqueRealTracks: Track[] = [...catalogSlots.values(), ...nonCatalogTracks];
 
         // Clean up duplicate/corrupt entries from IndexedDB stores
         if (duplicateIdsToDelete.length > 0) {
@@ -911,19 +908,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         );
 
         let finalTracks = restoredTracks;
-        // Auto-populate with default 261 Liked_Songs library if empty!
-        if (finalTracks.length === 0) {
-          finalTracks = getDefaultLibraryTracks();
-          try {
-            const tx = db.transaction('tracks', 'readwrite');
-            for (const tr of finalTracks) {
-              await tx.store.put(tr);
-            }
-            await tx.done;
-          } catch (err) {
-            console.warn('Could not persist default library to IndexedDB:', err);
-          }
-        } else {
+        if (finalTracks.length > 0) {
           // Ensure every catalog track has its canonical title, artist, album, cover, audioUrl and fileName
           finalTracks = await Promise.all(
             finalTracks.map(async (tr) => {
@@ -981,6 +966,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         set({
           tracks: finalTracks,
+          catalogTracks: getDefaultLibraryTracks(),
           filteredTracks: finalTracks,
           favorites: favIds,
           playlists: playlists || [],
@@ -1013,12 +999,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         StorageManager.requestPersistence().catch(() => {});
       } catch (e) {
         console.warn('Error loading from IndexedDB:', e);
-        const fallbackTracks = getDefaultLibraryTracks();
         set({
-          tracks: fallbackTracks,
-          filteredTracks: fallbackTracks,
-          savedFolderName: 'Liked_Songs',
-          savedFolderTrackCount: fallbackTracks.length,
+          tracks: [],
+          filteredTracks: [],
+          catalogTracks: getDefaultLibraryTracks(),
+          savedFolderName: null,
+          savedFolderTrackCount: 0,
           savedFolderTimestamp: Date.now(),
           isLoadingLibrary: false,
         });
@@ -1042,8 +1028,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     importTracks: async (newTracks: Track[], folderName?: string) => {
       const { tracks, downloadedTrackIds } = get();
 
-      // Ensure baseList has the 261 catalog tracks
-      let baseList = tracks.length > 0 ? [...tracks] : getDefaultLibraryTracks();
+      // User's base library
+      let baseList = [...tracks];
       const updatedBlobIds = new Set<string>(downloadedTrackIds);
 
       newTracks.forEach((newT) => {
@@ -2020,6 +2006,39 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         nextUpTrackId: null,
       });
       get().addToast('تم تفريغ قائمة الانتظار', undefined, 'info');
+    },
+
+    setCurrentUser: (user: AuthUser | null) => set({ currentUser: user }),
+    setAuthScreenOpen: (open: boolean) => set({ isAuthScreenOpen: open }),
+    addTrackToLibrary: async (track: Track) => {
+      const { tracks } = get();
+      if (tracks.some((t) => t.id === track.id)) {
+        get().addToast('الأغنية موجودة بالفعل في مكتبتك', undefined, 'info');
+        return;
+      }
+      const updated = [track, ...tracks];
+      set({ tracks: updated, filteredTracks: updated });
+      try {
+        const db = await getDB();
+        await db.put('tracks', track);
+      } catch (err) {
+        console.warn('Error saving track to library:', err);
+      }
+      triggerHaptic('success');
+      get().addToast(`تمت إضافة "${track.title}" إلى مكتبتك الموسيقية`, undefined, 'success');
+    },
+    removeTrackFromLibrary: async (trackId: string) => {
+      const { tracks } = get();
+      const updated = tracks.filter((t) => t.id !== trackId);
+      set({ tracks: updated, filteredTracks: updated });
+      try {
+        const db = await getDB();
+        await db.delete('tracks', trackId);
+      } catch (err) {
+        console.warn('Error removing track from library:', err);
+      }
+      triggerHaptic('medium');
+      get().addToast('تمت إزالة الأغنية من مكتبتك', undefined, 'info');
     },
 
     setActiveTab: (tab: ViewTab) => set({ activeTab: tab }),

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { Play, Pause, SkipForward, Loader2, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, SkipForward, Loader2, CheckCircle2, ListMusic } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedCoverUrl } from '../../utils/imageOptimizer';
 import { triggerHaptic } from '../../utils/haptics';
@@ -55,6 +55,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const previousTrack = usePlayerStore((state) => state.previousTrack);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const userQueue = usePlayerStore((state) => state.userQueue);
+  const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
 
   if (!currentTrack) return null;
 
@@ -195,6 +197,28 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           aria-label={t.next}
         >
           <SkipForward className="w-4 h-4 fill-current" />
+        </motion.button>
+
+        {/* Quick Queue Button with Badge Counter */}
+        <motion.button
+          data-testid="mini-queue-btn"
+          whileTap={{ scale: 0.88 }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHaptic();
+            setQueueOpen(true);
+          }}
+          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 aura-tap-btn"
+          title={t.queue}
+          aria-label={t.queue}
+        >
+          <ListMusic className="w-4 h-4" />
+          {userQueue.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FA243C] text-white text-[9px] font-mono font-black flex items-center justify-center border border-black shadow">
+              {userQueue.length}
+            </span>
+          )}
         </motion.button>
       </div>
 
