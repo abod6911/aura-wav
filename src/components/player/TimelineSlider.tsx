@@ -313,7 +313,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         aria-label="شريط تقدم الأغنية"
       >
         {/* Track Groove Background */}
-        <div className="w-full h-2.5 sm:h-3 group-hover:h-3.5 transition-[height] duration-200 rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md">
+        <div className={`w-full ${isDragging ? 'h-2.5' : 'h-1.5'} group-hover:h-2.5 transition-all duration-150 rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
           {/* Buffer Bar (Pre-loaded audio) */}
           <div
             className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
@@ -364,7 +364,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
 
       {/* Timestamp Indicators */}
       {showTimestamps && (
-        <div className="flex justify-between items-center text-xs font-mono tabular-nums tracking-tight font-bold text-zinc-300 -mt-0.5 px-1 select-none">
+        <div className="flex justify-between items-center text-[12px] font-mono tabular-nums text-white/50 -mt-0.5 px-1 select-none">
           {/* Current Elapsed Time */}
           <span ref={elapsedTextRef} className="hover:text-white transition-colors" title="الوقت المنقضي">
             {formatDuration(isDragging ? scrubSeconds : initialTime)}
@@ -378,7 +378,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
               setShowRemaining((prev) => !prev);
             }}
             title={showRemaining ? 'عرض إجمالي مدة الأغنية (انقر للتبديل)' : 'عرض الوقت المتبقي (انقر للتبديل)'}
-            className="text-zinc-400 hover:text-white transition-colors cursor-pointer flex items-center gap-1 group/dur py-0.5 px-1 rounded hover:bg-white/[0.06]"
+            className="text-white/50 hover:text-white transition-colors cursor-pointer flex items-center gap-1 group/dur py-0.5 px-1 rounded hover:bg-white/[0.06]"
           >
             <span ref={remainingTextRef}>
               {showRemaining

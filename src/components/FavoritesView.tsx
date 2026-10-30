@@ -1,7 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
+import { MobileTrackRow } from './common/MobileTrackRow';
+import { TrackActionSheet } from './library/TrackActionSheet';
 import {
   Heart,
   Play,
@@ -17,7 +19,6 @@ import {
 } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { Track } from '../types';
-import { TrackActionSheet } from './library/TrackActionSheet';
 
 interface FavoritesViewProps {
   onOpenImport?: () => void;
@@ -71,6 +72,33 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
     );
   }, [favoriteTracks, searchQuery]);
 
+  // Progressive loading for 120fps Mobile view
+  const [mobileDisplayLimit, setMobileDisplayLimit] = useState(35);
+  const mobileLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMobileDisplayLimit(35);
+  }, [searchQuery, favorites]);
+
+  useEffect(() => {
+    const el = mobileLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setMobileDisplayLimit((prev) => Math.min(prev + 35, displayedTracks.length));
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [displayedTracks.length]);
+
+  const progressiveMobileTracks = useMemo(() => {
+    return displayedTracks.slice(0, mobileDisplayLimit);
+  }, [displayedTracks, mobileDisplayLimit]);
+
   // Compute total duration
   const totalDurationSeconds = useMemo(() => {
     return favoriteTracks.reduce((acc, t) => acc + (t.duration || 0), 0);
@@ -106,7 +134,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-2 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 space-y-4 select-none overflow-x-hidden" dir={dir}>
+    <div className="w-full max-w-7xl mx-auto py-2 pb-6 md:pb-24 space-y-4 select-none overflow-x-hidden" dir={dir}>
       {/* 1. Hero Header Banner */}
       <div className="relative overflow-hidden rounded-3xl apple-glass-card p-4 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] transform-gpu">
         <div
@@ -136,34 +164,34 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               <span className="text-emerald-400 font-bold">Studio Master Hi-Fi</span>
             </p>
 
-            {/* Quick Actions */}
+            {/* Quick Actions with 0ms Tactile Feedback */}
             <div className="flex items-center justify-start gap-2.5 sm:gap-3 mt-3.5 sm:mt-5 flex-wrap">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
                 onClick={handlePlayAll}
                 disabled={favoriteTracks.length === 0}
-                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Play className="w-4 h-4 fill-white text-white" />
                 <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
                 onClick={handleShufflePlay}
                 disabled={favoriteTracks.length === 0}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Shuffle className="w-4 h-4 text-zinc-300" />
                 <span>{isRTL ? 'خلط عشوائي' : 'Shuffle'}</span>
-              </motion.button>
+              </button>
 
-              <motion.button
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
                 onClick={() => downloadFavoritesOffline()}
                 disabled={favoriteTracks.length === 0 || !!downloadAllProgress || allFavoritesSaved}
                 title={isRTL ? 'حفظ المفضلة للاستماع بدون إنترنت' : 'Save favorites for offline listening'}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
               >
                 {allFavoritesSaved ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                 <span>
@@ -171,7 +199,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     ? isRTL ? 'محفوظة أوفلاين' : 'Saved offline'
                     : isRTL ? `حفظ أوفلاين (${favoriteTracks.length - savedFavoritesCount})` : `Save offline (${favoriteTracks.length - savedFavoritesCount})`}
                 </span>
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
@@ -234,22 +262,42 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl apple-glass-card border border-white/[0.08] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
-          {/* Table Header (Desktop 6-Column Unified Grid) */}
-          <div className="hidden md:grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 border-b border-white/[0.08] text-xs font-extrabold text-white/55 uppercase tracking-wider select-none">
-            <span className="text-center font-mono">#</span>
-            <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
-            <span>{isRTL ? 'الألبوم' : 'Album'}</span>
-            <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
-            <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
-            <span className="text-end font-mono flex items-center justify-end gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{isRTL ? 'المدة' : 'Time'}</span>
-            </span>
+        <div>
+          {/* Mobile Fast Track List (120fps Native Rows + Swipe-to-Queue) */}
+          <div className="block md:hidden space-y-1">
+            {progressiveMobileTracks.map((track) => (
+              <MobileTrackRow
+                key={track.id}
+                track={track}
+                trackList={favoriteTracks}
+                onOpenActionSheet={(t) => setActionSheetTrack(t)}
+              />
+            ))}
+            {/* Sentinel for progressive infinite loading on mobile */}
+            {progressiveMobileTracks.length < displayedTracks.length && (
+              <div ref={mobileLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
+                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+              </div>
+            )}
           </div>
 
-          {/* Track Rows */}
-          <div className="divide-y divide-white/[0.02] pt-1">
+          {/* Desktop Table View */}
+          <div className="hidden md:block rounded-2xl apple-glass-card border border-white/[0.08] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
+            {/* Table Header (Desktop 6-Column Unified Grid) */}
+            <div className="grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 border-b border-white/[0.08] text-xs font-extrabold text-white/55 uppercase tracking-wider select-none">
+              <span className="text-center font-mono">#</span>
+              <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
+              <span>{isRTL ? 'الألبوم' : 'Album'}</span>
+              <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
+              <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
+              <span className="text-end font-mono flex items-center justify-end gap-1">
+                <Clock className="w-3 h-3" />
+                <span>{isRTL ? 'المدة' : 'Time'}</span>
+              </span>
+            </div>
+
+            {/* Track Rows */}
+            <div className="divide-y divide-white/[0.02] pt-1">
             {displayedTracks.map((track, idx) => {
               const isCurrent = currentTrack?.id === track.id;
               const isRowPlaying = isCurrent && isPlaying;
@@ -472,7 +520,8 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             })}
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* Track Action Sheet */}
       <TrackActionSheet

@@ -157,29 +157,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 select-none">
+      <div className="fixed inset-0 z-50 select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-2xl"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
         />
 
-        {/* Modal Sheet: Responsive Mobile Bottom Sheet & Desktop Dialog */}
+        {/* Modal Sheet: Unified Mobile Bottom Sheet */}
         <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 50, opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative w-full max-w-lg max-h-[88vh] sm:max-h-[90vh] bg-[#0d0d14]/98 border-t sm:border border-white/[0.12] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-[0_-20px_60px_rgba(0,0,0,0.9)] sm:shadow-[0_25px_80px_rgba(0,0,0,0.9)] backdrop-blur-3xl overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 flex flex-col gap-4 sm:gap-5 z-10"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          drag="y"
+          dragConstraints={{ top: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.y > 90 || info.velocity.y > 350) {
+              onClose();
+            }
+          }}
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl overflow-y-auto flex flex-col gap-4 sm:gap-5 z-10"
           dir={dir}
         >
           {/* iOS Mobile Top Drag Grabber Pill */}
           <div
             onClick={onClose}
-            className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+            className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto -mt-1 mb-2 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
           />
 
           {/* Ambient Lighting Accents */}

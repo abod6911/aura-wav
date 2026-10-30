@@ -10,6 +10,10 @@ interface MiniPlayerProps {
   onExpand: () => void;
 }
 
+/**
+ * Isolated hairline progress bar subscribing directly to usePlayerStore.
+ * Guarantees zero re-renders of the parent MiniPlayer on every 100ms tick!
+ */
 const MiniPlayerProgressBar: React.FC = () => {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +34,7 @@ const MiniPlayerProgressBar: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/[0.1] overflow-hidden pointer-events-none rounded-b-[20px]">
+    <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/[0.1] overflow-hidden pointer-events-none rounded-b-2xl">
       <div
         ref={barRef}
         className="h-full transition-all duration-150 rounded-full"
@@ -78,10 +82,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
       drag
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-      dragElastic={0.28}
+      dragElastic={0.25}
       onDragEnd={(_, info) => {
         // Swipe Up to open Full Player Sheet
-        if (info.offset.y < -35 || info.velocity.y < -200) {
+        if (info.offset.y < -30 || info.velocity.y < -200) {
           handleExpand();
           return;
         }
@@ -107,14 +111,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 1px rgba(255,255,255,0.2)`,
         touchAction: 'manipulation',
       }}
-      className="w-[calc(100%-1.5rem)] max-w-md mx-auto mb-1.5 h-[58px] apple-glass-dock rounded-[20px] px-3 py-1 flex items-center gap-2.5 select-none overflow-hidden touch-pan-y cursor-pointer aura-tap-btn border border-white/[0.14] shrink-0"
+      className="mx-3 mb-1.5 h-[62px] rounded-2xl px-3 flex items-center gap-3 bg-[#14141e]/90 backdrop-blur-xl border border-white/[0.08] shadow-2xl relative overflow-hidden select-none w-[calc(100%-1.5rem)] max-w-md shrink-0 cursor-pointer"
       dir={dir}
+      onClick={handleExpand}
     >
-      {/* Shared Layout Album Artwork with Ambient Shadow */}
+      {/* 1. Shared Layout Album Artwork with Ambient Shadow */}
       <motion.div
-        layoutId="shared-track-artwork"
-        onClick={handleExpand}
-        className="relative w-11 h-11 rounded-[14px] overflow-hidden flex-shrink-0 bg-black/60 border border-white/15 shadow-md"
+        layoutId="aura-player-artwork"
+        className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/15 shadow-md"
         transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
       >
         <AnimatePresence mode="wait">
@@ -126,21 +130,20 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             animate={{ opacity: 1, scale: isPlaying ? 1.05 : 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover select-none pointer-events-none"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/logo.svg';
+            }}
           />
         </AnimatePresence>
       </motion.div>
 
-      {/* Track Info with BiDi support & strictly truncated */}
-      <div onClick={handleExpand} className="flex-1 min-w-0 pe-1">
+      {/* 2. Track Info with BiDi support & strictly truncated */}
+      <div className="flex-1 min-w-0 pe-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <motion.h4
-            layoutId="shared-track-title"
-            className="text-xs sm:text-sm font-black text-white truncate tracking-tight leading-tight"
-            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
-          >
+          <h4 className="text-[14px] font-bold text-white truncate tracking-tight leading-tight">
             <bdi dir="auto">{currentTrack.title}</bdi>
-          </motion.h4>
+          </h4>
           {isDownloaded && (
             <span className="shrink-0 text-emerald-400" title={isRTL ? 'جاهزة بدون إنترنت' : 'Offline ready'}>
               <CheckCircle2 className="w-3 h-3" />
@@ -148,68 +151,28 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-          <p className="text-[11px] text-white/65 truncate font-medium">
+          <p className="text-[12px] text-white/55 truncate font-medium">
             <bdi dir="auto">{currentTrack.artist}</bdi>
           </p>
-          <span className="hidden xs:inline-flex items-center text-[9px] text-white/40 font-medium shrink-0">
-            • {isRTL ? 'اسحب للتخطي' : 'Swipe to skip'}
-          </span>
         </div>
       </div>
 
-      {/* Play / Next Controls with 40px Tactile Targets */}
-      <div 
+      {/* 3. Fast Action Buttons */}
+      <div
         onPointerDown={(e) => e.stopPropagation()}
-        className="flex items-center gap-1 flex-shrink-0"
+        onClick={(e) => e.stopPropagation()}
+        className="shrink-0 flex items-center gap-1"
         style={{ touchAction: 'manipulation' }}
       >
-        <motion.button
-          data-testid="mini-play-pause-btn"
-          whileTap={{ scale: 0.88 }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerHaptic();
-            togglePlayPause();
-          }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg aura-tap-btn"
-          aria-label={isPlaying ? t.pause : t.play}
-        >
-          {isPlaying ? (
-            <Pause className="w-4 h-4 fill-black text-black" />
-          ) : playbackState === 'buffering' ? (
-            <Loader2 className="w-4 h-4 animate-spin text-black" />
-          ) : (
-            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
-          )}
-        </motion.button>
-
-        <motion.button
-          data-testid="mini-next-btn"
-          whileTap={{ scale: 0.88 }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            triggerHaptic();
-            nextTrack({ forceImmediate: true });
-          }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 aura-tap-btn border border-white/10"
-          aria-label={t.next}
-        >
-          <SkipForward className="w-4 h-4 fill-current" />
-        </motion.button>
-
-        {/* Quick Queue Button with Badge Counter */}
-        <motion.button
+        {/* Fast Queue Button with Badge Counter */}
+        <button
           data-testid="mini-queue-btn"
-          whileTap={{ scale: 0.88 }}
-          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
-            triggerHaptic();
+            triggerHaptic('light');
             setQueueOpen(true);
           }}
-          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 aura-tap-btn"
+          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform"
           title={t.queue}
           aria-label={t.queue}
         >
@@ -219,10 +182,44 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
               {userQueue.length}
             </span>
           )}
-        </motion.button>
+        </button>
+
+        {/* Play / Pause with 40px Tactile Target */}
+        <button
+          data-testid="mini-play-pause-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHaptic('medium');
+            togglePlayPause();
+          }}
+          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform"
+          aria-label={isPlaying ? t.pause : t.play}
+        >
+          {isPlaying ? (
+            <Pause className="w-4 h-4 fill-black text-black" />
+          ) : playbackState === 'buffering' ? (
+            <Loader2 className="w-4 h-4 animate-spin text-black" />
+          ) : (
+            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+          )}
+        </button>
+
+        {/* Next Track Button */}
+        <button
+          data-testid="mini-next-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHaptic('light');
+            nextTrack({ forceImmediate: true });
+          }}
+          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 border border-white/10 active:scale-90 transition-transform"
+          aria-label={t.next}
+        >
+          <SkipForward className="w-4 h-4 fill-current" />
+        </button>
       </div>
 
-      {/* Bottom Hairline 2px Progress Line with Zero-Rerender DOM Ref */}
+      {/* 4. Bottom Hairline 2.5px Progress Line with Zero-Rerender Subscription */}
       <MiniPlayerProgressBar />
     </motion.div>
   );

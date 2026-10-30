@@ -1,4 +1,5 @@
 import { TrackActionSheet } from './TrackActionSheet';
+import { MobileTrackRow } from '../common/MobileTrackRow';
 import { triggerHaptic } from '../../utils/haptics';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
@@ -199,6 +200,33 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     }
   };
 
+  // Progressive loading for 120fps Mobile view (initial 35 tracks, appends +35 as user scrolls)
+  const [mobileDisplayLimit, setMobileDisplayLimit] = useState(35);
+  const mobileLoadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMobileDisplayLimit(35);
+  }, [searchQuery, activeFilter, activeRange, sortBy, activeMood]);
+
+  useEffect(() => {
+    const el = mobileLoadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setMobileDisplayLimit((prev) => Math.min(prev + 35, filtered.length));
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filtered.length]);
+
+  const progressiveMobileTracks = useMemo(() => {
+    return filtered.slice(0, mobileDisplayLimit);
+  }, [filtered, mobileDisplayLimit]);
+
   // Total duration calculation
   const totalSeconds = useMemo(() => {
     return tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
@@ -225,7 +253,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2">
+    <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2">
       {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
       {tracks.length > 0 ? (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 apple-glass-card shadow-[0_20px_60px_rgba(0,0,0,0.7)] transform-gpu">
@@ -292,27 +320,25 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               </div>
             </div>
 
-            {/* Play & Shuffle Action Controls */}
+            {/* Play & Shuffle Action Controls with 0ms Tactile Feedback */}
             <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0 w-full md:w-auto pt-1 sm:pt-0">
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
+              <button
+                type="button"
                 onClick={handlePlayAll}
-                className="flex-1 md:flex-initial h-11 sm:h-14 px-6 sm:px-8 rounded-full bg-white text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-3 shadow-[0_0_35px_rgba(255,255,255,0.25)] hover:bg-zinc-200 transition-all cursor-pointer"
+                className="flex-1 md:flex-initial h-12 sm:h-14 px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 active:scale-[0.93] transition-transform duration-75 cursor-pointer"
               >
-                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-black" />
-                <span>تشغيل الكل</span>
-              </motion.button>
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white" />
+                <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
+              </button>
 
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
+              <button
+                type="button"
                 onClick={handleShufflePlay}
-                className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center transition-all cursor-pointer flex-shrink-0"
-                title="خلط عشوائي"
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white flex items-center justify-center active:scale-[0.93] transition-transform duration-75 cursor-pointer flex-shrink-0"
+                title={isRTL ? 'خلط عشوائي' : 'Shuffle'}
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-300" />
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
@@ -593,31 +619,66 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </span>
           </div>
 
-          {/* Track Rows List with True Viewport Windowing */}
-          {filtered.length > 0 ? (
-            <div className="divide-y divide-white/[0.02] pt-1">
-              {topSpacer > 0 && <div style={{ height: `${topSpacer}px` }} aria-hidden="true" />}
-              {visibleTracks.map((track, idx) => (
-                <TrackTableRow
-                  key={track.id}
-                  track={track}
-                  index={startIndex + idx}
-                  onContextMenu={handleContextMenu}
-                />
-              ))}
-              {bottomSpacer > 0 && <div style={{ height: `${bottomSpacer}px` }} aria-hidden="true" />}
-            </div>
-          ) : (
-            <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
-              <Filter className="w-10 h-10 mx-auto text-zinc-600" />
-              <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
-              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                {searchQuery
-                  ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
-                  : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
-              </p>
-            </div>
-          )}
+          {/* Mobile Unified 120fps List with Swipe-to-Queue */}
+          <div className="block md:hidden space-y-1">
+            {filtered.length > 0 ? (
+              <>
+                {progressiveMobileTracks.map((track, idx) => (
+                  <MobileTrackRow
+                    key={track.id}
+                    track={track}
+                    index={idx}
+                    showIndex={true}
+                    contextList={filtered}
+                    onOpenActionSheet={setActionSheetTrack}
+                  />
+                ))}
+                {progressiveMobileTracks.length < filtered.length && (
+                  <div ref={mobileLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
+                    <div className="w-5 h-5 rounded-full border-2 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
+                <Filter className="w-10 h-10 mx-auto text-zinc-600" />
+                <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
+                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                  {searchQuery
+                    ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
+                    : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Track Rows List with True Viewport Windowing */}
+          <div className="hidden md:block">
+            {filtered.length > 0 ? (
+              <div className="divide-y divide-white/[0.02] pt-1">
+                {topSpacer > 0 && <div style={{ height: `${topSpacer}px` }} aria-hidden="true" />}
+                {visibleTracks.map((track, idx) => (
+                  <TrackTableRow
+                    key={track.id}
+                    track={track}
+                    index={startIndex + idx}
+                    onContextMenu={handleContextMenu}
+                  />
+                ))}
+                {bottomSpacer > 0 && <div style={{ height: `${bottomSpacer}px` }} aria-hidden="true" />}
+              </div>
+            ) : (
+              <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
+                <Filter className="w-10 h-10 mx-auto text-zinc-600" />
+                <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
+                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                  {searchQuery
+                    ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
+                    : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

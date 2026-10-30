@@ -375,13 +375,13 @@ input[type=range]::-webkit-slider-thumb:hover {
   overflow-x: hidden;
   padding-left: 1rem;
   padding-right: 1rem;
-  padding-bottom: calc(155px + env(safe-area-inset-bottom, 20px));
+  padding-bottom: 2rem;
 }
 @media (min-width: 768px) {
   .mobile-page-container {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
-    padding-bottom: 7rem;
+    padding-bottom: 4rem;
   }
 }
 

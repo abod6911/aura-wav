@@ -130,7 +130,7 @@ export const InfiniteSearchView: React.FC = () => {
   }, [tracks]);
 
   return (
-    <div className="w-full text-white pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
+    <div className="w-full text-white pb-6 md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
       <div className="relative max-w-xl mx-auto mb-3">
         <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 h-12">

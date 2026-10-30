@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { X, ListMusic, Trash2, ArrowUp, ArrowDown, Play, Compass, Disc3 } from 'lucide-react';
+import { X, ListMusic, Trash2, ArrowUp, ArrowDown, Play, Compass, Disc3, ListPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const QueueDrawer: React.FC = () => {
@@ -21,9 +21,11 @@ export const QueueDrawer: React.FC = () => {
   const removeFromUserQueue = usePlayerStore((state) => state.removeFromUserQueue);
   const reorderUserQueue = usePlayerStore((state) => state.reorderUserQueue);
   const clearUserQueue = usePlayerStore((state) => state.clearUserQueue);
+  const addToQueue = usePlayerStore((state) => state.addToQueue);
 
   // Background playlist queue
   const queue = usePlayerStore((state) => state.queue);
+  const removeFromQueue = usePlayerStore((state) => state.removeFromQueue);
 
   if (!isQueueOpen) return null;
 
@@ -171,7 +173,7 @@ export const QueueDrawer: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold text-white uppercase tracking-wider">
-                    {t.playNext}
+                    {t.nextInQueue || 'التالي في قائمة الانتظار'}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 font-mono">
                     {userQueue.length}
@@ -271,7 +273,7 @@ export const QueueDrawer: React.FC = () => {
             {/* Section 3: Autoplay Queue from Library / Playlist */}
             <div className="space-y-2">
               <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                {t.autoplayQueue}: {savedFolderName || 'المكتبة'} ({upNextPlaylist.length})
+                {t.nextFromLibrary || 'التالي من المكتبة'}: {savedFolderName || 'المكتبة'} ({upNextPlaylist.length})
               </span>
 
               {upNextPlaylist.length === 0 ? (
@@ -280,7 +282,7 @@ export const QueueDrawer: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {upNextPlaylist.slice(0, 30).map((track, idx) => (
+                  {upNextPlaylist.slice(0, 40).map((track, idx) => (
                     <div
                       key={`${track.id}_playlist_${idx}`}
                       className="p-2 sm:p-2.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/5 flex items-center gap-3 transition-colors group cursor-pointer active:scale-[0.99]"
@@ -302,10 +304,24 @@ export const QueueDrawer: React.FC = () => {
                         <p className="text-[11px] text-zinc-400 truncate mt-0.5">{track.artist}</p>
                       </div>
 
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {/* 1. Add to User Queue */}
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(10);
+                            addToQueue(track);
+                          }}
+                          title={t.addToQueue}
+                          className="w-8 h-8 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <ListPlus className="w-4 h-4" />
+                        </button>
+
+                        {/* 2. Play Next */}
+                        <button
+                          type="button"
+                          onClick={() => {
                             triggerHaptic(12);
                             playNext(track);
                           }}
@@ -313,6 +329,19 @@ export const QueueDrawer: React.FC = () => {
                           className="w-8 h-8 rounded-lg hover:bg-[#FA243C]/20 text-zinc-400 hover:text-[#FA243C] flex items-center justify-center transition-colors cursor-pointer"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
+                        </button>
+
+                        {/* 3. Remove from autoplay list */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(10);
+                            removeFromQueue(currentIdx + 1 + idx);
+                          }}
+                          title="حذف من القائمة"
+                          className="w-8 h-8 rounded-lg hover:bg-red-500/20 text-zinc-500 hover:text-red-400 flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

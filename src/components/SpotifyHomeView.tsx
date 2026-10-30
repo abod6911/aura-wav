@@ -92,7 +92,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   }, [currentTrack?.id, togglePlayPause, playTrack]);
 
   return (
-    <div className="w-full flex flex-col gap-6 px-4 pt-3 pb-8 overflow-x-hidden select-none" dir={dir}>
+    <div className="w-full flex flex-col gap-5 pt-1 pb-6 overflow-x-hidden select-none" dir={dir}>
       {/* ── Top Header Greeting ── */}
       <div className="flex items-center justify-between pt-1">
         <div>

@@ -1324,6 +1324,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       // Launch audio playback asynchronously with auto-retry fallback
       djAudioEngine.playTrack(playableTrack).then(async (success) => {
         cancelWatchdog();
+        if (currentRequestId !== activePlayRequestId) {
+          console.log('[playTrack] Ignored resolved playback for stale request:', playableTrack.title);
+          return;
+        }
         if (!success) {
           console.warn('[Audio Engine] Primary stream failed, attempting resilient direct stream fallback...');
           // 1. Direct Apple Music / AAC stream fallback (instant, guaranteed playable anywhere)
@@ -1595,6 +1599,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const currentIndex = effectiveQueue.findIndex((t) => t.id === currentTrack.id);
       if (currentIndex > 0) {
         const rawPrev = effectiveQueue[currentIndex - 1];
+        // 0ms Optimistic UI update on Previous button tap
+        set({
+          currentTrack: rawPrev,
+          isPlaying: true,
+          playbackState: 'buffering',
+          currentTime: 0,
+          duration: rawPrev.duration || 0,
+        });
         let prevTrack = rawPrev;
         if (!prevTrack.file && !prevTrack.blob) {
           try {
@@ -2469,6 +2481,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         'info'
       );
 
+      // Fault-tolerant 500ms auto-skip debounce
+      await new Promise((r) => setTimeout(r, 500));
+
       // If offline, try offline fallback queue switch
       if (!state.isOnline) {
         await state.handleOfflineTransition();
@@ -2532,7 +2547,7 @@ function getMediaSessionCallbacks(get: () => PlayerState) {
   return {
     onPlay: () => get().togglePlayPause(),
     onPause: () => get().togglePlayPause(),
-    onNext: () => get().nextTrack(false),
+    onNext: () => get().nextTrack({ forceImmediate: true }),
     onPrevious: () => get().previousTrack(),
     onSeek: (t: number) => get().seek(t),
   };

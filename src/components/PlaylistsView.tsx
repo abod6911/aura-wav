@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock } from 'lucide-react';
+import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock, Shuffle } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { useTranslation } from '../i18n/useTranslation';
 import { triggerHaptic } from '../utils/haptics';
 import { TrackActionSheet } from './library/TrackActionSheet';
+import { MobileTrackRow } from './common/MobileTrackRow';
 import { Track } from '../types';
 
 export const PlaylistsView: React.FC = () => {
@@ -50,9 +51,17 @@ export const PlaylistsView: React.FC = () => {
     }
   };
 
+  const handleShufflePlay = () => {
+    if (playlistTracks.length === 0) return;
+    triggerHaptic('light');
+    const shuffled = [...playlistTracks].sort(() => Math.random() - 0.5);
+    playTrack(shuffled[0], shuffled);
+    addToast(isRTL ? `تشغيل عشوائي: ${selectedPlaylist?.name}` : `Shuffle Play: ${selectedPlaylist?.name}`, undefined, 'info');
+  };
+
   if (selectedPlaylist) {
     return (
-      <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2">
+      <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2">
         {/* Back Button & Playlist Info */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
@@ -72,40 +81,68 @@ export const PlaylistsView: React.FC = () => {
 
           <div className="flex items-center gap-2">
             {playlistTracks.length > 0 && (
-              <button
-                onClick={handlePlayAll}
-                className="px-5 py-2.5 rounded-full bg-white text-black font-extrabold text-xs flex items-center gap-2 shadow-lg aura-tap-btn cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-black" />
-                <span>تشغيل الكل</span>
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    triggerHaptic('light');
+                    handlePlayAll();
+                  }}
+                  className="h-11 px-5 rounded-full bg-[#FA243C] text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.93] transition-transform duration-75 cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-white" />
+                  <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
+                </button>
+                <button
+                  onClick={handleShufflePlay}
+                  className="h-11 px-4 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-transform duration-75 cursor-pointer"
+                  title={isRTL ? 'تشغيل عشوائي' : 'Shuffle Play'}
+                >
+                  <Shuffle className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isRTL ? 'عشوائي' : 'Shuffle'}</span>
+                </button>
+              </>
             )}
             <button
               onClick={() => {
+                triggerHaptic('medium');
                 deletePlaylist(selectedPlaylist.id);
-                addToast('تم حذف قائمة التشغيل', undefined, 'info');
+                addToast(isRTL ? 'تم حذف قائمة التشغيل' : 'Playlist deleted', undefined, 'info');
                 setSelectedPlaylistId(null);
               }}
-              className="p-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer aura-tap-btn"
-              title="حذف القائمة"
+              className="h-11 w-11 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 flex items-center justify-center transition-colors cursor-pointer active:scale-[0.93] duration-75"
+              title={isRTL ? 'حذف القائمة' : 'Delete Playlist'}
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Tracks List (Strict LTR Table with Zero Empty Space) */}
+        {/* Tracks List */}
         {playlistTracks.length > 0 ? (
-          <div dir={dir} className="w-full max-w-full space-y-1">
-            <div className="hidden md:grid grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.08] select-none uppercase tracking-wider">
-              <span className="text-center font-mono">#</span>
-              <span>{isRTL ? 'الغلاف' : 'Cover'}</span>
-              <span>{isRTL ? 'العنوان والفنان' : 'Title & Artist'}</span>
-              <span>{isRTL ? 'الألبوم' : 'Album'}</span>
-              <span className="text-center"><Heart className="w-3.5 h-3.5 mx-auto opacity-70" /></span>
-              <span className="text-end font-mono flex items-center justify-end gap-1"><Clock className="w-3 h-3" /><span>{isRTL ? 'المدة' : 'Time'}</span></span>
-              <span />
+          <div>
+            {/* Mobile Fast Track List (120fps Native Rows + Swipe-to-Queue) */}
+            <div className="block md:hidden space-y-1">
+              {playlistTracks.map((track) => (
+                <MobileTrackRow
+                  key={track.id}
+                  track={track}
+                  trackList={playlistTracks}
+                  onOpenActionSheet={(t) => setActionSheetTrack(t)}
+                />
+              ))}
             </div>
+
+            {/* Desktop Table View */}
+            <div dir={dir} className="hidden md:block w-full max-w-full space-y-1">
+              <div className="grid grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-4 px-4 py-3 text-xs font-bold text-zinc-400 border-b border-white/[0.08] select-none uppercase tracking-wider">
+                <span className="text-center font-mono">#</span>
+                <span>{isRTL ? 'الغلاف' : 'Cover'}</span>
+                <span>{isRTL ? 'العنوان والفنان' : 'Title & Artist'}</span>
+                <span>{isRTL ? 'الألبوم' : 'Album'}</span>
+                <span className="text-center"><Heart className="w-3.5 h-3.5 mx-auto opacity-70" /></span>
+                <span className="text-end font-mono flex items-center justify-end gap-1"><Clock className="w-3 h-3" /><span>{isRTL ? 'المدة' : 'Time'}</span></span>
+                <span />
+              </div>
 
             {playlistTracks.map((track, idx) => {
               const isCur = currentTrack?.id === track.id;
@@ -236,6 +273,7 @@ export const PlaylistsView: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         ) : (
           <div className="text-center py-20 text-zinc-400 text-sm border border-dashed border-white/10 rounded-3xl">
@@ -254,7 +292,7 @@ export const PlaylistsView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 pb-[calc(155px+env(safe-area-inset-bottom,20px))] md:pb-24 w-full select-none overflow-x-hidden pt-2" dir={dir}>
+    <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

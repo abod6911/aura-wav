@@ -104,6 +104,10 @@ export interface Translations {
   durationSort: string;
   addToQueue: string;
   playNext: string;
+  nextInQueue: string;
+  nextFromLibrary: string;
+  swipeToQueue: string;
+  addedToQueueToast: string;
   addedToPlayNext: string;
   autoplayQueue: string;
   favoriteAdded: string;
@@ -160,7 +164,6 @@ export interface Translations {
   emptyLibrarySub: string;
   importLocalSongs: string;
   exploreAndSearch: string;
-  nextInQueue: string;
   nextFromContext: string;
 }
 
@@ -268,7 +271,11 @@ export const translations: Record<Language, Translations> = {
     artistSort: 'الفنان',
     durationSort: 'المدة',
     addToQueue: 'إضافة لقائمة الانتظار',
-    playNext: 'تشغيل تالياً',
+    playNext: 'تشغيل التالي',
+    nextInQueue: 'التالي في قائمة الانتظار',
+    nextFromLibrary: 'التالي من المكتبة',
+    swipeToQueue: 'اسحب للإضافة إلى قائمة الانتظار',
+    addedToQueueToast: 'تمت الإضافة إلى قائمة الانتظار',
     addedToPlayNext: 'تمت الإضافة للتشغيل التالي',
     autoplayQueue: 'التشغيل التلقائي من المكتبة',
     favoriteAdded: 'تمت الإضافة إلى المفضلة',
@@ -326,7 +333,6 @@ export const translations: Record<Language, Translations> = {
     emptyLibrarySub: 'استورد ملفاتك الصوتية من جهازك أو استكشف الأغاني الشائعة والكتالوج العام.',
     importLocalSongs: 'استيراد أغاني من جهازي',
     exploreAndSearch: 'استكشف الأغاني في البحث',
-    nextInQueue: 'التالي في قائمة الانتظار',
     nextFromContext: 'التالي من القائمة الحالية',
   },
 
@@ -434,6 +440,10 @@ export const translations: Record<Language, Translations> = {
     durationSort: 'Duration',
     addToQueue: 'Add to Queue',
     playNext: 'Play Next',
+    nextInQueue: 'Next in Queue',
+    nextFromLibrary: 'Next from Library',
+    swipeToQueue: 'Swipe to queue',
+    addedToQueueToast: 'Added to queue',
     addedToPlayNext: 'Added to play next',
     autoplayQueue: 'Autoplay Queue',
     favoriteAdded: 'Added to favorites',
@@ -491,7 +501,6 @@ export const translations: Record<Language, Translations> = {
     emptyLibrarySub: 'Import local audio files from your device or explore and search the global catalog.',
     importLocalSongs: 'Import Local Songs',
     exploreAndSearch: 'Explore & Search',
-    nextInQueue: 'Next in Queue',
     nextFromContext: 'Next From Context',
   },
 };

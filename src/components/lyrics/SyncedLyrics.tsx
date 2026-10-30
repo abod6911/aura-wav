@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, memo } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import { TimelineSlider } from '../player/TimelineSlider';
+import { getTrackLyrics } from '../../services/lyricsService';
+import { triggerHaptic } from '../../utils/haptics';
+import { useTranslation } from '../../i18n/useTranslation';
 import {
   X,
   Sparkles,
@@ -13,12 +16,10 @@ import {
   Shuffle,
   Repeat,
   Repeat1,
-  Volume2,
-  VolumeX,
   Mic2,
-  } from 'lucide-react';
+  Search,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { extractPaletteFromImage } from '../../lib/colorSampler';
 
 export const SyncedLyrics: React.FC = () => {
   const isLyricsOpen = usePlayerStore((state) => state.isLyricsOpen);
@@ -31,43 +32,88 @@ export const SyncedLyrics: React.FC = () => {
   );
 };
 
+interface LyricLineRowProps {
+  time: number;
+  text: string;
+  idx: number;
+  isActive: boolean;
+  onSeek: (time: number) => void;
+  activeLineRef: React.RefObject<HTMLDivElement | null> | null;
+}
+
+/**
+ * Isolated Memoized Lyric Line
+ * Re-renders ONLY when becoming active or inactive.
+ */
+const LyricLineRow: React.FC<LyricLineRowProps> = memo(({
+  time,
+  text,
+  isActive,
+  onSeek,
+  activeLineRef,
+}) => {
+  const isArabic = /[\u0600-\u06FF]/.test(text);
+
+  return (
+    <div
+      ref={isActive ? activeLineRef : null}
+      onClick={() => {
+        triggerHaptic('light');
+        onSeek(time);
+      }}
+      className={`cursor-pointer transition-all duration-300 py-3.5 px-5 rounded-2xl select-none ${
+        isActive
+          ? 'bg-white/[0.08] shadow-[0_0_35px_rgba(255,255,255,0.18)] border border-white/[0.12]'
+          : 'hover:bg-white/[0.02]'
+      } ${isArabic ? 'text-right' : 'text-left'}`}
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
+      <p
+        className={`tracking-tight font-sans transition-all duration-300 leading-relaxed ${
+          isActive
+            ? 'text-[22px] font-extrabold text-white scale-100 opacity-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]'
+            : 'text-[18px] font-semibold text-white/35 blur-[0.6px] scale-[0.97] hover:text-white/60'
+        }`}
+      >
+        <bdi dir="auto">{text}</bdi>
+      </p>
+    </div>
+  );
+});
+LyricLineRow.displayName = 'LyricLineRow';
+
 const SyncedLyricsModal: React.FC = () => {
+  const { isRTL } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack!);
-    const duration = usePlayerStore((state) => state.duration);
+  const duration = usePlayerStore((state) => state.duration);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const volume = usePlayerStore((state) => state.volume);
   const shuffle = usePlayerStore((state) => state.shuffle);
   const repeatMode = usePlayerStore((state) => state.repeatMode);
-  const automixEnabled = usePlayerStore((state) => state.automixEnabled);
-  const automixDuration = usePlayerStore((state) => state.automixDuration);
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
   const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
-  const karaokeVocalLevel = usePlayerStore((state) => state.karaokeVocalLevel);
-  const setKaraokeVocalLevel = usePlayerStore((state) => state.setKaraokeVocalLevel);
 
   const seek = usePlayerStore((state) => state.seek);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const nextTrack = usePlayerStore((state) => state.nextTrack);
   const previousTrack = usePlayerStore((state) => state.previousTrack);
-  const setVolume = usePlayerStore((state) => state.setVolume);
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
-
   const setLyricsOpen = usePlayerStore((state) => state.setLyricsOpen);
+  const addToast = usePlayerStore((state) => state.addToast);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const activeLineRef = useRef<HTMLDivElement | null>(null);
   const [userIsScrolling, setUserIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<any>(null);
+  const [isSearchingLyrics, setIsSearchingLyrics] = useState(false);
 
   const lyrics = useMemo(() => currentTrack.syncedLyrics || [], [currentTrack.syncedLyrics]);
-  const isAutoMixingLive = usePlayerStore((state) => state.isAutoMixingLive);
-  const isAutoMixing = isAutoMixingLive;
 
   const [activeIndex, setActiveIndex] = useState(() =>
     getActiveLyricIndex(lyrics, usePlayerStore.getState().currentTime)
   );
 
+  // High performance subscription: only trigger re-render when active index actually changes!
   useEffect(() => {
     return usePlayerStore.subscribe((state) => {
       const nextIdx = getActiveLyricIndex(lyrics, state.currentTime);
@@ -75,7 +121,7 @@ const SyncedLyricsModal: React.FC = () => {
     });
   }, [lyrics]);
 
-  // Auto-scroll active line to optical center unless user is manually dragging/scrolling
+  // Smooth scroll into center ONLY when active line index changes
   useEffect(() => {
     if (activeLineRef.current && !userIsScrolling) {
       activeLineRef.current.scrollIntoView({
@@ -93,22 +139,27 @@ const SyncedLyricsModal: React.FC = () => {
     }, 2500);
   };
 
-  const [palette, setPalette] = useState<{ primary: string; secondary: string; accent: string }>({
-    primary: 'rgba(250, 36, 60, 0.45)',
-    secondary: 'rgba(255, 55, 95, 0.35)',
-    accent: 'rgba(125, 18, 255, 0.25)',
-  });
-
-  useEffect(() => {
-    if (currentTrack.artworkUrl) {
-      extractPaletteFromImage(currentTrack.artworkUrl).then((p) => {
-        setPalette(p);
-      });
+  const handleSearchLyrics = async () => {
+    setIsSearchingLyrics(true);
+    try {
+      const res = await getTrackLyrics(currentTrack);
+      if (res && (res.syncedLyrics?.length || res.plainLyrics)) {
+        await usePlayerStore.getState().updateTrackMetadata(currentTrack.id, {
+          syncedLyrics: res.syncedLyrics,
+          lyrics: res.plainLyrics || currentTrack.lyrics,
+        });
+        addToast(isRTL ? 'تم جلب الكلمات المتزامنة بنجاح!' : 'Synced lyrics fetched successfully!', undefined, 'success');
+      } else {
+        addToast(isRTL ? 'لم يتم العثور على كلمات مطابقة عبر الإنترنت' : 'No matching lyrics found online', undefined, 'info');
+      }
+    } catch {
+      addToast(isRTL ? 'حدث خطأ أثناء البحث عن الكلمات' : 'Error searching lyrics', undefined, 'warning');
+    } finally {
+      setIsSearchingLyrics(false);
     }
-  }, [currentTrack.artworkUrl]);
+  };
 
-  // Helper to detect if a lyric line is Arabic for text direction
-  const isArabicText = (text: string) => /[\u0600-\u06FF]/.test(text);
+  const accentColor = currentTrack.accentColor || currentTrack.dominantColor || '#FA243C';
 
   return (
     <motion.div
@@ -116,346 +167,197 @@ const SyncedLyricsModal: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
       className="fixed inset-0 z-50 bg-[#060609] flex flex-col select-none overflow-hidden"
     >
-        {/* Luxury Obsidian Base Canvas */}
-        <div className="absolute inset-0 -z-20 bg-gradient-to-b from-[#08080c] via-[#060609] to-[#040406]" />
+      {/* Dynamic Multi-Orb Luminous Ambient Glow (Apple Music Style) */}
+      <div
+        className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-40 pointer-events-none transition-all duration-1000 ease-out"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div className="absolute inset-0 -z-10 bg-black/45 backdrop-blur-[50px] pointer-events-none" />
 
-        {/* Dynamic Multi-Orb Luminous Ambient Glow (Apple Music Style) */}
-        <div
-          className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-45 pointer-events-none transition-all duration-1000 ease-out"
-          style={{ backgroundColor: palette.primary }}
-        />
-        <div
-          className="absolute -bottom-[20%] -right-[15%] w-[80vw] h-[80vw] rounded-full filter blur-[150px] opacity-40 pointer-events-none transition-all duration-1000 ease-out"
-          style={{ backgroundColor: palette.secondary }}
-        />
-        <div
-          className="absolute top-[35%] right-[20%] w-[55vw] h-[55vw] rounded-full filter blur-[130px] opacity-30 pointer-events-none transition-all duration-1000 ease-out"
-          style={{ backgroundColor: palette.accent }}
-        />
-
-        {/* Ambient Dark Vignette & Glass Overlay */}
-        <div className="absolute inset-0 -z-10 bg-black/40 backdrop-blur-[50px] pointer-events-none" />
-
-        {/* Top Header Bar: Apple Music Live Lyrics & Apple Music Sing */}
-        <div className="w-full px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/[0.08] z-20">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-xs font-black text-white">
-              <Sparkles className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
-              <span>LIVE LYRICS</span>
-            </div>
-            
-            {/* Apple Music Sing Mode Switch */}
-            <button
-              onClick={() => setKaraokeMode(!karaokeMode)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
-                karaokeMode
-                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/35 ring-1 ring-white/20'
-                  : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'
-              }`}
-            >
-              <Mic2 className="w-3 h-3" />
-              <span>APPLE SING</span>
-            </button>
-
-            {isAutoMixing && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs font-bold text-emerald-400 animate-pulse">
-                AutoMix Active
-              </span>
-            )}
+      {/* Top Header Bar */}
+      <div className="w-full px-5 md:px-10 py-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-[11px] font-bold text-white">
+            <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
+            <span>{isRTL ? 'كلمات متزامنة' : 'LIVE LYRICS'}</span>
           </div>
 
-          <motion.button
-            data-testid="close-lyrics-btn"
-            whileTap={{ scale: 0.88 }}
-            onClick={() => setLyricsOpen(false)}
-            className="w-10 h-10 rounded-full apple-glass-pill text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer apple-spring"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </motion.button>
-        </div>
-
-        {/* Main Content: Apple Music Two-Column Layout on Desktop, Fluid Stream on Mobile */}
-        <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center overflow-hidden px-4 md:px-10 py-4 gap-8">
-          {/* Left Column: Player Info & Controls (Desktop & Tablet) */}
-          <div className="hidden lg:flex w-96 flex-col justify-center space-y-6 flex-shrink-0 pr-6 border-r border-white/[0.08]">
-            {/* High-Res Album Art with Subtle Pulse */}
-            <div className="relative w-72 h-72 rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-white/[0.12] mx-auto group">
-              <img
-                src={currentTrack.artworkUrl || '/logo.svg'}
-                alt={currentTrack.title}
-                className={`w-full h-full object-cover transition-transform duration-700 ${
-                  isPlaying ? 'scale-105' : 'scale-100'
-                }`}
-              />
-            </div>
-
-            {/* Track Meta */}
-            <div className="space-y-1 text-center">
-              <h2 className="text-2xl font-black text-white truncate tracking-tight">
-                {currentTrack.title}
-              </h2>
-              <p className="text-sm font-medium text-zinc-400 truncate">
-                {currentTrack.artist}
-              </p>
-              <p className="text-xs text-zinc-500 truncate font-mono">
-                {currentTrack.album}
-              </p>
-            </div>
-
-            {/* Scrubber */}
-            <div className="pt-2">
-              <TimelineSlider
-                duration={duration}
-                onSeek={seek}
-                showTimestamps={true}
-                accentColor={palette.primary}
-              />
-            </div>
-
-            {/* Playback Buttons */}
-            <div className="flex items-center justify-center gap-5 pt-1" dir="ltr">
-              <button
-                onClick={toggleShuffle}
-                className={`p-2 rounded-full transition-colors ${
-                  shuffle ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
-                }`}
-              >
-                <Shuffle className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={previousTrack}
-                className="p-2 text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all"
-              >
-                <SkipBack className="w-6 h-6 fill-current" />
-              </button>
-
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={togglePlayPause}
-                className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:scale-105 transition-all"
-              >
-                {isPlaying ? (
-                  <Pause className="w-6 h-6 fill-black" />
-                ) : (
-                  <Play className="w-6 h-6 fill-black translate-x-0.5" />
-                )}
-              </motion.button>
-
-              <button
-                onClick={() => nextTrack(false)}
-                className="p-2 text-white/90 hover:text-white hover:scale-110 active:scale-95 transition-all"
-              >
-                <SkipForward className="w-6 h-6 fill-current" />
-              </button>
-
-              <button
-                onClick={cycleRepeat}
-                className={`p-2 rounded-full transition-colors ${
-                  repeatMode !== 'off' ? 'text-[#FA243C] bg-[#FA243C]/20' : 'text-zinc-500 hover:text-white'
-                }`}
-              >
-                {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {/* Volume Slider */}
-            <div className="flex items-center justify-center gap-2 pt-1" dir="ltr">
-              <button
-                onClick={() => setVolume(volume === 0 ? 0.9 : 0)}
-                className="text-zinc-500 hover:text-white transition-colors"
-              >
-                {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-32 accent-white cursor-pointer"
-              />
-            </div>
-
-            {/* Apple Music Sing Vocal Level Slider */}
-            {karaokeMode && (
-              <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/[0.06] border border-[#FA243C]/30 shadow-lg">
-                <div className="flex items-center justify-between text-xs font-bold text-white">
-                  <span className="flex items-center gap-1.5 text-[#FF375F]">
-                    <Mic2 className="w-3.5 h-3.5" />
-                    <span>مستوى صوت المغني (Sing)</span>
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-400">
-                    {Math.round(karaokeVocalLevel * 100)}%
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={karaokeVocalLevel}
-                  onChange={(e) => setKaraokeVocalLevel(parseFloat(e.target.value))}
-                  className="w-full accent-[#FA243C] cursor-pointer"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: Kinetic Synchronized Lyrics Stream */}
-          <div
-            ref={containerRef}
-            onScroll={handleUserScroll}
-            className="flex-1 w-full h-full overflow-y-auto px-4 md:px-12 py-28 space-y-9 scroll-smooth select-none relative"
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setKaraokeMode(!karaokeMode);
             }}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+              karaokeMode
+                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/35 ring-1 ring-white/20'
+                : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'
+            }`}
           >
-            {lyrics.length > 0 ? (
-              lyrics.map((line, idx) => {
-                const isActive = idx === activeIndex;
-                const isArabic = isArabicText(line.text);
-                const distance = activeIndex >= 0 ? Math.abs(idx - activeIndex) : idx;
-                
-                // Progressive Distance Blur & Opacity (Apple Music kinetic typography)
-                const blurPx = isActive ? 0 : Math.min(10, distance * 1.5);
-                const opacityVal = isActive ? 1.0 : Math.max(0.18, 1.0 - distance * 0.22);
-                const scaleVal = isActive ? 1.04 : Math.max(0.92, 1.0 - distance * 0.015);
-
-                const nextLine = lyrics[idx + 1];
-                const hasInstrumentalGap = nextLine && (nextLine.time - line.time > 4.5);
-                const isDuringInstrumental = isActive && hasInstrumentalGap;
-
-                return (
-                  <React.Fragment key={`${line.time}_${idx}`}>
-                    <motion.div
-                      ref={isActive ? activeLineRef : null}
-                      onClick={() => {
-                        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-                          try {
-                            navigator.vibrate(12);
-                          } catch {}
-                        }
-                        seek(line.time);
-                      }}
-                      initial={false}
-                      animate={{
-                        scale: scaleVal,
-                        opacity: opacityVal,
-                        filter: `blur(${blurPx}px)`,
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 260,
-                        damping: 28,
-                        mass: 0.8,
-                      }}
-                      className={`cursor-pointer transition-all duration-300 py-4 px-6 rounded-3xl overflow-visible origin-left ${
-                        isActive 
-                          ? 'bg-white/[0.08] shadow-[0_0_50px_rgba(255,255,255,0.2)] border border-white/[0.12]' 
-                          : 'hover:bg-white/[0.02]'
-                      } ${isArabic ? 'text-right origin-right' : 'text-left origin-left'}`}
-                      dir={isArabic ? 'rtl' : 'ltr'}
-                    >
-                      <p
-                        className={`tracking-tight font-sans transition-all duration-300 leading-relaxed ${
-                          isActive
-                            ? 'text-white font-black text-2xl sm:text-3xl md:text-5xl drop-shadow-[0_0_40px_rgba(255,255,255,0.85)]'
-                            : 'text-white/35 hover:text-white/60 font-bold text-lg sm:text-xl md:text-3xl'
-                        }`}
-                      >
-                        <bdi dir="auto">{line.text}</bdi>
-                      </p>
-                    </motion.div>
-
-                    {/* Animated Instrumental Interlude Dots (Apple Music Style) */}
-                    {hasInstrumentalGap && (
-                      <div className={`py-3 px-6 transition-opacity duration-500 ${isDuringInstrumental ? 'opacity-100' : 'opacity-30'} ${isArabic ? 'text-right' : 'text-left'}`}>
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 text-xs font-bold">
-                          <Music2 className="w-3.5 h-3.5 text-[#FA243C] animate-pulse" />
-                          <span className="text-white/70">{isArabic ? 'فاصل موسيقي' : 'Instrumental Interlude'}</span>
-                          <span className="inline-flex items-center gap-1 ms-1 text-[#FA243C]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C] animate-ping" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C] animate-pulse" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C]" />
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            ) : currentTrack?.lyrics ? (
-              <div className="text-center py-24 text-zinc-400 space-y-4 whitespace-pre-line text-lg leading-loose">
-                <Music2 className="w-12 h-12 mx-auto text-[#FA243C] opacity-70" />
-                <p className="text-white text-2xl font-bold">كلمات الأغنية</p>
-                <div className="max-w-xl mx-auto text-zinc-300 text-lg leading-relaxed">
-                  {currentTrack.lyrics}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-36 text-zinc-400 space-y-4">
-                <Music2 className="w-14 h-14 mx-auto text-[#FA243C] animate-pulse opacity-50" />
-                <h4 className="text-white text-2xl font-bold">لا توجد كلمات متزامنة متاحة</h4>
-                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-                  يمكنك وضع ملف <code className="text-[#FF375F] font-mono bg-white/10 px-1.5 py-0.5 rounded">.lrc</code> بنفس اسم الأغنية أو يتم جلبها تلقائياً عند الاتصال بالإنترنت.
-                </p>
-              </div>
-            )}
-          </div>
+            <Mic2 className="w-3 h-3" />
+            <span>{isRTL ? 'عزل المغني' : 'SING'}</span>
+          </button>
         </div>
 
-        {/* Mobile Floating Mini-Controls (Shown only on small screens) */}
-        <div className="lg:hidden w-full px-6 py-4 border-t border-white/[0.08] bg-[#07070a]/90 backdrop-blur-2xl flex flex-col gap-2 z-20">
-          <TimelineSlider
-            duration={duration}
-            onSeek={seek}
-            showTimestamps={true}
-            accentColor={palette.primary}
-          />
+        <button
+          type="button"
+          data-testid="close-lyrics-btn"
+          onClick={() => {
+            triggerHaptic('light');
+            setLyricsOpen(false);
+          }}
+          className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer active:scale-90"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-          <div className="flex items-center justify-between pt-1" dir="ltr">
-            <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
-              <img
-                src={currentTrack.artworkUrl || '/logo.svg'}
-                alt={currentTrack.title}
-                className="w-10 h-10 rounded-xl object-cover"
+      {/* Main Content Area */}
+      <div className="flex-1 w-full max-w-5xl mx-auto flex flex-col items-center overflow-hidden min-h-0 relative">
+        <div
+          ref={containerRef}
+          onScroll={handleUserScroll}
+          className="flex-1 w-full h-full overflow-y-auto px-4 sm:px-8 py-20 space-y-4 scroll-smooth select-none relative"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+          }}
+        >
+          {lyrics.length > 0 ? (
+            lyrics.map((line, idx) => (
+              <LyricLineRow
+                key={`${line.time}_${idx}`}
+                time={line.time}
+                text={line.text}
+                idx={idx}
+                isActive={idx === activeIndex}
+                onSeek={seek}
+                activeLineRef={activeLineRef}
               />
-              <div className="min-w-0">
-                <h4 className="text-xs font-bold text-white truncate">{currentTrack.title}</h4>
-                <p className="text-[11px] text-zinc-400 truncate">{currentTrack.artist}</p>
-              </div>
+            ))
+          ) : currentTrack.lyrics ? (
+            <div className="text-center py-20 px-4 text-zinc-300 space-y-4 whitespace-pre-line text-base sm:text-lg leading-loose max-w-lg mx-auto">
+              <Music2 className="w-10 h-10 mx-auto text-[#FA243C] opacity-70" />
+              <p className="text-white text-xl font-bold">{isRTL ? 'كلمات الأغنية' : 'Lyrics'}</p>
+              <div className="text-zinc-300">{currentTrack.lyrics}</div>
             </div>
-
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <button onClick={previousTrack} className="text-white p-1">
-                <SkipBack className="w-5 h-5 fill-current" />
-              </button>
+          ) : (
+            <div className="text-center py-28 px-6 space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center mx-auto shadow-inner">
+                <Music2 className="w-8 h-8 text-[#FA243C]" />
+              </div>
+              <h4 className="text-white text-xl font-bold">
+                {isRTL ? 'لا توجد كلمات متزامنة متاحة' : 'No Synced Lyrics Available'}
+              </h4>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                {isRTL
+                  ? 'يمكنك البحث عن كلمات هذه الأغنية عبر الإنترنت ومزامنتها لحظياً.'
+                  : 'You can search for synced lyrics online and sing along live.'}
+              </p>
               <button
-                onClick={togglePlayPause}
-                className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md"
+                type="button"
+                onClick={handleSearchLyrics}
+                disabled={isSearchingLyrics}
+                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold shadow-lg shadow-[#FA243C]/30 active:scale-95 transition-transform flex items-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
               >
-                {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black translate-x-0.5" />}
+                <Search className="w-3.5 h-3.5" />
+                <span>{isSearchingLyrics ? (isRTL ? 'جاري البحث...' : 'Searching...') : (isRTL ? 'البحث عن الكلمات الآن' : 'Search Lyrics Online')}</span>
               </button>
-              <button onClick={() => nextTrack(false)} className="text-white p-1">
-                <SkipForward className="w-5 h-5 fill-current" />
-              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Floating Mini-Controls (Always locked at bottom) */}
+      <div className="w-full px-5 py-3 border-t border-white/[0.08] bg-[#07070a]/95 backdrop-blur-2xl flex flex-col gap-1.5 z-20 shrink-0">
+        <TimelineSlider
+          duration={duration}
+          onSeek={seek}
+          showTimestamps={true}
+          accentColor={accentColor}
+        />
+
+        <div className="flex items-center justify-between pt-1" dir="ltr">
+          <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
+            <img
+              src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+              alt={currentTrack.title}
+              className="w-10 h-10 rounded-xl object-cover shrink-0"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.svg';
+              }}
+            />
+            <div className="min-w-0">
+              <h4 className="text-xs font-bold text-white truncate">{currentTrack.title}</h4>
+              <p className="text-[11px] text-zinc-400 truncate">{currentTrack.artist}</p>
             </div>
           </div>
-        </div>
 
-        {/* Subtle Bottom Help Text */}
-        <div className="hidden lg:block text-center text-[11px] text-zinc-500 py-2 border-t border-white/[0.05] z-10">
-          اضغط على أي سطر للانتقال المباشر لتلك اللحظة في الأغنية
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                toggleShuffle();
+              }}
+              className={`p-2 rounded-full cursor-pointer transition-colors ${shuffle ? 'text-[#FA243C]' : 'text-zinc-500'}`}
+              title="Shuffle"
+            >
+              <Shuffle className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                previousTrack();
+              }}
+              className="text-white p-2 cursor-pointer active:scale-90"
+              title="Previous"
+            >
+              <SkipBack className="w-5 h-5 fill-current" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('medium');
+                togglePlayPause();
+              }}
+              className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md cursor-pointer active:scale-90 transition-transform"
+              title={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black translate-x-0.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                nextTrack({ forceImmediate: true });
+              }}
+              className="text-white p-2 cursor-pointer active:scale-90"
+              title="Next"
+            >
+              <SkipForward className="w-5 h-5 fill-current" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic('light');
+                cycleRepeat();
+              }}
+              className={`p-2 rounded-full cursor-pointer transition-colors ${repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-500'}`}
+              title="Repeat"
+            >
+              {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
-      </motion.div>
+      </div>
+    </motion.div>
   );
 };

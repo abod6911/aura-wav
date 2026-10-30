@@ -118,12 +118,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-xl animate-fadeIn select-none">
-      <div className="w-full max-w-lg apple-glass-card border-t sm:border border-white/12 rounded-t-[36px] sm:rounded-[32px] p-5 sm:p-8 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl space-y-5 sm:space-y-6 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 select-none">
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+      />
+
+      <div className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-8 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl space-y-5 sm:space-y-6 overflow-y-auto">
         {/* iOS Top Drag Pill */}
         <div
           onClick={onClose}
-          className="w-12 h-1.5 rounded-full bg-white/20 hover:bg-white/40 mx-auto -mt-1 mb-1 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+          className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto -mt-1 mb-2 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
         />
         {/* Hidden Folder Input (Desktop) */}
         <input

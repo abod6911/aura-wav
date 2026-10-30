@@ -222,16 +222,6 @@ export function App() {
     setIsHeaderScrolled(targetScroll > 20);
   }, [activeTab]);
 
-  const isModalActive =
-    isMobilePlayerOpen ||
-    isQueueOpen ||
-    isEqualizerOpen ||
-    isSoundboardOpen ||
-    isAutoMixModalOpen ||
-    isSleepTimerOpen ||
-    isChangeArtworkOpen ||
-    isMetadataEditorOpen;
-
   // Synchronize dynamic Apple Liquid Accent with album artwork
   useEffect(() => {
     const accent = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
@@ -448,9 +438,11 @@ export function App() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       dir={dir}
-      className={`fixed inset-0 w-full h-[100dvh] overflow-hidden select-none overscroll-none bg-[#060609] text-[#f4f4f7] font-sans selection:bg-[#FA243C]/25 ${
-        isMobile ? 'flex flex-col' : 'flex flex-row'
-      }`}
+      className={
+        isMobile
+          ? 'fixed inset-0 w-full h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
+          : 'fixed inset-0 w-full h-[100dvh] flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden select-none overscroll-none font-sans selection:bg-[#FA243C]/25'
+      }
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
@@ -471,23 +463,20 @@ export function App() {
       {/* 2. Desktop Left Sidebar (Only rendered on desktop) */}
       {!isMobile && <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />}
 
-      {/* 3. Header on Mobile (Stays fixed at top of column) */}
+      {/* 3. Header on Mobile (Stays fixed at top with safe-area support) */}
       {isMobile && (
         <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
       )}
 
-      {/* 4. Main View Area (iOS Recessed Card Depth on Sheet Open) */}
+      {/* 4. Main View Area (Strictly one active tab in DOM) */}
       <main
         ref={mainScrollRef}
         onScroll={handleMainScroll}
-        style={{
-          transform: isModalActive ? 'scale(0.94)' : 'scale(1)',
-          borderRadius: isModalActive ? '28px' : '0px',
-          filter: isModalActive ? 'brightness(0.7)' : 'brightness(1)',
-          transformOrigin: 'top center',
-          transition: 'transform 340ms cubic-bezier(0.32, 0.72, 0, 1), border-radius 340ms ease, filter 340ms ease',
-        }}
-        className="flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10"
+        className={
+          isMobile
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-6 overscroll-contain'
+            : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
+        }
       >
         <OfflineBanner />
         <DirectoryPermissionBanner />
@@ -548,21 +537,12 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls (MiniPlayer + NavDock in rigid shrink-0 container) */}
+      {/* 7. Mobile Bottom Controls: Rigid semantic <footer> */}
       {isMobile && (
-        <div className="shrink-0 w-full z-40 bg-gradient-to-t from-[#060609] via-[#060609]/95 to-transparent pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom,0.5rem))] flex flex-col items-center">
-          <AnimatePresence>
-            {!isMobilePlayerOpen && currentTrack && (
-              <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {!isMobilePlayerOpen && (
-              <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
-            )}
-          </AnimatePresence>
-        </div>
+        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)] pt-1 flex flex-col items-center">
+          <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
+          <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
+        </footer>
       )}
 
       {/* 8. Mobile Expandable Full-Screen Sheet */}

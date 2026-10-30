@@ -56,6 +56,7 @@ server.listen(PORT, async () => {
   await context.addInitScript(() => {
     localStorage.setItem('aura_welcome_seen', 'true');
     sessionStorage.setItem('aura_welcome_seen', 'true');
+    localStorage.setItem('aura_auth_guest', 'true');
   });
 
   const page = await context.newPage();
@@ -144,7 +145,7 @@ server.listen(PORT, async () => {
     console.log('MiniPlayer visible above NavDock:', isMiniPlayerVisible);
 
     // Capture mobile screen with Track List & MiniPlayer
-    const screenshot1 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\a08b9faa-ae3c-4319-b11e-dccc6fa25729\\e2e-screenshot-mobile-native.png';
+    const screenshot1 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\dc36be4c-0c1d-4fd9-bd43-c55918725efd\\e2e-screenshot-mobile-native.png';
     await page.screenshot({ path: screenshot1, fullPage: false });
     console.log(`✓ Screenshot 1 saved: ${screenshot1}`);
 
@@ -161,7 +162,7 @@ server.listen(PORT, async () => {
     console.log('Queue Bottom Sheet visible in DOM:', isQueueVisible);
 
     // Capture mobile screen with Queue Bottom Sheet
-    const screenshot2 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\a08b9faa-ae3c-4319-b11e-dccc6fa25729\\e2e-screenshot-mobile-queue.png';
+    const screenshot2 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\dc36be4c-0c1d-4fd9-bd43-c55918725efd\\e2e-screenshot-mobile-queue.png';
     await page.screenshot({ path: screenshot2, fullPage: false });
     console.log(`✓ Screenshot 2 saved: ${screenshot2}`);
 
@@ -170,13 +171,13 @@ server.listen(PORT, async () => {
     await page.evaluate(() => {
       window.usePlayerStore.setState({ isQueueOpen: false, isMobilePlayerOpen: true });
     });
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1500);
 
     const expandedPlayer = page.locator('[data-testid="expanded-player-sheet"]');
     const isExpandedVisible = await expandedPlayer.isVisible({ timeout: 4000 }).catch(() => false);
     console.log('ExpandedPlayer 100dvh Sheet visible in DOM:', isExpandedVisible);
 
-    const screenshot3 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\a08b9faa-ae3c-4319-b11e-dccc6fa25729\\e2e-screenshot-mobile-expanded.png';
+    const screenshot3 = 'C:\\Users\\abodv\\.gemini\\antigravity\\brain\\dc36be4c-0c1d-4fd9-bd43-c55918725efd\\e2e-screenshot-mobile-expanded.png';
     await page.screenshot({ path: screenshot3, fullPage: false });
     console.log(`✓ Screenshot 3 saved: ${screenshot3}`);
 
