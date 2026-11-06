@@ -228,7 +228,7 @@ export function App() {
     const accent = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
     document.documentElement.style.setProperty('--aura-accent', accent);
     document.documentElement.style.setProperty('--aura-accent-hover', accent);
-    document.documentElement.style.setProperty('--aura-accent-glow', `${accent}55`);
+    document.documentElement.style.setProperty('--aura-accent-glow', `${accent}18`);
   }, [currentTrack]);
 
   // Initialize DB, Party URL invite, and Service Worker

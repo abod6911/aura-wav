@@ -96,17 +96,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
       className="fixed inset-0 z-[120] w-full h-[100dvh] bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 select-none"
       dir={dir}
     >
-      {/* Background Ambient Glow */}
-      <div className="absolute top-0 inset-x-0 h-80 pointer-events-none -z-10 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-transparent blur-3xl transform-gpu" />
-      <div className="absolute bottom-0 inset-x-0 h-56 pointer-events-none -z-10 bg-gradient-to-t from-purple-900/15 to-transparent blur-3xl transform-gpu" />
+      {/* Background Subtle Ambient Tone */}
+      <div className="absolute top-0 inset-x-0 h-64 pointer-events-none -z-10 bg-gradient-to-b from-[#FA243C]/08 via-transparent to-transparent blur-2xl transform-gpu" />
 
       {/* Top Header / Brand Logo */}
       <div className="pt-2 sm:pt-4 flex flex-col items-center text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="relative w-14 h-14 sm:w-18 sm:h-18 rounded-[20px] sm:rounded-[26px] bg-gradient-to-tr from-[#FA243C] via-[#FF375F] to-[#7D12FF] p-0.5 shadow-[0_12px_40px_rgba(250,36,60,0.35)] flex items-center justify-center mb-2 sm:mb-3"
+          transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+          className="relative w-14 h-14 sm:w-18 sm:h-18 rounded-[20px] sm:rounded-[26px] bg-gradient-to-tr from-[#FA243C] via-[#FF375F] to-[#7D12FF] p-0.5 shadow-xl shadow-black/50 flex items-center justify-center mb-2 sm:mb-3"
         >
           <div className="w-full h-full bg-[#0a0a10] rounded-[18px] sm:rounded-[24px] flex items-center justify-center">
             <Disc3 className="w-7 h-7 sm:w-9 sm:h-9 text-[#FA243C] animate-spin-slow" />

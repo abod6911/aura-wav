@@ -56,9 +56,9 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
         return (
           <motion.button
             key={tab.id}
-            whileTap={{ scale: 0.90 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => handleTabClick(tab.id)}
-            className="relative flex flex-col items-center gap-0.5 sm:gap-1 py-1 sm:py-1.5 px-2 sm:px-3 rounded-2xl transition-all flex-1 cursor-pointer min-h-[42px] sm:min-h-[44px] aura-tap-btn"
+            className="relative flex flex-col items-center gap-0.5 sm:gap-1 py-1 sm:py-1.5 px-2 sm:px-3 rounded-2xl transition-colors flex-1 cursor-pointer min-h-[42px] sm:min-h-[44px]"
             aria-selected={isActive}
             role="tab"
           >
@@ -66,31 +66,31 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             {isActive && (
               <motion.div
                 layoutId="activeMobileTab"
-                className="absolute inset-0 rounded-2xl bg-white/[0.12] border border-white/[0.14] shadow-sm -z-10"
+                className="absolute inset-0 rounded-2xl bg-white/[0.10] border border-white/[0.12] shadow-sm -z-10"
                 transition={{
                   type: 'spring',
-                  stiffness: 380,
-                  damping: 32,
+                  stiffness: 420,
+                  damping: 36,
                   mass: 0.8,
                 }}
               />
             )}
             <motion.div
-              animate={{ scale: isActive ? 1.12 : 1 }}
+              animate={{ scale: isActive ? 1.08 : 1 }}
               transition={{
                 type: 'spring',
-                stiffness: 380,
-                damping: 32,
+                stiffness: 420,
+                damping: 36,
                 mass: 0.8,
               }}
             >
               <Icon
-                className={`w-5 h-5 transition-all duration-200 ${
+                className={`w-5 h-5 transition-colors duration-150 ${
                   isActive
-                    ? 'text-[#FA243C] drop-shadow-[0_0_12px_rgba(250,36,60,0.8)]'
+                    ? 'text-[#FA243C]'
                     : 'text-white/60 hover:text-white'
                 }`}
-                strokeWidth={isActive ? 2.5 : 1.8}
+                strokeWidth={isActive ? 2.3 : 1.8}
               />
             </motion.div>
             <span

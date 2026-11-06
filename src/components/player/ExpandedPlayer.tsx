@@ -89,8 +89,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       dragElastic={{ top: 0, bottom: 0.6 }}
       onDragEnd={(_, info) => {
         // 120fps Drag-to-Dismiss physics:
-        // Dismiss if dragged down > 90px or fast flick velocity.y > 350
-        if (info.offset.y > 90 || info.velocity.y > 350) {
+        // Dismiss if dragged down > 55px or fast flick velocity.y > 200
+        if (info.offset.y > 55 || info.velocity.y > 200) {
           handleClose();
         }
       }}
@@ -99,9 +99,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     >
       {/* Dynamic Hardware-Accelerated Ambient Backdrop */}
       <div
-        className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-40"
+        className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-18"
         style={{
-          background: `radial-gradient(circle at 50% 25%, ${accentColor} 0%, transparent 65%), #07070b`,
+          background: `radial-gradient(circle at 50% 20%, ${accentColor} 0%, transparent 60%), #07070b`,
           transform: 'translateZ(0)',
         }}
       />
@@ -169,8 +169,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
           style={{
             boxShadow: isPlaying
-              ? `0 20px 50px -10px ${accentColor}80`
-              : '0 10px 25px -10px rgba(0, 0, 0, 0.7)',
+              ? '0 18px 40px -10px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.4)'
+              : '0 8px 24px -8px rgba(0, 0, 0, 0.6)',
           }}
           className="relative w-[min(70vw,34vh,280px)] h-[min(70vw,34vh,280px)] max-h-full aspect-square rounded-[22px] sm:rounded-[26px] overflow-hidden border border-white/[0.12] select-none flex-shrink-0"
         >
@@ -211,7 +211,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         >
           <Heart
             className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${
-              isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_12px_rgba(250,36,60,0.65)] scale-110' : 'text-zinc-500'
+              isFav ? 'text-[#FA243C] fill-[#FA243C] scale-105' : 'text-zinc-500'
             }`}
           />
         </button>
@@ -253,7 +253,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           aria-label="Shuffle"
         >
           <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
-          {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FA243C]" />}
+          {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
         </button>
 
         {/* Previous Track */}
@@ -319,7 +319,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           aria-label="Repeat"
         >
           {repeatMode === 'one' ? <Repeat1 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />}
-          {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C] shadow-[0_0_6px_#FA243C]" />}
+          {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
         </button>
       </div>
 

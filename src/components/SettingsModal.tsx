@@ -172,12 +172,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
           drag="y"
           dragConstraints={{ top: 0 }}
-          dragElastic={0.2}
+          dragElastic={0.35}
           onDragEnd={(_, info) => {
-            if (info.offset.y > 90 || info.velocity.y > 350) {
+            if (info.offset.y > 55 || info.velocity.y > 200) {
               onClose();
             }
           }}
@@ -189,10 +189,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             onClick={onClose}
             className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto -mt-1 mb-2 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
           />
-
-          {/* Ambient Lighting Accents */}
-          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-[#FA243C]/12 filter blur-[80px] pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-[#7D12FF]/12 filter blur-[80px] pointer-events-none" />
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5 flex-shrink-0">

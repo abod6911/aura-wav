@@ -10,10 +10,10 @@
   --apple-violet: #7D12FF;
   --aura-accent: #FA243C;
   --aura-accent-hover: #FF375F;
-  --aura-accent-glow: rgba(250, 36, 60, 0.4);
-  --mesh-color-1: rgba(250, 36, 60, 0.28);
-  --mesh-color-2: rgba(255, 55, 95, 0.18);
-  --mesh-color-3: rgba(125, 18, 255, 0.15);
+  --aura-accent-glow: rgba(250, 36, 60, 0.12);
+  --mesh-color-1: rgba(250, 36, 60, 0.10);
+  --mesh-color-2: rgba(255, 55, 95, 0.08);
+  --mesh-color-3: rgba(125, 18, 255, 0.06);
 }
 
 /* Lightweight performance-optimized glass materials */
@@ -330,25 +330,25 @@ input[type=range]::-webkit-slider-thumb:hover {
 .aura-tap-btn {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 100ms cubic-bezier(0.16, 1, 0.3, 1), filter 100ms ease-out;
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), opacity 120ms ease-out;
   will-change: transform;
 }
 .aura-tap-btn:active {
-  transform: scale(0.92) translate3d(0, 0, 0);
-  filter: brightness(1.25);
+  transform: scale(0.96) translate3d(0, 0, 0);
+  opacity: 0.82;
 }
 
-/* 120fps Glowing Aura & Ambient Breathing */
+/* 120fps Subtle Ambient Breathing */
 @keyframes auraPulseGlow {
   0%, 100% {
-    box-shadow: 0 0 14px rgba(250, 36, 60, 0.4), 0 0 28px rgba(250, 36, 60, 0.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
   50% {
-    box-shadow: 0 0 24px rgba(250, 36, 60, 0.75), 0 0 45px rgba(250, 36, 60, 0.4);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(250, 36, 60, 0.2);
   }
 }
 .aura-glow-pulse {
-  animation: auraPulseGlow 2.5s ease-in-out infinite;
+  animation: auraPulseGlow 3s ease-in-out infinite;
   will-change: box-shadow;
 }
 
@@ -437,10 +437,10 @@ input[type=range]::-webkit-slider-thumb:hover {
 
 @keyframes neonDjPulse {
   0%, 100% {
-    box-shadow: 0 0 12px rgba(250, 36, 60, 0.4), inset 0 0 8px rgba(250, 36, 60, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.05);
   }
   50% {
-    box-shadow: 0 0 24px rgba(250, 36, 60, 0.75), inset 0 0 14px rgba(250, 36, 60, 0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 10px rgba(250, 36, 60, 0.2);
   }
 }
 
@@ -500,13 +500,13 @@ button:not(:disabled):active, [role="button"]:active, .interactive-press:active 
 
 /* Tactile Spring Physics */
 .spring-tactile {
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.2s ease,
-              border-color 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.15s ease,
+              border-color 0.15s ease;
 }
 .spring-tactile:active {
-  transform: scale(0.92) translateZ(0);
+  transform: scale(0.96) translateZ(0);
 }
 
 /* Master Luxury Hi-Fi Play/Pause Statement Button */
@@ -515,22 +515,21 @@ button:not(:disabled):active, [role="button"]:active, .interactive-press:active 
   box-shadow: 
     inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.9),
     inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.12),
-    0 12px 32px -4px rgba(0, 0, 0, 0.65),
-    0 4px 14px 0 rgba(0, 0, 0, 0.35);
+    0 12px 28px -4px rgba(0, 0, 0, 0.55),
+    0 4px 12px 0 rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hi-fi-play-button:hover {
-  transform: scale(1.06) translateZ(0);
+  transform: scale(1.04) translateZ(0);
   box-shadow: 
     inset 0 1.5px 2.5px 0 rgba(255, 255, 255, 1),
     inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.1),
-    0 16px 40px -4px rgba(0, 0, 0, 0.75),
-    0 0 35px 4px var(--aura-glow, rgba(250, 36, 60, 0.45));
+    0 16px 36px -4px rgba(0, 0, 0, 0.65);
 }
 .hi-fi-play-button:active {
-  transform: scale(0.90) translateZ(0);
+  transform: scale(0.94) translateZ(0);
   box-shadow: 
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.7),
     0 6px 18px -2px rgba(0, 0, 0, 0.5);
@@ -578,24 +577,24 @@ button:not(:disabled):active, [role="button"]:active, .interactive-press:active 
   transform: scale(0.95) translateZ(0);
 }
 .luxury-capsule-active {
-  background: linear-gradient(135deg, rgba(250, 36, 60, 0.25) 0%, rgba(255, 45, 85, 0.18) 100%);
-  border: 1px solid rgba(250, 36, 60, 0.5);
-  box-shadow: 0 0 20px rgba(250, 36, 60, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, rgba(250, 36, 60, 0.20) 0%, rgba(255, 45, 85, 0.12) 100%);
+  border: 1px solid rgba(250, 36, 60, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.18);
 }
 
 /* Apple Signature Play Button */
 .spotify-play-btn {
   background: linear-gradient(135deg, #FA243C 0%, #FF375F 100%);
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(250, 36, 60, 0.45);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.2s ease,
-              box-shadow 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.18s ease,
+              box-shadow 0.18s ease;
 }
 .spotify-play-btn:hover {
   background: linear-gradient(135deg, #FF375F 0%, #FA243C 100%);
-  transform: scale(1.06);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(250, 36, 60, 0.65);
+  transform: scale(1.04);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
 }
 .spotify-play-btn:active {
   transform: scale(0.94);

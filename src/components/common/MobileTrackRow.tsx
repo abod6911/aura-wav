@@ -64,7 +64,7 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
 
   const handleDragEnd = (_: any, info: any) => {
     const offset = info.offset.x;
-    const threshold = 55;
+    const threshold = 45;
     const triggered = isRTL ? offset < -threshold : offset > threshold;
 
     if (triggered) {
@@ -86,12 +86,12 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
       <motion.div
         style={{ opacity: bgOpacity }}
         className={`absolute inset-0 bg-gradient-to-r ${
-          isRTL ? 'from-transparent via-[#FA243C]/80 to-[#FA243C]' : 'from-[#FA243C] via-[#FA243C]/80 to-transparent'
+          isRTL ? 'from-transparent via-[#FA243C]/60 to-[#FA243C]/80' : 'from-[#FA243C]/80 via-[#FA243C]/60 to-transparent'
         } flex items-center ${isRTL ? 'justify-end pe-5' : 'justify-start ps-5'} z-0`}
       >
-        <motion.div style={{ scale: iconScale }} className="flex items-center gap-1.5 text-white font-bold text-xs animate-pulse">
+        <motion.div style={{ scale: iconScale }} className="flex items-center gap-1.5 text-white font-bold text-xs">
           <ListPlus className="w-5 h-5 text-white stroke-[2.5]" />
-          <span className="text-white text-xs font-black">{isRTL ? 'إلى قائمة الانتظار' : 'To Queue'}</span>
+          <span className="text-white text-xs font-bold">{isRTL ? 'إلى قائمة الانتظار' : 'To Queue'}</span>
         </motion.div>
       </motion.div>
 
@@ -101,13 +101,13 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: isRTL ? -80 : 0, right: isRTL ? 0 : 80 }}
-        dragElastic={0.2}
-        transition={{ type: 'spring', stiffness: 400, damping: 30, mass: 0.8 }}
+        dragElastic={0.35}
+        transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[64px] min-h-[64px] px-3 rounded-2xl flex items-center justify-between gap-3 select-none border transition-colors cursor-pointer active:scale-[0.98] ${
+        className={`relative z-10 w-full h-[64px] min-h-[64px] px-3 rounded-2xl flex items-center justify-between gap-3 select-none border transition-colors cursor-pointer active:scale-[0.99] ${
           isCur
-            ? 'bg-[#FA243C]/15 border-[#FA243C]/40'
+            ? 'bg-[#FA243C]/12 border-[#FA243C]/35'
             : 'bg-[#12121a]/90 hover:bg-[#161622] border-white/[0.06]'
         }`}
       >

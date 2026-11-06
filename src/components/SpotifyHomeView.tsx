@@ -181,11 +181,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
       {spotlightTrack && (
         <div
           onClick={() => handleTrackClick(spotlightTrack)}
-          className="h-[145px] sm:h-[160px] w-full rounded-2xl p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#FA243C]/25 via-[#14141c] to-[#09090d] border border-white/10 select-none cursor-pointer active:scale-[0.98] transition-transform shadow-xl"
+          className="h-[145px] sm:h-[160px] w-full rounded-2xl p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#FA243C]/12 via-[#14141c] to-[#09090d] border border-white/10 select-none cursor-pointer active:scale-[0.98] transition-transform shadow-lg"
         >
           {/* Subtle Cover Background */}
           <div
-            className="absolute inset-0 -z-10 bg-cover bg-center opacity-30 transform-gpu"
+            className="absolute inset-0 -z-10 bg-cover bg-center opacity-25 transform-gpu"
             style={{
               backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})`,
             }}
@@ -194,7 +194,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
           {/* Top Badges */}
           <div className="flex items-center justify-between">
-            <span className="apple-badge bg-[#FA243C]/25 border-[#FA243C]/40 text-[#FF375F] text-[8px] sm:text-[9px] font-black py-0.5 px-2">
+            <span className="apple-badge bg-[#FA243C]/18 border-[#FA243C]/30 text-[#FF375F] text-[8px] sm:text-[9px] font-bold py-0.5 px-2">
               APPLE MUSIC EXCLUSIVE
             </span>
             <span className="apple-badge bg-white/10 text-white/90 text-[8px] sm:text-[9px] py-0.5 px-2">

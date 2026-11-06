@@ -255,10 +255,10 @@ export const AtmosphereBackground: React.FC = () => {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, #FA243C1a 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, #7D12FF12 0%, transparent 65%)`,
+            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, #FA243C0c 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, #7D12FF08 0%, transparent 65%)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
       </div>
     );
   }

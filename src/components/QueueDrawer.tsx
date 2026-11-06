@@ -57,12 +57,12 @@ export const QueueDrawer: React.FC = () => {
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          transition={{ type: 'spring', damping: 32, stiffness: 360, mass: 0.8 }}
           drag="y"
           dragConstraints={{ top: 0 }}
-          dragElastic={0.2}
+          dragElastic={0.35}
           onDragEnd={(_, info) => {
-            if (info.offset.y > 100 || info.velocity.y > 400) {
+            if (info.offset.y > 55 || info.velocity.y > 200) {
               triggerHaptic(8);
               setQueueOpen(false);
             }

@@ -85,12 +85,12 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
             drag="y"
             dragConstraints={{ top: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.35}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 80 || info.velocity.y > 300) {
+              if (info.offset.y > 55 || info.velocity.y > 200) {
                 triggerHaptic('light');
                 onClose();
               }

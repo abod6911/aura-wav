@@ -61,18 +61,18 @@ const LyricLineRow: React.FC<LyricLineRowProps> = memo(({
         triggerHaptic('light');
         onSeek(time);
       }}
-      className={`cursor-pointer transition-all duration-300 py-3.5 px-5 rounded-2xl select-none ${
+      className={`cursor-pointer transition-all duration-200 py-3.5 px-5 rounded-2xl select-none ${
         isActive
-          ? 'bg-white/[0.08] shadow-[0_0_35px_rgba(255,255,255,0.18)] border border-white/[0.12]'
+          ? 'bg-white/[0.07] border border-white/[0.10]'
           : 'hover:bg-white/[0.02]'
       } ${isArabic ? 'text-right' : 'text-left'}`}
       dir={isArabic ? 'rtl' : 'ltr'}
     >
       <p
-        className={`tracking-tight font-sans transition-all duration-300 leading-relaxed ${
+        className={`tracking-tight font-sans transition-all duration-200 leading-relaxed ${
           isActive
-            ? 'text-[22px] font-extrabold text-white scale-100 opacity-100 drop-shadow-[0_0_20px_rgba(255,255,255,0.6)]'
-            : 'text-[18px] font-semibold text-white/35 blur-[0.6px] scale-[0.97] hover:text-white/60'
+            ? 'text-[22px] font-black text-white scale-100 opacity-100'
+            : 'text-[18px] font-semibold text-white/40 scale-[0.98] hover:text-white/60'
         }`}
       >
         <bdi dir="auto">{text}</bdi>
@@ -170,9 +170,9 @@ const SyncedLyricsModal: React.FC = () => {
       transition={{ duration: 0.25 }}
       className="fixed inset-0 z-50 bg-[#060609] flex flex-col select-none overflow-hidden"
     >
-      {/* Dynamic Multi-Orb Luminous Ambient Glow (Apple Music Style) */}
+      {/* Subtle Ambient Tint (Apple Music Style) */}
       <div
-        className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-40 pointer-events-none transition-all duration-1000 ease-out"
+        className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-15 pointer-events-none transition-all duration-1000 ease-out"
         style={{ backgroundColor: accentColor }}
       />
       <div className="absolute inset-0 -z-10 bg-black/45 backdrop-blur-[50px] pointer-events-none" />

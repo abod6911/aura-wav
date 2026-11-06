@@ -148,22 +148,19 @@ export const EqualizerModal: React.FC = () => {
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
             drag="y"
             dragConstraints={{ top: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.35}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 90 || info.velocity.y > 350) {
+              if (info.offset.y > 55 || info.velocity.y > 200) {
                 setEqualizerOpen(false);
               }
             }}
-            className="fixed bottom-0 inset-x-0 z-50 max-h-[88dvh] sm:max-w-4xl sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-4 sm:p-7 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-4 sm:space-y-5 flex flex-col overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7"
+            className="fixed bottom-0 inset-x-0 z-50 max-h-[88dvh] sm:max-w-4xl sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-4 sm:p-7 shadow-2xl space-y-4 sm:space-y-5 flex flex-col overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7"
           >
             {/* Unified iOS Mobile Drag Pill */}
             <div onClick={() => setEqualizerOpen(false)} className="w-10 h-1.5 bg-white/25 hover:bg-white/40 rounded-full mx-auto mt-0 mb-3 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
-
-          {/* Top Ambient Glow */}
-          <div className="absolute top-0 right-1/4 w-80 h-80 bg-[var(--apple-rose)]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
