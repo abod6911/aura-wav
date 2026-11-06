@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { dexieDB } from '../db/dexieDB';
 
 export interface AuthUser {
   id: string;
@@ -123,6 +124,31 @@ class AuthService {
     if (!this.currentUser) {
       this.restoreSessionSync();
     }
+
+    // Check IndexedDB backup if localStorage is empty or cleared
+    if (!this.currentUser) {
+      try {
+        const idbSession = await dexieDB.settings.get(VAULT_SESSION_KEY);
+        if (idbSession && idbSession.value) {
+          const restoredUser = idbSession.value as AuthUser;
+          this.currentUser = restoredUser;
+          this.saveSession(restoredUser);
+        }
+      } catch {}
+    }
+
+    // Synchronize user accounts list between LocalStorage and IndexedDB
+    try {
+      const localUsers = this.getVaultUsers();
+      if (localUsers.length === 0) {
+        const idbUsers = await dexieDB.settings.get(VAULT_USERS_KEY);
+        if (idbUsers && idbUsers.value && Array.isArray(idbUsers.value)) {
+          this.saveVaultUsers(idbUsers.value);
+        }
+      } else {
+        dexieDB.settings.put({ key: VAULT_USERS_KEY, value: localUsers }).catch(() => {});
+      }
+    } catch {}
 
     return this.currentUser;
   }
@@ -330,12 +356,18 @@ class AuthService {
     try {
       localStorage.setItem(VAULT_SESSION_KEY, JSON.stringify(user));
     } catch {}
+    try {
+      dexieDB.settings.put({ key: VAULT_SESSION_KEY, value: user }).catch(() => {});
+    } catch {}
   }
 
   private clearSession(): void {
     if (typeof window === 'undefined') return;
     try {
       localStorage.removeItem(VAULT_SESSION_KEY);
+    } catch {}
+    try {
+      dexieDB.settings.delete(VAULT_SESSION_KEY).catch(() => {});
     } catch {}
   }
 
@@ -353,6 +385,9 @@ class AuthService {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(VAULT_USERS_KEY, JSON.stringify(users));
+    } catch {}
+    try {
+      dexieDB.settings.put({ key: VAULT_USERS_KEY, value: users }).catch(() => {});
     } catch {}
   }
 

@@ -234,6 +234,12 @@ export function App() {
   // Initialize DB, Party URL invite, and Service Worker
   useEffect(() => {
     initStore();
+    authService.init().then((user) => {
+      if (user && !currentUser) {
+        setCurrentUser(user);
+        setAuthScreenOpen(false);
+      }
+    });
 
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
