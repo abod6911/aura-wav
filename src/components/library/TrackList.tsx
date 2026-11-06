@@ -344,25 +344,25 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       ) : (
         /* Empty State Hero CTA */
-        <div className="relative overflow-hidden rounded-[28px] p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-[#07070a] border border-white/[0.1] text-center space-y-4 backdrop-blur-2xl">
-          <FolderOpen className="w-14 h-14 mx-auto text-[#FA243C] animate-bounce" />
-          <h2 className="text-2xl md:text-3xl font-black text-white">{isRTL ? 'مكتبتك فارغة حالياً' : 'Your Library is Empty'}</h2>
-          <p className="text-sm text-zinc-400 max-w-md mx-auto">
+        <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] p-5 sm:p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-[#07070a] border border-white/[0.1] text-center space-y-3 sm:space-y-4 backdrop-blur-2xl">
+          <FolderOpen className="w-10 h-10 sm:w-14 sm:h-14 mx-auto text-[#FA243C] animate-bounce" />
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white">{isRTL ? 'مكتبتك فارغة حالياً' : 'Your Library is Empty'}</h2>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">
             {isRTL
               ? 'يمكنك استيراد أغانيك من جهازك للاستماع دون اتصال، أو استكشاف الأغاني الشائعة والبحث عنها وإضافتها لحسابك.'
               : 'Import songs from your device for offline listening, or explore trending catalog tracks and add them to your account.'}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
             <button
               onClick={onOpenImport}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm transition-all shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <FolderOpen className="w-4 h-4" />
               <span>{isRTL ? 'استيراد أغاني من جهازي' : 'Import Local Songs'}</span>
             </button>
             <button
               onClick={() => usePlayerStore.getState().setActiveTab('search')}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 text-white font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <Search className="w-4 h-4" />
               <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>

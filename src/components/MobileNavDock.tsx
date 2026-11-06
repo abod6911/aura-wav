@@ -47,7 +47,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="w-[calc(100%-1.5rem)] max-w-md mx-auto apple-glass-dock rounded-[24px] p-1.5 flex items-center justify-around select-none shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.18)] border border-white/[0.14] shrink-0"
+      className="w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md mx-auto apple-glass-dock rounded-[22px] sm:rounded-[24px] p-1 sm:p-1.5 flex items-center justify-around select-none shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_1px_rgba(255,255,255,0.18)] border border-white/[0.14] shrink-0"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -58,7 +58,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             key={tab.id}
             whileTap={{ scale: 0.90 }}
             onClick={() => handleTabClick(tab.id)}
-            className="relative flex flex-col items-center gap-1 py-1.5 px-3 rounded-2xl transition-all flex-1 cursor-pointer min-h-[44px] aura-tap-btn"
+            className="relative flex flex-col items-center gap-0.5 sm:gap-1 py-1 sm:py-1.5 px-2 sm:px-3 rounded-2xl transition-all flex-1 cursor-pointer min-h-[42px] sm:min-h-[44px] aura-tap-btn"
             aria-selected={isActive}
             role="tab"
           >

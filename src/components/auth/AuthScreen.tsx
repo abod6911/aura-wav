@@ -45,6 +45,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
           setErrorMessage(error || (isRTL ? 'فشل تسجيل الدخول' : 'Sign in failed'));
           triggerHaptic('warning');
         } else {
+          try {
+            localStorage.setItem('aura_welcome_seen', 'true');
+            sessionStorage.setItem('aura_welcome_seen', 'true');
+          } catch {}
           triggerHaptic('success');
           onSuccess(user);
         }
@@ -58,6 +62,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
           setErrorMessage(error || (isRTL ? 'فشل إنشاء الحساب' : 'Account creation failed'));
           triggerHaptic('warning');
         } else {
+          try {
+            localStorage.setItem('aura_welcome_seen', 'true');
+            sessionStorage.setItem('aura_welcome_seen', 'true');
+          } catch {}
           triggerHaptic('success');
           onSuccess(user);
         }
@@ -72,6 +80,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
 
   const handleGuest = () => {
     triggerHaptic('medium');
+    try {
+      localStorage.setItem('aura_welcome_seen', 'true');
+      sessionStorage.setItem('aura_welcome_seen', 'true');
+    } catch {}
     const guest = authService.continueAsGuest();
     if (onContinueAsGuest) {
       onContinueAsGuest();
@@ -82,40 +94,40 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
 
   return (
     <div
-      className="fixed inset-0 z-[120] w-full h-[100dvh] bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-6 py-8 select-none"
+      className="fixed inset-0 z-[120] w-full h-[100dvh] bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 select-none"
       dir={dir}
     >
       {/* Background Ambient Glow */}
-      <div className="absolute top-0 inset-x-0 h-96 pointer-events-none -z-10 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-transparent blur-3xl transform-gpu" />
-      <div className="absolute bottom-0 inset-x-0 h-64 pointer-events-none -z-10 bg-gradient-to-t from-purple-900/15 to-transparent blur-3xl transform-gpu" />
+      <div className="absolute top-0 inset-x-0 h-80 pointer-events-none -z-10 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-transparent blur-3xl transform-gpu" />
+      <div className="absolute bottom-0 inset-x-0 h-56 pointer-events-none -z-10 bg-gradient-to-t from-purple-900/15 to-transparent blur-3xl transform-gpu" />
 
       {/* Top Header / Brand Logo */}
-      <div className="pt-6 flex flex-col items-center text-center">
+      <div className="pt-2 sm:pt-4 flex flex-col items-center text-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="relative w-20 h-20 rounded-[28px] bg-gradient-to-tr from-[#FA243C] via-[#FF375F] to-[#7D12FF] p-0.5 shadow-[0_12px_40px_rgba(250,36,60,0.35)] flex items-center justify-center mb-4"
+          className="relative w-14 h-14 sm:w-18 sm:h-18 rounded-[20px] sm:rounded-[26px] bg-gradient-to-tr from-[#FA243C] via-[#FF375F] to-[#7D12FF] p-0.5 shadow-[0_12px_40px_rgba(250,36,60,0.35)] flex items-center justify-center mb-2 sm:mb-3"
         >
-          <div className="w-full h-full bg-[#0a0a10] rounded-[26px] flex items-center justify-center">
-            <Disc3 className="w-10 h-10 text-[#FA243C] animate-spin-slow" />
+          <div className="w-full h-full bg-[#0a0a10] rounded-[18px] sm:rounded-[24px] flex items-center justify-center">
+            <Disc3 className="w-7 h-7 sm:w-9 sm:h-9 text-[#FA243C] animate-spin-slow" />
           </div>
-          <span className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-[#FA243C] text-white shadow-md">
-            <Sparkles className="w-3.5 h-3.5" />
+          <span className="absolute -bottom-1 -right-1 p-1 rounded-full bg-[#FA243C] text-white shadow-md">
+            <Sparkles className="w-3 h-3" />
           </span>
         </motion.div>
 
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-1.5">
+        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-1.5">
           <bdi dir="ltr">
             AURA<span className="text-[#FA243C]">.WAV</span>
           </bdi>
         </h1>
-        <p className="text-xs text-white/50 font-medium mt-1 max-w-xs">
+        <p className="text-[11px] sm:text-xs text-white/50 font-medium mt-0.5 max-w-xs">
           {isRTL ? 'استوديو الصوت الفائق • تجربة هاتف أصلية 120fps' : 'Ultra Hi-Fi Music Experience • 120fps Native App'}
         </p>
 
         {/* Tab Switcher: Sign In vs Sign Up */}
-        <div className="w-full max-w-sm mt-7 p-1 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center relative">
+        <div className="w-full max-w-sm mt-4 sm:mt-6 p-1 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center relative">
           <button
             type="button"
             onClick={() => {

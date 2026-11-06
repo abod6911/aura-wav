@@ -474,7 +474,7 @@ export function App() {
         onScroll={handleMainScroll}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-2 pb-6 overscroll-contain'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-8 overscroll-contain'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -539,7 +539,7 @@ export function App() {
 
       {/* 7. Mobile Bottom Controls: Rigid semantic <footer> */}
       {isMobile && (
-        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)] pt-1 flex flex-col items-center">
+        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[max(env(safe-area-inset-bottom,0px),8px)] pt-1 flex flex-col items-center">
           <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
           <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </footer>

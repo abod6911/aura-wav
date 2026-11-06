@@ -106,23 +106,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
       </div>
 
       {/* ── 1. Quick Access Grid (Strictly 6 Cards) ── */}
-      <div className="grid grid-cols-2 gap-2.5 w-full">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full">
         {/* Card 1: Liked Songs */}
         <div
           onClick={() => {
             triggerHaptic('light');
             setActiveTab('favorites');
           }}
-          className="flex items-center gap-2.5 h-[56px] p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
+          className="flex items-center gap-2 sm:gap-2.5 h-[50px] sm:h-[56px] p-1 sm:p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
         >
-          <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#FA243C] to-[#FF375F] shrink-0 shadow-md">
-            <Heart className="w-5 h-5 text-white fill-white" />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#FA243C] to-[#FF375F] shrink-0 shadow-md">
+            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
           </div>
           <div className="min-w-0 flex-1 pe-1">
-            <span className="text-[13px] font-semibold text-white truncate block leading-tight">
+            <span className="text-[11.5px] sm:text-[13px] font-semibold text-white truncate block leading-tight">
               {t.likedSongsCard}
             </span>
-            <span className="text-[10px] text-white/50 block font-mono mt-0.5">
+            <span className="text-[9px] sm:text-[10px] text-white/50 block font-mono mt-0.5">
               {favorites.length} {t.songs}
             </span>
           </div>
@@ -134,16 +134,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             triggerHaptic('light');
             setMobilePlayerOpen(true);
           }}
-          className="flex items-center gap-2.5 h-[56px] p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
+          className="flex items-center gap-2 sm:gap-2.5 h-[50px] sm:h-[56px] p-1 sm:p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
         >
-          <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#7D12FF] to-[#FA243C] shrink-0 shadow-md">
-            <Sparkles className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#7D12FF] to-[#FA243C] shrink-0 shadow-md">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <div className="min-w-0 flex-1 pe-1">
-            <span className="text-[13px] font-semibold text-white truncate block leading-tight">
+            <span className="text-[11.5px] sm:text-[13px] font-semibold text-white truncate block leading-tight">
               {isRTL ? 'استوديو الصوت 3D' : '3D Sound Studio'}
             </span>
-            <span className="text-[10px] text-purple-300 block font-mono mt-0.5">
+            <span className="text-[9px] sm:text-[10px] text-purple-300 block font-mono mt-0.5">
               Hi-Fi Master
             </span>
           </div>
@@ -156,7 +156,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             <div
               key={trk.id}
               onClick={() => handleTrackClick(trk)}
-              className={`flex items-center gap-2.5 h-[56px] p-1.5 rounded-xl border active:scale-[0.97] transition-transform overflow-hidden cursor-pointer ${
+              className={`flex items-center gap-2 sm:gap-2.5 h-[50px] sm:h-[56px] p-1 sm:p-1.5 rounded-xl border active:scale-[0.97] transition-transform overflow-hidden cursor-pointer ${
                 isCur
                   ? 'bg-[#FA243C]/20 border-[#FA243C]/40'
                   : 'bg-[#14141c] border-white/[0.06]'
@@ -167,9 +167,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 alt={trk.title}
                 loading="lazy"
                 decoding="async"
-                className="w-11 h-11 rounded-lg object-cover shrink-0 bg-black/40"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover shrink-0 bg-black/40"
               />
-              <span className={`text-[13px] font-semibold truncate flex-1 leading-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+              <span className={`text-[11.5px] sm:text-[13px] font-semibold truncate flex-1 leading-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
                 <bdi dir="auto">{trk.title}</bdi>
               </span>
             </div>
@@ -181,7 +181,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
       {spotlightTrack && (
         <div
           onClick={() => handleTrackClick(spotlightTrack)}
-          className="h-[160px] w-full rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#FA243C]/25 via-[#14141c] to-[#09090d] border border-white/10 select-none cursor-pointer active:scale-[0.98] transition-transform shadow-xl"
+          className="h-[145px] sm:h-[160px] w-full rounded-2xl p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#FA243C]/25 via-[#14141c] to-[#09090d] border border-white/10 select-none cursor-pointer active:scale-[0.98] transition-transform shadow-xl"
         >
           {/* Subtle Cover Background */}
           <div
@@ -194,29 +194,29 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
           {/* Top Badges */}
           <div className="flex items-center justify-between">
-            <span className="apple-badge bg-[#FA243C]/25 border-[#FA243C]/40 text-[#FF375F] text-[9px] font-black">
+            <span className="apple-badge bg-[#FA243C]/25 border-[#FA243C]/40 text-[#FF375F] text-[8px] sm:text-[9px] font-black py-0.5 px-2">
               APPLE MUSIC EXCLUSIVE
             </span>
-            <span className="apple-badge bg-white/10 text-white/90 text-[9px]">
+            <span className="apple-badge bg-white/10 text-white/90 text-[8px] sm:text-[9px] py-0.5 px-2">
               LOSSLESS ALAC
             </span>
           </div>
 
           {/* Bottom Row */}
-          <div className="flex items-end justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-end justify-between gap-2.5 sm:gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
               <img
                 src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
                 alt={spotlightTrack.title}
                 loading="eager"
                 decoding="async"
-                className="w-14 h-14 rounded-xl object-cover shrink-0 shadow-md border border-white/15 bg-black/40"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover shrink-0 shadow-md border border-white/15 bg-black/40"
               />
               <div className="min-w-0 flex-1">
-                <h3 className="text-[15px] font-bold text-white truncate tracking-tight">
+                <h3 className="text-[14px] sm:text-[15px] font-bold text-white truncate tracking-tight">
                   <bdi dir="auto">{spotlightTrack.title}</bdi>
                 </h3>
-                <p className="text-[12px] text-white/60 font-medium truncate mt-0.5">
+                <p className="text-[11px] sm:text-[12px] text-white/60 font-medium truncate mt-0.5">
                   <bdi dir="auto">{spotlightTrack.artist}</bdi>
                 </p>
               </div>
@@ -227,7 +227,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 e.stopPropagation();
                 handleTrackClick(spotlightTrack);
               }}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-transform shrink-0"
+              className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] rounded-full bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-transform shrink-0"
               aria-label={currentTrack?.id === spotlightTrack.id && isPlaying ? t.pause : t.play}
             >
               {currentTrack?.id === spotlightTrack.id && isPlaying ? (
@@ -257,9 +257,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, madeForYou)}
-                  className="w-[136px] shrink-0 snap-start flex flex-col gap-1.5 cursor-pointer active:scale-[0.97] transition-transform select-none"
+                  className="w-[122px] sm:w-[136px] shrink-0 snap-start flex flex-col gap-1.5 cursor-pointer active:scale-[0.97] transition-transform select-none"
                 >
-                  <div className="relative w-[136px] h-[136px] rounded-2xl overflow-hidden bg-[#14141c] shadow-sm border border-white/[0.06]">
+                  <div className="relative w-[122px] h-[122px] sm:w-[136px] sm:h-[136px] rounded-2xl overflow-hidden bg-[#14141c] shadow-sm border border-white/[0.06]">
                     <img
                       src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
                       alt={trk.title}
@@ -302,9 +302,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, trendingHits)}
-                  className="w-[136px] shrink-0 snap-start flex flex-col gap-1.5 cursor-pointer active:scale-[0.97] transition-transform select-none"
+                  className="w-[122px] sm:w-[136px] shrink-0 snap-start flex flex-col gap-1.5 cursor-pointer active:scale-[0.97] transition-transform select-none"
                 >
-                  <div className="relative w-[136px] h-[136px] rounded-2xl overflow-hidden bg-[#14141c] shadow-sm border border-white/[0.06]">
+                  <div className="relative w-[122px] h-[122px] sm:w-[136px] sm:h-[136px] rounded-2xl overflow-hidden bg-[#14141c] shadow-sm border border-white/[0.06]">
                     <img
                       src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
                       alt={trk.title}

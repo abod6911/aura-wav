@@ -64,21 +64,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
 
   return (
     <header
-      className="select-none w-full min-w-0 bg-[#060609]/95 backdrop-blur-xl border-b border-white/[0.08] px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 shrink-0 z-30 transition-all"
+      className="select-none w-full min-w-0 bg-[#060609]/95 backdrop-blur-xl border-b border-white/[0.08] px-3 sm:px-4 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 shrink-0 z-30 transition-all"
       dir={dir}
     >
       {/* Mobile Header Bar */}
-      <div className="flex flex-col sm:hidden w-full gap-2.5">
-        <div className="flex items-center justify-between w-full">
+      <div className="flex flex-col sm:hidden w-full gap-2">
+        <div className="flex items-center justify-between w-full min-w-0">
           {/* Brand & Dynamic Greeting */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer aura-tap-btn"
+              className="w-8 h-8 min-w-[32px] min-h-[32px] sm:w-9 sm:h-9 sm:min-w-[36px] sm:min-h-[36px] rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer aura-tap-btn"
               title={currentUser ? currentUser.name : t.settings}
               aria-label={t.settings}
             >
-              <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
+              <div className="w-full h-full bg-[#101018] rounded-[10px] sm:rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
                 {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                 ) : (
@@ -86,25 +86,25 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
                 )}
               </div>
             </button>
-            <div className="flex flex-col min-w-0">
-              <span className="font-black text-white text-base tracking-tight leading-none flex items-center gap-1.5 truncate">
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="font-black text-white text-[15px] sm:text-base tracking-tight leading-none flex items-center gap-1.5 truncate">
                 <bdi dir="ltr" className="inline-flex items-center">
                   AURA<span className="text-[#FA243C]">.WAV</span>
                 </bdi>
-                <span className="apple-badge text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C]">ALAC</span>
+                <span className="apple-badge text-[7.5px] sm:text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C] px-1 py-0.5 shrink-0">ALAC</span>
               </span>
-              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
+              <span className="text-[9.5px] sm:text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
                 {currentUser ? `مرحباً، ${currentUser.name}` : (activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting)}
               </span>
             </div>
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ps-1">
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer aura-tap-btn"
+                className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer aura-tap-btn shrink-0"
                 title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
               >
                 <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -115,17 +115,17 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full apple-glass-pill text-xs font-bold text-white aura-tap-btn cursor-pointer min-h-[36px]"
+              className="w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full apple-glass-pill flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0"
               title={t.importFolder}
+              aria-label={t.importFolder}
             >
-              <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span className="text-[11px] font-bold hidden xs:inline">{t.importMusic}</span>
+              <FolderPlus className="w-4 h-4 text-[#FA243C]" />
             </button>
 
             {/* Sync Party */}
             <button
               onClick={() => setSyncPartyOpen(true)}
-              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 ${
                 syncRoomState.roomId
                   ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
@@ -135,30 +135,31 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             >
               <Radio className="w-4 h-4" />
               {syncRoomState.roomId && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-1 right-1 border border-black" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-0.5 right-0.5 border border-black" />
               )}
             </button>
 
             {/* Sleep Timer */}
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 ${
                 sleepTimerRemaining !== null
                   ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
               title={t.sleepTimer}
+              aria-label={t.sleepTimer}
             >
               <Moon className="w-4 h-4" />
               {sleepTimerRemaining !== null && (
-                <span className="font-mono text-[8px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
+                <span className="font-mono text-[7px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
               )}
             </button>
 
             {/* Settings Trigger */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center aura-tap-btn cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full text-zinc-300 hover:text-white hover:bg-white/10 flex items-center justify-center aura-tap-btn cursor-pointer shrink-0"
               title={t.settings}
               aria-label={t.settings}
             >

@@ -106,19 +106,19 @@ export const AutoMixSelectorModal: React.FC = () => {
           />
 
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/[0.08] px-6 py-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C]">
-                <Sliders className="w-5 h-5" />
+          <div className="flex items-center justify-between border-b border-white/[0.08] px-4 sm:px-6 py-3 shrink-0">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C] shrink-0">
+                <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span>أنماط انتقال AutoMix والسرعة</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF375F] border border-[#FA243C]/30 font-mono">
+              <div className="min-w-0">
+                <h3 className="text-[15px] sm:text-lg font-black text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                  <span>أنماط AutoMix والسرعة</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF375F] border border-[#FA243C]/30 font-mono shrink-0">
                     PRO DJ
                   </span>
                 </h3>
-                <p className="text-[11px] text-zinc-400 font-medium">
+                <p className="text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate">
                   الدمج التلقائي والتحكم السريع في سرعة التشغيل
                 </p>
               </div>
@@ -127,14 +127,14 @@ export const AutoMixSelectorModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setAutoMixModalOpen(false)}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer active:scale-90"
+              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer active:scale-90 shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
             {/* 1. Quick Playback Speed Controls */}
             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
               <div className="flex items-center justify-between text-xs">

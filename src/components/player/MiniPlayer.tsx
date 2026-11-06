@@ -111,14 +111,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 1px rgba(255,255,255,0.2)`,
         touchAction: 'manipulation',
       }}
-      className="mx-3 mb-1.5 h-[62px] rounded-2xl px-3 flex items-center gap-3 bg-[#14141e]/90 backdrop-blur-xl border border-white/[0.08] shadow-2xl relative overflow-hidden select-none w-[calc(100%-1.5rem)] max-w-md shrink-0 cursor-pointer"
+      className="mx-auto mb-1.5 h-[58px] sm:h-[62px] rounded-2xl px-2.5 sm:px-3 flex items-center gap-2.5 sm:gap-3 bg-[#14141e]/90 backdrop-blur-xl border border-white/[0.08] shadow-2xl relative overflow-hidden select-none w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md shrink-0 cursor-pointer"
       dir={dir}
       onClick={handleExpand}
     >
       {/* 1. Shared Layout Album Artwork with Ambient Shadow */}
       <motion.div
         layoutId="aura-player-artwork"
-        className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/15 shadow-md"
+        className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/15 shadow-md"
         transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
       >
         <AnimatePresence mode="wait">
@@ -141,7 +141,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* 2. Track Info with BiDi support & strictly truncated */}
       <div className="flex-1 min-w-0 pe-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <h4 className="text-[14px] font-bold text-white truncate tracking-tight leading-tight">
+          <h4 className="text-[13px] sm:text-[14px] font-bold text-white truncate tracking-tight leading-tight">
             <bdi dir="auto">{currentTrack.title}</bdi>
           </h4>
           {isDownloaded && (
@@ -151,7 +151,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-          <p className="text-[12px] text-white/55 truncate font-medium">
+          <p className="text-[11px] sm:text-[12px] text-white/55 truncate font-medium">
             <bdi dir="auto">{currentTrack.artist}</bdi>
           </p>
         </div>
@@ -161,7 +161,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       <div
         onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        className="shrink-0 flex items-center gap-1"
+        className="shrink-0 flex items-center gap-1 sm:gap-1.5"
         style={{ touchAction: 'manipulation' }}
       >
         {/* Fast Queue Button with Badge Counter */}
@@ -172,11 +172,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             setQueueOpen(true);
           }}
-          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform"
+          className="w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform"
           title={t.queue}
           aria-label={t.queue}
         >
-          <ListMusic className="w-4 h-4" />
+          <ListMusic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           {userQueue.length > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FA243C] text-white text-[9px] font-mono font-black flex items-center justify-center border border-black shadow">
               {userQueue.length}
@@ -184,7 +184,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           )}
         </button>
 
-        {/* Play / Pause with 40px Tactile Target */}
+        {/* Play / Pause with Tactile Target */}
         <button
           data-testid="mini-play-pause-btn"
           onClick={(e) => {
@@ -192,7 +192,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform"
+          className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform"
           aria-label={isPlaying ? t.pause : t.play}
         >
           {isPlaying ? (
@@ -212,10 +212,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             nextTrack({ forceImmediate: true });
           }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 border border-white/10 active:scale-90 transition-transform"
+          className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 border border-white/10 active:scale-90 transition-transform"
           aria-label={t.next}
         >
-          <SkipForward className="w-4 h-4 fill-current" />
+          <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
         </button>
       </div>
 
