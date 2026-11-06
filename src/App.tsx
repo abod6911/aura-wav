@@ -18,6 +18,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { WelcomeSplash } from './components/WelcomeSplash';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { useTranslation } from './i18n/useTranslation';
+import { authService } from './services/authService';
 
 // Code-split heavy modals and sheets for ultra-fast initial load & minimal memory
 const SyncedLyrics = lazy(() => import('./components/lyrics/SyncedLyrics').then((m) => ({ default: m.SyncedLyrics })));
@@ -596,6 +597,8 @@ export function App() {
               setAuthScreenOpen(false);
             }}
             onContinueAsGuest={() => {
+              const guest = authService.continueAsGuest();
+              setCurrentUser(guest);
               setAuthScreenOpen(false);
             }}
           />

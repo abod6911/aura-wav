@@ -85,10 +85,9 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
       sessionStorage.setItem('aura_welcome_seen', 'true');
     } catch {}
     const guest = authService.continueAsGuest();
+    onSuccess(guest);
     if (onContinueAsGuest) {
       onContinueAsGuest();
-    } else {
-      onSuccess(guest);
     }
   };
 
