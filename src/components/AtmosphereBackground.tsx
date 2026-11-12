@@ -248,14 +248,14 @@ export const AtmosphereBackground: React.FC = () => {
     };
   }, [rgbColors, isPlaying, reactiveVisualsEnabled, isMobile]);
 
-  // On Mobile: pure static luxury CSS gradient (0 requestAnimationFrame, 0 WebGL, 0 blur filter)
+  // On Mobile: pure dynamic CSS gradient using CSS variables (0 requestAnimationFrame, 0 WebGL, solid 120 FPS)
   if (isMobile) {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060609]">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060608] obsidian-grain">
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 transition-all duration-1000 ease-out"
           style={{
-            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, #FA243C0c 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, #7D12FF08 0%, transparent 65%)`,
+            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, rgba(var(--ambient-primary-rgb, 250, 36, 60), 0.12) 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, rgba(var(--ambient-accent-rgb, 125, 18, 255), 0.08) 0%, transparent 65%)`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
@@ -264,9 +264,9 @@ export const AtmosphereBackground: React.FC = () => {
   }
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#050508] transform-gpu">
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060608] obsidian-grain transform-gpu">
       {/* Deep Obsidian Base */}
-      <div className="absolute inset-0 bg-[#06060a]" />
+      <div className="absolute inset-0 bg-[#060608]" />
 
       {/* Real-Time Frequency-Reactive Canvas Mesh (Desktop only to guarantee 120fps on mobile) */}
       {reactiveVisualsEnabled && !isMobile && (

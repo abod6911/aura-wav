@@ -21,7 +21,7 @@ import {
   Smartphone,
   Eye,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
 const PRESET_ICONS: { [key: string]: React.ReactNode } = {
   'Flat': <Headphones className="w-3.5 h-3.5" />,
@@ -77,6 +77,7 @@ const REVERB_SPACES: {
 ];
 
 export const EqualizerModal: React.FC = () => {
+  const dragControls = useDragControls();
   const [modalTab, setModalTab] = useState<'eq' | 'pro_dsp'>('eq');
 
   const isEqualizerOpen = usePlayerStore((state) => state.isEqualizerOpen);
@@ -150,6 +151,8 @@ export const EqualizerModal: React.FC = () => {
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
             drag="y"
+            dragControls={dragControls}
+            dragListener={false}
             dragConstraints={{ top: 0 }}
             dragElastic={0.35}
             onDragEnd={(_, info) => {
@@ -157,10 +160,14 @@ export const EqualizerModal: React.FC = () => {
                 setEqualizerOpen(false);
               }
             }}
-            className="fixed bottom-0 inset-x-0 z-50 max-h-[88dvh] sm:max-w-4xl sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-4 sm:p-7 shadow-2xl space-y-4 sm:space-y-5 flex flex-col overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7"
+            className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-4xl sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-3xl p-4 sm:p-7 shadow-2xl space-y-4 sm:space-y-5 flex flex-col overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-7"
           >
             {/* Unified iOS Mobile Drag Pill */}
-            <div onClick={() => setEqualizerOpen(false)} className="w-10 h-1.5 bg-white/25 hover:bg-white/40 rounded-full mx-auto mt-0 mb-3 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
+            <div
+              onPointerDown={(e) => dragControls.start(e)}
+              onClick={() => setEqualizerOpen(false)}
+              className="w-10 h-1.5 bg-white/25 hover:bg-white/40 rounded-full mx-auto mt-0 mb-2 sm:hidden flex-shrink-0 cursor-grab active:cursor-grabbing transition-colors"
+            />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">

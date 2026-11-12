@@ -178,7 +178,7 @@ const SyncedLyricsModal: React.FC = () => {
       <div className="absolute inset-0 -z-10 bg-black/45 backdrop-blur-[50px] pointer-events-none" />
 
       {/* Top Header Bar */}
-      <div className="w-full px-5 md:px-10 py-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
+      <div className="w-full px-4 sm:px-6 md:px-10 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2.5 sm:pb-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-[11px] font-bold text-white">
             <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
@@ -275,7 +275,7 @@ const SyncedLyricsModal: React.FC = () => {
       </div>
 
       {/* Mobile Floating Mini-Controls (Always locked at bottom) */}
-      <div className="w-full px-5 py-3 border-t border-white/[0.08] bg-[#07070a]/95 backdrop-blur-2xl flex flex-col gap-1.5 z-20 shrink-0">
+      <div className="w-full px-4 sm:px-6 md:px-10 pt-2 sm:pt-3 pb-[max(env(safe-area-inset-bottom,0px),14px)] border-t border-white/[0.08] bg-[#07070a]/95 backdrop-blur-2xl flex flex-col gap-1.5 z-20 shrink-0">
         <TimelineSlider
           duration={duration}
           onSeek={seek}

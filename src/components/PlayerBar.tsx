@@ -92,9 +92,9 @@ export const PlayerBar: React.FC = () => {
         data-testid="player-bar"
         dir={dir}
         style={{
-          boxShadow: `0 24px 64px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 1px rgba(255,255,255,0.22)`,
+          boxShadow: `0 24px 64px rgba(0,0,0,0.9), 0 0 50px -10px ${accentColor}35, inset 0 1px 0 rgba(255,255,255,0.14)`,
         }}
-        className="hidden md:grid grid-cols-[200px_1fr_220px] lg:grid-cols-[250px_1fr_260px] xl:grid-cols-[280px_1fr_290px] fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 lg:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/90 backdrop-blur-3xl px-4 sm:px-6 lg:px-7 items-center border border-white/[0.14] rounded-[34px] select-none transition-shadow duration-500 apple-glass-dock overflow-hidden"
+        className="hidden md:grid grid-cols-[200px_1fr_220px] lg:grid-cols-[250px_1fr_260px] xl:grid-cols-[280px_1fr_290px] fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 lg:inset-x-8 max-w-7xl mx-auto h-[88px] z-40 bg-[#0c0c14]/92 backdrop-blur-3xl px-4 sm:px-6 lg:px-7 items-center border border-white/[0.12] rounded-[34px] select-none transition-shadow duration-500 specular-highlight overflow-hidden obsidian-grain"
       >
         {/* 1. Track Info (Start Column) */}
         <div className="flex items-center gap-3 min-w-0 w-full justify-self-start pr-1">

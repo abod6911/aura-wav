@@ -22,7 +22,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -74,6 +74,7 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
 };
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenImport }) => {
+  const dragControls = useDragControls();
   const { t, language, setLanguage, isRTL, dir } = useTranslation();
   const tracks = usePlayerStore((state) => state.tracks);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
@@ -174,6 +175,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
           drag="y"
+          dragControls={dragControls}
+          dragListener={false}
           dragConstraints={{ top: 0 }}
           dragElastic={0.35}
           onDragEnd={(_, info) => {
@@ -181,13 +184,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               onClose();
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl overflow-y-auto flex flex-col gap-4 sm:gap-5 z-10"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl overflow-y-auto flex flex-col gap-4 sm:gap-5 z-10"
           dir={dir}
         >
           {/* iOS Mobile Top Drag Grabber Pill */}
           <div
+            onPointerDown={(e) => dragControls.start(e)}
             onClick={onClose}
-            className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto -mt-1 mb-2 sm:hidden flex-shrink-0 cursor-pointer transition-colors"
+            className="w-10 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto -mt-1 mb-2 sm:hidden flex-shrink-0 cursor-grab active:cursor-grabbing transition-colors"
           />
 
           {/* Header */}

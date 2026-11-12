@@ -2,9 +2,10 @@ import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { X, ListMusic, Trash2, ArrowUp, ArrowDown, Play, Compass, Disc3, ListPlus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
 export const QueueDrawer: React.FC = () => {
+  const dragControls = useDragControls();
   const { t, dir } = useTranslation();
   const isQueueOpen = usePlayerStore((state) => state.isQueueOpen);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
@@ -59,6 +60,8 @@ export const QueueDrawer: React.FC = () => {
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 32, stiffness: 360, mass: 0.8 }}
           drag="y"
+          dragControls={dragControls}
+          dragListener={false}
           dragConstraints={{ top: 0 }}
           dragElastic={0.35}
           onDragEnd={(_, info) => {
@@ -68,11 +71,15 @@ export const QueueDrawer: React.FC = () => {
             }
           }}
           data-testid="queue-drawer"
-          className="relative z-10 w-full sm:max-w-md h-[88dvh] sm:h-full apple-glass-card rounded-t-[32px] sm:rounded-none sm:rounded-s-3xl border-t sm:border-t-0 sm:border-l border-white/[0.14] shadow-[0_-20px_60px_rgba(0,0,0,0.9)] flex flex-col justify-between overflow-hidden p-4 sm:p-6 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))]"
+          className="relative z-10 w-full sm:max-w-md h-[85dvh] sm:h-full apple-glass-card rounded-t-[28px] sm:rounded-none sm:rounded-s-3xl border-t sm:border-t-0 sm:border-l border-white/[0.14] shadow-[0_-20px_60px_rgba(0,0,0,0.9)] flex flex-col justify-between overflow-hidden p-4 sm:p-6 pb-[max(1rem,env(safe-area-inset-bottom,1rem))]"
           dir={dir}
         >
           {/* Mobile Drag Pill */}
-          <div className="w-12 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-2 cursor-grab active:cursor-grabbing sm:hidden flex-shrink-0 transition-colors" />
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
+            onClick={() => setQueueOpen(false)}
+            className="w-12 h-1.5 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-2 cursor-grab active:cursor-grabbing sm:hidden flex-shrink-0 transition-colors"
+          />
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4 flex-shrink-0">

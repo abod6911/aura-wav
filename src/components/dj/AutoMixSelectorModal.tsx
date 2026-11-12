@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
 import { Sliders, X, Check, Disc, Waves, Sparkles, Zap, SlidersHorizontal, Gauge } from 'lucide-react';
@@ -50,6 +50,7 @@ const TRANSITION_OPTIONS: TransitionOption[] = [
 ];
 
 export const AutoMixSelectorModal: React.FC = () => {
+  const dragControls = useDragControls();
   const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
@@ -89,6 +90,8 @@ export const AutoMixSelectorModal: React.FC = () => {
           exit={{ y: '100%' }}
           transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
           drag="y"
+          dragControls={dragControls}
+          dragListener={false}
           dragConstraints={{ top: 0 }}
           dragElastic={0.35}
           onDragEnd={(_, info) => {
@@ -96,13 +99,13 @@ export const AutoMixSelectorModal: React.FC = () => {
               setAutoMixModalOpen(false);
             }
           }}
-          style={{ touchAction: 'pan-y' }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] rounded-t-[32px] bg-[#101018] border-t border-white/10 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,16px)] shadow-2xl"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] rounded-t-[28px] bg-[#101018] border-t border-white/10 flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] shadow-2xl"
         >
           {/* Unified Grab Handle */}
           <div
+            onPointerDown={(e) => dragControls.start(e)}
             onClick={() => setAutoMixModalOpen(false)}
-            className="w-10 h-1.5 rounded-full bg-white/25 mx-auto mt-3 mb-2 shrink-0 cursor-pointer"
+            className="w-10 h-1.5 rounded-full bg-white/25 mx-auto mt-2.5 mb-2 shrink-0 cursor-grab active:cursor-grabbing"
           />
 
           {/* Header */}

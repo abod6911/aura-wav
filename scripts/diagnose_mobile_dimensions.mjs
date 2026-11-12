@@ -5,7 +5,12 @@ async function diagnose() {
   console.log('--- Starting Deep Mobile Dimensions Diagnostic ---');
   
   const server = await createServer({
-    server: { port: 5174 },
+    server: {
+      port: 5174,
+      watch: {
+        ignored: ['**/dist/**', '**/node_modules/**', '**/*.mp3', '**/*.wav'],
+      },
+    },
   });
   await server.listen();
   const serverUrl = 'http://localhost:5174';

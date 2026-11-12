@@ -446,10 +446,10 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
 
         {/* Filter Pills & Sort Selector */}
-        <div className="flex flex-wrap items-center gap-2 select-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
           <button
             onClick={() => setActiveFilter('all')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
               activeFilter === 'all'
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
@@ -461,7 +461,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveFilter('favorites')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
               activeFilter === 'favorites'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
@@ -473,7 +473,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveFilter('lyrics')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
               activeFilter === 'lyrics'
                 ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
@@ -485,7 +485,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
           <button
             onClick={() => setActiveFilter('offline')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
               activeFilter === 'offline'
                 ? 'bg-emerald-500 text-black font-extrabold shadow-md shadow-emerald-500/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
@@ -496,11 +496,11 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           </button>
 
           {/* Sort Dropdown */}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center shrink-0">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-xs font-bold py-2 px-3 rounded-xl focus:outline-none cursor-pointer"
+              className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-xs font-bold py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer"
             >
               <option value="number" className="bg-[#121218] text-white">الترتيب: الرقم #</option>
               <option value="title" className="bg-[#121218] text-white">الترتيب: العنوان (A-Z)</option>
@@ -856,14 +856,14 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
       onTouchEnd={clearTouchTimer}
       onTouchMove={clearTouchTimer}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-      className={`group h-16 min-h-[64px] grid grid-cols-[26px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-75 select-none active:scale-[0.98] active:bg-white/[0.06] my-1 ${
+      className={`group h-16 min-h-[64px] grid grid-cols-[26px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-75 select-none active:scale-[0.98] my-1 specular-highlight-subtle ${
         isUnavailable ? 'opacity-50 hover:opacity-80 ' : ''
       }${
         isCurrent
-          ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
+          ? 'bg-[#181824]/90 border border-[#FA243C]/40 shadow-[0_4px_24px_rgba(250,36,60,0.16)]'
           : isNextUp
           ? 'bg-purple-500/10 border border-purple-500/35'
-          : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
+          : 'bg-[#101016]/60 hover:bg-[#151520] border border-white/[0.05] hover:border-white/[0.1]'
       }`}
     >
       {/* 1. Track Index # or Live Equalizer */}

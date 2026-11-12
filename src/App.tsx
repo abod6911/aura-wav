@@ -223,12 +223,37 @@ export function App() {
     setIsHeaderScrolled(targetScroll > 20);
   }, [activeTab]);
 
-  // Synchronize dynamic Apple Liquid Accent with album artwork
+  // Synchronize dynamic Acoustic Obsidian & Vinyl-Glass ambient engine with album artwork
   useEffect(() => {
-    const accent = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
-    document.documentElement.style.setProperty('--aura-accent', accent);
-    document.documentElement.style.setProperty('--aura-accent-hover', accent);
-    document.documentElement.style.setProperty('--aura-accent-glow', `${accent}18`);
+    const primary = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
+    const accent = currentTrack?.secondaryColor || '#7D12FF';
+
+    const parseRgb = (c: string, defaultRgb: string) => {
+      if (!c) return defaultRgb;
+      if (c.startsWith('#')) {
+        const hex = c.replace('#', '');
+        const full = hex.length === 3 ? hex.split('').map((x) => x + x).join('') : hex;
+        const r = parseInt(full.substring(0, 2), 16) || 250;
+        const g = parseInt(full.substring(2, 4), 16) || 36;
+        const b = parseInt(full.substring(4, 6), 16) || 60;
+        return `${r}, ${g}, ${b}`;
+      }
+      const m = c.match(/\d+[\s,]+\d+[\s,]+\d+/);
+      return m ? m[0].replace(/\s+/g, ', ') : defaultRgb;
+    };
+
+    const primaryRgb = parseRgb(primary, '250, 36, 60');
+    const accentRgb = parseRgb(accent, '125, 18, 255');
+
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty('--aura-accent', primary);
+    rootStyle.setProperty('--aura-accent-hover', primary);
+    rootStyle.setProperty('--aura-accent-glow', `rgba(${primaryRgb}, 0.16)`);
+    rootStyle.setProperty('--ambient-primary', primary);
+    rootStyle.setProperty('--ambient-accent', accent);
+    rootStyle.setProperty('--ambient-primary-rgb', primaryRgb);
+    rootStyle.setProperty('--ambient-accent-rgb', accentRgb);
+    rootStyle.setProperty('--ambient-primary-glow', `rgba(${primaryRgb}, 0.22)`);
   }, [currentTrack]);
 
   // Initialize DB, Party URL invite, and Service Worker
@@ -447,8 +472,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'fixed inset-0 w-full h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
-          : 'fixed inset-0 w-full h-[100dvh] flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden select-none overscroll-none font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
+          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden select-none overscroll-none font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -544,9 +569,9 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls: Rigid semantic <footer> */}
+      {/* 7. Mobile Bottom Controls: Sleek and compact ergonomic dock */}
       {isMobile && (
-        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[max(env(safe-area-inset-bottom,0px),8px)] pt-1 flex flex-col items-center">
+        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1 px-2 flex flex-col items-center">
           <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
           <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </footer>

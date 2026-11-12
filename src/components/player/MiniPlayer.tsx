@@ -34,15 +34,15 @@ const MiniPlayerProgressBar: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/[0.1] overflow-hidden pointer-events-none rounded-b-2xl">
+    <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-white/[0.08] overflow-hidden pointer-events-none rounded-b-2xl">
       <div
         ref={barRef}
         className="h-full transition-all duration-150 rounded-full"
         style={{
           width: `${initialPct()}%`,
-          backgroundColor: '#FA243C',
-          backgroundImage: 'linear-gradient(90deg, #FA243C, #FF375F)',
-          boxShadow: '0 0 10px rgba(250, 36, 60, 0.8)',
+          backgroundColor: 'var(--aura-accent, #FA243C)',
+          backgroundImage: 'linear-gradient(90deg, var(--ambient-primary, #FA243C), var(--ambient-accent, #FF375F))',
+          boxShadow: '0 0 10px var(--aura-accent-glow, rgba(250, 36, 60, 0.8))',
         }}
       />
     </div>
@@ -108,17 +108,17 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       }}
       data-testid="mini-player"
       style={{
-        boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 1px rgba(255,255,255,0.2)`,
+        boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 0 rgba(255,255,255,0.15)`,
         touchAction: 'manipulation',
       }}
-      className="mx-auto mb-1.5 h-[58px] sm:h-[62px] rounded-2xl px-2.5 sm:px-3 flex items-center gap-2.5 sm:gap-3 bg-[#14141e]/90 backdrop-blur-xl border border-white/[0.08] shadow-2xl relative overflow-hidden select-none w-[calc(100%-1rem)] sm:w-[calc(100%-1.5rem)] max-w-md shrink-0 cursor-pointer"
+      className="mx-auto mb-1 h-[52px] sm:h-[58px] rounded-xl sm:rounded-2xl px-2.5 sm:px-3 flex items-center gap-2 sm:gap-2.5 bg-[#101018]/92 backdrop-blur-2xl border border-white/[0.1] shadow-2xl relative overflow-hidden select-none w-[calc(100%-0.75rem)] sm:w-[calc(100%-1.5rem)] max-w-md shrink-0 cursor-pointer specular-highlight obsidian-grain"
       dir={dir}
       onClick={handleExpand}
     >
-      {/* 1. Shared Layout Album Artwork with Ambient Shadow */}
+      {/* 1. Shared Layout Album Artwork with Vinyl Sheen */}
       <motion.div
         layoutId="aura-player-artwork"
-        className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/15 shadow-md"
+        className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/20 shadow-md specular-highlight-subtle"
         transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
       >
         <AnimatePresence mode="wait">
@@ -141,7 +141,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* 2. Track Info with BiDi support & strictly truncated */}
       <div className="flex-1 min-w-0 pe-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <h4 className="text-[13px] sm:text-[14px] font-bold text-white truncate tracking-tight leading-tight">
+          <h4 className="text-[12.5px] sm:text-[13.5px] font-bold text-white truncate tracking-tight leading-tight">
             <bdi dir="auto">{currentTrack.title}</bdi>
           </h4>
           {isDownloaded && (
@@ -151,7 +151,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-          <p className="text-[11px] sm:text-[12px] text-white/55 truncate font-medium">
+          <p className="text-[10.5px] sm:text-[11.5px] text-white/55 truncate font-medium">
             <bdi dir="auto">{currentTrack.artist}</bdi>
           </p>
         </div>
@@ -172,7 +172,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             setQueueOpen(true);
           }}
-          className="w-8 h-8 sm:w-9 sm:h-9 min-w-[32px] sm:min-w-[36px] min-h-[32px] sm:min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform"
+          className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform"
           title={t.queue}
           aria-label={t.queue}
         >
@@ -192,15 +192,15 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform"
+          className="w-8.5 h-8.5 sm:w-9.5 sm:h-9.5 min-w-[34px] sm:min-w-[38px] min-h-[34px] sm:min-h-[38px] rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform"
           aria-label={isPlaying ? t.pause : t.play}
         >
           {isPlaying ? (
-            <Pause className="w-4 h-4 fill-black text-black" />
+            <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />
           ) : playbackState === 'buffering' ? (
-            <Loader2 className="w-4 h-4 animate-spin text-black" />
+            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-black" />
           ) : (
-            <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+            <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black translate-x-0.5" />
           )}
         </button>
 
@@ -212,10 +212,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             nextTrack({ forceImmediate: true });
           }}
-          className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 border border-white/10 active:scale-90 transition-transform"
+          className="w-8 h-8 sm:w-8.5 sm:h-8.5 min-w-[32px] sm:min-w-[34px] min-h-[32px] sm:min-h-[34px] rounded-full bg-white/[0.08] hover:bg-white/[0.15] flex items-center justify-center text-white/90 hover:text-white cursor-pointer select-none flex-shrink-0 border border-white/10 active:scale-90 transition-transform"
           aria-label={t.next}
         >
-          <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+          <SkipForward className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />
         </button>
       </div>
 

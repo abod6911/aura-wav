@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #060609;
+  --app-bg: #060608;
+  --obsidian-base: #060608;
+  --smoked-glass: rgba(16, 17, 22, 0.72);
   --accent-color: 250, 36, 60;
   --apple-red: #FA243C;
   --apple-rose: #FF375F;
@@ -11,20 +13,63 @@
   --aura-accent: #FA243C;
   --aura-accent-hover: #FF375F;
   --aura-accent-glow: rgba(250, 36, 60, 0.12);
+  --ambient-primary: #FA243C;
+  --ambient-accent: #7D12FF;
+  --ambient-primary-rgb: 250, 36, 60;
+  --ambient-accent-rgb: 125, 18, 255;
   --mesh-color-1: rgba(250, 36, 60, 0.10);
   --mesh-color-2: rgba(255, 55, 95, 0.08);
   --mesh-color-3: rgba(125, 18, 255, 0.06);
+  --spring-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring-micro: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Lightweight performance-optimized glass materials */
-.noise-overlay {
-  display: none !important;
+/* Tactile Ultra-Subtle Procedural Grain/Noise (Hardware-accelerated zero-cost SVG texture) */
+.obsidian-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Hairline Specular Top-Edge Highlights */
+.specular-highlight {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.specular-highlight-subtle {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Asymmetric & Architectural Chamfer Accents */
+.chamfer-tl {
+  clip-path: polygon(14px 0%, 100% 0%, 100% 100%, 0% 100%, 0% 14px);
+}
+.chamfer-tr {
+  clip-path: polygon(0% 0%, calc(100% - 14px) 0%, 100% 14px, 100% 100%, 0% 100%);
+}
+.chamfer-pill {
+  clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+}
+
+/* Concentric Grooved Vinyl Disc Layering */
+.vinyl-disc-groove {
+  background: 
+    radial-gradient(circle at center, #181822 0%, #181822 18%, #0d0d12 19%, #0d0d12 28%, #1c1c28 29%, #121218 30%),
+    repeating-radial-gradient(circle at center, #09090d 0px, #09090d 2px, #161622 3px, #09090d 4px);
+  box-shadow: 
+    0 10px 24px -4px rgba(0, 0, 0, 0.8),
+    inset 0 0 12px rgba(0, 0, 0, 0.9),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Dynamic Sheen over vinyl */
+.vinyl-sheen {
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(255,255,255,0.05) 60%, transparent 100%);
 }
 
 /* Strict Native App Root Enclosure (Zero-Web-Feel) */
-html, body, #root {
+html, body {
   width: 100%;
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
   position: fixed;
   inset: 0;
@@ -44,8 +89,12 @@ html, body, #root {
 }
 
 #root {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 img, a, button {

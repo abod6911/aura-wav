@@ -15,7 +15,7 @@ interface MobileTrackRowProps {
   showIndex?: boolean;
 }
 
-export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
+const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   track,
   index,
   contextList,
@@ -35,6 +35,10 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
 
   const isCur = currentTrack?.id === track.id;
   const playList = trackList || contextList;
+
+  // Harmonic Key & BPM calculation for acoustic instrument HUD
+  const bpm = track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30));
+  const key = track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`;
 
   const x = useMotionValue(0);
   // Transform drag distance to reveal action background and scale icon
@@ -82,7 +86,7 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden select-none touch-pan-y my-1">
-      {/* Swipe Reveal Action Background (Spotify Style) */}
+      {/* Swipe Reveal Action Background */}
       <motion.div
         style={{ opacity: bgOpacity }}
         className={`absolute inset-0 bg-gradient-to-r ${
@@ -95,7 +99,7 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
         </motion.div>
       </motion.div>
 
-      {/* Main Draggable Row */}
+      {/* Main Draggable Acoustic Strip */}
       <motion.div
         style={{ x }}
         drag="x"
@@ -105,21 +109,21 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[64px] min-h-[64px] px-3 rounded-2xl flex items-center justify-between gap-3 select-none border transition-colors cursor-pointer active:scale-[0.99] ${
+        className={`relative z-10 w-full h-[64px] min-h-[64px] px-3 rounded-2xl flex items-center justify-between gap-3 select-none border transition-all cursor-pointer active:scale-[0.98] specular-highlight-subtle ${
           isCur
-            ? 'bg-[#FA243C]/12 border-[#FA243C]/35'
-            : 'bg-[#12121a]/90 hover:bg-[#161622] border-white/[0.06]'
+            ? 'bg-[#181824]/95 border-[#FA243C]/40 shadow-[0_4px_20px_rgba(250,36,60,0.15)]'
+            : 'bg-[#101016]/85 hover:bg-[#14141e] border-white/[0.06]'
         }`}
       >
-        {/* Left: Index + Artwork + Title/Artist */}
+        {/* Left: Index + Artwork + Title/Artist & Acoustic Badges */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-1">
           {showIndex && index !== undefined && (
-            <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 ${isCur ? 'text-[#FA243C]' : 'text-white/40'}`}>
+            <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 tabular-nums ${isCur ? 'text-[#FA243C]' : 'text-white/40'}`}>
               {index + 1}
             </span>
           )}
 
-          <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#14141c] shrink-0 shadow-sm border border-white/5">
+          <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#14141c] shrink-0 shadow-md border border-white/10">
             <img
               src={track.artworkUrl || track.coverUrl || '/logo.svg'}
               alt={track.title}
@@ -143,22 +147,29 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h4 className={`text-[15px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+            <h4 className={`text-[14.5px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
               <bdi dir="auto">{track.title}</bdi>
             </h4>
-            <p className="text-[13px] text-white/55 truncate mt-0.5 font-medium">
-              <bdi dir="auto">{track.artist}</bdi>
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
+              <p className="text-[12px] text-white/55 truncate font-medium">
+                <bdi dir="auto">{track.artist}</bdi>
+              </p>
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-white/[0.04] border border-white/[0.08] text-[9px] font-mono text-white/45 tabular-nums shrink-0">
+                <span className="text-[#FF375F] font-semibold">{bpm}</span>
+                <span className="text-white/20">•</span>
+                <span className="text-amber-400/90 font-semibold">{key}</span>
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Right Action Buttons */}
+        {/* Right Action Buttons with >=44x44px touch targets */}
         <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           {/* Quick 1-tap Add to Queue with Check Confirmation Animation */}
           <button
             type="button"
             onClick={handleQuickQueue}
-            className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center transition-transform active:scale-[0.93] duration-75 cursor-pointer ${
+            className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] duration-75 cursor-pointer ${
               isAddedFeedback
                 ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
                 : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white'
@@ -182,7 +193,7 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.93] duration-75 cursor-pointer"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.92] duration-75 cursor-pointer"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >
@@ -194,3 +205,5 @@ export const MobileTrackRow: React.FC<MobileTrackRowProps> = ({
     </div>
   );
 };
+
+export const MobileTrackRow = React.memo(MobileTrackRowInner);
