@@ -9,7 +9,9 @@ import {
   Music,
   Sliders,
   SlidersHorizontal,
-  } from 'lucide-react';
+  UploadCloud,
+} from 'lucide-react';
+import { CloudStatusBadge } from './cloud/CloudStatusBadge';
 
 interface SidebarProps {
   onOpenImport: () => void;
@@ -25,6 +27,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
+  const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
+  const cloudTracks = usePlayerStore((state) => state.cloudTracks);
 
   return (
     <aside
@@ -89,14 +93,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500">
               {t.library}
             </span>
-            <button
-              onClick={onOpenImport}
-              title={t.importFolder}
-              className="p-1 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer active:scale-90"
-            >
-              <Plus className="w-4 h-4 text-[#FA243C]" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCloudUploaderOpen(true)}
+                title={isRTL ? 'الرفع السحابي' : 'Cloud Upload'}
+                className="p-1 text-[#FF375F] hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer active:scale-90"
+              >
+                <UploadCloud className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onOpenImport}
+                title={t.importFolder}
+                className="p-1 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer active:scale-90"
+              >
+                <Plus className="w-4 h-4 text-[#FA243C]" />
+              </button>
+            </div>
           </div>
+
+          {/* Cloud Platform Uplink Tile */}
+          <button
+            onClick={() => setCloudUploaderOpen(true)}
+            className="w-full flex items-center justify-between p-2 rounded-xl apple-spring cursor-pointer active:scale-[0.97] transition-all bg-gradient-to-r from-[#FA243C]/10 via-[#7D12FF]/10 to-transparent hover:from-[#FA243C]/20 hover:via-[#7D12FF]/20 border border-white/[0.08] hover:border-white/20"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#FA243C] to-[#7D12FF] flex items-center justify-center shadow-md shrink-0">
+                <UploadCloud className="w-4 h-4 text-white" />
+              </div>
+              <div className="text-start truncate min-w-0">
+                <span className="text-xs font-bold text-white block truncate leading-tight">
+                  {isRTL ? 'الرفع إلى السحابة' : 'Cloud Upload'}
+                </span>
+                <span className="text-[9.5px] text-white/50 block font-mono leading-tight mt-0.5">
+                  {cloudTracks.length} {isRTL ? 'مسار سحابي' : 'cloud tracks'}
+                </span>
+              </div>
+            </div>
+            <CloudStatusBadge />
+          </button>
 
           {/* Liked Songs Tile */}
           <button

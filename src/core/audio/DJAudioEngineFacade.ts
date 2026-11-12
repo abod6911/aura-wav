@@ -917,9 +917,10 @@ export class DJAudioEngineFacade {
         }
       }
 
-      // Check Preload Threshold: 15s remaining (only when playback is well underway)
+      // Check Preload Threshold: Trigger preload early (within 2 seconds of playback starting)
+      // This pre-buffers the next track into the inactive deck for instant 0ms track skipping
       const remaining = dur - cur;
-      if (cur >= 3.0 && remaining <= 15 && !this.preloadTriggered && active.track) {
+      if (cur >= 2.0 && !this.preloadTriggered && active.track) {
         this.preloadTriggered = true;
         if (this.callbacks.onPreloadNeeded) {
           this.callbacks.onPreloadNeeded(active.track);
@@ -1010,7 +1011,12 @@ export class DJAudioEngineFacade {
       return track.audioUrl;
     }
 
-    // 5. Online stream resolver
+    // 5. Direct Cloud URL or valid HTTP stream (INSTANT PLAYBACK - bypasses slow external search!)
+    if (track.audioUrl && (track.audioUrl.startsWith('http://') || track.audioUrl.startsWith('https://')) && !track.audioUrl.startsWith('/api/stream')) {
+      return track.audioUrl;
+    }
+
+    // 6. Online stream resolver fallback (SoundCloud / Archive.org)
     const stream = await resolvePlayableStream(track);
     if (stream) return stream;
     if (track.audioUrl && !track.audioUrl.startsWith('/songs/')) return track.audioUrl;

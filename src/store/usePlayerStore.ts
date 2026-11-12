@@ -20,6 +20,8 @@ import { queryDirectoryPermission, requestDirectoryPermission } from '../service
 import { wakeLockManager } from '../services/wakeLockManager';
 import { syncLibraryToCarPlay, syncFavoritesToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
 import { triggerHaptic } from '../utils/haptics';
+import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../services/cloudLibraryService';
+import { isCloudConfigured } from '../lib/supabase';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
@@ -278,6 +280,14 @@ interface PlayerState {
   handleTrackPlaybackError: (failedTrack: Track | null, error?: any) => Promise<void>;
   handleOfflineTransition: () => Promise<void>;
   requestDirectoryAccess: () => Promise<boolean>;
+  // Cloud Streaming & Storage Platform
+  cloudTracks: Track[];
+  isCloudSyncing: boolean;
+  isCloudUploaderOpen: boolean;
+  setCloudUploaderOpen: (open: boolean) => void;
+  syncCloudLibrary: () => Promise<void>;
+  addCloudTrack: (track: Track) => Promise<void>;
+  deleteCloudTrackById: (trackId: string) => Promise<boolean>;
 }
 
 let sleepTimerInterval: any = null;
@@ -618,6 +628,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isSleepTimerOpen: false,
     isShortcutsOpen: false,
     isWelcomeOpen: false,
+    cloudTracks: [],
+    isCloudSyncing: false,
+    isCloudUploaderOpen: false,
     isChangeArtworkOpen: false,
     artworkTargetTrack: null,
     isMetadataEditorOpen: false,
@@ -997,6 +1010,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         // Ask the browser not to evict downloaded songs under storage pressure
         StorageManager.requestPersistence().catch(() => {});
+
+        // Seamless Cloud Library Synchronization
+        if (isCloudConfigured()) {
+          get().syncCloudLibrary().catch(() => {});
+        }
       } catch (e) {
         console.warn('Error loading from IndexedDB:', e);
         set({
@@ -2073,6 +2091,92 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setMobilePlayerOpen: (open: boolean) => set({ isMobilePlayerOpen: open }),
     setSleepTimerOpen: (open: boolean) => set({ isSleepTimerOpen: open }),
     setShortcutsOpen: (open: boolean) => set({ isShortcutsOpen: open }),
+    setCloudUploaderOpen: (open: boolean) => set({ isCloudUploaderOpen: open }),
+
+    syncCloudLibrary: async () => {
+      if (!isCloudConfigured()) return;
+      set({ isCloudSyncing: true });
+      try {
+        const fetched = await fetchCloudTracks();
+        if (fetched.length > 0) {
+          set((state) => {
+            const fetchedMap = new Map(fetched.map((t) => [t.id, t]));
+            // Merge cloud tracks into local library seamlessly
+            const existingIds = new Set(state.tracks.map((t) => t.id));
+            const newCloudTracks = fetched.filter((t) => !existingIds.has(t.id));
+            const mergedTracks = state.tracks.map((t) => {
+              const cloudVer = fetchedMap.get(t.id);
+              return cloudVer ? { ...t, ...cloudVer, source: 'online' as const } : t;
+            });
+            const allTracks = [...newCloudTracks, ...mergedTracks];
+            return {
+              cloudTracks: fetched,
+              tracks: allTracks,
+              filteredTracks: allTracks,
+            };
+          });
+
+          // Cache cloud tracks to Dexie for offline lookup
+          try {
+            const db = await getDB();
+            const tx = db.transaction('tracks', 'readwrite');
+            for (const t of fetched) {
+              await tx.store.put(t);
+            }
+            await tx.done;
+          } catch {}
+        } else {
+          set({ cloudTracks: [] });
+        }
+      } catch (err) {
+        console.warn('[usePlayerStore] Cloud sync notice:', err);
+      } finally {
+        set({ isCloudSyncing: false });
+      }
+    },
+
+    addCloudTrack: async (track: Track) => {
+      set((state) => {
+        const exists = state.tracks.some((t) => t.id === track.id);
+        const updatedTracks = exists
+          ? state.tracks.map((t) => (t.id === track.id ? track : t))
+          : [track, ...state.tracks];
+        const updatedCloud = [track, ...state.cloudTracks.filter((t) => t.id !== track.id)];
+        return {
+          tracks: updatedTracks,
+          cloudTracks: updatedCloud,
+          filteredTracks: updatedTracks,
+        };
+      });
+      try {
+        const db = await getDB();
+        await db.put('tracks', track);
+      } catch {}
+    },
+
+    deleteCloudTrackById: async (trackId: string) => {
+      const track = get().tracks.find((t) => t.id === trackId);
+      if (!track) return false;
+      const success = await deleteCloudTrack(track);
+      if (success) {
+        set((state) => {
+          const remaining = state.tracks.filter((t) => t.id !== trackId);
+          const remainingCloud = state.cloudTracks.filter((t) => t.id !== trackId);
+          return {
+            tracks: remaining,
+            cloudTracks: remainingCloud,
+            filteredTracks: remaining,
+            currentTrack: state.currentTrack?.id === trackId ? null : state.currentTrack,
+          };
+        });
+        try {
+          const db = await getDB();
+          await db.delete('tracks', trackId);
+        } catch {}
+        get().addToast('تم حذف المسار من السحابة بنجاح', undefined, 'info');
+      }
+      return success;
+    },
     setChangeArtworkModal: (open: boolean, track?: Track | null) =>
       set({
         isChangeArtworkOpen: open,

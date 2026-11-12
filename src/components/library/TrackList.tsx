@@ -29,6 +29,9 @@ import {
   Pencil,
   Download,
   AlertCircle,
+  Cloud,
+  UploadCloud,
+  Trash2,
 } from 'lucide-react';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
@@ -56,8 +59,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
   const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
   const cacheAllAvailableTracksOffline = usePlayerStore((state) => state.cacheAllAvailableTracksOffline);
+  const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
 
-  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics' | 'offline'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics' | 'offline' | 'cloud'>('all');
   const [activeRange, setActiveRange] = useState<RangeOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('number');
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -98,6 +102,10 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
     return tracks.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id))).length;
   }, [tracks, downloadedTrackIds]);
 
+  const cloudCount = useMemo(() => {
+    return tracks.filter((t) => t.source === 'online' || (t.audioUrl && t.audioUrl.startsWith('http'))).length;
+  }, [tracks]);
+
   // Filter tracks
   const filtered = useMemo(() => {
     let list = [...tracks];
@@ -121,6 +129,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       list = list.filter((t) => t.syncedLyrics && t.syncedLyrics.length > 0);
     } else if (activeFilter === 'offline') {
       list = list.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id)));
+    } else if (activeFilter === 'cloud') {
+      list = list.filter((t) => t.source === 'online' || (t.audioUrl && t.audioUrl.startsWith('http')));
     }
 
     // Range filter (active when not searching)
@@ -495,6 +505,27 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <span>أوفلاين ({downloadedTrackIds.length})</span>
           </button>
 
+          <button
+            onClick={() => setActiveFilter('cloud')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+              activeFilter === 'cloud'
+                ? 'bg-sky-500 text-white font-extrabold shadow-md shadow-sky-500/25'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
+            }`}
+          >
+            <Cloud className="w-3.5 h-3.5" />
+            <span>السحابية ({cloudCount})</span>
+          </button>
+
+          <button
+            onClick={() => setCloudUploaderOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer shrink-0 shadow-sm"
+            title="رفع ملفات موسيقية إلى السحابة"
+          >
+            <UploadCloud className="w-3.5 h-3.5" />
+            <span>رفع للسحابة</span>
+          </button>
+
           {/* Sort Dropdown */}
           <div className="relative flex items-center shrink-0">
             <select
@@ -773,6 +804,31 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <ImageIcon className="w-4 h-4 text-zinc-400" />
             <span>تغيير الغلاف</span>
           </button>
+          {(contextMenu.track.source === 'online' || (contextMenu.track.audioUrl && contextMenu.track.audioUrl.startsWith('http'))) && (
+            <button
+              onClick={async () => {
+                const tr = contextMenu.track;
+                setContextMenu(null);
+                const user = usePlayerStore.getState().currentUser;
+                if (!user || user.isGuest) {
+                  usePlayerStore.getState().addToast(
+                    'عذراً، حذف المسارات من السحابة مخصص لمالك المنصة فقط. يرجى تسجيل الدخول أولاً.',
+                    undefined,
+                    'warning'
+                  );
+                  usePlayerStore.getState().setCloudUploaderOpen(true);
+                  return;
+                }
+                if (window.confirm(`هل أنت متأكد من حذف "${tr.title}" من السحابة نهائياً؟`)) {
+                  await usePlayerStore.getState().deleteCloudTrackById(tr.id);
+                }
+              }}
+              className="px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" />
+              <span>حذف من السحابة</span>
+            </button>
+          )}
         </div>
       )}
       {/* iOS Native Track Action Sheet */}
@@ -954,6 +1010,12 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             {track.syncedLyrics && track.syncedLyrics.length > 0 && (
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
                 LYRICS
+              </span>
+            )}
+            {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-400 font-bold tracking-wider flex items-center gap-1 border border-sky-500/30">
+                <Cloud className="w-2.5 h-2.5" />
+                <span>CLOUD</span>
               </span>
             )}
           </div>

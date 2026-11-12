@@ -4,7 +4,7 @@ import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
-import { Play, ListPlus, Check, MoreHorizontal } from 'lucide-react';
+import { Play, ListPlus, Check, MoreHorizontal, Cloud } from 'lucide-react';
 
 interface MobileTrackRowProps {
   track: Track;
@@ -159,6 +159,11 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 <span className="text-white/20">•</span>
                 <span className="text-amber-400/90 font-semibold">{key}</span>
               </span>
+              {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
+                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-[8.5px] font-bold text-sky-400 shrink-0" title="سحابية">
+                  <Cloud className="w-2.5 h-2.5 text-sky-400" />
+                </span>
+              )}
             </div>
           </div>
         </div>

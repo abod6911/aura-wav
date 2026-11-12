@@ -15,9 +15,11 @@ import {
   AlertTriangle,
   Car,
   Radio,
+  UploadCloud,
 } from 'lucide-react';
 import { syncPartyService, SyncRoomState } from '../services/syncPartyService';
 import { useStorageStore } from '../stores/useStorageStore';
+import { CloudStatusBadge } from './cloud/CloudStatusBadge';
 
 interface HeaderProps {
   onOpenImport: () => void;
@@ -40,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setSpotlightOpen = usePlayerStore((state) => state.setSpotlightOpen);
+  const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
@@ -64,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
 
   return (
     <header
-      className="select-none w-full min-w-0 bg-[#060608]/96 backdrop-blur-2xl border-b border-white/[0.08] px-3 sm:px-4 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 shrink-0 z-30 transition-all specular-highlight-subtle obsidian-grain"
+      className="select-none w-full min-w-0 bg-[#060608]/96 backdrop-blur-2xl border-b border-white/[0.08] px-3 sm:px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2.5 shrink-0 z-30 transition-all specular-highlight-subtle pointer-events-auto"
       dir={dir}
     >
       {/* Mobile Header Bar */}
@@ -120,6 +123,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
               aria-label={t.importFolder}
             >
               <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+            </button>
+
+            {/* Cloud Uploader Button */}
+            <button
+              onClick={() => setCloudUploaderOpen(true)}
+              className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full apple-glass-pill flex items-center justify-center text-sky-400 aura-tap-btn cursor-pointer shrink-0"
+              title="رفع للسحابة"
+              aria-label="Cloud Uploader"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-sky-400" />
             </button>
 
             {/* Sync Party */}
@@ -319,6 +332,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             title="وضع القيادة في السيارة / Apple CarPlay Mode"
           >
             <Car className="w-4 h-4 text-[#FA243C]" />
+          </button>
+
+          {/* Cloud Sync Status Badge */}
+          <CloudStatusBadge />
+
+          {/* Cloud Uploader Trigger */}
+          <button
+            onClick={() => setCloudUploaderOpen(true)}
+            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
+            title="رفع ملفات موسيقية إلى السحابة (Cloud Uploader)"
+            aria-label="Cloud Uploader"
+          >
+            <UploadCloud className="w-4 h-4 text-sky-400" />
           </button>
 
           {/* Settings Modal Trigger */}

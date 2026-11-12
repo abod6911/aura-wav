@@ -106,23 +106,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
       </div>
 
       {/* ── 1. Quick Access Grid (Strictly 6 Cards) ── */}
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-2.5 w-full">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full">
         {/* Card 1: Liked Songs */}
         <div
           onClick={() => {
             triggerHaptic('light');
             setActiveTab('favorites');
           }}
-          className="flex items-center gap-2 sm:gap-2.5 h-[46px] sm:h-[52px] p-1 sm:p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
+          className="flex items-center gap-2.5 h-[50px] sm:h-[54px] p-1.5 rounded-xl bg-[#14141c] border border-white/[0.08] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
         >
-          <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#FA243C] to-[#FF375F] shrink-0 shadow-md">
-            <Heart className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white fill-white" />
+          <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg flex items-center justify-center bg-gradient-to-br from-[#FA243C] to-[#FF375F] shrink-0 shadow-md">
+            <Heart className="w-4.5 h-4.5 text-white fill-white" />
           </div>
           <div className="min-w-0 flex-1 pe-1">
-            <span className="text-[11px] sm:text-[12.5px] font-semibold text-white truncate block leading-tight">
+            <span className="text-[12px] sm:text-[13px] font-semibold text-white truncate block leading-tight">
               {t.likedSongsCard}
             </span>
-            <span className="text-[8.5px] sm:text-[9.5px] text-white/50 block font-mono mt-0.5">
+            <span className="text-[9.5px] sm:text-[10px] text-white/50 block font-mono mt-0.5">
               {favorites.length} {t.songs}
             </span>
           </div>
@@ -134,16 +134,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             triggerHaptic('light');
             setMobilePlayerOpen(true);
           }}
-          className="flex items-center gap-2 sm:gap-2.5 h-[46px] sm:h-[52px] p-1 sm:p-1.5 rounded-xl bg-[#14141c] border border-white/[0.06] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
+          className="flex items-center gap-2.5 h-[50px] sm:h-[54px] p-1.5 rounded-xl bg-[#14141c] border border-white/[0.08] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
         >
-          <div className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-[#7D12FF] to-[#FA243C] shrink-0 shadow-md">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-white" />
+          <div className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg flex items-center justify-center bg-gradient-to-br from-[#7D12FF] to-[#FA243C] shrink-0 shadow-md">
+            <Sparkles className="w-4.5 h-4.5 text-white" />
           </div>
           <div className="min-w-0 flex-1 pe-1">
-            <span className="text-[11px] sm:text-[12.5px] font-semibold text-white truncate block leading-tight">
+            <span className="text-[12px] sm:text-[13px] font-semibold text-white truncate block leading-tight">
               {isRTL ? 'استوديو الصوت 3D' : '3D Sound Studio'}
             </span>
-            <span className="text-[8.5px] sm:text-[9.5px] text-purple-300 block font-mono mt-0.5">
+            <span className="text-[9.5px] sm:text-[10px] text-purple-300 block font-mono mt-0.5">
               Hi-Fi Master
             </span>
           </div>
@@ -156,10 +156,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             <div
               key={trk.id}
               onClick={() => handleTrackClick(trk)}
-              className={`flex items-center gap-2 sm:gap-2.5 h-[46px] sm:h-[52px] p-1 sm:p-1.5 rounded-xl border active:scale-[0.97] transition-transform overflow-hidden cursor-pointer ${
+              className={`flex items-center gap-2.5 h-[50px] sm:h-[54px] p-1.5 rounded-xl border active:scale-[0.97] transition-transform overflow-hidden cursor-pointer ${
                 isCur
                   ? 'bg-[#FA243C]/20 border-[#FA243C]/40'
-                  : 'bg-[#14141c] border-white/[0.06]'
+                  : 'bg-[#14141c] border-white/[0.08]'
               }`}
             >
               <img
@@ -167,11 +167,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 alt={trk.title}
                 loading="lazy"
                 decoding="async"
-                className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-lg object-cover shrink-0 bg-black/40"
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg object-cover shrink-0 bg-black/40 shadow-sm"
               />
-              <span className={`text-[11px] sm:text-[12.5px] font-semibold truncate flex-1 leading-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-                <bdi dir="auto">{trk.title}</bdi>
-              </span>
+              <div className="min-w-0 flex-1 pe-1">
+                <span className={`text-[12px] sm:text-[13px] font-semibold truncate block leading-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                  <bdi dir="auto">{trk.title}</bdi>
+                </span>
+                <span className="text-[9.5px] sm:text-[10px] text-white/50 truncate block mt-0.5">
+                  <bdi dir="auto">{trk.artist}</bdi>
+                </span>
+              </div>
             </div>
           );
         })}
@@ -198,7 +203,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
           {/* Top Badges & Audio Engine Indicators */}
           <div className="flex items-center justify-between z-10">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" dir="ltr">
               <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[8px] sm:text-[9px] font-bold py-0.5 px-2">
                 STUDIO MASTER
               </span>

@@ -36,6 +36,7 @@ const CarPlayMode = lazy(() => import('./components/carplay/CarPlayMode').then((
 const SpotlightCommandModal = lazy(() => import('./components/search/SpotlightCommandModal').then((m) => ({ default: m.SpotlightCommandModal })));
 const SyncPartyModal = lazy(() => import('./components/party/SyncPartyModal').then((m) => ({ default: m.SyncPartyModal })));
 const HarmonicSetGenerator = lazy(() => import('./components/player/HarmonicSetGenerator').then((m) => ({ default: m.HarmonicSetGenerator })));
+const CloudUploaderModal = lazy(() => import('./components/cloud/CloudUploaderModal').then((m) => ({ default: m.CloudUploaderModal })));
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -183,6 +184,8 @@ export function App() {
   const isSpotlightOpen = usePlayerStore((state) => state.isSpotlightOpen);
   const isSyncPartyOpen = usePlayerStore((state) => state.isSyncPartyOpen);
   const isHarmonicJourneyOpen = usePlayerStore((state) => state.isHarmonicJourneyOpen);
+  const isCloudUploaderOpen = usePlayerStore((state) => state.isCloudUploaderOpen);
+  const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const prevVolumeRef = useRef(0.8);
@@ -472,7 +475,7 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
+          ? 'relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
           : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden select-none overscroll-none font-sans selection:bg-[#FA243C]/25'
       }
     >
@@ -506,7 +509,7 @@ export function App() {
         onScroll={handleMainScroll}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-8 overscroll-contain'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(140px+env(safe-area-inset-bottom,24px))] overscroll-contain'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -571,7 +574,7 @@ export function App() {
 
       {/* 7. Mobile Bottom Controls: Sleek and compact ergonomic dock */}
       {isMobile && (
-        <footer className="shrink-0 w-full z-30 bg-[#060609]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1 px-2 flex flex-col items-center">
+        <footer className="shrink-0 w-full z-40 bg-[#060609]/95 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(env(safe-area-inset-bottom,24px),24px)] pt-2 px-3 flex flex-col items-center gap-1.5 pointer-events-auto">
           <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
           <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </footer>
@@ -617,6 +620,12 @@ export function App() {
         {isSpotlightOpen && <SpotlightCommandModal />}
         {isSyncPartyOpen && <SyncPartyModal />}
         {isHarmonicJourneyOpen && <HarmonicSetGenerator />}
+        {isCloudUploaderOpen && (
+          <CloudUploaderModal
+            isOpen={isCloudUploaderOpen}
+            onClose={() => setCloudUploaderOpen(false)}
+          />
+        )}
       </Suspense>
 
       {/* 9. Real Authentication & Account Screen */}

@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   X,
   Music,
+  Trash2,
 } from 'lucide-react';
 
 interface TrackActionSheetProps {
@@ -42,6 +43,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const addToast = usePlayerStore((state) => state.addToast);
+  const deleteCloudTrackById = usePlayerStore((state) => state.deleteCloudTrackById);
 
   const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
 
@@ -265,6 +267,33 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   </div>
                   <span className="flex-1 text-start">تغيير غلاف الألبوم</span>
                 </button>
+
+                {/* 8. Delete from Cloud (Only if online/cloud track) */}
+                {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
+                  <button
+                    onClick={() => handleAction(async () => {
+                      const user = usePlayerStore.getState().currentUser;
+                      if (!user || user.isGuest) {
+                        addToast(
+                          'عذراً، حذف المسارات من السحابة مخصص لمالك المنصة فقط. يرجى تسجيل الدخول أولاً.',
+                          undefined,
+                          'warning'
+                        );
+                        usePlayerStore.getState().setCloudUploaderOpen(true);
+                        return;
+                      }
+                      if (window.confirm(`هل أنت متأكد من حذف "${track.title}" من السحابة نهائياً؟`)) {
+                        await deleteCloudTrackById(track.id);
+                      }
+                    })}
+                    className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 active:scale-[0.98] transition-all text-red-400 font-bold text-xs sm:text-sm cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center">
+                      <Trash2 className="w-4 h-4" />
+                    </div>
+                    <span className="flex-1 text-start">حذف من السحابة (Delete from Cloud)</span>
+                  </button>
+                )}
               </div>
             )}
 

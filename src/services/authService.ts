@@ -1,5 +1,6 @@
-import { createClient, SupabaseClient, User as SupabaseUser } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { dexieDB } from '../db/dexieDB';
+import { supabase as sharedSupabaseClient } from '../lib/supabase';
 
 export interface AuthUser {
   id: string;
@@ -19,20 +20,10 @@ interface StoredVaultUser {
   createdAt: string;
 }
 
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const SUPABASE_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-
 const VAULT_USERS_KEY = 'aura_auth_users_vault_v1';
 const VAULT_SESSION_KEY = 'aura_auth_active_session_v1';
 
-let supabaseClient: SupabaseClient | null = null;
-if (SUPABASE_URL && SUPABASE_KEY) {
-  try {
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-  } catch (err) {
-    console.warn('[AuthService] Supabase client init notice:', err);
-  }
-}
+const supabaseClient = sharedSupabaseClient;
 
 /**
  * Hash password locally with SHA-256 for secure client-side vault storage
@@ -391,10 +382,16 @@ class AuthService {
     } catch {}
   }
 
+  public isOwnerAuthenticated(): boolean {
+    const user = this.getCurrentUser();
+    if (!user || user.isGuest) return false;
+    return true;
+  }
+
   private mapSupabaseUser(user: SupabaseUser, fallbackName?: string): AuthUser {
     const meta = user.user_metadata || {};
     return {
-      id: `sp_${user.id}`,
+      id: user.id, // Raw UUID for Supabase RLS and DB compatibility
       email: user.email || '',
       name: meta.name || meta.full_name || fallbackName || user.email?.split('@')[0] || 'User',
       avatarUrl: meta.avatar_url || meta.picture,

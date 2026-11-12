@@ -47,18 +47,18 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="w-[calc(100%-0.75rem)] sm:w-[calc(100%-1.5rem)] max-w-md mx-auto bg-[#0c0c14]/94 backdrop-blur-2xl rounded-xl sm:rounded-2xl p-0.5 sm:p-1 flex items-center justify-around select-none shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.16)] border border-white/[0.12] shrink-0 specular-highlight obsidian-grain"
+      className="w-full max-w-md mx-auto bg-[#0c0c14]/94 backdrop-blur-2xl rounded-2xl p-1 flex items-center justify-around select-none shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.16)] border border-white/[0.12] shrink-0 specular-highlight pointer-events-auto h-[52px] min-h-[52px]"
       dir={dir}
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
         return (
-          <motion.button
+          <button
             key={tab.id}
-            whileTap={{ scale: 0.96 }}
+            type="button"
             onClick={() => handleTabClick(tab.id)}
-            className="relative flex flex-col items-center gap-0.5 py-1 sm:py-1.5 px-1 sm:px-2 rounded-xl sm:rounded-2xl transition-colors flex-1 cursor-pointer min-h-[38px] sm:min-h-[42px]"
+            className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl transition-all flex-1 cursor-pointer min-h-[44px] h-full touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
@@ -66,7 +66,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             {isActive && (
               <motion.div
                 layoutId="activeMobileTab"
-                className="absolute inset-0 rounded-xl sm:rounded-2xl bg-white/[0.10] border border-white/[0.12] shadow-sm -z-10"
+                className="absolute inset-0 rounded-xl bg-white/[0.10] border border-white/[0.12] shadow-sm pointer-events-none"
                 transition={{
                   type: 'spring',
                   stiffness: 420,
@@ -75,32 +75,28 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
                 }}
               />
             )}
-            <motion.div
-              animate={{ scale: isActive ? 1.08 : 1 }}
-              transition={{
-                type: 'spring',
-                stiffness: 420,
-                damping: 36,
-                mass: 0.8,
-              }}
+            <div
+              className={`transition-transform duration-150 relative z-10 ${
+                isActive ? 'scale-105' : 'scale-100'
+              }`}
             >
               <Icon
-                className={`w-[18px] h-[18px] sm:w-5 sm:h-5 transition-colors duration-150 ${
+                className={`w-[19px] h-[19px] transition-colors duration-150 ${
                   isActive
                     ? 'text-[#FA243C]'
                     : 'text-white/60 hover:text-white'
                 }`}
                 strokeWidth={isActive ? 2.3 : 1.8}
               />
-            </motion.div>
+            </div>
             <span
-              className={`text-[9px] sm:text-[10px] tracking-tight transition-colors duration-200 ${
-                isActive ? 'text-white font-black' : 'text-white/60 font-medium'
+              className={`text-[9.5px] tracking-tight transition-colors duration-150 relative z-10 leading-tight ${
+                isActive ? 'text-white font-bold' : 'text-white/60 font-medium'
               }`}
             >
               {tab.label}
             </span>
-          </motion.button>
+          </button>
         );
       })}
     </nav>
