@@ -47,7 +47,11 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="w-full bg-[#090910]/96 backdrop-blur-3xl border-t border-white/[0.08] px-1 pt-1 pb-[max(env(safe-area-inset-bottom,6px),6px)] flex items-center justify-around select-none pointer-events-auto shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.6)]"
+      style={{
+        backgroundColor: '#090910',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)',
+      }}
+      className="w-full border-t border-white/[0.08] px-1 pt-1 flex items-center justify-around select-none pointer-events-auto shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.8)]"
       dir={dir}
     >
       {tabs.map((tab) => {

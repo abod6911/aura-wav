@@ -91,6 +91,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       }}
       data-testid="mini-player"
       style={{
+        backgroundColor: '#12121a',
         boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 0 rgba(255,255,255,0.15)`,
         touchAction: 'manipulation',
       }}

@@ -25,7 +25,7 @@
     <!-- Instant Client Cache Invalidation: purges stale SW caches on version bump -->
     <script>
       (function() {
-        var APP_VERSION = 'v13.0';
+        var APP_VERSION = 'v13.1';
         var stored = localStorage.getItem('aura_sw_ver');
         if (stored !== APP_VERSION) {
           if ('caches' in window) {
