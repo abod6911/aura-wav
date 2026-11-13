@@ -490,10 +490,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       )}
 
-      {/* 2. Controls, Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        {/* Search Box */}
-        <div className="relative flex-1 max-w-md">
+      {/* 2. Controls, Search & Filter Bar (Only when library has tracks) */}
+      {tracks.length > 0 && (
+        <>
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            {/* Search Box */}
+            <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-zinc-500 absolute right-3.5 top-3.5" />
           <input
             id="library-search-input"
@@ -773,6 +775,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Floating Scroll to Top Action Button */}
       {showScrollTop && (
