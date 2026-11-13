@@ -263,10 +263,71 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2">
-      {/* 1. Grand Editorial Hero Banner (Obsidian Glass Aesthetic) */}
+    <div className="space-y-2.5 sm:space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
+      {/* 1. Mobile Compact Header (Sleek Apple Music style, under 60px) */}
+      {tracks.length > 0 && (
+        <div className="sm:hidden flex items-center justify-between gap-2.5 p-2 rounded-2xl bg-[#12121c]/90 border border-white/[0.08] backdrop-blur-xl">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
+              {heroCovers.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`Cover ${i + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/logo.svg';
+                  }}
+                />
+              ))}
+            </div>
+            <div className="min-w-0 flex-1 text-start">
+              <h1 className="text-[14px] font-black text-white truncate leading-tight">
+                {isRTL ? 'مكتبتي الموسيقية' : 'My Library'}
+              </h1>
+              <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5">
+                <span>{tracks.length} {isRTL ? 'مسار' : 'tracks'}</span>
+                <span className="mx-1">•</span>
+                <span>{formattedTotalTime}</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Compact Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handlePlayAll}
+              className="h-8 px-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-[#FA243C]/30 active:scale-95 transition-transform cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-white text-white" />
+              <span>{isRTL ? 'تشغيل' : 'Play'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShufflePlay}
+              className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+              title={isRTL ? 'خلط عشوائي' : 'Shuffle'}
+            >
+              <Shuffle className="w-3.5 h-3.5 text-zinc-300" />
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenImport}
+              className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+              title={isRTL ? 'تغيير المجلد' : 'Change folder'}
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-[#FA243C]" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grand Editorial Hero Banner (Desktop: sm:block hidden) */}
       {tracks.length > 0 ? (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 apple-glass-card shadow-[0_20px_60px_rgba(0,0,0,0.7)] transform-gpu">
+        <div className="hidden sm:block relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 apple-glass-card shadow-[0_20px_60px_rgba(0,0,0,0.7)] transform-gpu">
           {/* Subtle Ambient Glow */}
           <div
             className="absolute -top-20 -right-20 w-96 h-96 rounded-full pointer-events-none transform-gpu"

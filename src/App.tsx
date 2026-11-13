@@ -509,7 +509,7 @@ export function App() {
         onScroll={handleMainScroll}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(145px+env(safe-area-inset-bottom,20px))] overscroll-contain relative z-10'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(110px+env(safe-area-inset-bottom,16px))] overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -572,11 +572,17 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls: Sleek and compact ergonomic dock */}
+      {/* 7. Mobile Bottom Controls: Full-bleed Edge-to-Edge iOS Tab Bar & Floating MiniPlayer */}
       {isMobile && (
-        <footer className="fixed bottom-0 inset-x-0 z-40 bg-[#060609]/95 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(env(safe-area-inset-bottom,20px),20px)] pt-1.5 px-3 flex flex-col items-center gap-1.5 pointer-events-auto">
-          <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
-          <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
+        <footer className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex flex-col items-center select-none">
+          {/* Floating MiniPlayer right above Tab Bar */}
+          <div className="w-full max-w-lg px-2 pb-1.5 pointer-events-auto">
+            <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
+          </div>
+          {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
+          <div className="w-full pointer-events-auto">
+            <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
+          </div>
         </footer>
       )}
 

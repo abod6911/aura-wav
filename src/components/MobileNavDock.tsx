@@ -47,7 +47,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="w-full max-w-md mx-auto bg-[#0c0c14]/94 backdrop-blur-2xl rounded-2xl p-1 flex items-center justify-around select-none shadow-[0_16px_40px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.16)] border border-white/[0.12] shrink-0 specular-highlight pointer-events-auto h-[52px] min-h-[52px]"
+      className="w-full bg-[#090910]/96 backdrop-blur-3xl border-t border-white/[0.08] px-1 pt-1 pb-[max(env(safe-area-inset-bottom,6px),6px)] flex items-center justify-around select-none pointer-events-auto shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.6)]"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -66,7 +66,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl transition-all flex-1 cursor-pointer min-h-[44px] h-full touch-manipulation select-none active:scale-95 pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[44px] min-h-[44px] touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
@@ -74,7 +74,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
             {isActive && (
               <motion.div
                 layoutId="activeMobileTab"
-                className="absolute inset-0 rounded-xl bg-white/[0.10] border border-white/[0.12] shadow-sm pointer-events-none"
+                className="absolute inset-x-1 inset-y-0.5 rounded-xl bg-white/[0.08] border border-white/[0.1] shadow-sm pointer-events-none"
                 transition={{
                   type: 'spring',
                   stiffness: 420,
@@ -89,7 +89,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               }`}
             >
               <Icon
-                className={`w-[19px] h-[19px] transition-colors duration-150 ${
+                className={`w-[20px] h-[20px] transition-colors duration-150 ${
                   isActive
                     ? 'text-[#FA243C]'
                     : 'text-white/60 hover:text-white'
@@ -98,7 +98,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               />
             </div>
             <span
-              className={`text-[9.5px] tracking-tight transition-colors duration-150 relative z-10 leading-tight ${
+              className={`text-[10px] tracking-tight transition-colors duration-150 relative z-10 leading-tight ${
                 isActive ? 'text-white font-bold' : 'text-white/60 font-medium'
               }`}
             >

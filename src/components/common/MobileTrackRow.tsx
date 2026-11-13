@@ -85,16 +85,16 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   };
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden select-none touch-pan-y my-1">
+    <div className="relative w-full rounded-xl overflow-hidden select-none touch-pan-y my-0.5">
       {/* Swipe Reveal Action Background */}
       <motion.div
         style={{ opacity: bgOpacity }}
         className={`absolute inset-0 bg-gradient-to-r ${
           isRTL ? 'from-transparent via-[#FA243C]/60 to-[#FA243C]/80' : 'from-[#FA243C]/80 via-[#FA243C]/60 to-transparent'
-        } flex items-center ${isRTL ? 'justify-end pe-5' : 'justify-start ps-5'} z-0`}
+        } flex items-center ${isRTL ? 'justify-end pe-4' : 'justify-start ps-4'} z-0`}
       >
         <motion.div style={{ scale: iconScale }} className="flex items-center gap-1.5 text-white font-bold text-xs">
-          <ListPlus className="w-5 h-5 text-white stroke-[2.5]" />
+          <ListPlus className="w-4 h-4 text-white stroke-[2.5]" />
           <span className="text-white text-xs font-bold">{isRTL ? 'إلى قائمة الانتظار' : 'To Queue'}</span>
         </motion.div>
       </motion.div>
@@ -109,7 +109,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[64px] min-h-[64px] px-3 rounded-2xl flex items-center justify-between gap-3 select-none border transition-all cursor-pointer active:scale-[0.98] specular-highlight-subtle ${
+        className={`relative z-10 w-full h-[52px] min-h-[52px] sm:h-[58px] sm:min-h-[58px] px-2.5 rounded-xl flex items-center justify-between gap-2.5 select-none border transition-all cursor-pointer active:scale-[0.98] specular-highlight-subtle ${
           isCur
             ? 'bg-[#181824]/95 border-[#FA243C]/40 shadow-[0_4px_20px_rgba(250,36,60,0.15)]'
             : 'bg-[#101016]/85 hover:bg-[#14141e] border-white/[0.06]'
@@ -123,7 +123,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
             </span>
           )}
 
-          <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#14141c] shrink-0 shadow-md border border-white/10">
+          <div className="relative w-9.5 h-9.5 min-w-[38px] min-h-[38px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 shadow-sm border border-white/10">
             <img
               src={track.artworkUrl || track.coverUrl || '/logo.svg'}
               alt={track.title}
@@ -147,20 +147,20 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h4 className={`text-[14.5px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+            <h4 className={`text-[13px] sm:text-[14px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
               <bdi dir="auto">{track.title}</bdi>
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-              <p className="text-[12px] text-white/55 truncate font-medium">
+              <p className="text-[11px] text-white/55 truncate font-medium">
                 <bdi dir="auto">{track.artist}</bdi>
               </p>
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-white/[0.04] border border-white/[0.08] text-[9px] font-mono text-white/45 tabular-nums shrink-0">
+              <span className="inline-flex items-center gap-1 px-1 py-0.2 rounded bg-white/[0.04] border border-white/[0.08] text-[8.5px] font-mono text-white/45 tabular-nums shrink-0">
                 <span className="text-[#FF375F] font-semibold">{bpm}</span>
                 <span className="text-white/20">•</span>
                 <span className="text-amber-400/90 font-semibold">{key}</span>
               </span>
               {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
-                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-[8.5px] font-bold text-sky-400 shrink-0" title="سحابية">
+                <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-[8px] font-bold text-sky-400 shrink-0" title="سحابية">
                   <Cloud className="w-2.5 h-2.5 text-sky-400" />
                 </span>
               )}
@@ -168,13 +168,13 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
         </div>
 
-        {/* Right Action Buttons with >=44x44px touch targets */}
-        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right Action Buttons */}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           {/* Quick 1-tap Add to Queue with Check Confirmation Animation */}
           <button
             type="button"
             onClick={handleQuickQueue}
-            className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] duration-75 cursor-pointer ${
+            className={`w-8 h-8 min-w-[32px] min-h-[32px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] duration-75 cursor-pointer ${
               isAddedFeedback
                 ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
                 : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white'
@@ -183,9 +183,9 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
             aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
           >
             {isAddedFeedback ? (
-              <Check className="w-4 h-4 text-white stroke-[3]" />
+              <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
             ) : (
-              <ListPlus className="w-4 h-4 text-white/80" />
+              <ListPlus className="w-3.5 h-3.5 text-white/80" />
             )}
           </button>
 
@@ -198,11 +198,11 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.92] duration-75 cursor-pointer"
+              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.92] duration-75 cursor-pointer"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
