@@ -159,6 +159,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             setQueueOpen(true);
           }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerHaptic('light');
+            setQueueOpen(true);
+          }}
           className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] text-white/80 hover:text-white flex items-center justify-center cursor-pointer select-none flex-shrink-0 relative border border-white/10 active:scale-90 transition-transform touch-manipulation pointer-events-auto"
           title={t.queue}
           aria-label={t.queue}
@@ -180,6 +186,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerHaptic('medium');
+            togglePlayPause();
+          }}
           className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center cursor-pointer select-none flex-shrink-0 shadow-lg active:scale-90 transition-transform touch-manipulation pointer-events-auto"
           aria-label={isPlaying ? t.pause : t.play}
         >
@@ -197,6 +209,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           type="button"
           data-testid="mini-next-btn"
           onClick={(e) => {
+            e.stopPropagation();
+            triggerHaptic('light');
+            nextTrack({ forceImmediate: true });
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             triggerHaptic('light');
             nextTrack({ forceImmediate: true });

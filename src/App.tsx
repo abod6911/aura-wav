@@ -475,8 +475,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none overscroll-none'
-          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden select-none overscroll-none font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden'
+          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -509,7 +509,7 @@ export function App() {
         onScroll={handleMainScroll}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(140px+env(safe-area-inset-bottom,24px))] overscroll-contain'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(145px+env(safe-area-inset-bottom,20px))] overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -574,7 +574,7 @@ export function App() {
 
       {/* 7. Mobile Bottom Controls: Sleek and compact ergonomic dock */}
       {isMobile && (
-        <footer className="shrink-0 w-full z-40 bg-[#060609]/95 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(env(safe-area-inset-bottom,24px),24px)] pt-2 px-3 flex flex-col items-center gap-1.5 pointer-events-auto">
+        <footer className="fixed bottom-0 inset-x-0 z-40 bg-[#060609]/95 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(env(safe-area-inset-bottom,20px),20px)] pt-1.5 px-3 flex flex-col items-center gap-1.5 pointer-events-auto">
           <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
           <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </footer>

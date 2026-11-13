@@ -21,6 +21,32 @@
     <!-- Local High-Performance Self-Hosted Arabic & Latin Fonts (100% Offline) -->
     <link rel="stylesheet" href="/fonts/fonts.css" />
     <title>AURA.WAV — Future Audio Experience</title>
+
+    <!-- Instant Client Cache Invalidation: purges stale SW caches on version bump -->
+    <script>
+      (function() {
+        var APP_VERSION = 'v12.2';
+        var stored = localStorage.getItem('aura_sw_ver');
+        if (stored !== APP_VERSION) {
+          if ('caches' in window) {
+            caches.keys().then(function(keys) {
+              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+            });
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              for (var i = 0; i < regs.length; i++) {
+                regs[i].unregister();
+              }
+            });
+          }
+          localStorage.setItem('aura_sw_ver', APP_VERSION);
+          if (stored) {
+            window.location.reload();
+          }
+        }
+      })();
+    </script>
     <style>
       html, body {
         background-color: #060609 !important;

@@ -57,7 +57,15 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
           <button
             key={tab.id}
             type="button"
-            onClick={() => handleTabClick(tab.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTabClick(tab.id);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleTabClick(tab.id);
+            }}
             className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-2 rounded-xl transition-all flex-1 cursor-pointer min-h-[44px] h-full touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
