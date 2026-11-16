@@ -57,24 +57,24 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
   const getGreetingData = () => {
     if (hour >= 5 && hour < 12) {
       return {
-        greeting: 'صباح الخير والنشاط',
-        subtitle: 'ابدأ يومك بتجربة صوتية استثنائية ونقية',
+        greeting: 'صباح الخير',
+        subtitle: 'مرحباً بك في AURA.WAV',
         Icon: Sun,
         color: 'text-amber-400',
         glow: 'rgba(245, 158, 11, 0.25)',
       };
     } else if (hour >= 12 && hour < 17) {
       return {
-        greeting: 'طاب يومك بكل خير',
-        subtitle: 'أجواؤك المفضلة جاهزة للاستماع بأعلى دقة',
+        greeting: 'طاب يومك',
+        subtitle: 'موسيقاك جاهزة للاستماع',
         Icon: CloudSun,
         color: 'text-orange-400',
         glow: 'rgba(249, 115, 22, 0.25)',
       };
     } else {
       return {
-        greeting: 'مساء الخير والهدوء',
-        subtitle: 'استرخِ واستمتع بموسيقاك الفاخرة بجودة Apple Lossless',
+        greeting: 'مساء الخير',
+        subtitle: 'موسيقاك جاهزة للاستماع',
         Icon: Moon,
         color: 'text-[var(--apple-rose)]',
         glow: 'rgba(250, 36, 60, 0.35)',

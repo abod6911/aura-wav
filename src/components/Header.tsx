@@ -67,21 +67,21 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
 
   return (
     <header
-      className="select-none w-full min-w-0 bg-[#060608]/96 backdrop-blur-2xl border-b border-white/[0.08] px-3 sm:px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2.5 shrink-0 z-30 transition-all specular-highlight-subtle pointer-events-auto"
+      className="select-none w-full min-w-0 bg-[#060609] border-b border-white/[0.08] px-3.5 sm:px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2.5 shrink-0 z-30 transition-all pointer-events-auto"
       dir={dir}
     >
       {/* Mobile Header Bar */}
       <div className="flex flex-col sm:hidden w-full gap-2">
         <div className="flex items-center justify-between w-full min-w-0">
           {/* Brand & Dynamic Greeting */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-8 h-8 min-w-[32px] min-h-[32px] sm:w-9 sm:h-9 sm:min-w-[36px] sm:min-h-[36px] rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer aura-tap-btn"
+              className="w-8.5 h-8.5 min-w-[34px] min-h-[34px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer aura-tap-btn active:scale-95 transition-transform"
               title={currentUser ? currentUser.name : t.settings}
               aria-label={t.settings}
             >
-              <div className="w-full h-full bg-[#101018] rounded-[10px] sm:rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
+              <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
                 {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                 ) : (
@@ -90,20 +90,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
               </div>
             </button>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="font-black text-white text-[15px] sm:text-base tracking-tight leading-none flex items-center gap-1.5 truncate">
+              <span className="font-extrabold text-white text-[15px] tracking-tight leading-none flex items-center gap-1.5 truncate">
                 <bdi dir="ltr" className="inline-flex items-center">
                   AURA<span className="text-[#FA243C]">.WAV</span>
                 </bdi>
-                <span className="apple-badge text-[7.5px] sm:text-[8px] bg-[#FA243C]/15 border-[#FA243C]/30 text-[#FA243C] px-1 py-0.5 shrink-0">ALAC</span>
               </span>
-              <span className="text-[9.5px] sm:text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
-                {currentUser ? `مرحباً، ${currentUser.name}` : (activeTab === 'home' ? (isRTL ? 'استوديو Apple Hi-Fi' : 'Apple Hi-Fi Studio') : greeting)}
+              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
+                {currentUser ? currentUser.name : (activeTab === 'home' ? (isRTL ? 'استماع الآن' : 'Listen Now') : greeting)}
               </span>
             </div>
           </div>
 
           {/* Mobile Right Actions */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ps-1">
+          <div className="flex items-center gap-1.5 shrink-0 ps-1">
             {isQuotaWarning && (
               <button
                 onClick={() => setSettingsOpen(true)}
@@ -118,55 +117,46 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             {/* Quick Import Button */}
             <button
               onClick={onOpenImport}
-              className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full apple-glass-pill flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0"
+              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
               title={t.importFolder}
               aria-label={t.importFolder}
             >
-              <FolderPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+              <FolderPlus className="w-4 h-4 text-[#FA243C]" />
             </button>
 
-            {/* Cloud Uploader Button */}
-            <button
-              onClick={() => setCloudUploaderOpen(true)}
-              className="w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full apple-glass-pill flex items-center justify-center text-sky-400 aura-tap-btn cursor-pointer shrink-0"
-              title="رفع للسحابة"
-              aria-label="Cloud Uploader"
-            >
-              <UploadCloud className="w-3.5 h-3.5 text-sky-400" />
-            </button>
+            {/* Sync Party (if active or quick tap) */}
+            {syncRoomState.roomId && (
+              <button
+                onClick={() => setSyncPartyOpen(true)}
+                className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 shadow-md animate-pulse"
+                title={`${t.syncParty}: ${syncRoomState.roomId}`}
+                aria-label={t.syncParty}
+              >
+                <Radio className="w-3.5 h-3.5" />
+              </button>
+            )}
 
-            {/* Sync Party */}
-            <button
-              onClick={() => setSyncPartyOpen(true)}
-              className={`w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 ${
-                syncRoomState.roomId
-                  ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
-                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
-              }`}
-              title={syncRoomState.roomId ? `${t.syncParty}: ${syncRoomState.roomId}` : t.syncParty}
-              aria-label={t.syncParty}
-            >
-              <Radio className="w-3.5 h-3.5" />
-              {syncRoomState.roomId && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-0.5 right-0.5 border border-black" />
-              )}
-            </button>
+            {/* Sleep Timer (if active) */}
+            {sleepTimerRemaining !== null && (
+              <button
+                onClick={() => setSleepTimerOpen(true)}
+                className="h-8 px-2 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-xs font-mono font-bold flex items-center gap-1 aura-tap-btn cursor-pointer shrink-0"
+                title={t.sleepTimer}
+                aria-label={t.sleepTimer}
+              >
+                <Moon className="w-3 h-3" />
+                <span className="text-[9px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
+              </button>
+            )}
 
-            {/* Sleep Timer */}
+            {/* Settings Quick Access */}
             <button
-              onClick={() => setSleepTimerOpen(true)}
-              className={`w-7.5 h-7.5 sm:w-8.5 sm:h-8.5 min-w-[30px] sm:min-w-[34px] min-h-[30px] sm:min-h-[34px] rounded-full text-xs font-bold flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 ${
-                sleepTimerRemaining !== null
-                  ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
-                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
-              }`}
-              title={t.sleepTimer}
-              aria-label={t.sleepTimer}
+              onClick={() => setSettingsOpen(true)}
+              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
+              title={t.settings}
+              aria-label={t.settings}
             >
-              <Moon className="w-3.5 h-3.5" />
-              {sleepTimerRemaining !== null && (
-                <span className="font-mono text-[7px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
-              )}
+              <Settings className="w-4 h-4" />
             </button>
           </div>
         </div>

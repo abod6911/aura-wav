@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { authService } from '../services/authService';
+import { authService, AuthUser, SavedAccount } from '../services/authService';
 import {
   X,
   FolderPlus,
@@ -21,6 +21,7 @@ import {
   Volume2,
   User,
   LogOut,
+  Plus,
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
@@ -148,6 +149,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     );
   };
 
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
+
+  useEffect(() => {
+    if (isOpen) {
+      setSavedAccounts(authService.getSavedAccounts());
+    }
+  }, [isOpen]);
+
+  const handleSwitchTo = (acc: SavedAccount) => {
+    const user: AuthUser = {
+      id: acc.id,
+      email: acc.email,
+      name: acc.name,
+      avatarUrl: acc.avatarUrl,
+      isGuest: acc.isGuest,
+      createdAt: acc.lastLoginAt,
+    };
+    authService.switchAccount(user);
+    setCurrentUser(user);
+    setSavedAccounts(authService.getSavedAccounts());
+    addToast(isRTL ? `تم التبديل إلى "${acc.name}"` : `Switched to "${acc.name}"`, undefined, 'success');
+  };
+
   const handleSignOut = async () => {
     await authService.signOut();
     setCurrentUser(null);
@@ -222,48 +246,79 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
 
           {/* 0. Account & Profile Group */}
-          <div className="rounded-2xl bg-gradient-to-r from-white/[0.04] to-white/[0.02] border border-white/[0.08] p-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0">
-                <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-sm font-black overflow-hidden">
-                  {currentUser?.avatarUrl ? (
-                    <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                  ) : (
-                    currentUser?.name?.[0]?.toUpperCase() || 'A'
-                  )}
+          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0">
+                  <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-sm font-black overflow-hidden">
+                    {currentUser?.avatarUrl ? (
+                      <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                      currentUser?.name?.[0]?.toUpperCase() || 'A'
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-white truncate">
+                    {currentUser ? currentUser.name : (isRTL ? 'زائر AURA' : 'AURA Guest')}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono">
+                    {currentUser?.email || (isRTL ? 'حساب محلي' : 'Local Account')}
+                  </p>
                 </div>
               </div>
-              <div className="min-w-0">
-                <h4 className="text-sm font-bold text-white truncate">
-                  {currentUser ? currentUser.name : (isRTL ? 'زائر AURA' : 'AURA Guest')}
-                </h4>
-                <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono">
-                  {currentUser?.email || (isRTL ? 'جلسة محلية مؤقتة' : 'Local Session')}
-                </p>
-              </div>
+
+              {currentUser ? (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    setAuthScreenOpen(true);
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
+                </button>
+              )}
             </div>
 
-            {currentUser ? (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  setAuthScreenOpen(true);
-                }}
-                className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
-              </button>
+            {/* Saved Accounts Switcher */}
+            {savedAccounts.filter((a) => a.id !== currentUser?.id).length > 0 && (
+              <div className="pt-2.5 border-t border-white/[0.06] space-y-2">
+                <span className="text-[11px] font-bold text-zinc-400 block">
+                  {isRTL ? 'التبديل إلى حساب آخر محفوظ:' : 'Switch to another saved account:'}
+                </span>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto no-scrollbar">
+                  {savedAccounts
+                    .filter((a) => a.id !== currentUser?.id)
+                    .map((acc) => (
+                      <div
+                        key={acc.id}
+                        onClick={() => handleSwitchTo(acc)}
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 hover:bg-white/[0.06] border border-white/[0.06] flex items-center justify-between text-xs cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center font-bold text-white text-[10px]">
+                            {acc.name?.[0]?.toUpperCase() || 'U'}
+                          </div>
+                          <span className="text-white font-medium truncate">{acc.name}</span>
+                          <span className="text-zinc-500 font-mono text-[10px] truncate">({acc.email})</span>
+                        </div>
+                        <span className="text-[10px] text-[#FA243C] font-bold shrink-0">{isRTL ? 'تبديل' : 'Switch'}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
             )}
           </div>
 

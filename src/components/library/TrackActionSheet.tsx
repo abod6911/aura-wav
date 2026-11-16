@@ -180,92 +180,103 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                 )}
               </div>
             ) : (
-              /* Action Options List */
-              <div className="space-y-1.5">
+              <div className="space-y-2.5">
+              {/* Group 1: Playback Queue Controls */}
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] divide-y divide-white/[0.06] overflow-hidden">
                 {/* 1. Play Next */}
                 <button
                   onClick={() => handleAction(() => playNextInQueue(track))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-[#FA243C]/15 text-[#FA243C] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-[#FA243C]/15 text-[#FA243C] flex items-center justify-center shrink-0">
                     <ListEnd className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">تشغيل التالي (Play Next)</span>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">{isRTL ? 'تشغيل التالي' : 'Play Next'}</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">{isRTL ? 'التشغيل فور انتهاء الأغنية الحالية' : 'Plays right after current song'}</span>
+                  </div>
                 </button>
 
                 {/* 2. Add to Queue */}
                 <button
                   onClick={() => handleAction(() => addToQueue(track))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-white/10 text-white flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0">
                     <ListPlus className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">الإضافة إلى نهاية الطابور (Add to Queue)</span>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">{isRTL ? 'إضافة إلى نهاية الانتظار' : 'Add to Queue'}</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">{isRTL ? 'إدراج المسار في قائمة الانتظار' : 'Append track to current queue'}</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Group 2: Library & Playlists */}
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] divide-y divide-white/[0.06] overflow-hidden">
+                {/* 3. Toggle Favorite */}
+                <button
+                  onClick={() => handleAction(() => toggleFavorite(track.id))}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center shrink-0">
+                    <Heart className={`w-4 h-4 ${isFav ? 'fill-[#FA243C] text-[#FA243C]' : ''}`} />
+                  </div>
+                  <span className="flex-1 text-start">
+                    {isFav ? (isRTL ? 'إزالة من المفضلة' : 'Remove from Favorites') : (isRTL ? 'إضافة إلى المفضلة' : 'Add to Favorites')}
+                  </span>
                 </button>
 
-                {/* 3. Add to Playlist */}
+                {/* 4. Add to Playlist */}
                 <button
                   onClick={() => {
                     triggerHaptic('light');
                     setShowPlaylistSelector(true);
                   }}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
                     <FolderPlus className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">الإضافة إلى قائمة تشغيل (Add to Playlist)</span>
-                </button>
-
-                {/* 4. Toggle Favorite */}
-                <button
-                  onClick={() => handleAction(() => toggleFavorite(track.id))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white font-bold text-xs sm:text-sm cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center">
-                    <Heart className={`w-4 h-4 ${isFav ? 'fill-[#FA243C] text-[#FA243C]' : ''}`} />
-                  </div>
-                  <span className="flex-1 text-start">
-                    {isFav ? 'إزالة من المفضلة' : 'الإضافة إلى المفضلة'}
-                  </span>
+                  <span className="flex-1 text-start">{isRTL ? 'إضافة إلى قائمة تشغيل' : 'Add to Playlist'}</span>
                 </button>
 
                 {/* 5. Download for Offline */}
                 <button
                   onClick={() => handleAction(() => downloadTrackForOffline(track.id))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
                     {isDownloaded ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                   </div>
                   <span className="flex-1 text-start">
-                    {isDownloaded ? 'محفوظة أوفلاين بالكامل' : 'حفظ للاستماع بدون إنترنت'}
+                    {isDownloaded ? (isRTL ? 'محفوظة للاستماع دون إنترنت' : 'Saved for Offline') : (isRTL ? 'تنزيل للاستماع دون إنترنت' : 'Download for Offline')}
                   </span>
                 </button>
+              </div>
 
-                <div className="h-px bg-white/[0.08] my-1" />
-
+              {/* Group 3: Metadata & Actions */}
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] divide-y divide-white/[0.06] overflow-hidden">
                 {/* 6. Edit Metadata */}
                 <button
                   onClick={() => handleAction(() => setMetadataEditorModal(true, track))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white/90 font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white/90 font-medium text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
                     <Pencil className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">تعديل بيانات الأغنية (ID3 Tags)</span>
+                  <span className="flex-1 text-start">{isRTL ? 'تعديل بيانات الأغنية' : 'Edit Track Info'}</span>
                 </button>
 
                 {/* 7. Change Artwork */}
                 <button
                   onClick={() => handleAction(() => setChangeArtworkModal(true, track))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.09] active:scale-[0.98] transition-all text-white/90 font-bold text-xs sm:text-sm cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white/90 font-medium text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
                     <ImageIcon className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">تغيير غلاف الألبوم</span>
+                  <span className="flex-1 text-start">{isRTL ? 'تغيير غلاف الألبوم' : 'Change Artwork'}</span>
                 </button>
 
                 {/* 8. Delete from Cloud (Only if online/cloud track) */}
@@ -275,26 +286,27 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                       const user = usePlayerStore.getState().currentUser;
                       if (!user || user.isGuest) {
                         addToast(
-                          'عذراً، حذف المسارات من السحابة مخصص لمالك المنصة فقط. يرجى تسجيل الدخول أولاً.',
+                          isRTL ? 'حذف المسارات مخصص لمالك المنصة فقط' : 'Only platform owner can delete tracks',
                           undefined,
                           'warning'
                         );
                         usePlayerStore.getState().setCloudUploaderOpen(true);
                         return;
                       }
-                      if (window.confirm(`هل أنت متأكد من حذف "${track.title}" من السحابة نهائياً؟`)) {
+                      if (window.confirm(isRTL ? `هل تريد حذف "${track.title}" من السحابة؟` : `Delete "${track.title}" from cloud?`)) {
                         await deleteCloudTrackById(track.id);
                       }
                     })}
-                    className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 active:scale-[0.98] transition-all text-red-400 font-bold text-xs sm:text-sm cursor-pointer"
+                    className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-red-500/10 active:bg-red-500/20 transition-colors text-red-400 font-medium text-xs sm:text-sm cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center shrink-0">
                       <Trash2 className="w-4 h-4" />
                     </div>
-                    <span className="flex-1 text-start">حذف من السحابة (Delete from Cloud)</span>
+                    <span className="flex-1 text-start">{isRTL ? 'حذف من السحابة' : 'Delete from Cloud'}</span>
                   </button>
                 )}
               </div>
+            </div>
             )}
 
             {/* Bottom Cancel Button */}

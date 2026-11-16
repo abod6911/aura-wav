@@ -128,11 +128,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           </div>
         </div>
 
-        {/* Card 2: 3D Sound Studio */}
+        {/* Card 2: Equalizer & Effects */}
         <div
           onClick={() => {
             triggerHaptic('light');
-            setMobilePlayerOpen(true);
+            usePlayerStore.getState().setEqualizerOpen(true);
           }}
           className="flex items-center gap-2.5 h-[50px] sm:h-[54px] p-1.5 rounded-xl bg-[#14141c] border border-white/[0.08] active:scale-[0.97] transition-transform overflow-hidden cursor-pointer"
         >
@@ -141,10 +141,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           </div>
           <div className="min-w-0 flex-1 pe-1">
             <span className="text-[12px] sm:text-[13px] font-semibold text-white truncate block leading-tight">
-              {isRTL ? 'استوديو الصوت 3D' : '3D Sound Studio'}
+              {isRTL ? 'معادل الصوت' : 'Equalizer'}
             </span>
-            <span className="text-[9.5px] sm:text-[10px] text-purple-300 block font-mono mt-0.5">
-              Hi-Fi Master
+            <span className="text-[9.5px] sm:text-[10px] text-zinc-400 block font-mono mt-0.5">
+              {isRTL ? 'مخصص' : 'Custom'}
             </span>
           </div>
         </div>
@@ -201,14 +201,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060608] via-[#060608]/80 to-transparent" />
           <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
 
-          {/* Top Badges & Audio Engine Indicators */}
+          {/* Top Badges */}
           <div className="flex items-center justify-between z-10">
             <div className="flex items-center gap-1.5" dir="ltr">
-              <span className="apple-badge bg-[#FA243C]/20 border-[#FA243C]/35 text-[#FF375F] text-[8px] sm:text-[9px] font-bold py-0.5 px-2">
-                STUDIO MASTER
-              </span>
-              <span className="apple-badge bg-white/10 border-white/15 text-white/90 text-[8px] sm:text-[9px] py-0.5 px-2">
-                24-BIT / 96kHz ALAC
+              <span className="apple-badge bg-white/10 border-white/15 text-white/90 text-[8.5px] py-0.5 px-2 font-medium">
+                Lossless
               </span>
             </div>
             {currentTrack?.id === spotlightTrack.id && isPlaying && (

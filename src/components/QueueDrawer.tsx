@@ -203,9 +203,9 @@ export const QueueDrawer: React.FC = () => {
 
               {userQueue.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 text-center space-y-1">
-                  <p className="text-xs text-zinc-300 font-medium">قائمة الانتظار المباشرة فارغة</p>
+                  <p className="text-xs text-zinc-300 font-medium">قائمة الانتظار فارغة</p>
                   <p className="text-[11px] text-zinc-500 leading-relaxed">
-                    اضغط زر <span className="text-[#FA243C] font-bold">+</span> بجانب أي أغنية لتشغيلها تالياً فور انتهاء الأغنية الحالية.
+                    اختر <span className="text-[#FA243C] font-bold">تشغيل التالي</span> من خيارات أي أغنية لتشغيلها تالياً.
                   </p>
                 </div>
               ) : (

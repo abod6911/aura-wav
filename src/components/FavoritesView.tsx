@@ -16,6 +16,7 @@ import {
   Clock,
   Download,
   CheckCircle2,
+  Trash2,
 } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { Track } from '../types';
@@ -37,6 +38,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   const addToQueue = usePlayerStore((state) => state.addToQueue);
   const playNextInQueue = usePlayerStore((state) => state.playNextInQueue);
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
+  const clearFavorites = usePlayerStore((state) => state.clearFavorites);
   const addToast = usePlayerStore((state) => state.addToast);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,9 +281,24 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               }`}
             />
           </div>
-          <span className="text-[11px] font-mono text-zinc-400 font-bold shrink-0">
-            {displayedTracks.length} {isRTL ? 'مسار' : 'tracks'}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] font-mono text-zinc-400 font-bold">
+              {displayedTracks.length} {isRTL ? 'مسار' : 'tracks'}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(isRTL ? 'هل تريد بالتأكيد إفراغ قائمة المفضلة بالكامل؟' : 'Are you sure you want to clear all favorites?')) {
+                  clearFavorites();
+                }
+              }}
+              className="h-8 px-2.5 rounded-xl bg-white/[0.04] hover:bg-red-500/15 border border-white/[0.08] hover:border-red-500/30 text-zinc-400 hover:text-red-400 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+              title={isRTL ? 'تفريغ المفضلة' : 'Clear favorites'}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isRTL ? 'تفريغ' : 'Clear'}</span>
+            </button>
+          </div>
         </div>
       )}
 

@@ -11,6 +11,15 @@ export interface AuthUser {
   createdAt: string;
 }
 
+export interface SavedAccount {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  isGuest?: boolean;
+  lastLoginAt: string;
+}
+
 interface StoredVaultUser {
   id: string;
   email: string;
@@ -22,6 +31,7 @@ interface StoredVaultUser {
 
 const VAULT_USERS_KEY = 'aura_auth_users_vault_v1';
 const VAULT_SESSION_KEY = 'aura_auth_active_session_v1';
+const SAVED_ACCOUNTS_KEY = 'aura_saved_accounts_v2';
 
 const supabaseClient = sharedSupabaseClient;
 
@@ -138,6 +148,17 @@ class AuthService {
         }
       } else {
         dexieDB.settings.put({ key: VAULT_USERS_KEY, value: localUsers }).catch(() => {});
+      }
+    } catch {}
+
+    // Synchronize saved device accounts
+    try {
+      const savedAccounts = this.getSavedAccounts();
+      if (savedAccounts.length === 0) {
+        const idbSaved = await dexieDB.settings.get(SAVED_ACCOUNTS_KEY);
+        if (idbSaved && idbSaved.value && Array.isArray(idbSaved.value)) {
+          localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(idbSaved.value));
+        }
       }
     } catch {}
 
@@ -318,6 +339,48 @@ class AuthService {
     this.notifyListeners();
   }
 
+  public getSavedAccounts(): SavedAccount[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return [];
+  }
+
+  public saveAccountToHistory(user: AuthUser): void {
+    if (typeof window === 'undefined' || !user || !user.id) return;
+    try {
+      const current = this.getSavedAccounts().filter((a) => a.id !== user.id && a.email !== user.email);
+      const updated: SavedAccount[] = [
+        {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          isGuest: user.isGuest,
+          lastLoginAt: new Date().toISOString(),
+        },
+        ...current,
+      ].slice(0, 10);
+      localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(updated));
+      dexieDB.settings.put({ key: SAVED_ACCOUNTS_KEY, value: updated }).catch(() => {});
+    } catch {}
+  }
+
+  public removeSavedAccount(accountId: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const updated = this.getSavedAccounts().filter((a) => a.id !== accountId);
+      localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(updated));
+      dexieDB.settings.put({ key: SAVED_ACCOUNTS_KEY, value: updated }).catch(() => {});
+    } catch {}
+  }
+
+  public switchAccount(user: AuthUser): void {
+    this.setCurrentUser(user);
+  }
+
   public onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
     this.listeners.add(callback);
     callback(this.currentUser);
@@ -326,9 +389,10 @@ class AuthService {
     };
   }
 
-  private setCurrentUser(user: AuthUser): void {
+  public setCurrentUser(user: AuthUser): void {
     this.currentUser = user;
     this.saveSession(user);
+    this.saveAccountToHistory(user);
     this.notifyListeners();
   }
 

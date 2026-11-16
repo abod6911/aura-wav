@@ -378,7 +378,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 </h1>
 
                 <p className="text-xs sm:text-sm text-zinc-400 font-normal leading-relaxed max-w-2xl hidden sm:block">
-                  مجموعتك الخاصة كاملة مع أغلفة الألبومات الأصلية عالية الدقة والكلمات المتزامنة، مع تقنية الدمج الاحترافي True DJ AutoMix دون أي انقطاع.
+                  مكتبتك الصوتية الكاملة مع الكلمات المتزامنة ومؤثرات الصوت.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-zinc-400 pt-0.5">
@@ -386,7 +386,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   <span>•</span>
                   <span>{formattedTotalTime}</span>
                   <span className="hidden xs:inline">•</span>
-                  <span className="text-emerald-400 font-bold hidden xs:inline">Studio Master Hi-Fi</span>
+                  <span className="text-zinc-400 font-medium hidden xs:inline">Lossless Audio</span>
                 </div>
               </div>
             </div>

@@ -203,6 +203,7 @@ interface PlayerState {
   setSpotlightOpen: (open: boolean) => void;
   playDJSound: (effect: 'scratch' | 'airhorn' | 'echo_drop' | 'laser' | 'cheer') => void;
   toggleFavorite: (trackId: string) => Promise<void>;
+  clearFavorites: () => Promise<void>;
   setBassBoost: (level: number) => void;
   toggleSpatialAudio: () => void;
   toggle8DSpatial: () => void;
@@ -760,17 +761,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         const resolvedFolderName = savedFolderNameVal || savedDirNameVal || 'Liked_Songs';
 
         let favIds = (favs || []).map((f: any) => f.id);
-        // If favorites is empty, auto-populate with the 261 Liked Songs!
-        if (favIds.length === 0) {
-          favIds = Array.from({ length: 261 }, (_, i) => `track_catalog_${i + 1}`);
-          try {
-            const fTx = db.transaction('favorites', 'readwrite');
-            for (const fid of favIds) {
-              await fTx.store.put({ id: fid, addedAt: Date.now() });
-            }
-            await fTx.done;
-          } catch {}
-        }
+        // Purge legacy auto-polluted favorites so user only has songs they explicitly liked
+        try {
+          const isLegacyPolluted =
+            favIds.length === 261 &&
+            favIds.every((id: string) => typeof id === 'string' && id.startsWith('track_catalog_'));
+          if (isLegacyPolluted && typeof localStorage !== 'undefined' && localStorage.getItem('aura_favorites_cleaned_v2') !== 'true') {
+            favIds = [];
+            await db.clear('favorites');
+            localStorage.setItem('aura_favorites_cleaned_v2', 'true');
+          }
+        } catch {}
 
         const automix = automixSetting || { enabled: true, duration: 5 };
         const vol = volSetting !== undefined ? volSetting : 0.9;
@@ -1748,6 +1749,18 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           ? [...state.favorites, trackId]
           : state.favorites.filter((id) => id !== trackId),
       }));
+    },
+
+    clearFavorites: async () => {
+      try {
+        const db = await getDB();
+        await db.clear('favorites');
+      } catch {}
+      try {
+        await dexieDB.favorites.clear();
+      } catch {}
+      set({ favorites: [] });
+      get().addToast('تم تفريغ قائمة المفضلة بنجاح', undefined, 'info');
     },
 
     setBassBoost: (level: number) => {
