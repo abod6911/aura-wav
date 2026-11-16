@@ -95,7 +95,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 35px -8px ${accentColor}40, inset 0 1px 0 rgba(255,255,255,0.15)`,
         touchAction: 'manipulation',
       }}
-      className="mx-auto mb-1 h-[50px] sm:h-[54px] rounded-xl px-2.5 flex items-center gap-2 bg-[#101018]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl relative overflow-hidden select-none w-full shrink-0 cursor-pointer specular-highlight pointer-events-auto"
+      className="mx-auto mb-0.5 h-[50px] sm:h-[54px] rounded-xl px-2.5 flex items-center gap-2 bg-[#101018]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl relative overflow-hidden select-none w-full shrink-0 cursor-pointer specular-highlight pointer-events-auto"
       dir={dir}
       onClick={handleExpand}
     >

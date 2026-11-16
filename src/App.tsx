@@ -509,7 +509,7 @@ export function App() {
         onScroll={handleMainScroll}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(110px+env(safe-area-inset-bottom,16px))] overscroll-contain relative z-10'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(138px+env(safe-area-inset-bottom,16px))] overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -576,7 +576,7 @@ export function App() {
       {isMobile && (
         <footer className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex flex-col items-center select-none">
           {/* Floating MiniPlayer right above Tab Bar */}
-          <div className="w-full max-w-lg px-2 pb-1.5 pointer-events-auto">
+          <div className="w-full max-w-lg px-2 pb-1 pointer-events-auto">
             <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
           </div>
           {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}

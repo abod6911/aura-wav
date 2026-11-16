@@ -93,6 +93,19 @@ html, body {
   position: relative;
 }
 
+/* iOS Safari Full-Bleed Viewport Normalization (Eliminates bottom voids on iPhone 16 Pro) */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
+  }
+  #root {
+    height: 100%;
+    min-height: 100%;
+    max-height: -webkit-fill-available;
+  }
+}
+
 img, a, button {
   -webkit-user-drag: none;
   user-select: none;

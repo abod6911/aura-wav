@@ -49,7 +49,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       aria-label="Mobile Navigation"
       style={{
         backgroundColor: '#090910',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)',
+        paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) - 14px), 6px)',
       }}
       className="w-full border-t border-white/[0.08] px-1 pt-1 flex items-center justify-around select-none pointer-events-auto shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.8)]"
       dir={dir}
@@ -70,7 +70,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-0.5 py-1 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[44px] min-h-[44px] touch-manipulation select-none active:scale-95 pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-0.5 py-0.5 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[42px] min-h-[42px] touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
@@ -87,22 +87,22 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
                 }}
               />
             )}
-            <div
-              className={`transition-transform duration-150 relative z-10 ${
-                isActive ? 'scale-105' : 'scale-100'
-              }`}
+            <motion.div
+              animate={isActive ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+              className="relative z-10"
             >
               <Icon
-                className={`w-[20px] h-[20px] transition-colors duration-150 ${
+                className={`w-[19px] h-[19px] transition-colors duration-150 ${
                   isActive
                     ? 'text-[#FA243C]'
                     : 'text-white/60 hover:text-white'
                 }`}
-                strokeWidth={isActive ? 2.3 : 1.8}
+                strokeWidth={isActive ? 2.4 : 1.8}
               />
-            </div>
+            </motion.div>
             <span
-              className={`text-[10px] tracking-tight transition-colors duration-150 relative z-10 leading-tight ${
+              className={`text-[9.5px] tracking-tight transition-colors duration-150 relative z-10 leading-none ${
                 isActive ? 'text-white font-bold' : 'text-white/60 font-medium'
               }`}
             >
