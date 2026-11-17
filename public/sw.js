@@ -1,9 +1,7 @@
-const CACHE_NAME = 'aura-wav-v12';
+const CACHE_NAME = 'aura-wav-v17';
 const AUDIO_CACHE_NAME = 'aura-wav-audio-v1';
 const IMAGE_CACHE_NAME = 'aura-wav-images-v1';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/logo.svg',
   '/favicon.svg',

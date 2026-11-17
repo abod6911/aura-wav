@@ -190,74 +190,66 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         })}
       </div>
 
-      {/* ── 2. Featured Spotlight Hero Card (Architectural Chamfer & Obsidian Glass) ── */}
+      {/* ── 2. Featured Spotlight Hero Card (Apple-Grade Proportions & Pure Luxury) ── */}
       {spotlightTrack && (
         <div
           onClick={() => handleTrackClick(spotlightTrack)}
           style={{
-            boxShadow: `0 16px 40px rgba(0,0,0,0.85), 0 0 45px -12px ${spotlightTrack.dominantColor || '#FA243C'}35, inset 0 1px 0 rgba(255,255,255,0.14)`,
+            boxShadow: `0 20px 48px rgba(0,0,0,0.85), 0 0 45px -12px ${spotlightTrack.dominantColor || '#FA243C'}30, inset 0 1px 0 rgba(255,255,255,0.12)`,
           }}
-          className="h-[122px] sm:h-[148px] w-full rounded-2xl sm:rounded-3xl p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#161622] via-[#0f0f18] to-[#060608] border border-white/15 select-none cursor-pointer active:scale-[0.98] transition-all duration-200"
+          className="h-[164px] sm:h-[184px] w-full rounded-[26px] p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#161622] via-[#0d0d16] to-[#060609] border border-white/12 select-none cursor-pointer active:scale-[0.985] transition-all duration-200"
         >
-          {/* Dynamic Cover Ambient Mesh Underlay */}
+          {/* Subtle Dynamic Ambient Color Tint (No Blurry Raster Overlay) */}
           <div
-            className="absolute inset-0 -z-10 bg-cover bg-center opacity-30 transform-gpu blur-sm"
+            className="absolute inset-0 -z-10 bg-cover bg-center opacity-20 pointer-events-none"
             style={{
               backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})`,
             }}
           />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060608] via-[#060608]/80 to-transparent" />
-          <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#060609] via-[#060609]/90 to-transparent pointer-events-none" />
 
-          {/* Top Badges */}
+          {/* Top Info Header */}
           <div className="flex items-center justify-between z-10 leading-none">
-            <div className="flex items-center gap-1.5" dir="ltr">
-              <span className="apple-badge bg-white/10 border-white/15 text-white/90 text-[8.5px] py-0.5 px-2 font-medium">
-                Lossless ALAC
-              </span>
-            </div>
+            <span className="apple-badge bg-white/10 border-white/15 text-white/90 text-[9px] py-1 px-2.5 font-semibold">
+              ALAC Lossless
+            </span>
             {currentTrack?.id === spotlightTrack.id && isPlaying && (
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/15">
-                <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-2.5" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/15">
+                <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-3" />
                 <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2" />
-                <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-3" />
-                <span className="text-[9px] font-mono font-bold text-white/70 ms-1">LIVE</span>
+                <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-3.5" />
+                <span className="text-[9.5px] font-mono font-bold text-white/80 ms-1">LIVE</span>
               </div>
             )}
           </div>
 
-          {/* Bottom Row */}
-          <div className="flex items-center justify-between gap-2.5 sm:gap-3 z-10">
-            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
-              <div className="relative group shrink-0">
+          {/* Bottom Row: Album Art + Titles + Large Tactile Play Button */}
+          <div className="flex items-center justify-between gap-3 sm:gap-4 z-10">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="relative shrink-0">
                 <img
                   src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
                   alt={spotlightTrack.title}
                   loading="eager"
                   decoding="async"
-                  className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl object-cover shrink-0 shadow-lg border border-white/20 bg-black/50"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover shrink-0 shadow-xl border border-white/20 bg-black/50"
                 />
               </div>
               <div className="min-w-0 flex-1">
                 <h3
                   dir="ltr"
                   style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                  className="text-[13.5px] sm:text-[15px] font-bold text-white truncate tracking-tight leading-snug"
+                  className="text-[15px] sm:text-[17px] font-bold text-white truncate tracking-tight leading-snug"
                 >
                   {spotlightTrack.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p
-                    dir="ltr"
-                    style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                    className="text-[11px] sm:text-[12px] text-white/65 font-medium truncate"
-                  >
-                    {spotlightTrack.artist}
-                  </p>
-                  <span className="text-[9.5px] text-zinc-400 font-mono hidden xs:inline shrink-0">
-                    • {spotlightTrack.bpm || 124} BPM
-                  </span>
-                </div>
+                <p
+                  dir="ltr"
+                  style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                  className="text-[12px] sm:text-[13px] text-white/65 font-medium truncate mt-0.5"
+                >
+                  {spotlightTrack.artist}
+                </p>
               </div>
             </div>
 
@@ -266,28 +258,26 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 e.stopPropagation();
                 handleTrackClick(spotlightTrack);
               }}
-              className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] min-h-[40px] rounded-full bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-transform shrink-0 hover:scale-105"
+              className="w-11 h-11 sm:w-12 sm:h-12 min-w-[44px] min-h-[44px] rounded-full bg-white text-black flex items-center justify-center shadow-2xl active:scale-90 transition-transform shrink-0 hover:scale-105"
               aria-label={currentTrack?.id === spotlightTrack.id && isPlaying ? t.pause : t.play}
             >
               {currentTrack?.id === spotlightTrack.id && isPlaying ? (
-                <Pause className="w-4.5 h-4.5 fill-black text-black" />
+                <Pause className="w-5 h-5 fill-black text-black" />
               ) : (
-                <Play className="w-4.5 h-4.5 fill-black text-black translate-x-0.5" />
+                <Play className="w-5 h-5 fill-black text-black translate-x-0.5" />
               )}
             </button>
           </div>
         </div>
       )}
 
-      {/* ── 3. Section: Made For You (Vinyl Depth Cards Snap Carousel) ── */}
+      {/* ── 3. Section: Made For You (Clean, Apple-Grade Vinyl Snap Carousel) ── */}
       {madeForYou.length > 0 && (
         <section className="flex flex-col">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-[18px] font-bold tracking-tight text-white flex items-center gap-2">
-              <span>{t.madeForYou}</span>
-              <span className="text-[10px] font-mono text-[#FA243C] font-semibold bg-[#FA243C]/10 px-2 py-0.5 rounded-full border border-[#FA243C]/20">VINYL</span>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[18px] font-bold tracking-tight text-white">
+              {t.madeForYou}
             </h2>
-            <span className="text-[11px] text-white/40">{t.swipeToExplore}</span>
           </div>
 
           <div
@@ -296,7 +286,6 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           >
             {madeForYou.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
-              const trackBpm = trk.bpm || (118 + (Math.abs(trk.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 25));
               return (
                 <div
                   key={trk.id}
@@ -334,16 +323,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   >
                     {trk.title}
                   </h4>
-                  <div className="flex items-center justify-between text-[10.5px] text-white/50 truncate font-medium">
-                    <span
-                      dir="ltr"
-                      style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                      className="truncate max-w-[82px]"
-                    >
-                      {trk.artist}
-                    </span>
-                    <span className="text-[9px] font-mono text-zinc-400 tabular-nums shrink-0">{trackBpm} BPM</span>
-                  </div>
+                  <span
+                    dir="ltr"
+                    style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                    className="text-[11px] text-white/50 truncate block font-medium"
+                  >
+                    {trk.artist}
+                  </span>
                 </div>
               );
             })}
@@ -351,13 +337,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </section>
       )}
 
-      {/* ── 4. Section: Trending Hits (Vinyl Depth Cards Snap Carousel) ── */}
+      {/* ── 4. Section: Trending Hits (Clean, Apple-Grade Snap Carousel) ── */}
       {trendingHits.length > 0 && (
         <section className="flex flex-col">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-[18px] font-bold tracking-tight text-white flex items-center gap-2">
-              <span>{isRTL ? 'الأكثر استماعاً' : 'Trending Hits'}</span>
-              <span className="text-[10px] font-mono text-amber-400 font-semibold bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">HOT</span>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[18px] font-bold tracking-tight text-white">
+              {isRTL ? 'الأكثر استماعاً' : 'Trending Hits'}
             </h2>
           </div>
 
@@ -367,7 +352,6 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           >
             {trendingHits.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
-              const trackBpm = trk.bpm || (120 + (Math.abs(trk.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 20));
               return (
                 <div
                   key={trk.id}
@@ -405,16 +389,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   >
                     {trk.title}
                   </h4>
-                  <div className="flex items-center justify-between text-[10.5px] text-white/50 truncate font-medium">
-                    <span
-                      dir="ltr"
-                      style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                      className="truncate max-w-[82px]"
-                    >
-                      {trk.artist}
-                    </span>
-                    <span className="text-[9px] font-mono text-zinc-400 tabular-nums shrink-0">{trackBpm} BPM</span>
-                  </div>
+                  <span
+                    dir="ltr"
+                    style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                    className="text-[11px] text-white/50 truncate block font-medium"
+                  >
+                    {trk.artist}
+                  </span>
                 </div>
               );
             })}

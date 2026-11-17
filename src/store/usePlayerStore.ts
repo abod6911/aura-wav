@@ -763,13 +763,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         let favIds = (favs || []).map((f: any) => f.id);
         // Purge legacy auto-polluted favorites so user only has songs they explicitly liked
         try {
-          const isLegacyPolluted =
-            favIds.length === 261 &&
-            favIds.every((id: string) => typeof id === 'string' && id.startsWith('track_catalog_'));
-          if (isLegacyPolluted && typeof localStorage !== 'undefined' && localStorage.getItem('aura_favorites_cleaned_v2') !== 'true') {
+          if (typeof localStorage !== 'undefined' && localStorage.getItem('aura_favorites_explicit_clean_v5') !== 'true') {
             favIds = [];
             await db.clear('favorites');
-            localStorage.setItem('aura_favorites_cleaned_v2', 'true');
+            await dexieDB.favorites.clear();
+            localStorage.setItem('aura_favorites_explicit_clean_v5', 'true');
           }
         } catch {}
 

@@ -71,140 +71,94 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
       className="select-none w-full min-w-0 bg-[#060609] border-b border-white/[0.08] px-3.5 sm:px-4 pb-2.5 shrink-0 z-30 transition-all pointer-events-auto"
       dir={dir}
     >
-      {/* Mobile Header Bar */}
-      <div className="flex flex-col sm:hidden w-full gap-2">
-        <div className="flex items-center justify-between w-full min-w-0">
-          {/* Brand & Dynamic Greeting */}
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="w-8.5 h-8.5 min-w-[34px] min-h-[34px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer aura-tap-btn active:scale-95 transition-transform"
-              title={currentUser ? currentUser.name : t.settings}
-              aria-label={t.settings}
-            >
-              <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-                {currentUser?.avatarUrl ? (
-                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-                ) : (
-                  currentUser?.name?.[0]?.toUpperCase() || 'A'
-                )}
-              </div>
-            </button>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 truncate">
-                <span className="font-extrabold text-white text-[15px] tracking-tight leading-none flex items-center gap-1.5">
-                  <bdi dir="ltr" className="inline-flex items-center">
-                    AURA<span className="text-[#FA243C]">.WAV</span>
-                  </bdi>
-                </span>
-                <span className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400 text-[8px] px-1.5 py-0.5 shrink-0 font-mono font-bold leading-none">
-                  ALAC
-                </span>
-              </div>
-              <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
-                {currentUser ? currentUser.name : (activeTab === 'home' ? (isRTL ? 'استماع الآن' : 'Listen Now') : greeting)}
-              </span>
+      {/* Mobile Header Bar - Sleek, Minimalist, Apple-Grade */}
+      <div className="flex items-center justify-between sm:hidden w-full min-w-0">
+        {/* Brand & User Profile */}
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="w-8.5 h-8.5 min-w-[34px] min-h-[34px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer aura-tap-btn active:scale-95 transition-transform"
+            title={currentUser ? currentUser.name : t.settings}
+            aria-label={t.settings}
+          >
+            <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+              {currentUser?.avatarUrl ? (
+                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+              ) : (
+                currentUser?.name?.[0]?.toUpperCase() || 'A'
+              )}
             </div>
-          </div>
-
-          {/* Mobile Right Actions */}
-          <div className="flex items-center gap-1.5 shrink-0 ps-1">
-            {isQuotaWarning && (
-              <button
-                onClick={() => setSettingsOpen(true)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[9.5px] font-bold animate-pulse cursor-pointer aura-tap-btn shrink-0"
-                title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
-              >
-                <AlertTriangle className="w-3 h-3 text-red-400" />
-                <span>{usagePercentage}%</span>
-              </button>
-            )}
-
-            {/* Quick Import Button */}
-            <button
-              onClick={onOpenImport}
-              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
-              title={t.importFolder}
-              aria-label={t.importFolder}
-            >
-              <FolderPlus className="w-4 h-4 text-[#FA243C]" />
-            </button>
-
-            {/* Sync Party (if active or quick tap) */}
-            {syncRoomState.roomId && (
-              <button
-                onClick={() => setSyncPartyOpen(true)}
-                className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 shadow-md animate-pulse"
-                title={`${t.syncParty}: ${syncRoomState.roomId}`}
-                aria-label={t.syncParty}
-              >
-                <Radio className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Sleep Timer (if active) */}
-            {sleepTimerRemaining !== null && (
-              <button
-                onClick={() => setSleepTimerOpen(true)}
-                className="h-8 px-2 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-xs font-mono font-bold flex items-center gap-1 aura-tap-btn cursor-pointer shrink-0"
-                title={t.sleepTimer}
-                aria-label={t.sleepTimer}
-              >
-                <Moon className="w-3 h-3" />
-                <span className="text-[9px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
-              </button>
-            )}
-
-            {/* Settings Quick Access */}
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
-              title={t.settings}
-              aria-label={t.settings}
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+          </button>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="font-extrabold text-white text-[15px] tracking-tight leading-none flex items-center gap-1.5">
+              <bdi dir="ltr" className="inline-flex items-center">
+                AURA<span className="text-[#FA243C]">.WAV</span>
+              </bdi>
+            </span>
+            <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
+              {currentUser ? currentUser.name : greeting}
+            </span>
           </div>
         </div>
 
-        {/* Mobile Filter Pills - only on Home feed */}
-        {activeTab === 'home' && (
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+        {/* Mobile Right Actions */}
+        <div className="flex items-center gap-1.5 shrink-0 ps-1">
+          {isQuotaWarning && (
             <button
-              onClick={() => setActiveFilterPill('all')}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold apple-spring cursor-pointer shrink-0 ${
-                activeFilterPill === 'all'
-                  ? 'bg-white text-black shadow-md'
-                  : 'apple-glass-pill text-zinc-300'
-              }`}
+              onClick={() => setSettingsOpen(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[9.5px] font-bold animate-pulse cursor-pointer aura-tap-btn shrink-0"
+              title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
             >
-              {t.all}
+              <AlertTriangle className="w-3 h-3 text-red-400" />
+              <span>{usagePercentage}%</span>
             </button>
+          )}
+
+          {/* Quick Import Button */}
+          <button
+            onClick={onOpenImport}
+            className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
+            title={t.importFolder}
+            aria-label={t.importFolder}
+          >
+            <FolderPlus className="w-4 h-4 text-[#FA243C]" />
+          </button>
+
+          {/* Sync Party (if active) */}
+          {syncRoomState.roomId && (
             <button
-              onClick={() => setActiveFilterPill('music')}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold apple-spring cursor-pointer shrink-0 ${
-                activeFilterPill === 'music'
-                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
-                  : 'apple-glass-pill text-zinc-300'
-              }`}
+              onClick={() => setSyncPartyOpen(true)}
+              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 shadow-md animate-pulse"
+              title={`${t.syncParty}: ${syncRoomState.roomId}`}
+              aria-label={t.syncParty}
             >
-              {t.music}
+              <Radio className="w-3.5 h-3.5" />
             </button>
+          )}
+
+          {/* Sleep Timer (if active) */}
+          {sleepTimerRemaining !== null && (
             <button
-              onClick={() => {
-                setActiveFilterPill('podcasts');
-                addToast(isRTL ? 'قسم البودكاست قيد التطوير' : 'Podcasts section coming soon', undefined, 'info');
-              }}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold apple-spring cursor-pointer shrink-0 ${
-                activeFilterPill === 'podcasts'
-                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
-                  : 'apple-glass-pill text-zinc-300'
-              }`}
+              onClick={() => setSleepTimerOpen(true)}
+              className="h-8 px-2 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-xs font-mono font-bold flex items-center gap-1 aura-tap-btn cursor-pointer shrink-0"
+              title={t.sleepTimer}
+              aria-label={t.sleepTimer}
             >
-              {t.podcasts}
+              <Moon className="w-3 h-3" />
+              <span className="text-[9px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
             </button>
-          </div>
-        )}
+          )}
+
+          {/* Settings Quick Access */}
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white aura-tap-btn cursor-pointer shrink-0 transition-colors"
+            title={t.settings}
+            aria-label={t.settings}
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Desktop Header Bar */}

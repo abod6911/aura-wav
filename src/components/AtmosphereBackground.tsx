@@ -248,17 +248,17 @@ export const AtmosphereBackground: React.FC = () => {
     };
   }, [rgbColors, isPlaying, reactiveVisualsEnabled, isMobile]);
 
-  // On Mobile: pure dynamic CSS gradient using CSS variables (0 requestAnimationFrame, 0 WebGL, solid 120 FPS)
+  // On Mobile: pure deep obsidian with ultra-subtle ambient glow (Zero SVG turbulence haze, 100% crisp)
   if (isMobile) {
     return (
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060608] obsidian-grain">
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none bg-[#060609]">
         <div
-          className="absolute inset-0 transition-all duration-1000 ease-out"
+          className="absolute inset-0 transition-opacity duration-1000 ease-out"
           style={{
-            backgroundImage: `radial-gradient(circle 75vw at 50% 0%, rgba(var(--ambient-primary-rgb, 250, 36, 60), 0.12) 0%, transparent 70%), radial-gradient(circle 60vw at 0% 100%, rgba(var(--ambient-accent-rgb, 125, 18, 255), 0.08) 0%, transparent 65%)`,
+            backgroundImage: `radial-gradient(circle 80vw at 50% 10%, rgba(var(--ambient-primary-rgb, 250, 36, 60), 0.08) 0%, transparent 65%), radial-gradient(circle 70vw at 0% 90%, rgba(var(--ambient-accent-rgb, 125, 18, 255), 0.05) 0%, transparent 60%)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
       </div>
     );
   }
