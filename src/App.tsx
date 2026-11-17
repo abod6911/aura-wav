@@ -475,8 +475,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden'
-          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none'
+          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -507,18 +507,9 @@ export function App() {
       <main
         ref={mainScrollRef}
         onScroll={handleMainScroll}
-        style={
-          isMobile
-            ? {
-                paddingBottom: currentTrack
-                  ? 'calc(138px + env(safe-area-inset-bottom, 0px) + 24px)'
-                  : 'calc(var(--bottom-nav-height, 76px) + env(safe-area-inset-bottom, 0px) + 24px)',
-              }
-            : undefined
-        }
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 pb-4 overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
@@ -581,15 +572,15 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls: Full-bleed Edge-to-Edge iOS Tab Bar & Floating MiniPlayer */}
+      {/* 7. Mobile Bottom Controls: Edge-to-Edge grounded flex footer */}
       {isMobile && (
-        <footer className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex flex-col items-center select-none">
-          {/* Floating MiniPlayer right above Tab Bar */}
-          <div className="w-full max-w-lg px-2 pb-1 pointer-events-auto">
-            <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
-          </div>
-          {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
-          <div className="w-full pointer-events-auto">
+        <footer className="shrink-0 w-full z-30 bg-[#090910] border-t border-white/[0.08] flex flex-col items-center select-none">
+          {currentTrack && (
+            <div className="w-full max-w-lg px-2 pt-1.5 pb-0.5">
+              <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
+            </div>
+          )}
+          <div className="w-full">
             <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
           </div>
         </footer>
