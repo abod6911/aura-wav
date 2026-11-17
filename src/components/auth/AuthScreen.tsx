@@ -136,7 +136,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 360, damping: 28 }}
-          className="w-13 h-13 rounded-2xl bg-[#161622] border border-white/10 p-0.5 shadow-xl flex items-center justify-center mb-2"
+          className="w-12 h-12 rounded-2xl bg-[#161622] border border-white/10 p-0.5 shadow-xl flex items-center justify-center mb-2"
         >
           <div className="w-full h-full bg-[#0c0c14] rounded-[14px] flex items-center justify-center">
             <Disc3 className="w-6 h-6 text-[#FA243C]" />

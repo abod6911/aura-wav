@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
@@ -69,17 +70,17 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
     onClose();
   };
 
-  return (
+  const content = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center select-none">
+        <div className="fixed inset-0 z-[100] flex items-end justify-center select-none" dir={dir}>
           {/* Frosted Glass Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/75 backdrop-blur-xl"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[101]"
           />
 
           {/* iOS Native Bottom Action Sheet */}
@@ -87,17 +88,21 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35, mass: 0.8 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
             drag="y"
             dragConstraints={{ top: 0 }}
-            dragElastic={0.35}
+            dragElastic={0.2}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 55 || info.velocity.y > 200) {
+              if (info.offset.y > 60 || info.velocity.y > 200) {
                 triggerHaptic('light');
                 onClose();
               }
             }}
-            className="relative z-10 w-full max-w-lg bg-[#0d0d15]/98 border-t border-white/[0.14] rounded-t-[32px] shadow-[0_-25px_80px_rgba(0,0,0,0.95)] p-4 sm:p-5 pb-[max(1.75rem,env(safe-area-inset-bottom,1.75rem))] space-y-3.5 max-h-[88dvh] overflow-y-auto no-scrollbar"
+            style={{
+              backgroundColor: '#101018',
+              paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 24px)',
+            }}
+            className="relative z-[102] w-full max-w-lg bg-[#101018] border-t border-white/[0.14] rounded-t-[32px] shadow-[0_-25px_80px_rgba(0,0,0,0.95)] p-4 sm:p-5 space-y-3.5 max-h-[85dvh] overflow-y-auto no-scrollbar pointer-events-auto"
             dir={dir}
           >
             {/* Top iOS Grab Handle */}
@@ -108,11 +113,12 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
 
             {/* Track Info Card Header */}
             <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.05] border border-white/[0.08]">
-              <div className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-md flex-shrink-0">
+              <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-md flex-shrink-0">
                 <img
                   src={getOptimizedCoverUrl(track.coverUrl || track.artworkUrl, 'thumb')}
                   alt={track.title}
                   className="w-full h-full object-cover"
+                  loading="eager"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -322,11 +328,13 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
               onClick={onClose}
               className="w-full py-3.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm text-center transition-all cursor-pointer border border-white/10"
             >
-              إلغاء
+              {isRTL ? 'إلغاء' : 'Cancel'}
             </button>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
+
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 };

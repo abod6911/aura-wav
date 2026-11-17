@@ -278,7 +278,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('medium');
               togglePlayPause();
             }}
-            className="w-14 h-14 sm:w-15 sm:h-15 min-w-[56px] min-h-[56px] rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer select-none flex-shrink-0"
+            className="w-14 h-14 sm:w-16 sm:h-16 min-w-[56px] min-h-[56px] rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer select-none flex-shrink-0"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
