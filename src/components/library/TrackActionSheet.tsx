@@ -116,11 +116,19 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-black text-white truncate tracking-tight">
-                  <bdi dir="auto">{track.title}</bdi>
+                <h3
+                  dir="ltr"
+                  style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                  className="text-sm font-black text-white truncate tracking-tight"
+                >
+                  {track.title}
                 </h3>
-                <p className="text-xs text-white/60 truncate mt-0.5">
-                  <bdi dir="auto">{track.artist}</bdi>
+                <p
+                  dir="ltr"
+                  style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                  className="text-xs text-white/60 truncate mt-0.5"
+                >
+                  {track.artist}
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-[10px] text-white/40 font-mono">
                   <span>{formatTime(track.duration || 180)}</span>

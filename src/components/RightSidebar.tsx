@@ -39,7 +39,7 @@ export const RightSidebar: React.FC = () => {
   return (
     <aside
       dir={dir}
-      className="hidden xl:flex w-84 flex-col apple-glass-card rounded-[28px] my-3 ms-3 p-4.5 z-30 select-none h-[calc(100vh-6.5rem)] overflow-hidden border border-white/[0.1] shadow-[0_24px_64px_rgba(0,0,0,0.85)] backdrop-blur-3xl"
+      className="hidden xl:flex w-84 flex-col apple-glass-card rounded-[28px] my-3 ms-3 p-4.5 z-30 select-none h-[calc(100dvh-6.5rem)] overflow-hidden border border-white/[0.1] shadow-[0_24px_64px_rgba(0,0,0,0.85)] backdrop-blur-3xl"
     >
       {/* Header with Liquid Tabs */}
       <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] flex-shrink-0">

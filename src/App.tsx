@@ -475,8 +475,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden'
-          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden'
+          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -507,9 +507,18 @@ export function App() {
       <main
         ref={mainScrollRef}
         onScroll={handleMainScroll}
+        style={
+          isMobile
+            ? {
+                paddingBottom: currentTrack
+                  ? 'calc(138px + env(safe-area-inset-bottom, 0px) + 24px)'
+                  : 'calc(var(--bottom-nav-height, 76px) + env(safe-area-inset-bottom, 0px) + 24px)',
+              }
+            : undefined
+        }
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-4 pt-1 pb-[calc(138px+env(safe-area-inset-bottom,16px))] overscroll-contain relative z-10'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >

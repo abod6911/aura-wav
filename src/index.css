@@ -22,6 +22,7 @@
   --mesh-color-3: rgba(125, 18, 255, 0.06);
   --spring-entrance: cubic-bezier(0.22, 1, 0.36, 1);
   --spring-micro: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --bottom-nav-height: 76px;
 }
 
 /* Tactile Ultra-Subtle Procedural Grain/Noise (Hardware-accelerated zero-cost SVG texture) */

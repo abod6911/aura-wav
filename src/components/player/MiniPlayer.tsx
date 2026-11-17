@@ -125,8 +125,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* 2. Track Info with BiDi support & strictly truncated */}
       <div className="flex-1 min-w-0 pe-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <h4 className="text-[12px] sm:text-[13px] font-bold text-white truncate tracking-tight leading-tight">
-            <bdi dir="auto">{currentTrack.title}</bdi>
+          <h4
+            dir="ltr"
+            style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+            className="text-[12px] sm:text-[13px] font-bold text-white truncate tracking-tight leading-tight flex-1"
+          >
+            {currentTrack.title}
           </h4>
           {isDownloaded && (
             <span className="shrink-0 text-emerald-400" title={isRTL ? 'جاهزة بدون إنترنت' : 'Offline ready'}>
@@ -135,8 +139,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
           )}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-          <p className="text-[10px] sm:text-[11px] text-white/55 truncate font-medium">
-            <bdi dir="auto">{currentTrack.artist}</bdi>
+          <p
+            dir="ltr"
+            style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+            className="text-[10px] sm:text-[11px] text-white/55 truncate font-medium flex-1"
+          >
+            {currentTrack.artist}
           </p>
         </div>
       </div>

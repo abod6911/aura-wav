@@ -147,12 +147,20 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h4 className={`text-[13px] sm:text-[14px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
-              <bdi dir="auto">{track.title}</bdi>
+            <h4
+              dir="ltr"
+              style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+              className={`text-[13px] sm:text-[14px] font-semibold truncate leading-tight tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}
+            >
+              {track.title}
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-              <p className="text-[11px] text-white/55 truncate font-medium">
-                <bdi dir="auto">{track.artist}</bdi>
+              <p
+                dir="ltr"
+                style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
+                className="text-[11px] text-white/55 truncate font-medium"
+              >
+                {track.artist}
               </p>
               <span className="inline-flex items-center gap-1 px-1 py-0.2 rounded bg-white/[0.04] border border-white/[0.08] text-[8.5px] font-mono text-white/45 tabular-nums shrink-0">
                 <span className="text-[#FF375F] font-semibold">{bpm}</span>
