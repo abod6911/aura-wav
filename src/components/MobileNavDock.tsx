@@ -49,9 +49,10 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       aria-label="Mobile Navigation"
       style={{
         backgroundColor: '#090910',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+        paddingTop: '8px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 24px)',
       }}
-      className="w-full px-1 pt-1.5 flex items-center justify-around select-none pointer-events-auto shrink-0"
+      className="w-full px-1 flex items-center justify-around select-none pointer-events-auto shrink-0"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -70,7 +71,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-0.5 py-0.5 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[42px] min-h-[42px] touch-manipulation select-none active:scale-95 pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[48px] min-h-[48px] touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
@@ -93,7 +94,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               className="relative z-10"
             >
               <Icon
-                className={`w-[19px] h-[19px] transition-colors duration-150 ${
+                className={`w-[22px] h-[22px] transition-colors duration-150 ${
                   isActive
                     ? 'text-[#FA243C]'
                     : 'text-white/60 hover:text-white'
@@ -102,7 +103,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               />
             </motion.div>
             <span
-              className={`text-[9.5px] tracking-tight transition-colors duration-150 relative z-10 leading-none ${
+              className={`text-[10px] sm:text-[10.5px] tracking-tight transition-colors duration-150 relative z-10 leading-none ${
                 isActive ? 'text-white font-bold' : 'text-white/60 font-medium'
               }`}
             >
