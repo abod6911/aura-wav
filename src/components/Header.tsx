@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
               </bdi>
             </span>
             <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
-              {currentUser ? currentUser.name : greeting}
+              {currentUser ? currentUser.name : (isRTL ? 'ضيف' : 'Guest')}
             </span>
           </div>
         </div>

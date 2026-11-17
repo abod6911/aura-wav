@@ -420,8 +420,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white">{isRTL ? 'مكتبتك فارغة حالياً' : 'Your Library is Empty'}</h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">
             {isRTL
-              ? 'يمكنك استيراد أغانيك من جهازك للاستماع دون اتصال، أو استكشاف الأغاني الشائعة والبحث عنها وإضافتها لحسابك.'
-              : 'Import songs from your device for offline listening, or explore trending catalog tracks and add them to your account.'}
+              ? 'أضف أغانٍ إلى مكتبتك للاستماع دون اتصال أو تصفح الكتالوج.'
+              : 'Add songs to your library for offline listening or explore the catalog.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
             <button

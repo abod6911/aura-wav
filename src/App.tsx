@@ -475,8 +475,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none'
-          : 'relative w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
+          ? 'fixed inset-0 w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none'
+          : 'fixed inset-0 w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}

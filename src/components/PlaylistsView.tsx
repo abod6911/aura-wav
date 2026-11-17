@@ -363,8 +363,8 @@ export const PlaylistsView: React.FC = () => {
           <h4 className="text-sm sm:text-base font-bold text-white">{isRTL ? 'لا توجد قوائم تشغيل بعد' : 'No playlists yet'}</h4>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
             {isRTL
-              ? 'اضغط على "قائمة جديدة" لإنشاء قائمة مخصصة، أو استكشف الأغاني في البحث وأضفها لقوائمك.'
-              : 'Tap "New Playlist" to create a custom list, or explore songs in search and add them.'}
+              ? 'أنشئ قائمتك الأولى أو أضف أغانٍ من البحث.'
+              : 'Create your first playlist or add songs from search.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
             <button

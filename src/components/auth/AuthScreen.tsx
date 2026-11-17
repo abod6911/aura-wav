@@ -384,7 +384,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
       </div>
 
       {/* Bottom Guest Mode */}
-      <div className="pb-2 flex flex-col items-center gap-2 text-center">
+      <div className="pb-3 flex flex-col items-center text-center">
         <button
           type="button"
           onClick={handleGuest}
@@ -392,10 +392,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
         >
           {isRTL ? 'المتابعة كضيف' : 'Continue as Guest'}
         </button>
-
-        <p className="text-[10px] text-zinc-500 font-mono">
-          {isRTL ? 'حفظ الحساب والجلسة تلقائياً على هذا الجهاز' : 'Account & session saved on this device'}
-        </p>
       </div>
     </div>
   );

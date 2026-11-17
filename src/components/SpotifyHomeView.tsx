@@ -93,16 +93,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
   return (
     <div className="w-full flex flex-col gap-5 pt-1 pb-6 overflow-x-hidden select-none" dir={dir}>
-      {/* ── Top Header Greeting ── */}
+      {/* ── Top Header Title ── */}
       <div className="flex items-center justify-between pt-1">
-        <div>
-          <span className="text-[11px] font-bold text-[#FA243C] uppercase tracking-wider block">
-            {t.listenNow}
-          </span>
-          <h1 className="text-2xl font-black text-white tracking-tight mt-0.5">
-            {greeting}
-          </h1>
-        </div>
+        <h1 className="text-2xl font-black text-white tracking-tight">
+          {t.listenNow}
+        </h1>
       </div>
 
       {/* ── 1. Quick Access Grid (Strictly 6 Cards) ── */}
@@ -144,7 +139,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               {isRTL ? 'معادل الصوت' : 'Equalizer'}
             </span>
             <span className="text-[9.5px] sm:text-[10px] text-zinc-400 block font-mono mt-0.5">
-              {isRTL ? 'مخصص' : 'Custom'}
+              DSP
             </span>
           </div>
         </div>
@@ -439,8 +434,8 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         >
           <span>
             {tracks.length > 0
-              ? (isRTL ? `عرض كل مكتبتك (${tracks.length} أغنية)` : `View All Library (${tracks.length} songs)`)
-              : (isRTL ? `استكشف كامل كتالوج الأغاني (${catalogTracks.length} أغنية)` : `Explore Full Catalog (${catalogTracks.length} songs)`)}
+              ? (isRTL ? `المكتبة (${tracks.length})` : `Library (${tracks.length})`)
+              : (isRTL ? `عرض جميع الأغاني (${catalogTracks.length})` : `View All Songs (${catalogTracks.length})`)}
           </span>
           <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
         </button>
