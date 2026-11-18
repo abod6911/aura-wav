@@ -1,5 +1,6 @@
 import { Track } from '../types';
 import catalogData1750 from './tracksCatalog1750.json';
+import cloudCatalogData from './cloudCatalog.json';
 
 // Auto-generated catalog for 100% offline cover art, audio streaming, and metadata resolution
 export interface CatalogItem {
@@ -147,9 +148,14 @@ export function resolveCatalogTrackItem(
 }
 
 /**
- * Returns the complete initial 1,750 tracks library ready for instant playback.
+ * Returns the complete initial tracks library ready for instant playback.
+ * Prefers Cloudflare R2 cloud catalog if uploaded, otherwise falls back to local catalog.
  */
 export function getDefaultLibraryTracks(): Track[] {
+  if (Array.isArray(cloudCatalogData) && cloudCatalogData.length > 0) {
+    return cloudCatalogData as unknown as Track[];
+  }
+
   return TRACKS_CATALOG.map((item) => {
     const parts = item.duration.split(':').map(Number);
     const durSecs = item.durationSecs || (parts.length === 2 ? parts[0] * 60 + parts[1] : 210);
