@@ -5,6 +5,7 @@ import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
 import { Play, ListPlus, Check, MoreHorizontal, Cloud } from 'lucide-react';
+import { formatTime } from '../player/TimelineSlider';
 
 interface MobileTrackRowProps {
   track: Track;
@@ -35,10 +36,6 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
 
   const isCur = currentTrack?.id === track.id;
   const playList = trackList || contextList;
-
-  // Harmonic Key & BPM calculation for acoustic instrument HUD
-  const bpm = track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30));
-  const key = track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`;
 
   const x = useMotionValue(0);
   // Transform drag distance to reveal action background and scale icon
@@ -162,11 +159,6 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
               >
                 {track.artist}
               </p>
-              <span className="inline-flex items-center gap-1 px-1 py-0.2 rounded bg-white/[0.04] border border-white/[0.08] text-[8.5px] font-mono text-white/45 tabular-nums shrink-0">
-                <span className="text-[#FF375F] font-semibold">{bpm}</span>
-                <span className="text-white/20">•</span>
-                <span className="text-amber-400/90 font-semibold">{key}</span>
-              </span>
               {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
                 <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-[8px] font-bold text-sky-400 shrink-0" title="سحابية">
                   <Cloud className="w-2.5 h-2.5 text-sky-400" />
@@ -176,8 +168,14 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right Action Buttons & Duration */}
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {track.duration > 0 && (
+            <span className="text-[11px] font-mono text-white/40 tabular-nums select-none pe-1">
+              {formatTime(track.duration)}
+            </span>
+          )}
+
           {/* Quick 1-tap Add to Queue with Check Confirmation Animation */}
           <button
             type="button"
