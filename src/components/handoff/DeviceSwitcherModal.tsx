@@ -124,7 +124,7 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="relative w-full max-w-lg bg-[#101018] border border-white/[0.12] rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85vh]"
+          className="relative w-full max-w-lg bg-[#101018] border border-white/[0.12] rounded-t-[32px] sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85dvh]"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
           {/* Header */}

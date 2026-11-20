@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
-import { Sliders, X, Check, Disc, Waves, Sparkles, Zap, SlidersHorizontal, Gauge } from 'lucide-react';
+import { Sliders, X, Check, Disc, Waves, Zap, SlidersHorizontal, Gauge } from 'lucide-react';
 import { triggerHaptic } from '../../utils/haptics';
 
 interface TransitionOption {
@@ -36,7 +36,7 @@ const TRANSITION_OPTIONS: TransitionOption[] = [
     titleAr: 'الصدى المتلاشي',
     titleEn: 'Echo Out & Reverb Tail',
     description: 'إرسال نهاية الأغنية في حلقة صدى فضائية متلاشية في الخلفية بينما تتقدم الأغنية التالية.',
-    icon: Sparkles,
+    icon: Waves,
     badge: 'Spatial Echo',
   },
   {
@@ -99,27 +99,24 @@ export const AutoMixSelectorModal: React.FC = () => {
               setAutoMixModalOpen(false);
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] rounded-t-[28px] bg-[#101018] border-t border-white/10 flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] shadow-2xl"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-t-[28px] sm:rounded-3xl bg-[#101018] border-t sm:border border-white/10 flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-2xl"
         >
           {/* Unified Grab Handle */}
           <div
             onPointerDown={(e) => dragControls.start(e)}
             onClick={() => setAutoMixModalOpen(false)}
-            className="w-10 h-1.5 rounded-full bg-white/25 mx-auto mt-2.5 mb-2 shrink-0 cursor-grab active:cursor-grabbing"
+            className="w-10 h-1.5 rounded-full bg-white/25 mx-auto mt-2.5 mb-2 shrink-0 cursor-grab active:cursor-grabbing sm:hidden"
           />
 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] px-4 sm:px-6 py-3 shrink-0">
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C] shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FA2D48]/15 border border-[#FA2D48]/30 flex items-center justify-center text-[#FA2D48] shrink-0">
                 <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div className="min-w-0">
                 <h3 className="text-[15px] sm:text-lg font-black text-white flex items-center gap-1.5 sm:gap-2 truncate">
                   <span>أنماط AutoMix والسرعة</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#FA243C]/20 text-[#FF375F] border border-[#FA243C]/30 font-mono shrink-0">
-                    PRO DJ
-                  </span>
                 </h3>
                 <p className="text-[10px] sm:text-[11px] text-zinc-400 font-medium truncate">
                   الدمج التلقائي والتحكم السريع في سرعة التشغيل
@@ -130,7 +127,7 @@ export const AutoMixSelectorModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setAutoMixModalOpen(false)}
-              className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer active:scale-90 shrink-0"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer active:scale-90 shrink-0 touch-manipulation"
             >
               <X className="w-4 h-4" />
             </button>
@@ -189,14 +186,19 @@ export const AutoMixSelectorModal: React.FC = () => {
 
               <button
                 type="button"
+                dir="ltr"
+                role="switch"
+                aria-checked={automixEnabled}
                 onClick={() => setAutoMix(!automixEnabled)}
-                className={`relative w-12 h-6.5 rounded-full transition-colors p-0.5 cursor-pointer ${
-                  automixEnabled ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F]' : 'bg-white/20'
+                className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors select-none active:scale-95 ${
+                  automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/20'
                 }`}
               >
-                <div
-                  className={`w-5.5 h-5.5 rounded-full bg-white transition-transform ${
-                    automixEnabled ? 'translate-x-5.5' : 'translate-x-0'
+                <motion.div
+                  layout
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className={`w-5.5 h-5.5 rounded-full bg-white shadow-md pointer-events-none ${
+                    automixEnabled ? 'ml-auto' : 'mr-auto'
                   }`}
                 />
               </button>

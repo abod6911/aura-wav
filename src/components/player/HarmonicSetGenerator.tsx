@@ -8,7 +8,7 @@ import {
   Play,
   Zap,
   Moon,
-  Sparkles,
+  Disc3,
   } from 'lucide-react';
 
 export const HarmonicSetGenerator: React.FC = () => {
@@ -97,7 +97,7 @@ export const HarmonicSetGenerator: React.FC = () => {
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.94 }}
-        className="w-full max-w-2xl bg-[#0c0c16] border border-white/[0.14] rounded-3xl p-6 shadow-2xl relative overflow-hidden"
+        className="w-full max-w-2xl bg-[#0c0c16] border border-white/[0.14] rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[88dvh] overflow-y-auto"
         dir="rtl"
       >
         {/* Glow ambient background */}
@@ -135,7 +135,7 @@ export const HarmonicSetGenerator: React.FC = () => {
                 : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/[0.08]'
             }`}
           >
-            <Sparkles className="w-5 h-5 text-purple-400 mb-2" />
+            <Disc3 className="w-5 h-5 text-purple-400 mb-2" />
             <h4 className="font-bold text-sm text-white">Harmonic Flow</h4>
             <p className="text-[11px] text-zinc-400 mt-1">
               Camelot Wheel (8A → 8B → 9B) صفر نشاز موسيقي في الانتقال

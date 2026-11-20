@@ -260,7 +260,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isRTL ? 'ابحث داخل أغانيك المفضلة...' : 'Search within favorites...'}
               style={{ fontSize: '16px' }}
-              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-all [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
+              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-all [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
                 isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
             />

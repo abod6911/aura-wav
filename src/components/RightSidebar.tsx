@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { X, Trash2, ListMusic, Heart, Play, Radio, Sparkles, Disc, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Trash2, ListMusic, Heart, Play, Radio, Disc, ArrowUp, ArrowDown } from 'lucide-react';
 
 export const RightSidebar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -39,7 +39,7 @@ export const RightSidebar: React.FC = () => {
   return (
     <aside
       dir={dir}
-      className="hidden xl:flex w-80 flex-col bg-[#111114] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-screen pb-24 overflow-hidden shrink-0"
+      className="hidden xl:flex w-80 flex-col bg-[#111114] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-[100dvh] pb-24 overflow-hidden shrink-0"
     >
       {/* Header with Clean Segmented Tabs */}
       <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] flex-shrink-0">

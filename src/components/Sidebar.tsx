@@ -27,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
   return (
     <aside
-      className="hidden lg:flex w-64 min-w-[256px] max-w-[256px] h-screen bg-[#111114] border-l rtl:border-l ltr:border-r border-white/[0.06] flex-col justify-between select-none z-30 shrink-0 pb-24"
+      className="hidden lg:flex w-64 min-w-[256px] max-w-[256px] h-[100dvh] bg-[#111114] border-l rtl:border-l ltr:border-r border-white/[0.06] flex-col justify-between select-none z-30 shrink-0 pb-24"
       dir={dir}
     >
       <div className="flex flex-col min-h-0">

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
 import {
-  Sparkles,
   X,
   Flame,
   Zap,
@@ -96,7 +95,7 @@ const AUTOMIX_STYLES: { id: AutoMixStyle; nameAr: string; nameEn: string; desc: 
     nameAr: 'الصدى المتلاشي (Club Echo)',
     nameEn: 'Echo Out',
     desc: 'تكرار صدى متلاشٍ في فضاء ثلاثي الأبعاد',
-    icon: Sparkles,
+    icon: Waves,
   },
   {
     id: 'filter_sweep',
@@ -208,9 +207,6 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
               <div>
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                   <span>أدوات ومؤثرات الـ DJ الحية</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 font-mono">
-                    LIVE FX
-                  </span>
                 </h3>
                 <p className="text-xs text-zinc-400 font-medium">
                   مؤثرات صوتية، تحكم بالنغمة والسرعة، وإعدادات الانتقال التلقائي الذكي
@@ -220,7 +216,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
 
             <button
               onClick={handleClose}
-              className="w-9 h-9 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
             >
               <X className="w-5 h-5" />
             </button>

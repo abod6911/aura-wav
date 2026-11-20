@@ -5,7 +5,6 @@ import {
   X,
   RotateCcw,
   Sliders,
-  Sparkles,
   Headphones,
   Building2,
   Waves,
@@ -489,14 +488,18 @@ export const EqualizerModal: React.FC = () => {
                     <button
                       type="button"
                       dir="ltr"
+                      role="switch"
+                      aria-checked={automixEnabled}
                       onClick={() => setAutoMix(!automixEnabled)}
-                      className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
                         automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
                       }`}
                     >
-                      <div
-                        className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                          automixEnabled ? 'translate-x-5' : 'translate-x-0'
+                      <motion.div
+                        layout
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
+                          automixEnabled ? 'ml-auto' : 'mr-auto'
                         }`}
                       />
                     </button>
@@ -615,14 +618,18 @@ export const EqualizerModal: React.FC = () => {
                 <button
                   type="button"
                   dir="ltr"
+                  role="switch"
+                  aria-checked={karaokeMode}
                   onClick={() => setKaraokeMode(!karaokeMode)}
-                  className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
                     karaokeMode ? 'bg-[#FA2D48]' : 'bg-white/10'
                   }`}
                 >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                      karaokeMode ? 'translate-x-5' : 'translate-x-0'
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
+                      karaokeMode ? 'ml-auto' : 'mr-auto'
                     }`}
                   />
                 </button>
@@ -643,14 +650,18 @@ export const EqualizerModal: React.FC = () => {
                 <button
                   type="button"
                   dir="ltr"
+                  role="switch"
+                  aria-checked={loudnessNormalization}
                   onClick={() => setLoudnessNormalization(!loudnessNormalization)}
-                  className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
                     loudnessNormalization ? 'bg-[#FA2D48]' : 'bg-white/10'
                   }`}
                 >
-                  <div
-                    className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                      loudnessNormalization ? 'translate-x-5' : 'translate-x-0'
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
+                      loudnessNormalization ? 'ml-auto' : 'mr-auto'
                     }`}
                   />
                 </button>

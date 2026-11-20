@@ -84,7 +84,7 @@ export const QueueDrawer: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-3 sm:pb-4 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[#FA243C]/20 to-[#FF375F]/15 border border-[#FA243C]/30 text-[#FA243C]">
+              <div className="p-2.5 rounded-2xl bg-[#FA2D48]/15 border border-[#FA2D48]/30 text-[#FA2D48]">
                 <ListMusic className="w-5 h-5" />
               </div>
               <div>
@@ -106,7 +106,7 @@ export const QueueDrawer: React.FC = () => {
                 triggerHaptic(8);
                 setQueueOpen(false);
               }}
-              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition-colors cursor-pointer touch-manipulation"
               title="إغلاق"
               aria-label="Close"
             >
@@ -122,10 +122,10 @@ export const QueueDrawer: React.FC = () => {
                 triggerHaptic(12);
                 setHarmonicJourneyOpen(true);
               }}
-              className="w-full p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-purple-500/20 via-rose-500/15 to-amber-500/20 hover:from-purple-500/30 hover:to-amber-500/30 border border-purple-500/30 text-white flex items-center justify-between transition-all cursor-pointer group shadow-lg active:scale-[0.98]"
+              className="w-full p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] text-white flex items-center justify-between transition-all cursor-pointer group shadow-sm active:scale-[0.98]"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-2 rounded-xl bg-purple-500/20 text-purple-300 border border-purple-500/30 group-hover:scale-105 transition-transform">
+                <div className="p-2 rounded-xl bg-[#FA2D48]/15 text-[#FA2D48] border border-[#FA2D48]/25 group-hover:scale-105 transition-transform">
                   <Compass className="w-4 h-4 animate-spin-slow" />
                 </div>
                 <div className="text-start min-w-0">
@@ -137,8 +137,8 @@ export const QueueDrawer: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <span className="apple-badge bg-purple-500/20 border-purple-500/40 text-purple-200 text-[10px] flex-shrink-0">
-                DJ PRO
+              <span className="text-[11px] text-zinc-400 group-hover:text-white transition-colors flex-shrink-0">
+                ←
               </span>
             </button>
           </div>
@@ -148,10 +148,10 @@ export const QueueDrawer: React.FC = () => {
             {/* Section 1: Currently Playing */}
             {currentTrack && (
               <div className="space-y-1.5">
-                <span className="text-[11px] font-bold text-[#FA243C] uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-[#FA2D48] uppercase tracking-wider block">
                   {t.nowPlaying}
                 </span>
-                <div className="p-3 rounded-2xl apple-glass-card border border-[#FA243C]/40 bg-[#FA243C]/[0.08] flex items-center gap-3 shadow-md">
+                <div className="p-3 rounded-2xl apple-glass-card border border-[#FA2D48]/40 bg-[#FA2D48]/[0.08] flex items-center gap-3 shadow-md">
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 shadow">
                     <img
                       src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
@@ -170,7 +170,7 @@ export const QueueDrawer: React.FC = () => {
                     <h4 className="text-sm font-bold text-white truncate">{currentTrack.title}</h4>
                     <p className="text-xs text-zinc-400 truncate mt-0.5">{currentTrack.artist}</p>
                   </div>
-                  <Disc3 className={`w-5 h-5 text-[#FA243C] flex-shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
+                  <Disc3 className={`w-5 h-5 text-[#FA2D48] flex-shrink-0 ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }} />
                 </div>
               </div>
             )}
@@ -182,7 +182,7 @@ export const QueueDrawer: React.FC = () => {
                   <span className="text-[11px] font-bold text-white uppercase tracking-wider">
                     {t.nextInQueue || 'التالي في قائمة الانتظار'}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 font-mono">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FA2D48]/20 text-[#FA2D48] border border-[#FA2D48]/30 font-mono">
                     {userQueue.length}
                   </span>
                 </div>

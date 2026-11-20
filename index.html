@@ -25,7 +25,7 @@
     <!-- Instant Client Cache Invalidation: purges stale SW caches on version bump -->
     <script>
       (function() {
-        var APP_VERSION = 'v24.0';
+        var APP_VERSION = 'v25.0';
         var stored = localStorage.getItem('aura_sw_ver');
         if (stored !== APP_VERSION) {
           if ('caches' in window) {
@@ -71,7 +71,7 @@
   </head>
   <body class="bg-[#09090B] text-[#f4f4f7] antialiased selection:bg-[#FA2D48]/30 selection:text-white overflow-hidden font-sans">
     <div id="root">
-      <div id="app-splash" style="min-height: 100vh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #09090B; color: #f4f4f5; font-family: 'Readex Pro', sans-serif;">
+      <div id="app-splash" style="min-height: 100dvh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #09090B; color: #f4f4f5; font-family: 'Readex Pro', sans-serif;">
         <div style="width: 44px; height: 44px; border: 3.5px solid rgba(250, 45, 72, 0.2); border-top-color: #FA2D48; border-radius: 50%; animation: auraSpin 0.9s linear infinite;"></div>
         <div style="margin-top: 20px; font-weight: 700; font-size: 15px; letter-spacing: 0.05em; color: #e4e4e7;">AURA<span style="color: #FA2D48;">.WAV</span></div>
         <p style="margin-top: 6px; font-size: 12px; color: #71717a;">جاري بدء المشغل الصوتي...</p>

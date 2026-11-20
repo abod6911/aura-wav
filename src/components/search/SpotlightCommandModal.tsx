@@ -7,7 +7,7 @@ import {
   Search,
   X,
   Disc,
-  Sparkles,
+  Radio,
   Mic2,
   Compass,
   Shuffle,
@@ -120,7 +120,7 @@ export const SpotlightCommandModal: React.FC = () => {
         id: 'action-8d',
         title: isRTL ? 'تبديل وضع الصوت المكاني (8D Spatial Audio)' : 'Toggle 8D Binaural Spatial Audio',
         subtitle: isRTL ? 'مدار صوتي 360 درجة مع تثبيت البيس في المركز' : 'Binaural HRTF orbit with Mono-anchored bass',
-        icon: Sparkles,
+        icon: Radio,
         action: () => {
           toggle8DSpatial();
           setSpotlightOpen(false);
@@ -231,7 +231,7 @@ export const SpotlightCommandModal: React.FC = () => {
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-4 bg-black/70 backdrop-blur-2xl"
+        className="fixed inset-0 z-50 flex items-start justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] sm:pt-24 px-3 sm:px-4 bg-black/70 backdrop-blur-2xl"
         onClick={() => setSpotlightOpen(false)}
         dir={dir}
       >
@@ -241,10 +241,10 @@ export const SpotlightCommandModal: React.FC = () => {
           exit={{ opacity: 0, scale: 0.94, y: -20 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl apple-glass-card rounded-[32px] border border-white/[0.14] shadow-[0_32px_80px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col max-h-[80vh] backdrop-blur-3xl"
+          className="w-full max-w-2xl apple-glass-card rounded-[28px] sm:rounded-[32px] border border-white/[0.14] shadow-[0_32px_80px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col max-h-[80dvh] backdrop-blur-3xl"
         >
           {/* Top Search Input Bar */}
-          <div className="relative flex items-center px-5 py-4 border-b border-white/[0.1] gap-3 bg-white/[0.02]">
+          <div className="relative flex items-center px-4 sm:px-5 py-3.5 sm:py-4 border-b border-white/[0.1] gap-3 bg-white/[0.02]">
             <Search className="w-5 h-5 text-white/50 flex-shrink-0" />
             <input
               ref={inputRef}
@@ -256,6 +256,7 @@ export const SpotlightCommandModal: React.FC = () => {
               }}
               onKeyDown={handleKeyDown}
               placeholder={isRTL ? 'ابحث عن مسار، فنان، ألبوم، أو أمر DSP...' : 'Search 1,940 tracks, artists, DSP commands...'}
+              style={{ fontSize: '16px' }}
               className="w-full bg-transparent text-white placeholder-white/40 text-base font-medium outline-none leading-relaxed"
             />
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -264,7 +265,7 @@ export const SpotlightCommandModal: React.FC = () => {
               </span>
               <button
                 onClick={() => setSpotlightOpen(false)}
-                className="p-1 text-white/50 hover:text-white rounded-full hover:bg-white/10 cursor-pointer transition-colors"
+                className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-white/50 hover:text-white rounded-full hover:bg-white/10 cursor-pointer transition-colors touch-manipulation"
                 aria-label="Close search"
               >
                 <X className="w-4 h-4" />

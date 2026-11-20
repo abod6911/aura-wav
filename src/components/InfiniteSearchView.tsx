@@ -2,7 +2,7 @@ import React, { useState, useEffect, useTransition, useMemo } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { searchWorldwideMusic, SearchResultsCategorized } from '../services/streamingEngine';
-import { Search, Play, Pause, X, Sparkles, CheckCircle2, Loader2 } from 'lucide-react';
+import { Search, Play, Pause, X, CheckCircle2, Loader2 } from 'lucide-react';
 import { Track } from '../types';
 import { OptimizedImage } from './common/OptimizedImage';
 import { MobileTrackRow } from './common/MobileTrackRow';

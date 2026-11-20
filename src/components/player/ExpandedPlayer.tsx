@@ -17,7 +17,6 @@ import {
   Repeat,
   Repeat1,
   Mic2,
-  Sparkles,
   Sliders,
   ListMusic,
   Radio,

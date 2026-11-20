@@ -110,17 +110,17 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
 
       {/* 2. Track Title & Artist (Clean BiDi Truncation at end) */}
       <div className="flex-1 min-w-0">
-        <h4 className="text-[13px] font-bold text-white truncate block leading-tight">
-          <bdi dir="auto">{currentTrack.title}</bdi>
+        <h4 dir="auto" className="text-[13px] font-bold text-white truncate block text-start leading-tight">
+          {currentTrack.title}
         </h4>
-        <p className="text-[11px] text-zinc-400 truncate block mt-0.5 font-normal leading-tight">
-          <bdi dir="auto">{currentTrack.artist}</bdi>
+        <p dir="auto" className="text-[11px] text-zinc-400 truncate block text-start mt-0.5 font-normal leading-tight">
+          {currentTrack.artist}
         </p>
       </div>
 
-      {/* 3. Sleek Controls: Play/Pause (40px touch area) + Next Track */}
+      {/* 3. Sleek Controls: Play/Pause (44px touch area) + Next Track (44px touch area) */}
       <div
-        className="flex items-center gap-1 shrink-0 pointer-events-auto"
+        className="flex items-center gap-0.5 shrink-0 pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Play / Pause Button */}
@@ -132,7 +132,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-white cursor-pointer active:scale-90 transition-transform"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white cursor-pointer active:scale-90 transition-transform touch-manipulation"
           aria-label={isPlaying ? t.pause : t.play}
         >
           {isPlaying ? (
@@ -153,7 +153,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             nextTrack({ forceImmediate: true });
           }}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer active:scale-90 transition-transform"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer active:scale-90 transition-transform touch-manipulation"
           aria-label={t.next}
         >
           <SkipForward className="w-4.5 h-4.5 fill-current" />

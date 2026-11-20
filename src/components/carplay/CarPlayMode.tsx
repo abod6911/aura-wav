@@ -13,7 +13,6 @@ import {
   X,
   ListMusic,
   Clock,
-  Sparkles,
   Volume2,
   Disc3,
   Radio,
@@ -260,7 +259,7 @@ export const CarPlayMode: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.22 }}
-        className={`fixed inset-0 z-[9999] flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
+        className={`fixed inset-0 z-[9999] h-[100dvh] flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
           highContrastMode === 'day' ? 'bg-[#F2F2F7] text-[#1C1C1E]' : 'bg-[#0A0A0E] text-white'
         }`}
         dir="rtl"
@@ -274,7 +273,7 @@ export const CarPlayMode: React.FC = () => {
         />
 
         {/* --- In-Car Top System Header --- */}
-        <header className={`relative z-20 flex flex-col landscape:flex-row landscape:items-center justify-between px-4 sm:px-8 py-2.5 sm:py-3 border-b gap-2.5 landscape:gap-4 backdrop-blur-xl transition-colors duration-300 ${
+        <header className={`relative z-20 flex flex-col landscape:flex-row landscape:items-center justify-between px-4 sm:px-8 pt-[calc(env(safe-area-inset-top,0px)+10px)] pb-2.5 sm:pb-3 border-b gap-2.5 landscape:gap-4 backdrop-blur-xl transition-colors duration-300 ${
           highContrastMode === 'day' ? 'border-black/10 bg-white/80' : 'border-white/[0.08] bg-black/60'
         }`}>
           <div className="flex items-center justify-between w-full landscape:w-auto">
@@ -288,7 +287,7 @@ export const CarPlayMode: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-[11px] sm:text-xs font-black tracking-wider uppercase">
-                <Sparkles className="w-3 h-3" />
+                <Radio className="w-3 h-3" />
                 <span>Apple CarPlay</span>
               </div>
 

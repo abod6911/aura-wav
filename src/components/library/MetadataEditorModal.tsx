@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { searchOnlineArtworkCandidates, ArtworkCandidate } from '../../lib/metadata';
-import { X, Save, Upload, Sparkles, Music, Disc, User, Calendar, Tag, Loader2 } from 'lucide-react';
+import { X, Save, Upload, Search, Music, Disc, User, Calendar, Tag, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const MetadataEditorModal: React.FC = () => {
@@ -110,7 +110,7 @@ export const MetadataEditorModal: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-xl bg-[#0e0e15]/95 border border-white/[0.12] rounded-3xl p-5 sm:p-6 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-5 my-auto"
+          className="relative w-full max-w-xl bg-[#0e0e15]/95 border-t sm:border border-white/[0.12] rounded-t-[28px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 shadow-[0_24px_80px_rgba(0,0,0,0.9)] space-y-5 my-auto max-h-[90dvh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
@@ -165,7 +165,7 @@ export const MetadataEditorModal: React.FC = () => {
                     {isSearchingArtwork ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FA243C]" />
                     ) : (
-                      <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
+                      <Search className="w-3.5 h-3.5 text-[#FA243C]" />
                     )}
                     <span>بحث عن غلاف أونلاين</span>
                   </button>
@@ -205,7 +205,8 @@ export const MetadataEditorModal: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -220,7 +221,8 @@ export const MetadataEditorModal: React.FC = () => {
                   value={artist}
                   onChange={(e) => setArtist(e.target.value)}
                   required
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -234,7 +236,8 @@ export const MetadataEditorModal: React.FC = () => {
                   type="text"
                   value={album}
                   onChange={(e) => setAlbum(e.target.value)}
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -249,7 +252,8 @@ export const MetadataEditorModal: React.FC = () => {
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
                   placeholder="Pop, Hip-Hop, R&B..."
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -264,7 +268,8 @@ export const MetadataEditorModal: React.FC = () => {
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
                   placeholder="2024"
-                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                 />
               </div>
 
@@ -277,7 +282,8 @@ export const MetadataEditorModal: React.FC = () => {
                     value={bpm}
                     onChange={(e) => setBpm(e.target.value)}
                     placeholder="128"
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
+                    style={{ fontSize: '16px' }}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors"
                   />
                 </div>
                 <div className="space-y-1">
@@ -287,7 +293,8 @@ export const MetadataEditorModal: React.FC = () => {
                     value={key}
                     onChange={(e) => setKey(e.target.value)}
                     placeholder="8A, 8B"
-                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors uppercase"
+                    style={{ fontSize: '16px' }}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2 text-base sm:text-sm text-white focus:outline-none focus:border-[#FA243C] transition-colors uppercase"
                   />
                 </div>
               </div>

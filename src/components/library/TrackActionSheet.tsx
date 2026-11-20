@@ -123,16 +123,14 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <h3
-                  dir="ltr"
-                  style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                  className="text-sm font-black text-white truncate tracking-tight"
+                  dir="auto"
+                  className="text-sm font-black text-white truncate block text-start tracking-tight"
                 >
                   {track.title}
                 </h3>
                 <p
-                  dir="ltr"
-                  style={{ unicodeBidi: 'isolate', textAlign: isRTL ? 'right' : 'left' }}
-                  className="text-xs text-white/60 truncate mt-0.5"
+                  dir="auto"
+                  className="text-xs text-white/60 truncate block text-start mt-0.5"
                 >
                   {track.artist}
                 </p>

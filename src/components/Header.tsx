@@ -98,16 +98,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
 
         <button
           onClick={() => setSettingsOpen(true)}
-          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] -me-1 flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
           title={currentUser ? currentUser.name : t.settings}
           aria-label={t.settings}
         >
-          <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-            {currentUser?.avatarUrl ? (
-              <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
-            ) : (
-              currentUser?.name?.[0]?.toUpperCase() || 'A'
-            )}
+          <div className="w-9 h-9 rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center">
+            <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+              {currentUser?.avatarUrl ? (
+                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
+              ) : (
+                currentUser?.name?.[0]?.toUpperCase() || 'A'
+              )}
+            </div>
           </div>
         </button>
       </div>

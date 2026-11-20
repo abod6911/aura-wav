@@ -10,7 +10,6 @@ import {
   FolderOpen,
   Heart,
   Music,
-  Sparkles,
   Filter,
   X,
   Play,
@@ -454,7 +453,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         <div className="space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FA243C]" />
+              <Radio className="w-4 h-4 text-[#FA2D48]" />
               <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                 مختارات Apple Music لك
               </h3>
@@ -601,7 +600,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-xs font-bold py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer"
+              style={{ fontSize: '16px' }}
+              className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-base sm:text-xs font-bold py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer"
             >
               <option value="number" className="bg-[#121218] text-white">الترتيب: الرقم #</option>
               <option value="title" className="bg-[#121218] text-white">الترتيب: العنوان (A-Z)</option>
@@ -677,9 +677,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
         {/* Active Mood Radio Banner */}
         {activeMood && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#FA243C]/20 via-[#FA243C]/10 to-[#08080c] border border-[#FA243C]/30 animate-fadeIn">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#FA2D48]/20 via-[#FA2D48]/10 to-[#08080c] border border-[#FA2D48]/30 animate-fadeIn">
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-[#FA243C] animate-pulse" />
+              <Radio className="w-4 h-4 text-[#FA2D48] animate-pulse" />
               <span className="text-xs font-bold text-white">
                 تم تفعيل وضع المزاج: {filtered.length} مسار متوافق
               </span>
@@ -688,7 +688,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePlayAll}
-                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#FA243C]/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA2D48] to-[#FF375F] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#FA2D48]/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-white text-white" />
                 <span>تشغيل راديو هذا المزاج</span>
@@ -705,7 +705,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div ref={containerRef} className="apple-glass-card rounded-[28px] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)] transform-gpu backdrop-blur-3xl border border-white/[0.1]">
+      <div ref={containerRef} className="md:apple-glass-card md:rounded-[28px] p-0 md:p-5 md:shadow-[0_24px_64px_rgba(0,0,0,0.85)] md:transform-gpu md:backdrop-blur-3xl md:border md:border-white/[0.1] bg-transparent border-0 rounded-none shadow-none">
         <div dir={dir} className="w-full max-w-full">
           {/* Table Column Headers (Desktop Proportional Unified Grid) */}
           <div className="hidden md:grid grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-4 px-4 py-3 text-xs font-extrabold text-white/55 border-b border-white/[0.08] select-none uppercase tracking-wider">

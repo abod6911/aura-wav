@@ -485,7 +485,7 @@ export function App() {
       className={
         isMobile
           ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
-          : 'relative w-full h-full min-h-screen flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
+          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -524,7 +524,7 @@ export function App() {
         className={
           isMobile
             ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
-            : 'flex-1 w-full min-w-0 h-screen overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
+            : 'flex-1 w-full min-w-0 h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
         }
       >
         <HandoffBanner />

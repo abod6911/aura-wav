@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { X, Sparkles, Sliders, Flame, Gauge, Check, Disc, Megaphone, Waves, Zap, Radio } from 'lucide-react';
+import { X, Sliders, Flame, Gauge, Check, Disc, Megaphone, Waves, Zap, Radio } from 'lucide-react';
 
 interface AudioSettingsModalProps {
   isOpen: boolean;
@@ -60,10 +60,8 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-lg shadow-[#FA243C]/20 flex items-center justify-center">
-                <div className="w-full h-full bg-[#0d0d14] rounded-[14px] flex items-center justify-center text-[#FA243C]">
-                  <Sparkles className="w-5 h-5" />
-                </div>
+              <div className="w-10 h-10 rounded-2xl bg-[#FA2D48]/15 border border-[#FA2D48]/30 flex items-center justify-center">
+                <Sliders className="w-5 h-5 text-[#FA2D48]" />
               </div>
               <div>
                 <h3 className="text-base font-black text-white tracking-tight">إعدادات الصوت المتقدمة ومواصفات DJ</h3>
@@ -130,20 +128,24 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
+                <Radio className="w-3.5 h-3.5 text-[#FA2D48]" />
                 الدمج التلقائي الذكي (AutoMix)
               </label>
               <button
                 type="button"
+                dir="ltr"
+                role="switch"
+                aria-checked={automixEnabled}
                 onClick={() => setAutoMix(!automixEnabled)}
-                className={`w-12 h-6.5 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
-                  automixEnabled ? 'bg-[#FA243C]' : 'bg-white/10'
+                className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors select-none active:scale-95 ${
+                  automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
                 }`}
               >
                 <motion.div
                   layout
-                  className={`w-5.5 h-5.5 rounded-full bg-white shadow-md ${
-                    automixEnabled ? 'translate-x-5.5 rtl:-translate-x-5.5' : ''
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className={`w-5.5 h-5.5 rounded-full bg-white shadow-md pointer-events-none ${
+                    automixEnabled ? 'ml-auto' : 'mr-auto'
                   }`}
                 />
               </button>

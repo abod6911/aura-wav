@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { searchOnlineArtworkCandidates, generateLuxuryCanvasArtwork, ArtworkCandidate } from '../lib/metadata';
-import { X, Search, Upload, Sparkles, Image as ImageIcon, Loader2, Check } from 'lucide-react';
+import { X, Search, Upload, Image as ImageIcon, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ChangeArtworkModal: React.FC = () => {
@@ -163,7 +163,7 @@ export const ChangeArtworkModal: React.FC = () => {
               title="إنشاء غلاف استوديو فخم 512x512 PNG متوافق مع الداينمك آيلند"
               className="px-3 py-1.5 rounded-full bg-[var(--apple-rose)]/15 hover:bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all flex-shrink-0 active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <ImageIcon className="w-3.5 h-3.5" />
               <span>غلاف استوديو</span>
             </button>
           </div>
@@ -182,7 +182,8 @@ export const ChangeArtworkModal: React.FC = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث باسم الأغنية أو الفنان..."
-                className="w-full bg-white/[0.05] border border-white/10 rounded-full py-2.5 pr-4 pl-10 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--apple-rose)] transition-colors"
+                style={{ fontSize: '16px' }}
+                className="w-full bg-white/[0.05] border border-white/10 rounded-full py-2.5 pr-4 pl-10 text-base sm:text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-[var(--apple-rose)] transition-colors"
               />
               <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

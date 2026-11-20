@@ -2,7 +2,6 @@ import React from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
-  Sparkles,
   Flame,
   Mic2,
   Disc3,
@@ -91,7 +90,7 @@ export const AuraProDspHud: React.FC<AuraProDspHudProps> = ({ compact = false })
           </div>
 
           <span className="text-[11px] font-medium text-zinc-400 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-400" />
+            <Radio className="w-3 h-3 text-[#FA2D48]" />
             <span>Bass-Swap Protected</span>
           </span>
         </div>

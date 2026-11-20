@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { pickLocalDirectory, processAudioFiles, ScanProgress } from '../services/fileScanner';
-import { FolderOpen, UploadCloud, CheckCircle2, AlertCircle, Sparkles, X, FileAudio } from 'lucide-react';
+import { FolderOpen, UploadCloud, CheckCircle2, AlertCircle, X, FileAudio } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ImportModalProps {
@@ -248,8 +248,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             </div>
 
             {/* iPhone Pro-Tip */}
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs leading-relaxed text-right flex items-start gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs leading-relaxed text-right flex items-start gap-2.5">
+              <FileAudio className="w-4 h-4 text-[#FA2D48] flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="text-white block mb-0.5">نصيحة لمستخدمي الآيفون:</strong>
                 عند فتح شاشة الملفات، ادخل إلى مجلد الأغاني ثم اضغط على النقاط الثلاث <strong>(•••)</strong> بالأعلى، ثم اختر <strong>"تحديد الكل" (Select All)</strong> ثم اضغط <strong>"فتح" (Open)</strong> ليتم حفظ جميع الأغاني فوراً!

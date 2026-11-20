@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Disc, Sparkles, Music, Sun, Moon, CloudSun, ArrowLeft } from 'lucide-react';
+import { Disc, Music, Sun, Moon, CloudSun, ArrowLeft } from 'lucide-react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { triggerHaptic } from '../utils/haptics';
 
@@ -93,7 +93,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 bg-[#060609]/98 backdrop-blur-3xl select-none overflow-hidden"
+          className="fixed inset-0 z-[100] h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#060609]/98 backdrop-blur-3xl select-none overflow-hidden"
         >
           {/* Ambient Neon Atmosphere */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -218,7 +218,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
               </span>
               <span>•</span>
               <span className="flex items-center gap-1.5 text-[var(--apple-rose)]">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Disc className="w-3.5 h-3.5" />
                 <span>Apple Lossless Audio</span>
               </span>
             </motion.div>

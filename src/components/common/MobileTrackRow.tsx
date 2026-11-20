@@ -143,15 +143,16 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
 
           <div className="min-w-0 flex-1">
             <h4
-              className={`text-[13px] sm:text-[14px] font-bold truncate block leading-tight tracking-tight ${
+              dir="auto"
+              className={`text-[13px] sm:text-[14px] font-bold truncate block text-start leading-tight tracking-tight ${
                 isCur ? 'text-[#FA2D48]' : 'text-white'
               }`}
             >
-              <bdi dir="auto">{track.title}</bdi>
+              {track.title}
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-              <p className="text-[11px] text-zinc-400 truncate block font-normal">
-                <bdi dir="auto">{track.artist}</bdi>
+              <p dir="auto" className="text-[11px] text-zinc-400 truncate block text-start font-normal">
+                {track.artist}
               </p>
               {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
                 <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-sky-500/15 border border-sky-500/30 text-[8px] font-bold text-sky-400 shrink-0" title="سحابية">
@@ -163,30 +164,34 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         </div>
 
         {/* Right: Duration + Quick Queue + 3-Dots */}
-        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           {track.duration > 0 && (
             <span className="text-[11px] font-mono text-zinc-500 tabular-nums select-none pe-1">
               {formatTime(track.duration)}
             </span>
           )}
 
-          {/* Quick 1-tap Add to Queue */}
+          {/* Quick 1-tap Add to Queue (44px touch area) */}
           <button
             type="button"
             onClick={handleQuickQueue}
-            className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] cursor-pointer touch-manipulation ${
-              isAddedFeedback
-                ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
-                : 'text-zinc-400 hover:text-white'
-            }`}
+            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation active:scale-[0.92] transition-transform"
             title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
             aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
           >
-            {isAddedFeedback ? (
-              <Check className="w-4 h-4 text-white stroke-[3]" />
-            ) : (
-              <ListPlus className="w-4 h-4" />
-            )}
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isAddedFeedback
+                  ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {isAddedFeedback ? (
+                <Check className="w-4 h-4 text-white stroke-[3]" />
+              ) : (
+                <ListPlus className="w-4 h-4" />
+              )}
+            </div>
           </button>
 
           {/* 3-dots Menu Button (44px touch target) */}

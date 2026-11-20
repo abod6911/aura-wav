@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authService, AuthUser, SavedAccount } from '../../services/authService';
 import { triggerHaptic } from '../../utils/haptics';
 import { useTranslation } from '../../i18n/useTranslation';
-import { Sparkles, Lock, Mail, User, ArrowRight, Loader2, Disc3, Trash2, Plus, ChevronRight } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Loader2, Disc3, Trash2, Plus, ChevronRight } from 'lucide-react';
 
 interface AuthScreenProps {
   onSuccess: (user: AuthUser) => void;
@@ -124,7 +124,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
 
   return (
     <div
-      className="fixed inset-0 z-[120] w-full h-full bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 pt-[max(env(safe-area-inset-top,0px),16px)] pb-[max(env(safe-area-inset-bottom,0px),16px)] select-none"
+      className="fixed inset-0 z-[120] w-full h-[100dvh] bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] select-none"
       dir={dir}
     >
       {/* Background Subtle Ambient Tone */}

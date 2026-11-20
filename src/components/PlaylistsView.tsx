@@ -323,7 +323,8 @@ export const PlaylistsView: React.FC = () => {
             placeholder="اسم قائمة التشغيل (مثال: أغاني الخط السريع، ليلية...)"
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C] transition-colors"
+            style={{ fontSize: '16px' }}
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C] transition-colors"
             autoFocus
           />
           <button type="submit" className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md aura-tap-btn cursor-pointer">

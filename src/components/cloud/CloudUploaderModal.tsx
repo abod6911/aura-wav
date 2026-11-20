@@ -20,7 +20,6 @@ import {
   Music,
   Trash2,
   CloudCheck,
-  Sparkles,
   Lock,
   ShieldCheck,
   LogOut,
@@ -352,7 +351,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 15 }}
         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-        className="relative w-full max-w-2xl bg-[#0c0c14]/95 backdrop-blur-3xl border border-white/[0.12] rounded-[28px] sm:rounded-[32px] p-4 sm:p-6 shadow-[0_24px_64px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh] specular-highlight obsidian-grain"
+        className="relative w-full max-w-2xl bg-[#0c0c14]/95 backdrop-blur-3xl border-t sm:border border-white/[0.12] rounded-t-[28px] sm:rounded-[32px] p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 shadow-[0_24px_64px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90dvh] specular-highlight obsidian-grain"
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] shrink-0">
@@ -457,7 +456,8 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder={isRTL ? 'مثال: عبدالمجيد' : 'e.g. Platform Owner'}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-xs outline-none transition-colors"
+                    style={{ fontSize: '16px' }}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
                   />
                 </div>
               )}
@@ -472,7 +472,8 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                   value={ownerEmail}
                   onChange={(e) => setOwnerEmail(e.target.value)}
                   placeholder="owner@example.com"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-xs outline-none transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
                 />
               </div>
 
@@ -486,7 +487,8 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                   value={ownerPassword}
                   onChange={(e) => setOwnerPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-xs outline-none transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
                 />
               </div>
 

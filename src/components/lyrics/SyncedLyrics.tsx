@@ -7,7 +7,6 @@ import { triggerHaptic } from '../../utils/haptics';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
   X,
-  Sparkles,
   Music2,
   Play,
   Pause,
@@ -168,7 +167,7 @@ const SyncedLyricsModal: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-50 bg-[#060609] flex flex-col select-none overflow-hidden"
+      className="fixed inset-0 z-50 bg-[#060609] h-[100dvh] flex flex-col select-none overflow-hidden"
     >
       {/* Subtle Ambient Tint (Apple Music Style) */}
       <div
@@ -178,10 +177,10 @@ const SyncedLyricsModal: React.FC = () => {
       <div className="absolute inset-0 -z-10 bg-black/45 backdrop-blur-[50px] pointer-events-none" />
 
       {/* Top Header Bar */}
-      <div className="w-full px-4 sm:px-6 md:px-10 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2.5 sm:pb-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
+      <div className="w-full px-4 sm:px-6 md:px-10 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-2.5 sm:pb-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-[11px] font-bold text-white">
-            <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
+            <Music2 className="w-3.5 h-3.5 text-[#FA2D48]" />
             <span>{isRTL ? 'كلمات متزامنة' : 'LIVE LYRICS'}</span>
           </div>
 
@@ -193,7 +192,7 @@ const SyncedLyricsModal: React.FC = () => {
             }}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
               karaokeMode
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-lg shadow-[#FA243C]/35 ring-1 ring-white/20'
+                ? 'bg-[#FA2D48] text-white shadow-lg shadow-[#FA2D48]/35 ring-1 ring-white/20'
                 : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'
             }`}
           >
@@ -209,7 +208,7 @@ const SyncedLyricsModal: React.FC = () => {
             triggerHaptic('light');
             setLyricsOpen(false);
           }}
-          className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer active:scale-90"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.08] hover:bg-white/[0.14] text-white flex items-center justify-center transition-colors shadow-lg cursor-pointer active:scale-90 touch-manipulation"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
