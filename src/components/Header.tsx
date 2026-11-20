@@ -1,25 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { formatTimerRemaining } from '../utils/formatters';
 import {
   FolderPlus,
-  FolderOpen,
   Moon,
-  Sliders,
   Settings,
   Search,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   AlertTriangle,
   Car,
   Radio,
   UploadCloud,
+  X,
 } from 'lucide-react';
 import { syncPartyService, SyncRoomState } from '../services/syncPartyService';
 import { useStorageStore } from '../stores/useStorageStore';
-import { CloudStatusBadge } from './cloud/CloudStatusBadge';
 
 interface HeaderProps {
   onOpenImport: () => void;
@@ -27,53 +24,56 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false }) => {
-  const { t, language, isRTL, dir } = useTranslation();
-  const tracks = usePlayerStore((state) => state.tracks);
+  const { t, isRTL, dir } = useTranslation();
   const currentUser = usePlayerStore((state) => state.currentUser);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
-  const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSyncPartyOpen = usePlayerStore((state) => state.setSyncPartyOpen);
-  const [syncRoomState, setSyncRoomState] = React.useState<SyncRoomState>(syncPartyService.getState());
+  const [syncRoomState, setSyncRoomState] = useState<SyncRoomState>(syncPartyService.getState());
 
-  React.useEffect(() => {
+  useEffect(() => {
     return syncPartyService.subscribe(setSyncRoomState);
   }, []);
+
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setSpotlightOpen = usePlayerStore((state) => state.setSpotlightOpen);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
-  const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
-  const activeFilterPill = usePlayerStore((state) => state.activeFilterPill);
-  const setActiveFilterPill = usePlayerStore((state) => state.setActiveFilterPill);
-  const savedFolderName = usePlayerStore((state) => state.savedFolderName);
-  const addToast = usePlayerStore((state) => state.addToast);
   const isQuotaWarning = useStorageStore((state) => state.isQuotaWarning);
   const usagePercentage = useStorageStore((state) => state.usagePercentage);
 
-  const totalDurationSecs = tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
-  const totalHours = Math.floor(totalDurationSecs / 3600);
-  const totalMins = Math.floor((totalDurationSecs % 3600) / 60);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    if (isProfileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isProfileMenuOpen]);
 
   return (
     <header
       style={{
-        paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
-        backgroundColor: 'rgba(6, 6, 9, 0.92)',
-        backdropFilter: 'blur(28px) saturate(190%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+        backgroundColor: '#09090B',
       }}
-      className="select-none w-full min-w-0 border-b border-white/[0.08] px-3.5 sm:px-4 pb-2.5 shrink-0 z-30 transition-all pointer-events-auto"
+      className="select-none w-full min-w-0 border-b border-white/[0.04] px-4 sm:px-8 py-3 shrink-0 z-30 transition-all pointer-events-auto"
       dir={dir}
     >
-      {/* Mobile Header Bar - Sleek, Minimalist, Apple HIG Compliant */}
+      {/* ── Mobile Header Bar (Preserved for Mobile) ── */}
       <div className="flex items-center justify-between sm:hidden w-full min-w-0">
         {/* Brand & User Profile */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer aura-tap-btn active:scale-95 transition-transform touch-manipulation"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
             title={currentUser ? currentUser.name : t.settings}
             aria-label={t.settings}
           >
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           <div className="flex flex-col min-w-0 flex-1">
             <span className="font-extrabold text-white text-[15px] tracking-tight leading-none flex items-center gap-1.5">
               <bdi dir="ltr" className="inline-flex items-center">
-                AURA<span className="text-[#FA243C]">.WAV</span>
+                AURA<span className="text-[#FA2D48]">.WAV</span>
               </bdi>
             </span>
             <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
@@ -97,12 +97,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           </div>
         </div>
 
-        {/* Mobile Right Actions with Apple HIG 44px Hit Targets */}
-        <div className="flex items-center gap-1 shrink-0 ps-1">
+        {/* Mobile Right Actions */}
+        <div className="flex items-center gap-1.5 shrink-0 ps-1">
           {isQuotaWarning && (
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer aura-tap-btn shrink-0 touch-manipulation"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer shrink-0"
               title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
             >
               <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -113,30 +113,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           {/* Quick Import Button */}
           <button
             onClick={onOpenImport}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white aura-tap-btn cursor-pointer shrink-0 transition-colors touch-manipulation"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white cursor-pointer shrink-0 transition-colors"
             title={t.importFolder}
             aria-label={t.importFolder}
           >
-            <FolderPlus className="w-4 h-4 text-[#FA243C]" />
+            <FolderPlus className="w-4 h-4 text-[#FA2D48]" />
           </button>
-
-          {/* Sync Party (if active) */}
-          {syncRoomState.roomId && (
-            <button
-              onClick={() => setSyncPartyOpen(true)}
-              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center aura-tap-btn cursor-pointer relative shrink-0 shadow-md animate-pulse touch-manipulation"
-              title={`${t.syncParty}: ${syncRoomState.roomId}`}
-              aria-label={t.syncParty}
-            >
-              <Radio className="w-3.5 h-3.5" />
-            </button>
-          )}
 
           {/* Sleep Timer (if active) */}
           {sleepTimerRemaining !== null && (
             <button
               onClick={() => setSleepTimerOpen(true)}
-              className="h-9 px-2.5 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-xs font-mono font-bold flex items-center gap-1 aura-tap-btn cursor-pointer shrink-0 touch-manipulation"
+              className="h-9 px-2.5 rounded-full bg-[#FA2D48]/20 border border-[#FA2D48]/40 text-[#FA2D48] text-xs font-mono font-bold flex items-center gap-1 cursor-pointer shrink-0"
               title={t.sleepTimer}
               aria-label={t.sleepTimer}
             >
@@ -145,10 +133,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
             </button>
           )}
 
-          {/* Settings Quick Access */}
+          {/* Settings */}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white aura-tap-btn cursor-pointer shrink-0 transition-colors touch-manipulation"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer shrink-0 transition-colors"
             title={t.settings}
             aria-label={t.settings}
           >
@@ -157,165 +145,102 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
         </div>
       </div>
 
-      {/* Desktop Header Bar */}
+      {/* ── Desktop Header Bar (Ultra-Clean 3-Zone Architecture) ── */}
       <div className="hidden sm:flex items-center justify-between w-full min-w-0">
-        {/* Left: History Navigation & Saved Folder */}
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="flex items-center gap-1.5" dir="ltr">
-            <button
-              onClick={() => setActiveTab('home')}
-              className="w-8 h-8 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-              title={t.listenNow}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setActiveTab('search')}
-              className="w-8 h-8 rounded-full apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-              title={t.search}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Unified Library Status Pill */}
-            <button
-              onClick={onOpenImport}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl apple-glass-pill hover:bg-white/[0.12] text-zinc-300 hover:text-white text-xs font-medium apple-spring cursor-pointer border border-white/10 shadow-sm"
-              title={`${t.importFolder} - انقر لتغيير أو استيراد مجلد الموسيقى`}
-            >
-              <FolderOpen className="w-4 h-4 text-[#FA243C]" />
-              <span className="font-bold text-white">{savedFolderName || 'Liked_Songs'}</span>
-              <span className="text-white/30">•</span>
-              <span className="text-zinc-300 font-mono text-[11px]">{tracks.length} {t.songs}</span>
-              <span className="text-white/30">•</span>
-              <span className="text-[#FF375F] font-bold text-[11px]">{t.importFolder}</span>
-            </button>
-            <span className="hidden lg:inline-flex items-center gap-2 text-[11px] text-zinc-400">
-              <span className="font-mono">{totalHours > 0 ? `${totalHours}h ` : ''}{totalMins}m</span>
-              <span>•</span>
-              <span className="apple-badge bg-emerald-500/10 border-emerald-500/25 text-emerald-400">
-                <ShieldCheck className="w-2.5 h-2.5" />
-                LOSSLESS ALAC
-              </span>
-            </span>
-          </div>
+        {/* Zone 1 (Right in RTL): Subtle Back / Forward Navigation Buttons */}
+        <div className="flex items-center gap-1.5" dir="ltr">
+          <button
+            onClick={() => setActiveTab('home')}
+            className="w-8 h-8 rounded-full bg-[#18181C] hover:bg-[#202026] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/[0.04]"
+            title={t.listenNow}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setActiveTab('search')}
+            className="w-8 h-8 rounded-full bg-[#18181C] hover:bg-[#202026] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/[0.04]"
+            title={t.search}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Right: Desktop Actions (Uniform w-10 h-10 rounded-2xl Controls) */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Cupertino Search Pill (Spotlight Command Palette) */}
+        {/* Zone 2 (Center / Right): Single Elegant Search Bar */}
+        <div className="flex-1 max-w-md mx-6">
           <button
             onClick={() => setSpotlightOpen(true)}
-            className="flex items-center gap-3 px-3.5 py-2 rounded-2xl apple-glass-pill text-white/70 hover:text-white text-xs font-medium apple-spring cursor-pointer group border border-white/10"
+            className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#18181C] hover:bg-[#202026] text-zinc-400 hover:text-zinc-200 text-xs font-normal border border-white/[0.05] transition-colors cursor-pointer group shadow-sm"
             title={t.quickSearch}
             aria-label="Spotlight search"
           >
-            <Search className="w-3.5 h-3.5 text-white/50 group-hover:text-white transition-colors" />
-            <span>{t.quickSearch}</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/60 font-mono">⌘K</kbd>
+            <div className="flex items-center gap-2.5">
+              <Search className="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-300 transition-colors" />
+              <span className="text-zinc-400 group-hover:text-zinc-200">{t.quickSearch}</span>
+            </div>
+            <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] text-zinc-500 font-mono">⌘K</kbd>
           </button>
+        </div>
 
-          {/* Storage Quota Warning Badge */}
-          {isQuotaWarning && (
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 text-xs font-bold transition-all animate-pulse cursor-pointer shadow-md"
-              title={`تحذير الذاكرة: تم استهلاك ${usagePercentage}% من المساحة التخزينية`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-              <span>مساحة التخزين {usagePercentage}%</span>
-            </button>
-          )}
-
-          {/* Sleep Timer */}
+        {/* Zone 3 (Left in RTL): Profile Avatar with Refined Secondary Dropdown */}
+        <div className="relative flex items-center" ref={profileMenuRef}>
           <button
-            onClick={() => setSleepTimerOpen(true)}
-            className={`w-10 h-10 rounded-2xl flex items-center justify-center apple-spring cursor-pointer relative ${
-              sleepTimerRemaining !== null
-                ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
-                : 'apple-glass-pill text-zinc-300 hover:text-white'
-            }`}
-            title={sleepTimerRemaining !== null ? `مؤقت النوم: ${formatTimerRemaining(sleepTimerRemaining)}` : t.sleepTimer}
-          >
-            <Moon className="w-4 h-4" />
-            {sleepTimerRemaining !== null && (
-              <span className="font-mono text-[8px] absolute -bottom-1 bg-[#FA243C] px-1 rounded-full font-bold">{formatTimerRemaining(sleepTimerRemaining)}</span>
-            )}
-          </button>
-
-          {/* Sync Party Trigger */}
-          <button
-            onClick={() => setSyncPartyOpen(true)}
-            className={`w-10 h-10 rounded-2xl flex items-center justify-center apple-spring cursor-pointer relative ${
-              syncRoomState.roomId
-                ? 'bg-gradient-to-tr from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/40 animate-pulse'
-                : 'apple-glass-pill text-zinc-300 hover:text-white'
-            }`}
-            title={syncRoomState.roomId ? `${t.syncParty}: ${syncRoomState.roomId}` : t.syncParty}
-            aria-label={t.syncParty}
-          >
-            <Radio className="w-4 h-4" />
-            {syncRoomState.roomId && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400 absolute top-1.5 right-1.5 border border-black" />
-            )}
-          </button>
-
-          {/* Equalizer */}
-          <button
-            onClick={() => setEqualizerOpen(true)}
-            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-            title={t.equalizer}
-          >
-            <Sliders className="w-4 h-4" />
-          </button>
-
-          {/* CarPlay / Car Mode Trigger */}
-          <button
-            onClick={() => setCarModeOpen(true)}
-            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-            title="وضع القيادة في السيارة / Apple CarPlay Mode"
-          >
-            <Car className="w-4 h-4 text-[#FA243C]" />
-          </button>
-
-          {/* Cloud Sync Status Badge */}
-          <CloudStatusBadge />
-
-          {/* Cloud Uploader Trigger */}
-          <button
-            onClick={() => setCloudUploaderOpen(true)}
-            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-            title="رفع ملفات موسيقية إلى السحابة (Cloud Uploader)"
-            aria-label="Cloud Uploader"
-          >
-            <UploadCloud className="w-4 h-4 text-sky-400" />
-          </button>
-
-          {/* Settings Modal Trigger */}
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="w-10 h-10 rounded-2xl apple-glass-pill text-zinc-300 hover:text-white flex items-center justify-center apple-spring cursor-pointer"
-            title={t.settings}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-
-          {/* Profile Avatar Trigger */}
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0 cursor-pointer apple-spring"
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all cursor-pointer overflow-hidden shadow-sm"
             title={currentUser ? currentUser.name : t.profile}
           >
-            <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
-              {currentUser?.avatarUrl ? (
-                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
-              ) : (
-                currentUser?.name?.[0]?.toUpperCase() || 'A'
-              )}
-            </div>
+            {currentUser?.avatarUrl ? (
+              <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+            ) : (
+              currentUser?.name?.[0]?.toUpperCase() || 'A'
+            )}
           </button>
+
+          {/* Clean secondary dropdown menu */}
+          {isProfileMenuOpen && (
+            <div
+              className="absolute top-10 start-0 min-w-[210px] bg-[#16161A] border border-white/[0.08] rounded-xl p-1.5 shadow-2xl backdrop-blur-2xl z-50 text-xs text-zinc-300 animate-fadeIn"
+            >
+              <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
+                <span className="font-semibold text-white block truncate">{currentUser?.name || 'مستخدم AuraWave'}</span>
+                <span className="text-[10px] text-zinc-500 block truncate">{currentUser?.email || 'جلسة محلية'}</span>
+              </div>
+              <button
+                onClick={() => { setIsProfileMenuOpen(false); setSettingsOpen(true); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5 text-zinc-400" />
+                <span>{t.settings}</span>
+              </button>
+              <button
+                onClick={() => { setIsProfileMenuOpen(false); setCloudUploaderOpen(true); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-zinc-400" />
+                <span>رفع ملفات للسحابة</span>
+              </button>
+              <button
+                onClick={() => { setIsProfileMenuOpen(false); setCarModeOpen(true); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+              >
+                <Car className="w-3.5 h-3.5 text-zinc-400" />
+                <span>وضع قيادة السيارة (CarPlay)</span>
+              </button>
+              <button
+                onClick={() => { setIsProfileMenuOpen(false); setSleepTimerOpen(true); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+              >
+                <Moon className="w-3.5 h-3.5 text-zinc-400" />
+                <span>مؤقت النوم</span>
+              </button>
+              <button
+                onClick={() => { setIsProfileMenuOpen(false); setSyncPartyOpen(true); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+              >
+                <Radio className="w-3.5 h-3.5 text-zinc-400" />
+                <span>{t.syncParty}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

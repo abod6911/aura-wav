@@ -69,16 +69,16 @@ function OfflineBanner() {
 
   if (!isOnline) {
     return (
-      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-300 text-center text-sm font-bold backdrop-blur-md">
-        📡 وضع بدون اتصال — يتم تشغيل الأغاني المحفوظة محلياً
+      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-center text-xs font-medium backdrop-blur-md">
+        وضع بدون اتصال — تشغيل المسارات المحفوظة محلياً
       </div>
     );
   }
 
   if (showOnlineBanner) {
     return (
-      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-[var(--apple-rose)]/20 border-b border-[var(--apple-rose)]/30 text-[var(--apple-rose)] text-center text-sm font-bold backdrop-blur-md transition-opacity duration-300">
-        ✅ تم استعادة الاتصال
+      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-400 text-center text-xs font-medium backdrop-blur-md transition-opacity duration-300">
+        تم استعادة الاتصال بالشبكة
       </div>
     );
   }
@@ -96,14 +96,14 @@ function DirectoryPermissionBanner() {
   if (!needsPermission) return null;
 
   return (
-    <div className="sticky top-0 z-[105] w-full px-4 py-2.5 bg-gradient-to-r from-amber-500/25 via-orange-500/20 to-amber-500/25 border-b border-amber-500/40 text-white backdrop-blur-2xl flex items-center justify-between gap-3 shadow-xl animate-fadeIn">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-base flex-shrink-0 animate-bounce">🔑</span>
+    <div className="sticky top-0 z-[105] w-full px-4 py-2.5 bg-[#18181C] border-b border-white/[0.08] text-white backdrop-blur-2xl flex items-center justify-between gap-3 shadow-xl animate-fadeIn">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
         <div className="min-w-0">
-          <span className="text-xs font-bold text-amber-200 block truncate">
+          <span className="text-xs font-semibold text-zinc-200 block truncate">
             {t.directoryPermissionPrompt}
           </span>
-          <span className="text-[10px] text-amber-300/80 block truncate font-mono">
+          <span className="text-[10px] text-zinc-400 block truncate font-mono">
             {savedFolderName || 'Liked_Songs'}
           </span>
         </div>
@@ -111,7 +111,7 @@ function DirectoryPermissionBanner() {
       <button
         type="button"
         onClick={() => requestAccess()}
-        className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black text-xs font-black shadow-md apple-spring cursor-pointer flex-shrink-0 active:scale-95 transition-transform"
+        className="px-3.5 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-sm cursor-pointer flex-shrink-0 active:scale-95 transition-all"
       >
         {t.grantDirectoryAccess}
       </button>
@@ -129,18 +129,18 @@ function DownloadProgressPill() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-3 inset-x-0 mx-auto z-[110] w-[min(92vw,420px)] rounded-[22px] apple-glass-card border border-white/12 shadow-2xl px-4 py-3 flex items-center gap-3"
+      className="fixed top-3 inset-x-0 mx-auto z-[110] w-[min(92vw,400px)] rounded-2xl bg-[#18181C]/95 border border-white/[0.08] backdrop-blur-2xl shadow-2xl px-4 py-3 flex items-center gap-3"
     >
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between text-xs font-bold text-white mb-1.5">
-          <span>⬇️ جاري الحفظ للأوفلاين (Apple ALAC)</span>
-          <span className="tabular-nums text-white/70">
+        <div className="flex items-center justify-between text-xs font-semibold text-white mb-1.5">
+          <span>جاري التنزيل للاستماع دون اتصال</span>
+          <span className="tabular-nums text-zinc-400 text-[11px]">
             {progress.current}/{progress.total}
           </span>
         </div>
-        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] transition-[width] duration-300"
+            className="h-full rounded-full bg-[#FA2D48] transition-[width] duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -148,7 +148,7 @@ function DownloadProgressPill() {
       <button
         type="button"
         onClick={cancel}
-        className="shrink-0 text-xs font-bold text-red-300 hover:text-red-200 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer"
+        className="shrink-0 text-xs font-medium text-zinc-400 hover:text-white px-2 py-1 rounded-md bg-white/[0.05] hover:bg-white/[0.1] transition-colors cursor-pointer"
       >
         إلغاء
       </button>
@@ -333,7 +333,7 @@ export function App() {
         window.removeEventListener('focus', handleUpdateCheck);
       };
     }
-  }, [initStore]);
+  }, [initStore, setCurrentUser, setAuthScreenOpen, setIsAuthLoading]);
 
   // Online / Offline network status listener
   useEffect(() => {
@@ -484,19 +484,19 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none'
-          : 'relative w-full h-full min-h-screen flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
+          : 'relative w-full h-full min-h-screen flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-[#08080c]/95 backdrop-blur-2xl border-4 border-dashed border-[var(--apple-rose)]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="p-6 rounded-[28px] bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] mb-4 animate-bounce border border-[var(--apple-rose)]/30 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#FA2D48]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
+          <div className="p-6 rounded-[28px] bg-[#FA2D48]/15 text-[#FA2D48] mb-4 border border-[#FA2D48]/30 shadow-2xl">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
-          <h2 className="text-2xl font-black text-white mb-2 tracking-tight">أفلت مجلد الأغاني أو الملفات هنا</h2>
+          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">أفلت مجلد الأغاني أو الملفات هنا</h2>
           <p className="text-sm text-zinc-400 font-medium">سيتم استيراد كافة المسارات وقراءة الأغلفة فوراً</p>
         </div>
       )}
@@ -504,7 +504,7 @@ export function App() {
       {/* 1. Dynamic Album Art Ambient Mesh (CSS-only on mobile, WebGL on desktop) */}
       <AtmosphereBackground />
 
-      {/* 2. Desktop Left Sidebar (Only rendered on desktop) */}
+      {/* 2. Desktop Right Sidebar (Docked continuously on right in RTL) */}
       {!isMobile && <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />}
 
       {/* 3. Header on Mobile (Stays fixed at top with safe-area support) */}
@@ -519,12 +519,12 @@ export function App() {
         style={{
           paddingBottom: isMobile
             ? (currentTrack ? 'var(--scroll-bottom-clearance)' : 'var(--scroll-bottom-no-player)')
-            : undefined,
+            : '8rem',
         }}
         className={
           isMobile
             ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
-            : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
+            : 'flex-1 w-full min-w-0 h-screen overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
         }
       >
         <HandoffBanner />
@@ -532,14 +532,14 @@ export function App() {
         <DirectoryPermissionBanner />
         <DownloadProgressPill />
 
-        {/* Desktop Header sits inside main */}
+        {/* Desktop Header docked sticky at top of main area */}
         {!isMobile && (
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="sticky top-0 z-30 w-full bg-[#09090B]/90 backdrop-blur-xl">
             <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
           </div>
         )}
 
-        <div className="w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
+        <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-10 pb-32 pt-4 flex-1 flex flex-col min-w-0">
           {/* Dynamic Tab Views (Strict Conditional Rendering: ONLY activeTab in DOM) */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">

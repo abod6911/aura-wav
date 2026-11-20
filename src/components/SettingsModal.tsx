@@ -103,6 +103,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [showConfirmClear, setShowConfirmClear] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
+
+  useEffect(() => {
+    if (isOpen) {
+      setSavedAccounts(authService.getSavedAccounts());
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -149,13 +156,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     );
   };
 
-  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
 
-  useEffect(() => {
-    if (isOpen) {
-      setSavedAccounts(authService.getSavedAccounts());
-    }
-  }, [isOpen]);
 
   const handleSwitchTo = (acc: SavedAccount) => {
     const user: AuthUser = {

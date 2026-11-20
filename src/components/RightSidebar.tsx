@@ -39,27 +39,27 @@ export const RightSidebar: React.FC = () => {
   return (
     <aside
       dir={dir}
-      className="hidden xl:flex w-84 flex-col apple-glass-card rounded-[28px] my-3 ms-3 p-4.5 z-30 select-none h-[calc(100dvh-6.5rem)] overflow-hidden border border-white/[0.1] shadow-[0_24px_64px_rgba(0,0,0,0.85)] backdrop-blur-3xl"
+      className="hidden xl:flex w-80 flex-col bg-[#111114] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-screen pb-24 overflow-hidden shrink-0"
     >
-      {/* Header with Liquid Tabs */}
-      <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] flex-shrink-0">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+      {/* Header with Clean Segmented Tabs */}
+      <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] flex-shrink-0">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/[0.06] text-xs">
           <button
             onClick={() => setActiveRightSidebarTab('queue')}
-            className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer apple-spring ${
+            className={`font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeRightSidebarTab === 'queue'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
-                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             {isRTL ? 'قائمة الانتظار' : 'Up Next'}
           </button>
           <button
             onClick={() => setActiveRightSidebarTab('now_playing')}
-            className={`text-xs font-bold px-3.5 py-1.5 rounded-xl transition-all cursor-pointer apple-spring ${
+            className={`font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeRightSidebarTab === 'now_playing'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/30'
-                : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                ? 'bg-white text-black shadow-sm'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
             {isRTL ? 'يعمل الآن' : 'Now Playing'}
@@ -68,7 +68,7 @@ export const RightSidebar: React.FC = () => {
 
         <button
           onClick={() => setRightSidebarOpen(false)}
-          className="p-2 text-white/60 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+          className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors cursor-pointer"
           title={isRTL ? 'إغلاق اللوحة الجانبية' : 'Close panel'}
           aria-label="Close Sidebar"
         >
@@ -346,13 +346,10 @@ export const RightSidebar: React.FC = () => {
                     <bdi dir="auto">{currentTrack.album || (isRTL ? 'ألبوم فردي' : 'Single')}</bdi>
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-white/65">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Sparkles className="w-3.5 h-3.5 text-[#FA243C]" />
-                    <span>{isRTL ? 'جودة الصوت' : 'Quality'}</span>
-                  </span>
-                  <span className="text-[#FA243C] font-extrabold text-[10px] bg-[#FA243C]/15 border border-[#FA243C]/30 px-2 py-0.5 rounded-full font-mono">
-                    ALAC Lossless 24-Bit
+                <div className="flex items-center justify-between text-zinc-400">
+                  <span className="font-medium">{isRTL ? 'جودة الصوت' : 'Quality'}</span>
+                  <span className="text-zinc-400 text-xs font-normal">
+                    Lossless ALAC 24-Bit
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-white/65">
