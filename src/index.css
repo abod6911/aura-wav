@@ -24,13 +24,13 @@
   --spring-micro: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* Unified Mobile Bottom Dock & Viewport Geometry Variables */
-  --nav-height: 52px;
-  --miniplayer-height: 56px;
-  --safe-bottom: max(env(safe-area-inset-bottom, 24px), 24px);
-  --safe-top: max(env(safe-area-inset-top, 0px), 12px);
-  --scroll-bottom-clearance: calc(var(--nav-height) + var(--miniplayer-height) + var(--safe-bottom) + 20px);
-  --scroll-bottom-no-player: calc(var(--nav-height) + var(--safe-bottom) + 16px);
-  --bottom-nav-height: 76px;
+  --nav-height: 54px;
+  --miniplayer-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --scroll-bottom-clearance: calc(54px + 68px + env(safe-area-inset-bottom, 0px) + 24px);
+  --scroll-bottom-no-player: calc(54px + env(safe-area-inset-bottom, 0px) + 20px);
+  --bottom-nav-height: 54px;
 }
 
 /* Tactile Ultra-Subtle Procedural Grain/Noise (Hardware-accelerated zero-cost SVG texture) */

@@ -132,8 +132,8 @@ export const InfiniteSearchView: React.FC = () => {
   return (
     <div className="w-full text-white pb-6 md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
-      <div className="relative max-w-xl mx-auto mb-3">
-        <div className="relative flex items-center bg-white/[0.08] hover:bg-white/[0.12] focus-within:bg-white/[0.14] focus-within:ring-1 focus-within:ring-[#FA243C]/60 rounded-2xl transition-all shadow-md border border-white/[0.1] px-3.5 h-12">
+      <div className="relative max-w-xl mx-auto mb-4">
+        <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#FA2D48]/60 rounded-xl transition-all shadow-md border border-white/[0.08] px-3.5 h-11">
           <Search className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           <input
             type="search"
@@ -148,7 +148,7 @@ export const InfiniteSearchView: React.FC = () => {
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full flex-shrink-0 aura-tap-btn"
+              className="p-1 text-zinc-400 hover:text-white transition-colors cursor-pointer rounded-full flex-shrink-0"
               aria-label={t.clearSearch}
             >
               <X className="w-4 h-4" />
@@ -179,14 +179,10 @@ export const InfiniteSearchView: React.FC = () => {
       {/* State 1: Empty Search -> Browse Genres */}
       {!query.trim() && (
         <div className="max-w-5xl mx-auto space-y-4">
-          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 mb-2">
-            <h2 className="text-base sm:text-xl font-black text-white">
+          <div className="flex items-center justify-between gap-1 mb-2">
+            <h2 className="text-base sm:text-xl font-bold text-white">
               {isRTL ? 'استكشف الأنواع والموسيقى' : 'Browse Categories & Genres'}
             </h2>
-            <span className="text-[11px] text-[#FA243C] font-bold flex items-center gap-1 self-start xs:self-auto">
-              <Sparkles className="w-3 h-3" />
-              <span>{isRTL ? 'تشغيل كامل بدون حدود 30 ثانية' : '100% Full Length Audio'}</span>
-            </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
             {genreStats.map((g) => (

@@ -174,7 +174,7 @@ export const EqualizerModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div data-testid="equalizer-modal" className="fixed inset-0 z-50 select-none flex items-center justify-center p-3 sm:p-6">
+      <div data-testid="equalizer-modal" className="fixed inset-0 z-50 select-none flex items-end md:items-center justify-center p-0 md:p-6">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -184,14 +184,16 @@ export const EqualizerModal: React.FC = () => {
           className="fixed inset-0 bg-black/75 backdrop-blur-md cursor-pointer"
         />
 
-        {/* Modal Window */}
+        {/* Modal Window (Full-Height Bottom Sheet on Mobile, Dialog on Desktop) */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 15 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-          className="relative w-full max-w-4xl max-h-[90vh] bg-[#101013]/95 border border-white/[0.08] rounded-2xl shadow-2xl backdrop-blur-3xl p-5 sm:p-7 flex flex-col gap-5 overflow-y-auto z-10"
+          className="relative w-full max-w-4xl max-h-[90dvh] md:max-h-[90vh] bg-[#101013]/98 border-t md:border border-white/[0.08] rounded-t-3xl md:rounded-2xl shadow-2xl backdrop-blur-3xl p-5 sm:p-7 flex flex-col gap-5 overflow-y-auto z-10 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] md:pb-7"
         >
+          {/* Mobile Grabber Handle */}
+          <div className="md:hidden w-10 h-1 rounded-full bg-white/20 mx-auto -mt-1 mb-1 shrink-0" />
           {/* ── 1. Modal Header (Single Line Clean Architecture) ── */}
           <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06]">
             {/* Title */}
@@ -485,6 +487,8 @@ export const EqualizerModal: React.FC = () => {
 
                     {/* iOS-Style Toggle */}
                     <button
+                      type="button"
+                      dir="ltr"
                       onClick={() => setAutoMix(!automixEnabled)}
                       className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
                         automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
@@ -609,6 +613,8 @@ export const EqualizerModal: React.FC = () => {
                 </div>
 
                 <button
+                  type="button"
+                  dir="ltr"
                   onClick={() => setKaraokeMode(!karaokeMode)}
                   className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
                     karaokeMode ? 'bg-[#FA2D48]' : 'bg-white/10'
@@ -635,6 +641,8 @@ export const EqualizerModal: React.FC = () => {
                 </div>
 
                 <button
+                  type="button"
+                  dir="ltr"
                   onClick={() => setLoudnessNormalization(!loudnessNormalization)}
                   className={`w-11 h-6 rounded-full p-0.5 transition-colors relative flex items-center cursor-pointer ${
                     loudnessNormalization ? 'bg-[#FA2D48]' : 'bg-white/10'

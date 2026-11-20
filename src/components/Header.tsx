@@ -39,9 +39,27 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
   const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
   const setSpotlightOpen = usePlayerStore((state) => state.setSpotlightOpen);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
+  const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const isQuotaWarning = useStorageStore((state) => state.isQuotaWarning);
   const usagePercentage = useStorageStore((state) => state.usagePercentage);
+
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'home':
+        return t.listenNow;
+      case 'search':
+        return t.search;
+      case 'library':
+        return t.library;
+      case 'favorites':
+        return t.favorites;
+      case 'playlists':
+        return isRTL ? 'قوائم التشغيل' : 'Playlists';
+      default:
+        return t.listenNow;
+    }
+  };
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -62,87 +80,36 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
   return (
     <header
       style={{
-        backgroundColor: '#09090B',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        backgroundColor: isScrolled ? '#09090B' : 'transparent',
       }}
-      className="select-none w-full min-w-0 border-b border-white/[0.04] px-4 sm:px-8 py-3 shrink-0 z-30 transition-all pointer-events-auto"
+      className={`select-none w-full min-w-0 px-4 sm:px-8 pb-3 shrink-0 z-30 transition-all pointer-events-auto ${
+        isScrolled
+          ? 'bg-[#09090B]/95 backdrop-blur-2xl border-b border-white/[0.08]'
+          : 'border-b border-white/[0.03]'
+      }`}
       dir={dir}
     >
-      {/* ── Mobile Header Bar (Preserved for Mobile) ── */}
-      <div className="flex items-center justify-between sm:hidden w-full min-w-0">
-        {/* Brand & User Profile */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#161622] border border-white/[0.12] p-0.5 shadow-sm flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-            title={currentUser ? currentUser.name : t.settings}
-            aria-label={t.settings}
-          >
-            <div className="w-full h-full bg-[#101018] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-              {currentUser?.avatarUrl ? (
-                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
-              ) : (
-                currentUser?.name?.[0]?.toUpperCase() || 'A'
-              )}
-            </div>
-          </button>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="font-extrabold text-white text-[15px] tracking-tight leading-none flex items-center gap-1.5">
-              <bdi dir="ltr" className="inline-flex items-center">
-                AURA<span className="text-[#FA2D48]">.WAV</span>
-              </bdi>
-            </span>
-            <span className="text-[10px] text-zinc-400 font-medium leading-tight mt-0.5 truncate">
-              {currentUser ? currentUser.name : (isRTL ? 'ضيف' : 'Guest')}
-            </span>
+      {/* ── Mobile Header Bar (Apple Music Native iOS Style) ── */}
+      <div className="flex items-center justify-between sm:hidden w-full min-w-0 pt-1 pb-1">
+        <h1 className="text-2xl font-black tracking-tight text-white leading-none">
+          {getPageTitle()}
+        </h1>
+
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+          title={currentUser ? currentUser.name : t.settings}
+          aria-label={t.settings}
+        >
+          <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+            {currentUser?.avatarUrl ? (
+              <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
+            ) : (
+              currentUser?.name?.[0]?.toUpperCase() || 'A'
+            )}
           </div>
-        </div>
-
-        {/* Mobile Right Actions */}
-        <div className="flex items-center gap-1.5 shrink-0 ps-1">
-          {isQuotaWarning && (
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] font-bold animate-pulse cursor-pointer shrink-0"
-              title={`تحذير الذاكرة: ${usagePercentage}% ممتلئ`}
-            >
-              <AlertTriangle className="w-3 h-3 text-red-400" />
-              <span>{usagePercentage}%</span>
-            </button>
-          )}
-
-          {/* Quick Import Button */}
-          <button
-            onClick={onOpenImport}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-white cursor-pointer shrink-0 transition-colors"
-            title={t.importFolder}
-            aria-label={t.importFolder}
-          >
-            <FolderPlus className="w-4 h-4 text-[#FA2D48]" />
-          </button>
-
-          {/* Sleep Timer (if active) */}
-          {sleepTimerRemaining !== null && (
-            <button
-              onClick={() => setSleepTimerOpen(true)}
-              className="h-9 px-2.5 rounded-full bg-[#FA2D48]/20 border border-[#FA2D48]/40 text-[#FA2D48] text-xs font-mono font-bold flex items-center gap-1 cursor-pointer shrink-0"
-              title={t.sleepTimer}
-              aria-label={t.sleepTimer}
-            >
-              <Moon className="w-3 h-3" />
-              <span className="text-[9.5px]">{formatTimerRemaining(sleepTimerRemaining)}</span>
-            </button>
-          )}
-
-          {/* Settings */}
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer shrink-0 transition-colors"
-            title={t.settings}
-            aria-label={t.settings}
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </div>
+        </button>
       </div>
 
       {/* ── Desktop Header Bar (Ultra-Clean 3-Zone Architecture) ── */}

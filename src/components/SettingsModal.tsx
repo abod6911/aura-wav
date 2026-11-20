@@ -8,7 +8,7 @@ import {
   RefreshCw,
   Trash2,
   Database,
-  Sparkles,
+  Sun,
   AlertTriangle,
   Languages,
   ShieldCheck,
@@ -209,7 +209,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               onClose();
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl overflow-y-auto flex flex-col gap-4 sm:gap-5 z-10"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[88dvh] w-full max-w-full sm:max-w-lg sm:mx-auto bg-[#111114] border-t sm:border border-white/[0.08] rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-4 sm:gap-5"
           dir={dir}
         >
           {/* iOS Mobile Top Drag Grabber Pill */}
@@ -247,7 +247,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
 
           {/* 0. Account & Profile Group */}
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 space-y-3">
+          <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0">
@@ -324,7 +324,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
 
           {/* 1. Language & Display Group */}
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 space-y-3.5">
+          <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
                 <Languages className="w-4 h-4 text-[#FA243C]" />
@@ -372,7 +372,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-3">
               <div className="min-w-0 pr-2">
                 <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <Sun className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
                   <span>{t.ambientGlowLabel}</span>
                 </h5>
                 <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{t.ambientGlowSub}</p>
@@ -387,7 +387,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
 
           {/* 2. Pro Audio & DSP Suite */}
-          <div className="rounded-[22px] bg-white/[0.03] border border-white/[0.08] p-4 space-y-3.5">
+          <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-[var(--apple-rose)]" />
@@ -519,7 +519,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
 
           {/* 3. Storage Metric & Library Group */}
-          <div className="p-4 rounded-[22px] bg-white/[0.03] border border-white/[0.08] space-y-3">
+          <div className="p-4 rounded-2xl bg-[#16161A] border border-white/[0.06] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-[var(--apple-rose)]" />

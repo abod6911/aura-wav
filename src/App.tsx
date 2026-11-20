@@ -539,7 +539,7 @@ export function App() {
           </div>
         )}
 
-        <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-10 pb-32 pt-4 flex-1 flex flex-col min-w-0">
+        <div className="w-full max-w-[1440px] mx-auto px-0 md:px-6 lg:px-10 pb-16 md:pb-32 pt-2 md:pt-4 flex-1 flex flex-col min-w-0">
           {/* Dynamic Tab Views (Strict Conditional Rendering: ONLY activeTab in DOM) */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
@@ -587,20 +587,16 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls: Full-bleed Edge-to-Edge iOS Tab Bar & Floating MiniPlayer */}
+      {/* 7. Mobile Bottom Controls: Edge-to-Edge iOS Tab Bar & Floating MiniPlayer */}
       {isMobile && (
-        <footer className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex flex-col items-center select-none">
+        <>
           {/* Floating MiniPlayer right above Tab Bar */}
-          {currentTrack && (
-            <div className="w-full max-w-lg px-2 pb-1.5 pointer-events-auto">
-              <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
-            </div>
-          )}
+          {currentTrack && <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />}
           {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
-          <div className="w-full pointer-events-auto">
+          <div className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto">
             <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
           </div>
-        </footer>
+        </>
       )}
 
       {/* 8. Mobile Expandable Full-Screen Sheet */}

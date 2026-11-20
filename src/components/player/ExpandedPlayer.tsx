@@ -96,7 +96,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           handleClose();
         }
       }}
-      className="fixed inset-0 z-50 h-full w-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-[#060608] obsidian-grain overflow-hidden select-none touch-pan-y"
+      className="fixed inset-0 z-50 h-[100dvh] w-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-[#09090B] obsidian-grain overflow-hidden select-none touch-pan-y"
       dir={dir}
     >
       {/* Dynamic Cover-Driven Ambient Engine */}
@@ -137,7 +137,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 ? isRTL ? 'يتم التشغيل من قائمة الانتظار' : 'Playing from Queue'
                 : isRTL ? 'يتم التشغيل من المكتبة' : 'Playing from Library'}
             </span>
-            <h5 className="text-[11.5px] sm:text-xs text-white/80 font-medium truncate max-w-[200px] mx-auto">
+            <h5 dir="auto" className="text-[11.5px] sm:text-xs text-white/80 font-medium truncate max-w-[200px] mx-auto text-center block">
               {currentTrack.album || currentTrack.title}
             </h5>
           </div>
@@ -324,7 +324,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </button>
         </div>
 
-        {/* LAYER 6: BOTTOM STUDIO DOCK (EXACTLY 4 PROMINENT BUTTONS) */}
+        {/* LAYER 6: BOTTOM STUDIO DOCK (CLEAN 3 TOOLS: LYRICS, EQ, QUEUE) */}
         <div className="flex items-center justify-around w-full pt-1.5 sm:pt-2 border-t border-white/[0.06] flex-shrink-0 select-none">
           {/* 1. Synced Lyrics */}
           <button
@@ -336,27 +336,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
             title={isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'}
           >
-            <Mic2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-[9.5px] sm:text-[10px] font-medium">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
+            <Mic2 className="w-5 h-5" />
+            <span className="text-[10px] font-medium">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
           </button>
 
-          {/* 2. AutoMix & Speed */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              setAutoMixModalOpen(true);
-            }}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl transition-all cursor-pointer active:scale-90 ${
-              automixEnabled ? 'text-purple-400' : 'text-zinc-400 hover:text-white'
-            }`}
-            title="AutoMix & Speed"
-          >
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-[9.5px] sm:text-[10px] font-medium">AutoMix</span>
-          </button>
-
-          {/* 3. EQ & DSP */}
+          {/* 2. EQ & Studio Effects */}
           <button
             type="button"
             onClick={() => {
@@ -366,11 +350,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
             title={isRTL ? 'المعادل والمؤثرات' : 'EQ & Effects'}
           >
-            <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-[9.5px] sm:text-[10px] font-medium">{isRTL ? 'المعادل' : 'EQ'}</span>
+            <Sliders className="w-5 h-5" />
+            <span className="text-[10px] font-medium">{isRTL ? 'المعادل' : 'EQ'}</span>
           </button>
 
-          {/* 4. Queue Drawer */}
+          {/* 3. Queue Drawer */}
           <button
             type="button"
             data-testid="expanded-queue-btn"
@@ -379,31 +363,17 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               setQueueOpen(true);
             }}
             className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90 relative"
-            title={isRTL ? 'طابور الانتظار' : 'Queue'}
+            title={isRTL ? 'قائمة الانتظار' : 'Queue'}
           >
             <div className="relative">
-              <ListMusic className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ListMusic className="w-5 h-5" />
               {userQueue.length > 0 && (
-                <span className="absolute -top-1.5 -right-2.5 px-1 min-w-[16px] h-4 rounded-full bg-[#FA243C] text-white text-[9px] font-mono font-black flex items-center justify-center border border-black shadow">
+                <span className="absolute -top-1 -right-2 px-1 min-w-[15px] h-3.5 rounded-full bg-[#FA2D48] text-white text-[8.5px] font-mono font-bold flex items-center justify-center border border-black shadow">
                   {userQueue.length}
                 </span>
               )}
             </div>
-            <span className="text-[9.5px] sm:text-[10px] font-medium">{isRTL ? 'الطابور' : 'Queue'}</span>
-          </button>
-
-          {/* 5. Devices & Handoff */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('light');
-              setDeviceSwitcherOpen(true);
-            }}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
-            title={isRTL ? 'الأجهزة و Handoff' : 'Devices & Handoff'}
-          >
-            <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
-            <span className="text-[9.5px] sm:text-[10px] font-medium text-emerald-400/90">{isRTL ? 'الأجهزة' : 'Devices'}</span>
+            <span className="text-[10px] font-medium">{isRTL ? 'القائمة' : 'Queue'}</span>
           </button>
         </div>
       </div>

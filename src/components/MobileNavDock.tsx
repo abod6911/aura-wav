@@ -2,11 +2,10 @@ import React, { useRef } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { Radio, Search, Library, Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { triggerHaptic } from '../utils/haptics';
 
 interface MobileNavDockProps {
-  onOpenImport: () => void;
+  onOpenImport?: () => void;
 }
 
 export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
@@ -48,13 +47,9 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
     <nav
       aria-label="Mobile Navigation"
       style={{
-        backgroundColor: 'rgba(9, 9, 16, 0.94)',
-        backdropFilter: 'blur(28px) saturate(190%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-        paddingTop: '6px',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 24px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
-      className="w-full border-t border-white/[0.08] px-1 flex items-center justify-around select-none pointer-events-auto shrink-0 shadow-[0_-4px_24px_rgba(0,0,0,0.8)]"
+      className="w-full bg-[#121215]/90 backdrop-blur-2xl border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-50 h-[calc(54px+env(safe-area-inset-bottom,0px))]"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -73,40 +68,21 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 rounded-xl transition-all flex-1 cursor-pointer h-[48px] min-h-[48px] touch-manipulation select-none active:scale-95 pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 transition-all flex-1 cursor-pointer h-full touch-manipulation select-none active:scale-95 pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
-            {/* Sliding Liquid Active Indicator with Apple Spring Physics */}
-            {isActive && (
-              <motion.div
-                layoutId="activeMobileTab"
-                className="absolute inset-x-1 inset-y-0.5 rounded-xl bg-white/[0.08] border border-white/[0.1] shadow-sm pointer-events-none"
-                transition={{
-                  type: 'spring',
-                  stiffness: 420,
-                  damping: 36,
-                  mass: 0.8,
-                }}
-              />
-            )}
-            <motion.div
-              animate={isActive ? { scale: [1, 1.15, 1] } : { scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-              className="relative z-10"
-            >
+            <div className="relative">
               <Icon
                 className={`w-[22px] h-[22px] transition-colors duration-150 ${
-                  isActive
-                    ? 'text-[#FA243C]'
-                    : 'text-white/60 hover:text-white'
+                  isActive ? 'text-[#FA2D48]' : 'text-[#8E8E93]'
                 }`}
-                strokeWidth={isActive ? 2.4 : 1.8}
+                strokeWidth={1.8}
               />
-            </motion.div>
+            </div>
             <span
-              className={`text-[10px] sm:text-[10.5px] tracking-tight transition-colors duration-150 relative z-10 leading-none ${
-                isActive ? 'text-white font-bold' : 'text-white/60 font-medium'
+              className={`text-[10px] sm:text-[11px] tracking-tight transition-colors duration-150 leading-none ${
+                isActive ? 'text-[#FA2D48] font-semibold' : 'text-[#8E8E93] font-medium'
               }`}
             >
               {tab.label}

@@ -137,58 +137,42 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
   return (
     <div className="w-full max-w-7xl mx-auto py-1 sm:py-2 pb-6 md:pb-24 space-y-2.5 sm:space-y-4 select-none overflow-x-hidden" dir={dir}>
-      {/* 1. Mobile Compact Header (Sleek Apple Music style, under 60px) */}
-      <div className="sm:hidden flex items-center justify-between gap-2.5 p-2 rounded-2xl bg-[#12121c]/90 border border-white/[0.08] backdrop-blur-xl">
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FA243C] via-[#FF375F] to-[#E00028] flex items-center justify-center flex-shrink-0 shadow-md border border-white/20">
-            <Heart className="w-5 h-5 fill-white text-white drop-shadow" />
-          </div>
-          <div className="min-w-0 flex-1 text-start">
-            <h1 className="text-[14px] font-black text-white truncate leading-tight">
-              {isRTL ? 'أغانيك المفضلة' : 'Liked Songs'}
-            </h1>
-            <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5">
-              <span>{favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'}</span>
-              <span className="mx-1">•</span>
-              <span>{formattedTotalDuration}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Compact Actions */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={handlePlayAll}
-            disabled={favoriteTracks.length === 0}
-            className="h-8 px-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-[#FA243C]/30 active:scale-95 transition-transform cursor-pointer disabled:opacity-50"
-          >
-            <Play className="w-3.5 h-3.5 fill-white text-white" />
-            <span>{isRTL ? 'تشغيل' : 'Play'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleShufflePlay}
-            disabled={favoriteTracks.length === 0}
-            className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer disabled:opacity-50"
-            title={isRTL ? 'خلط عشوائي' : 'Shuffle'}
-          >
-            <Shuffle className="w-3.5 h-3.5 text-zinc-300" />
-          </button>
-
+      {/* 1. Mobile Clean Header & Actions (Apple Music 44px Dual Button Layout) */}
+      <div className="sm:hidden space-y-3 pt-1 pb-2">
+        <div className="flex items-center justify-between px-0.5">
+          <span className="text-xs text-zinc-400 font-medium tabular-nums">
+            {favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'} • {formattedTotalDuration}
+          </span>
           <button
             type="button"
             onClick={() => downloadFavoritesOffline()}
             disabled={favoriteTracks.length === 0 || !!downloadAllProgress || allFavoritesSaved}
-            className={`w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-transform cursor-pointer border ${
-              allFavoritesSaved
-                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                : 'bg-white/[0.08] border-white/10 text-white'
-            }`}
-            title={isRTL ? 'حفظ أوفلاين' : 'Save offline'}
+            className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 cursor-pointer py-1 px-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06]"
           >
-            {allFavoritesSaved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
+            {allFavoritesSaved ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+            <span className="text-[11px] font-medium">{allFavoritesSaved ? (isRTL ? 'محفوظة' : 'Saved') : (isRTL ? 'تحميل' : 'Download')}</span>
+          </button>
+        </div>
+
+        {/* Two Equal Action Buttons (44px height, rounded-xl) */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={handlePlayAll}
+            disabled={favoriteTracks.length === 0}
+            className="h-11 rounded-xl bg-[#FA2D48] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Play className="w-4 h-4 fill-white text-white" />
+            <span>{isRTL ? 'تشغيل' : 'Play'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleShufflePlay}
+            disabled={favoriteTracks.length === 0}
+            className="h-11 rounded-xl bg-[#1C1C21] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Shuffle className="w-4 h-4 text-zinc-300" />
+            <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
           </button>
         </div>
       </div>

@@ -98,14 +98,14 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
   return (
     <div className="w-full flex flex-col gap-6 sm:gap-8 pt-1 sm:pt-2 pb-16 overflow-x-hidden select-none" dir={dir}>
-      {/* ── Top Header Title ── */}
-      <div className="flex items-center justify-between">
+      {/* ── Top Header Title (Desktop Only: Mobile Header displays sticky page title) ── */}
+      <div className="hidden sm:flex items-center justify-between">
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
           {t.listenNow}
         </h1>
       </div>
 
-      {/* ── 1. Quick Access Grid (Balanced 2 cols mobile, 3 or 4 cols desktop, compact 64px) ── */}
+      {/* ── 1. Quick Access Grid (Balanced 6 cards on mobile, 8 on desktop, flush image) ── */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 w-full">
         {/* Card 1: Liked Songs */}
         <div
@@ -113,29 +113,31 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             triggerHaptic('light');
             setActiveTab('favorites');
           }}
-          className="group relative flex items-center gap-2.5 sm:gap-3 h-14 sm:h-16 p-2 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-all cursor-pointer overflow-hidden shadow-sm"
+          className="group relative flex items-center h-14 sm:h-16 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-all cursor-pointer overflow-hidden shadow-sm"
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 min-w-[40px] sm:min-w-[48px] rounded-lg flex items-center justify-center bg-gradient-to-br from-[#FA2D48] to-[#FF375F] shrink-0 shadow-md">
-            <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white fill-white" />
+          <div className="w-14 h-14 min-w-[56px] min-h-[56px] sm:w-16 sm:h-16 sm:min-w-[64px] flex items-center justify-center bg-gradient-to-br from-[#FA2D48] to-[#FF375F] shrink-0 shadow-md">
+            <Heart className="w-5 h-5 text-white fill-white" />
           </div>
-          <div className="min-w-0 flex-1">
-            <span className="text-xs font-semibold text-white truncate block leading-tight">
+          <div className="min-w-0 flex-1 px-2.5 sm:px-3 py-1">
+            <span className="text-xs font-bold text-white truncate block leading-tight">
               {t.likedSongsCard}
             </span>
-            <span className="text-[10px] sm:text-[11px] text-zinc-400 block tabular-nums mt-0.5">
+            <span className="text-[10px] sm:text-[11px] text-zinc-400 block tabular-nums mt-0.5 font-medium">
               {favorites.length} {t.songs}
             </span>
           </div>
         </div>
 
-        {/* Cards 2-8: Quick Tracks from Library */}
-        {quickTracks.slice(0, 7).map((trk) => {
+        {/* Cards 2-8: Quick Tracks from Library (Max 5 on mobile = 6 total, 7 on desktop = 8 total) */}
+        {quickTracks.slice(0, 7).map((trk, idx) => {
           const isCur = currentTrack?.id === trk.id;
           return (
             <div
               key={trk.id}
               onClick={() => handleTrackClick(trk, sourcePool)}
-              className={`group relative flex items-center gap-2.5 sm:gap-3 h-14 sm:h-16 p-2 rounded-xl border transition-all cursor-pointer overflow-hidden shadow-sm ${
+              className={`group relative flex items-center h-14 sm:h-16 rounded-xl border transition-all cursor-pointer overflow-hidden shadow-sm ${
+                idx >= 5 ? 'hidden md:flex' : 'flex'
+              } ${
                 isCur
                   ? 'bg-[#1e1b22] border-[#FA2D48]/40'
                   : 'bg-[#18181C] hover:bg-[#202026] border-white/[0.04]'
@@ -146,18 +148,20 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 alt={trk.title}
                 loading="lazy"
                 decoding="async"
-                className="w-10 h-10 sm:w-12 sm:h-12 min-w-[40px] sm:min-w-[48px] rounded-lg object-cover shrink-0 bg-black/40 shadow-sm"
+                className="w-14 h-14 min-w-[56px] min-h-[56px] sm:w-16 sm:h-16 sm:min-w-[64px] object-cover shrink-0 bg-black/40 shadow-sm"
               />
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 px-2.5 sm:px-3 py-1">
                 <span
-                  className={`text-xs font-semibold truncate block leading-tight ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
+                  dir="auto"
+                  className={`text-xs font-bold truncate block text-start leading-tight ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
                 >
-                  <bdi dir="auto">{trk.title}</bdi>
+                  {trk.title}
                 </span>
                 <span
-                  className="text-[10px] sm:text-[11px] text-zinc-400 truncate block mt-0.5"
+                  dir="auto"
+                  className="text-[10px] sm:text-[11px] text-zinc-400 truncate block text-start mt-0.5 font-medium"
                 >
-                  <bdi dir="auto">{trk.artist}</bdi>
+                  {trk.artist}
                 </span>
               </div>
 
@@ -167,7 +171,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   e.stopPropagation();
                   handleTrackClick(trk, sourcePool);
                 }}
-                className="hidden sm:flex w-8 h-8 rounded-full bg-white text-black items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0 shadow-lg cursor-pointer hover:scale-105 active:scale-95"
+                className="hidden sm:flex w-8 h-8 rounded-full bg-white text-black items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0 shadow-lg cursor-pointer hover:scale-105 active:scale-95 me-2"
                 aria-label={isCur && isPlaying ? t.pause : t.play}
               >
                 {isCur && isPlaying ? (
@@ -181,9 +185,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         })}
       </div>
 
-      {/* ── 2. Editorial Glass Hero Card (Replacing empty box with refined Apple/Tidal hero) ── */}
+      {/* ── 2. Editorial Glass Hero Card (Hidden on Mobile to save screen real estate) ── */}
       {spotlightTrack && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 w-full">
+        <div className="hidden md:grid grid-cols-1 lg:grid-cols-12 gap-4 w-full">
           {/* Main Featured Track Card (65% width on desktop) */}
           <div
             className="lg:col-span-8 min-h-[190px] sm:h-[210px] rounded-2xl p-4 sm:p-6 flex items-center justify-between relative overflow-hidden bg-[#141418] border border-white/[0.07] select-none"
@@ -318,23 +322,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </div>
       )}
 
-      {/* ── 3. Section: Made For You (Clean, Pure Square Album Grid) ── */}
+      {/* ── 3. Section: Made For You (Horizontal Carousel on Mobile, Grid on Desktop) ── */}
       {madeForYou.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-white">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
               {t.madeForYou}
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-5">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-5 md:overflow-visible">
             {madeForYou.slice(0, 12).map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, madeForYou)}
-                  className="group relative flex flex-col cursor-pointer transition-all select-none"
+                  className="group relative flex flex-col cursor-pointer transition-all select-none w-[140px] xs:w-[148px] shrink-0 snap-start md:w-auto"
                 >
                   {/* Clean Square Artwork Container */}
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-all">
@@ -376,14 +380,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
                   {/* Title & Artist */}
                   <h4
-                    className={`text-xs font-semibold truncate mt-2 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
+                    dir="auto"
+                    className={`text-xs font-semibold truncate text-start block mt-2 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
                   >
-                    <bdi dir="auto">{trk.title}</bdi>
+                    {trk.title}
                   </h4>
                   <span
-                    className="text-[11px] text-[#8E8E93] truncate block mt-0.5 font-normal"
+                    dir="auto"
+                    className="text-[11px] text-[#8E8E93] truncate text-start block mt-0.5 font-normal"
                   >
-                    <bdi dir="auto">{trk.artist}</bdi>
+                    {trk.artist}
                   </span>
                 </div>
               );
@@ -392,23 +398,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </section>
       )}
 
-      {/* ── 4. Section: Trending Hits (Clean, Pure Square Album Grid) ── */}
+      {/* ── 4. Section: Trending Hits (Horizontal Carousel on Mobile, Grid on Desktop) ── */}
       {trendingHits.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight text-white">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
               {isRTL ? 'الأكثر استماعاً' : 'Trending Hits'}
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-5">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-5 md:overflow-visible">
             {trendingHits.slice(0, 12).map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, trendingHits)}
-                  className="group relative flex flex-col cursor-pointer transition-all select-none"
+                  className="group relative flex flex-col cursor-pointer transition-all select-none w-[140px] xs:w-[148px] shrink-0 snap-start md:w-auto"
                 >
                   {/* Clean Square Artwork Container */}
                   <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-all">
@@ -450,14 +456,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
                   {/* Title & Artist */}
                   <h4
-                    className={`text-xs font-semibold truncate mt-2 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
+                    dir="auto"
+                    className={`text-xs font-semibold truncate text-start block mt-2 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
                   >
-                    <bdi dir="auto">{trk.title}</bdi>
+                    {trk.title}
                   </h4>
                   <span
-                    className="text-[11px] text-[#8E8E93] truncate block mt-0.5 font-normal"
+                    dir="auto"
+                    className="text-[11px] text-[#8E8E93] truncate text-start block mt-0.5 font-normal"
                   >
-                    <bdi dir="auto">{trk.artist}</bdi>
+                    {trk.artist}
                   </span>
                 </div>
               );
