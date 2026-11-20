@@ -484,8 +484,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'fixed inset-0 w-full h-full flex flex-col bg-[#060609] text-white overflow-hidden select-none'
-          : 'fixed inset-0 w-full h-full flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
+          ? 'relative w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col bg-[#060609] text-white overflow-hidden select-none'
+          : 'relative w-full h-full min-h-screen flex flex-row bg-[#060609] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA243C]/25'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -587,15 +587,17 @@ export function App() {
       {/* 6. Desktop Persistent Player Bar (Only rendered on desktop) */}
       {!isMobile && <PlayerBar />}
 
-      {/* 7. Mobile Bottom Controls: Edge-to-Edge grounded flex footer */}
+      {/* 7. Mobile Bottom Controls: Full-bleed Edge-to-Edge iOS Tab Bar & Floating MiniPlayer */}
       {isMobile && (
-        <footer className="shrink-0 w-full z-30 bg-[#090910] border-t border-white/[0.08] flex flex-col items-center select-none">
+        <footer className="fixed bottom-0 inset-x-0 z-40 pointer-events-none flex flex-col items-center select-none">
+          {/* Floating MiniPlayer right above Tab Bar */}
           {currentTrack && (
-            <div className="w-full max-w-lg px-2 pt-1.5 pb-0.5">
+            <div className="w-full max-w-lg px-2 pb-1.5 pointer-events-auto">
               <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />
             </div>
           )}
-          <div className="w-full">
+          {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
+          <div className="w-full pointer-events-auto">
             <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
           </div>
         </footer>

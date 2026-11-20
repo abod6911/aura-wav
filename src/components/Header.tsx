@@ -58,8 +58,13 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
 
   return (
     <header
-      style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 0px))' }}
-      className="select-none w-full min-w-0 bg-[#060609] border-b border-white/[0.08] px-3.5 sm:px-4 pb-2.5 shrink-0 z-30 transition-all pointer-events-auto"
+      style={{
+        paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
+        backgroundColor: 'rgba(6, 6, 9, 0.92)',
+        backdropFilter: 'blur(28px) saturate(190%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+      }}
+      className="select-none w-full min-w-0 border-b border-white/[0.08] px-3.5 sm:px-4 pb-2.5 shrink-0 z-30 transition-all pointer-events-auto"
       dir={dir}
     >
       {/* Mobile Header Bar - Sleek, Minimalist, Apple HIG Compliant */}

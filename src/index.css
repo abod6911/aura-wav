@@ -26,9 +26,9 @@
   /* Unified Mobile Bottom Dock & Viewport Geometry Variables */
   --nav-height: 52px;
   --miniplayer-height: 56px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top: env(safe-area-inset-top, 0px);
-  --scroll-bottom-clearance: calc(var(--nav-height) + var(--miniplayer-height) + var(--safe-bottom) + 24px);
+  --safe-bottom: max(env(safe-area-inset-bottom, 24px), 24px);
+  --safe-top: max(env(safe-area-inset-top, 0px), 12px);
+  --scroll-bottom-clearance: calc(var(--nav-height) + var(--miniplayer-height) + var(--safe-bottom) + 20px);
   --scroll-bottom-no-player: calc(var(--nav-height) + var(--safe-bottom) + 16px);
   --bottom-nav-height: 76px;
 }
@@ -78,9 +78,8 @@
 html, body {
   width: 100%;
   height: 100%;
+  min-height: 100%;
   overflow: hidden;
-  position: fixed;
-  inset: 0;
   margin: 0;
   padding: 0;
   background-color: #060609;
@@ -99,12 +98,28 @@ html, body {
 #root {
   width: 100%;
   height: 100%;
+  min-height: 100%;
   height: 100vh;
   height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
+}
+
+/* iOS Safari & WebKit Full-Bleed Viewport Normalization (Eliminates bottom voids on iPhone) */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: 100%;
+    min-height: 100%;
+    min-height: -webkit-fill-available;
+  }
+  #root {
+    height: 100%;
+    min-height: 100%;
+    min-height: -webkit-fill-available;
+    height: 100dvh;
+  }
 }
 
 img, a, button {
