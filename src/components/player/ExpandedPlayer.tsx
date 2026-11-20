@@ -20,6 +20,7 @@ import {
   Sparkles,
   Sliders,
   ListMusic,
+  Radio,
 } from 'lucide-react';
 
 interface ExpandedPlayerProps {
@@ -63,6 +64,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const setAutoMixModalOpen = usePlayerStore((state) => state.setAutoMixModalOpen);
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
+  const setDeviceSwitcherOpen = usePlayerStore((state) => state.setDeviceSwitcherOpen);
 
   const [isActionSheetOpen, setActionSheetOpen] = useState(false);
 
@@ -388,6 +390,20 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               )}
             </div>
             <span className="text-[9.5px] sm:text-[10px] font-medium">{isRTL ? 'الطابور' : 'Queue'}</span>
+          </button>
+
+          {/* 5. Devices & Handoff */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setDeviceSwitcherOpen(true);
+            }}
+            className="flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            title={isRTL ? 'الأجهزة و Handoff' : 'Devices & Handoff'}
+          >
+            <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
+            <span className="text-[9.5px] sm:text-[10px] font-medium text-emerald-400/90">{isRTL ? 'الأجهزة' : 'Devices'}</span>
           </button>
         </div>
       </div>

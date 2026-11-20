@@ -21,6 +21,7 @@ import {
   CheckCircle2,
   Activity,
   Sparkles,
+  Radio,
 } from 'lucide-react';
 import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
@@ -56,6 +57,7 @@ export const PlayerBar: React.FC = () => {
   const setLyricsOpen = usePlayerStore((state) => state.setLyricsOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const toggleRightSidebar = usePlayerStore((state) => state.toggleRightSidebar);
+  const setDeviceSwitcherOpen = usePlayerStore((state) => state.setDeviceSwitcherOpen);
 
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
@@ -311,6 +313,18 @@ export const PlayerBar: React.FC = () => {
             className="hidden lg:inline-flex p-1.5 sm:p-2 text-zinc-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
           >
             <Sliders className="w-4 h-4" />
+          </button>
+
+          {/* Devices & Handoff */}
+          <button
+            onClick={() => {
+              triggerHaptic('light');
+              setDeviceSwitcherOpen(true);
+            }}
+            title={isRTL ? 'الأجهزة و Handoff' : 'Devices & Handoff'}
+            className="p-1.5 sm:p-2 text-zinc-400 hover:text-emerald-400 transition-colors cursor-pointer hover:bg-white/[0.05] rounded-xl"
+          >
+            <Radio className="w-4 h-4 text-emerald-400" />
           </button>
 
           {/* Right Sidebar Queue Toggle */}

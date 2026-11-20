@@ -37,6 +37,8 @@ const SpotlightCommandModal = lazy(() => import('./components/search/SpotlightCo
 const SyncPartyModal = lazy(() => import('./components/party/SyncPartyModal').then((m) => ({ default: m.SyncPartyModal })));
 const HarmonicSetGenerator = lazy(() => import('./components/player/HarmonicSetGenerator').then((m) => ({ default: m.HarmonicSetGenerator })));
 const CloudUploaderModal = lazy(() => import('./components/cloud/CloudUploaderModal').then((m) => ({ default: m.CloudUploaderModal })));
+const DeviceSwitcherModal = lazy(() => import('./components/handoff/DeviceSwitcherModal').then((m) => ({ default: m.DeviceSwitcherModal })));
+import { HandoffBanner } from './components/handoff/HandoffBanner';
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -186,6 +188,8 @@ export function App() {
   const isHarmonicJourneyOpen = usePlayerStore((state) => state.isHarmonicJourneyOpen);
   const isCloudUploaderOpen = usePlayerStore((state) => state.isCloudUploaderOpen);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
+  const isDeviceSwitcherOpen = usePlayerStore((state) => state.isDeviceSwitcherOpen);
+  const setDeviceSwitcherOpen = usePlayerStore((state) => state.setDeviceSwitcherOpen);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const prevVolumeRef = useRef(0.8);
@@ -513,6 +517,7 @@ export function App() {
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >
+        <HandoffBanner />
         <OfflineBanner />
         <DirectoryPermissionBanner />
         <DownloadProgressPill />
@@ -630,6 +635,12 @@ export function App() {
           <CloudUploaderModal
             isOpen={isCloudUploaderOpen}
             onClose={() => setCloudUploaderOpen(false)}
+          />
+        )}
+        {isDeviceSwitcherOpen && (
+          <DeviceSwitcherModal
+            isOpen={isDeviceSwitcherOpen}
+            onClose={() => setDeviceSwitcherOpen(false)}
           />
         )}
       </Suspense>

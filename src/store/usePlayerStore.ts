@@ -22,6 +22,7 @@ import { syncLibraryToCarPlay, syncFavoritesToCarPlay, initCarPlayBridge } from 
 import { triggerHaptic } from '../utils/haptics';
 import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../services/cloudLibraryService';
 import { isCloudConfigured } from '../lib/supabase';
+import { handoffService } from '../services/handoffService';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
@@ -163,6 +164,7 @@ interface PlayerState {
   isAutoMixModalOpen: boolean;
   isHarmonicJourneyOpen: boolean;
   isSyncPartyOpen: boolean;
+  isDeviceSwitcherOpen: boolean;
   isSpotlightOpen: boolean;
   isCarModeOpen: boolean;
   isOnline: boolean;
@@ -278,6 +280,7 @@ interface PlayerState {
   clearQueue: () => void;
   setCarModeOpen: (open: boolean) => void;
   toggleCarMode: () => void;
+  setDeviceSwitcherOpen: (open: boolean) => void;
   handleTrackPlaybackError: (failedTrack: Track | null, error?: any) => Promise<void>;
   handleOfflineTransition: () => Promise<void>;
   requestDirectoryAccess: () => Promise<boolean>;
@@ -477,10 +480,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         try {
           localStorage.setItem('aura_last_track_position', String(Math.floor(cur)));
         } catch {}
+        handoffService.broadcastPlaybackState(get().currentTrack, cur, dur, get().isPlaying);
       }
     },
     onPlaybackStateChange: (isPlaying) => {
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
+      handoffService.broadcastPlaybackState(get().currentTrack, get().currentTime, get().duration, isPlaying);
       if (isPlaying) {
         wakeLockManager.request().catch(() => {});
       } else {
@@ -640,6 +645,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isAutoMixModalOpen: false,
     isHarmonicJourneyOpen: false,
     isSyncPartyOpen: false,
+    isDeviceSwitcherOpen: false,
     isSpotlightOpen: false,
     activeLoopRoll: null,
     isCarModeOpen: false,
@@ -1878,6 +1884,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
     setSyncPartyOpen: (open: boolean) => {
       set({ isSyncPartyOpen: open });
+    },
+    setDeviceSwitcherOpen: (open: boolean) => {
+      set({ isDeviceSwitcherOpen: open });
     },
 
     setActiveMoodFilter: (filter: string | null) => {
