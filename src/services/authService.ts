@@ -102,19 +102,19 @@ class AuthService {
           this.saveSession(this.currentUser);
         }
 
-        supabaseClient.auth.onAuthStateChange((_event, session) => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
           if (session?.user) {
             this.currentUser = this.mapSupabaseUser(session.user);
             this.saveSession(this.currentUser);
-          } else {
-            // Keep local session if Supabase logged out but local is guest/vault
-            if (this.currentUser && !this.currentUser.id.startsWith('sp_')) {
-              return;
+            this.notifyListeners();
+          } else if (event === 'SIGNED_OUT') {
+            // ONLY wipe session if Supabase explicitly fired a user-initiated SIGNED_OUT event
+            if (this.currentUser && this.currentUser.id.startsWith('sp_')) {
+              this.currentUser = null;
+              this.clearSession();
+              this.notifyListeners();
             }
-            this.currentUser = null;
-            this.clearSession();
           }
-          this.notifyListeners();
         });
       } catch (err) {
         console.warn('[AuthService] Supabase session check error, using local vault:', err);

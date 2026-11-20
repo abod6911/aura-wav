@@ -164,6 +164,8 @@ export function App() {
   const isMobilePlayerOpen = usePlayerStore((state) => state.isMobilePlayerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
   const currentUser = usePlayerStore((state) => state.currentUser);
+  const isAuthLoading = usePlayerStore((state) => state.isAuthLoading);
+  const setIsAuthLoading = usePlayerStore((state) => state.setIsAuthLoading);
   const isAuthScreenOpen = usePlayerStore((state) => state.isAuthScreenOpen);
   const setCurrentUser = usePlayerStore((state) => state.setCurrentUser);
   const setAuthScreenOpen = usePlayerStore((state) => state.setAuthScreenOpen);
@@ -267,10 +269,13 @@ export function App() {
   useEffect(() => {
     initStore();
     authService.init().then((user) => {
-      if (user && !currentUser) {
+      if (user) {
         setCurrentUser(user);
         setAuthScreenOpen(false);
       }
+      setIsAuthLoading(false);
+    }).catch(() => {
+      setIsAuthLoading(false);
     });
 
     if (typeof window !== 'undefined') {
@@ -652,7 +657,7 @@ export function App() {
 
       {/* 9. Real Authentication & Account Screen */}
       <AnimatePresence>
-        {(!currentUser || isAuthScreenOpen) && (
+        {!isAuthLoading && (!currentUser || isAuthScreenOpen) && (
           <AuthScreen
             onSuccess={(user) => {
               setCurrentUser(user);

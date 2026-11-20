@@ -707,15 +707,13 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
       <div ref={containerRef} className="apple-glass-card rounded-[28px] p-2.5 sm:p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)] transform-gpu backdrop-blur-3xl border border-white/[0.1]">
         <div dir={dir} className="w-full max-w-full">
-          {/* Table Column Headers (Desktop 6-Column Unified Grid) */}
-          <div className="hidden md:grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 text-xs font-extrabold text-white/55 border-b border-white/[0.08] select-none uppercase tracking-wider">
+          {/* Table Column Headers (Desktop Proportional Unified Grid) */}
+          <div className="hidden md:grid grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-4 px-4 py-3 text-xs font-extrabold text-white/55 border-b border-white/[0.08] select-none uppercase tracking-wider">
             <span className="text-center font-mono">#</span>
             <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
             <span>{isRTL ? 'الألبوم' : 'Album'}</span>
-            <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
-            <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
-            <span className="text-end font-mono flex items-center justify-end gap-1">
-              <Clock className="w-3 h-3" />
+            <span className="text-end font-mono flex items-center justify-end gap-1 pe-2">
+              <Clock className="w-3.5 h-3.5" />
               <span>{isRTL ? 'المدة' : 'Time'}</span>
             </span>
           </div>
@@ -984,7 +982,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
       onTouchEnd={clearTouchTimer}
       onTouchMove={clearTouchTimer}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-      className={`group h-16 min-h-[64px] grid grid-cols-[26px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-75 select-none active:scale-[0.98] my-1 specular-highlight-subtle ${
+      className={`group h-16 min-h-[64px] grid grid-cols-[26px_1fr_auto] md:grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-75 select-none active:scale-[0.98] my-1 specular-highlight-subtle ${
         isUnavailable ? 'opacity-50 hover:opacity-80 ' : ''
       }${
         isCurrent
@@ -1099,40 +1097,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
       </div>
 
-      {/* 4. BPM & Camelot Badge */}
-      <div className="hidden md:flex items-center justify-center">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
-          <span className="text-[#FF375F] font-bold">
-            {track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30))}
-          </span>
-          <span className="text-white/35 text-[10px]">BPM</span>
-          <span className="text-white/20">•</span>
-          <span className="text-amber-400 font-bold">
-            {track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`}
-          </span>
-        </span>
-      </div>
-
-      {/* 5. Mini Waveform / Energy Bars */}
-      <div className="hidden md:flex items-center justify-center gap-[2.5px] h-4">
-        {[0.35, 0.65, 0.9, 0.45, 0.8, 1.0, 0.55, 0.85, 0.4, 0.75, 0.5, 0.95].map((val, bIdx) => (
-          <span
-            key={bIdx}
-            style={{
-              height: isCurrent && isPlaying ? `${Math.max(25, Math.min(100, val * 100 * (0.7 + (bIdx % 3) * 0.2)))}%` : `${val * 65}%`,
-            }}
-            className={`w-[3px] rounded-full transition-all duration-300 ${
-              isCurrent && isPlaying
-                ? 'bg-gradient-to-t from-[#FA243C] to-[#FF375F] animate-pulse'
-                : isCurrent
-                ? 'bg-[#FA243C]/60'
-                : 'bg-white/20 group-hover:bg-white/35'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* 6. Action Cluster: Play Next (44x44px) + Heart (44x44px) + More Menu */}
+      {/* 4. Action Cluster: Play Next (44x44px) + Heart (44x44px) + More Menu */}
       <div className="flex items-center justify-end gap-0.5 sm:gap-1.5 flex-shrink-0" style={{ touchAction: 'manipulation' }}>
         {/* Play Next / Add to Queue 44x44px Button */}
         <motion.button

@@ -356,15 +356,13 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
           {/* Desktop Table View */}
           <div className="hidden md:block rounded-2xl apple-glass-card border border-white/[0.08] p-5 shadow-[0_24px_64px_rgba(0,0,0,0.85)]">
-            {/* Table Header (Desktop 6-Column Unified Grid) */}
-            <div className="grid grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-4 px-4 py-3 border-b border-white/[0.08] text-xs font-extrabold text-white/55 uppercase tracking-wider select-none">
+            {/* Table Header (Desktop Proportional Unified Grid) */}
+            <div className="grid grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-4 px-4 py-3 border-b border-white/[0.08] text-xs font-extrabold text-white/55 uppercase tracking-wider select-none">
               <span className="text-center font-mono">#</span>
               <span>{isRTL ? 'المسار والفنان' : 'Track & Artist'}</span>
               <span>{isRTL ? 'الألبوم' : 'Album'}</span>
-              <span className="text-center">{isRTL ? 'التوافق الموسيقي' : 'BPM / Key'}</span>
-              <span className="text-center">{isRTL ? 'مستوى الطاقة' : 'Energy'}</span>
-              <span className="text-end font-mono flex items-center justify-end gap-1">
-                <Clock className="w-3 h-3" />
+              <span className="text-end font-mono flex items-center justify-end gap-1 pe-2">
+                <Clock className="w-3.5 h-3.5" />
                 <span>{isRTL ? 'المدة' : 'Time'}</span>
               </span>
             </div>
@@ -387,7 +385,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     }
                   }}
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-                  className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(220px,2fr)_minmax(140px,1fr)_130px_110px_84px] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+                  className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
                     isCurrent
                       ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
                       : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
@@ -473,44 +471,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
                   </div>
 
-                  {/* 4. Real BPM & Camelot Badge (only when real metadata exists) */}
-                  <div className="hidden md:flex items-center justify-center">
-                    {track.bpm ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
-                        <span className="text-[#FF375F] font-bold">{track.bpm}</span>
-                        <span className="text-white/35 text-[10px]">BPM</span>
-                        {track.key && (
-                          <>
-                            <span className="text-white/20">•</span>
-                            <span className="text-amber-400 font-bold">{track.key}</span>
-                          </>
-                        )}
-                      </span>
-                    ) : (
-                      <span className="text-white/20 text-xs font-mono">—</span>
-                    )}
-                  </div>
-
-                  {/* 5. Mini Waveform / Energy Bars */}
-                  <div className="hidden md:flex items-center justify-center gap-[2.5px] h-4">
-                    {[0.35, 0.65, 0.9, 0.45, 0.8, 1.0, 0.55, 0.85, 0.4, 0.75, 0.5, 0.95].map((val, bIdx) => (
-                      <span
-                        key={bIdx}
-                        style={{
-                          height: isCurrent && isPlaying ? `${Math.max(25, Math.min(100, val * 100 * (0.7 + (bIdx % 3) * 0.2)))}%` : `${val * 65}%`,
-                        }}
-                        className={`w-[3px] rounded-full transition-all duration-300 ${
-                          isCurrent && isPlaying
-                            ? 'bg-gradient-to-t from-[#FA243C] to-[#FF375F] animate-pulse'
-                            : isCurrent
-                            ? 'bg-[#FA243C]/60'
-                            : 'bg-white/20 group-hover:bg-white/35'
-                        }`}
-                      />
-                    ))}
-                  </div>
-
-                  {/* 6. Clustered Actions: Add to Queue + Favorite Heart + Duration + More Menu */}
+                  {/* 4. Clustered Actions: Add to Queue + Favorite Heart + Duration + More Menu */}
                   <div className="flex items-center justify-end gap-1 sm:gap-2 flex-shrink-0">
                     <button
                       type="button"

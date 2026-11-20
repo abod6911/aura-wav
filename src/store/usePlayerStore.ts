@@ -88,6 +88,7 @@ export const MAX_USER_QUEUE = 100;
 interface PlayerState {
   // User Auth & Session
   currentUser: AuthUser | null;
+  isAuthLoading: boolean;
   isAuthScreenOpen: boolean;
 
   // Library & Data
@@ -234,6 +235,7 @@ interface PlayerState {
   reorderUserQueue: (startIndex: number, endIndex: number) => void;
   clearUserQueue: () => void;
   setCurrentUser: (user: AuthUser | null) => void;
+  setIsAuthLoading: (loading: boolean) => void;
   setAuthScreenOpen: (open: boolean) => void;
   addTrackToLibrary: (track: Track) => Promise<void>;
   removeTrackFromLibrary: (trackId: string) => Promise<void>;
@@ -574,6 +576,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
   return {
     currentUser: authService.getCurrentUser(),
+    isAuthLoading: true,
     isAuthScreenOpen: false,
     tracks: [],
     catalogTracks: getDefaultLibraryTracks(),
@@ -2059,6 +2062,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     setCurrentUser: (user: AuthUser | null) => set({ currentUser: user }),
+    setIsAuthLoading: (loading: boolean) => set({ isAuthLoading: loading }),
     setAuthScreenOpen: (open: boolean) => set({ isAuthScreenOpen: open }),
     addTrackToLibrary: async (track: Track) => {
       const { tracks } = get();

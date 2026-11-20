@@ -124,7 +124,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             type="button"
             data-testid="minimize-player-btn"
             onClick={handleClose}
-            className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             aria-label="Collapse player"
           >
             <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
@@ -150,7 +150,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setActionSheetOpen(true);
             }}
-            className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             aria-label="More options"
           >
             <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
@@ -211,7 +211,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('success');
               toggleFavorite(currentTrack.id);
             }}
-            className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-transform active:scale-90 cursor-pointer rounded-full flex-shrink-0"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-transform active:scale-90 cursor-pointer rounded-full flex-shrink-0"
             aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
           >
             <Heart
@@ -247,13 +247,13 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               toggleShuffle();
             }}
-            className={`relative w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
               shuffle ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تشغيل عشوائي' : 'Shuffle'}
             aria-label="Shuffle"
           >
-            <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Shuffle className="w-5 h-5" />
             {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
           </button>
 
@@ -265,11 +265,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               previousTrack();
             }}
-            className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
             title={isRTL ? 'السابق' : 'Previous'}
             aria-label="Previous track"
           >
-            <SkipBack className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-white" />
+            <SkipBack className="w-6 h-6 fill-white text-white" />
           </button>
 
           {/* Center Master Play/Pause Statement Button */}
@@ -280,13 +280,13 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('medium');
               togglePlayPause();
             }}
-            className="w-14 h-14 sm:w-16 sm:h-16 min-w-[56px] min-h-[56px] rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer select-none flex-shrink-0"
+            className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer select-none flex-shrink-0"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <Pause className="w-6 h-6 sm:w-7 sm:h-7 fill-black text-black" />
+              <Pause className="w-7 h-7 fill-black text-black" />
             ) : (
-              <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-black text-black translate-x-0.5" />
+              <Play className="w-7 h-7 fill-black text-black translate-x-0.5" />
             )}
           </button>
 
@@ -298,11 +298,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               nextTrack({ forceImmediate: true });
             }}
-            className="w-10 h-10 sm:w-11 sm:h-11 min-w-[40px] sm:min-w-[44px] min-h-[40px] sm:min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
             title={isRTL ? 'التالي' : 'Next'}
             aria-label="Next track"
           >
-            <SkipForward className="w-5 h-5 sm:w-6 sm:h-6 fill-white text-white" />
+            <SkipForward className="w-6 h-6 fill-white text-white" />
           </button>
 
           {/* Repeat Button */}
@@ -313,13 +313,13 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               cycleRepeat();
             }}
-            className={`relative w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
               repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تكرار' : 'Repeat'}
             aria-label="Repeat"
           >
-            {repeatMode === 'one' ? <Repeat1 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />}
+            {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
             {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
           </button>
         </div>
@@ -333,7 +333,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setLyricsOpen(true);
             }}
-            className="flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
             title={isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'}
           >
             <Mic2 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -347,7 +347,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setAutoMixModalOpen(true);
             }}
-            className={`flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl transition-all cursor-pointer active:scale-90 ${
+            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl transition-all cursor-pointer active:scale-90 ${
               automixEnabled ? 'text-purple-400' : 'text-zinc-400 hover:text-white'
             }`}
             title="AutoMix & Speed"
@@ -363,7 +363,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setEqualizerOpen(true);
             }}
-            className="flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
             title={isRTL ? 'المعادل والمؤثرات' : 'EQ & Effects'}
           >
             <Sliders className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -378,7 +378,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setQueueOpen(true);
             }}
-            className="flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90 relative"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90 relative"
             title={isRTL ? 'طابور الانتظار' : 'Queue'}
           >
             <div className="relative">
@@ -399,7 +399,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setDeviceSwitcherOpen(true);
             }}
-            className="flex flex-col items-center gap-0.5 p-1 sm:p-1.5 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
             title={isRTL ? 'الأجهزة و Handoff' : 'Devices & Handoff'}
           >
             <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 animate-pulse" />
