@@ -1,7 +1,8 @@
-const CACHE_NAME = 'aura-wav-v20';
-const AUDIO_CACHE_NAME = 'aura-wav-audio-v1';
+const CACHE_NAME = 'aura-wav-v22';
 const IMAGE_CACHE_NAME = 'aura-wav-images-v1';
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/manifest.json',
   '/logo.svg',
   '/favicon.svg',
@@ -27,7 +28,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key.startsWith('aura-wav-') && key !== CACHE_NAME && key !== AUDIO_CACHE_NAME && key !== IMAGE_CACHE_NAME) {
+          // Purge all old caches including previous versions (v20, v21, etc.) and old audio caches
+          if (key.startsWith('aura-wav-') && key !== CACHE_NAME && key !== IMAGE_CACHE_NAME) {
             console.log('[SW] Purging old cache:', key);
             return caches.delete(key);
           }
@@ -40,19 +42,22 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Ignore non-GET, non-http(s), Range requests (audio seeking is served by the
-  // app from OPFS/IndexedDB or by the backend) and all backend API endpoints.
+  // 1. Strict Audio Exclusion: Audio streams (MP3/WAV/AAC/FLAC), Hugging Face CDN, and Range requests
+  // MUST NEVER be saved to Cache API to prevent memory bloat and Safari audio crashes.
   if (
     event.request.method !== 'GET' ||
     !url.startsWith('http') ||
     event.request.headers.has('range') ||
-    url.includes('/api/') ||
-    url.includes('/songs/')
+    /\.(mp3|m4a|wav|flac|aac|ogg|opus)(\?|$)/i.test(url) ||
+    url.includes('huggingface.co') ||
+    url.includes('cdn-lfs.huggingface.co') ||
+    url.includes('/songs/') ||
+    url.includes('/api/')
   ) {
     return;
   }
 
-  // Artwork images: Cache-first with stale-while-revalidate and cross-origin opaque support
+  // 2. Artwork Images: Cache-first with network fallback and opaque cross-origin caching
   if (event.request.destination === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) {
     event.respondWith(
       (async () => {
@@ -73,7 +78,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 1. Navigation requests (HTML document): NETWORK-FIRST with guaranteed offline fallback
+  // 3. Navigation Requests (HTML document): NETWORK-FIRST with offline fallback to cached index.html
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {
     event.respondWith(
       fetch(event.request, { cache: 'no-cache' })
@@ -93,24 +98,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets (JS, CSS, SVGs, Fonts, Images): CACHE-FIRST with network fallback
+  // 4. Critical UI Assets (JS, CSS, Fonts): NETWORK-FIRST strategy so updates apply instantly
+  // On network failure (offline), falls back safely to cached asset bundle.
   event.respondWith(
-    caches.match(event.request).then(async (cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      try {
-        const networkResponse = await fetch(event.request);
+    fetch(event.request)
+      .then(async (networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {
           const copy = networkResponse.clone();
           const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, copy);
+          cache.put(event.request, copy).catch(() => {});
         }
         return networkResponse;
-      } catch (err) {
-        // Offline asset fallback: if specific hashed JS/CSS is missing, attempt closest match
-        const url = event.request.url;
+      })
+      .catch(async () => {
+        // Network unavailable: fall back to cached version
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+
+        // If specific hashed JS/CSS is missing, attempt closest match in cache
         const cache = await caches.open(CACHE_NAME);
         const keys = await cache.keys();
 
@@ -128,10 +133,8 @@ self.addEventListener('fetch', (event) => {
           }
         }
 
-        // Return empty 200 response rather than undefined to prevent browser crash screen
         return new Response('', { status: 200, statusText: 'Offline Fallback' });
-      }
-    })
+      })
   );
 });
 

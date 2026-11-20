@@ -15,12 +15,14 @@ if (!fs.existsSync(distDir)) {
 
 let assetFiles = [];
 if (fs.existsSync(assetsDir)) {
-  assetFiles = fs.readdirSync(assetsDir).map((f) => '/assets/' + f);
+  assetFiles = fs.readdirSync(assetsDir)
+    .filter((f) => f.endsWith('.js') || f.endsWith('.css'))
+    .map((f) => '/assets/' + f);
 }
 
 console.log('[buildSw] Found bundle assets to cache:', assetFiles);
 
-const cacheVersion = 'aura-wav-v21-' + Date.now();
+const cacheVersion = 'aura-wav-v22-' + Date.now();
 let swContent = fs.readFileSync(swPublicPath, 'utf8');
 
 swContent = swContent.replace(/const CACHE_NAME = ['"].*?['"];/, "const CACHE_NAME = '" + cacheVersion + "';");

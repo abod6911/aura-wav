@@ -511,9 +511,14 @@ export function App() {
       <main
         ref={mainScrollRef}
         onScroll={handleMainScroll}
+        style={{
+          paddingBottom: isMobile
+            ? (currentTrack ? 'var(--scroll-bottom-clearance)' : 'var(--scroll-bottom-no-player)')
+            : undefined,
+        }}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 pb-8 overscroll-contain relative z-10'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
             : 'flex-1 w-full min-w-0 overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10'
         }
       >

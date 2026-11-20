@@ -49,8 +49,8 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       aria-label="Mobile Navigation"
       style={{
         backgroundColor: '#090910',
-        paddingTop: '8px',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 24px)',
+        paddingTop: '6px',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
       }}
       className="w-full px-1 flex items-center justify-around select-none pointer-events-auto shrink-0"
       dir={dir}

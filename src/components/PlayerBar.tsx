@@ -27,6 +27,7 @@ import { TimelineSlider } from './player/TimelineSlider';
 import { AudioSettingsModal } from './AudioSettingsModal';
 import { getOptimizedCoverUrl } from '../utils/imageOptimizer';
 import { AuraProDspHud } from './player/AuraProDspHud';
+import { triggerHaptic } from '../utils/haptics';
 
 export const PlayerBar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();

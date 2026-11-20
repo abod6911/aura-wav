@@ -437,11 +437,11 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
                   {/* 2. Cover + Title & Artist */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
+                    <div className="relative w-11 h-11 min-w-[44px] min-h-[44px] max-w-[44px] max-h-[44px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0 shrink-0 aspect-square">
                       <img
                         src={track.artworkUrl || track.coverUrl || '/logo.svg'}
                         alt={track.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover shrink-0 aspect-square group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/logo.svg';
@@ -473,18 +473,22 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
                   </div>
 
-                  {/* 4. BPM & Camelot Badge */}
+                  {/* 4. Real BPM & Camelot Badge (only when real metadata exists) */}
                   <div className="hidden md:flex items-center justify-center">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
-                      <span className="text-[#FF375F] font-bold">
-                        {track.bpm || (115 + (Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 30))}
+                    {track.bpm ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[11px] font-mono font-medium text-zinc-300">
+                        <span className="text-[#FF375F] font-bold">{track.bpm}</span>
+                        <span className="text-white/35 text-[10px]">BPM</span>
+                        {track.key && (
+                          <>
+                            <span className="text-white/20">•</span>
+                            <span className="text-amber-400 font-bold">{track.key}</span>
+                          </>
+                        )}
                       </span>
-                      <span className="text-white/35 text-[10px]">BPM</span>
-                      <span className="text-white/20">•</span>
-                      <span className="text-amber-400 font-bold">
-                        {track.key || `${(Math.abs(track.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 12) + 1}${['A', 'B'][Math.abs(track.id.length) % 2]}`}
-                      </span>
-                    </span>
+                    ) : (
+                      <span className="text-white/20 text-xs font-mono">—</span>
+                    )}
                   </div>
 
                   {/* 5. Mini Waveform / Energy Bars */}

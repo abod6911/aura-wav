@@ -29,15 +29,6 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
     return tracks.length > 0 ? tracks : (catalogTracks.length > 0 ? catalogTracks : []);
   }, [tracks, catalogTracks]);
 
-  // Time-aware greeting
-  const greeting = useMemo(() => {
-    const h = new Date().getHours();
-    if (h >= 5 && h < 12) return t.goodMorning;
-    if (h >= 12 && h < 17) return t.goodAfternoon;
-    if (h >= 17 && h < 22) return t.goodEvening;
-    return t.peacefulNight;
-  }, [t]);
-
   // Extract slices strictly once without recalculating on every re-render
   const { quickTracks, madeForYou, trendingHits, topTen } = useMemo(() => {
     const quick: Track[] = [];
@@ -298,7 +289,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                         alt={trk.title}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover shrink-0 aspect-square group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
                       {isCur && isPlaying && (
@@ -364,7 +355,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                         alt={trk.title}
                         loading="lazy"
                         decoding="async"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover shrink-0 aspect-square group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
                       {isCur && isPlaying && (

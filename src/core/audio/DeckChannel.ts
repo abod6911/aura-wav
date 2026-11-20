@@ -199,7 +199,17 @@ export class DeckChannel {
     (this.audio as any).mozPreservesPitch = true;
     (this.audio as any).webkitPreservesPitch = true;
     this.audio.volume = 1.0;
-    this.audio.src = url;
+
+    // Ensure URL is safely encoded for iOS Safari & cloud streaming (spaces and Arabic chars)
+    let safeUrl = url;
+    try {
+      if (url.startsWith('http') || url.startsWith('/')) {
+        safeUrl = encodeURI(decodeURI(url));
+      }
+    } catch {
+      safeUrl = url;
+    }
+    this.audio.src = safeUrl;
     this.audio.load();
   }
 
@@ -437,10 +447,23 @@ export class DeckChannel {
         this.startBufferPlayback(safeTime);
       }
     } else {
-      if (isFinite(this.audio.duration) && this.audio.duration > 0) {
-        this.audio.currentTime = Math.min(safeTime, this.audio.duration);
-      } else {
-        this.audio.currentTime = safeTime;
+      try {
+        if (isFinite(this.audio.duration) && this.audio.duration > 0) {
+          this.audio.currentTime = Math.min(safeTime, this.audio.duration);
+        } else if (this.audio.readyState >= 1) {
+          this.audio.currentTime = safeTime;
+        } else {
+          // If metadata is still loading on iOS Safari, defer seek until loadedmetadata
+          const onMeta = () => {
+            try {
+              this.audio.currentTime = safeTime;
+            } catch {}
+            this.audio.removeEventListener('loadedmetadata', onMeta);
+          };
+          this.audio.addEventListener('loadedmetadata', onMeta, { once: true });
+        }
+      } catch (err) {
+        console.warn(`[DeckChannel ${this.name}] Seek error:`, err);
       }
     }
   }

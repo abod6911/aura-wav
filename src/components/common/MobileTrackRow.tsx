@@ -120,13 +120,13 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
             </span>
           )}
 
-          <div className="relative w-9.5 h-9.5 min-w-[38px] min-h-[38px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 shadow-sm border border-white/10">
+          <div className="relative w-10 h-10 min-w-[40px] min-h-[40px] max-w-[40px] max-h-[40px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 aspect-square shadow-sm border border-white/10">
             <img
               src={track.artworkUrl || track.coverUrl || '/logo.svg'}
               alt={track.title}
               loading="lazy"
               decoding="async"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover shrink-0 aspect-square"
             />
             {isCur && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -168,8 +168,8 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
         </div>
 
-        {/* Right Action Buttons & Duration */}
-        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right Action Buttons & Duration with Apple HIG Touch Targets */}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           {track.duration > 0 && (
             <span className="text-[11px] font-mono text-white/40 tabular-nums select-none pe-1">
               {formatTime(track.duration)}
@@ -180,7 +180,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           <button
             type="button"
             onClick={handleQuickQueue}
-            className={`w-8 h-8 min-w-[32px] min-h-[32px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] duration-75 cursor-pointer ${
+            className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center transition-transform active:scale-[0.92] duration-75 cursor-pointer touch-manipulation ${
               isAddedFeedback
                 ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
                 : 'bg-white/[0.06] hover:bg-white/[0.12] text-white/80 hover:text-white'
@@ -204,7 +204,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-8 h-8 min-w-[32px] min-h-[32px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.92] duration-75 cursor-pointer"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center text-white/45 hover:text-white hover:bg-white/10 transition-transform active:scale-[0.92] duration-75 cursor-pointer touch-manipulation"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >

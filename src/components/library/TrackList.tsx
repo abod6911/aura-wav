@@ -2,6 +2,7 @@ import { TrackActionSheet } from './TrackActionSheet';
 import { MobileTrackRow } from '../common/MobileTrackRow';
 import { triggerHaptic } from '../../utils/haptics';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { Track } from '../../types';
 import {
@@ -85,15 +86,21 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       setContextMenu(null);
       return;
     }
-    const menuWidth = 250;
-    const menuHeight = 280;
+    const menuWidth = 240;
+    const menuHeight = 320;
     let x = clientX;
     let y = clientY || 0;
     
-    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+    // Smart Positioning: flip upward if near bottom edge
+    if (y + menuHeight > window.innerHeight) {
+      y = Math.max(16, y - menuHeight);
+    }
+    // Flip leftward or clamp if near right edge
+    if (x + menuWidth > window.innerWidth) {
+      x = Math.max(16, window.innerWidth - menuWidth - 16);
+    }
     
-    setContextMenu({ x: Math.max(10, x), y: Math.max(10, y), track });
+    setContextMenu({ x: Math.max(16, x), y: Math.max(16, y), track });
   }, []);
 
 
@@ -797,11 +804,11 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </motion.button>
       )}
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Desktop Context Menu rendered via Portal with high z-index and smart positioning */}
+      {contextMenu && typeof document !== 'undefined' && createPortal(
         <div
           style={{ top: contextMenu.y, left: contextMenu.x }}
-          className="fixed z-50 bg-[#1a1a2e]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-1 w-56 flex flex-col"
+          className="fixed z-[110] bg-[#141420]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] p-1.5 w-60 flex flex-col pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -809,7 +816,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().playNextInQueue(contextMenu.track);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <ListEnd className="w-4 h-4 text-[#FA243C]" />
             <span>تشغيل التالي</span>
@@ -819,7 +826,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().addToQueue(contextMenu.track);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <ListPlus className="w-4 h-4 text-[#FA243C]" />
             <span>إضافة للقائمة</span>
@@ -829,7 +836,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().toggleFavorite(contextMenu.track.id);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <Heart className={`w-4 h-4 ${favorites.includes(contextMenu.track.id) ? 'text-[#FA243C] fill-[#FA243C]' : 'text-[#FA243C]'}`} />
             <span>{favorites.includes(contextMenu.track.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}</span>
@@ -839,7 +846,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().downloadTrackForOffline(contextMenu.track.id);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <Download className="w-4 h-4 text-emerald-400" />
             <span>
@@ -854,7 +861,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().setMetadataEditorModal(true, contextMenu.track);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <Pencil className="w-4 h-4 text-zinc-400" />
             <span>تعديل البيانات</span>
@@ -864,7 +871,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               usePlayerStore.getState().setChangeArtworkModal(true, contextMenu.track);
               setContextMenu(null);
             }}
-            className="px-3 py-2.5 text-sm text-white/90 hover:bg-white/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <ImageIcon className="w-4 h-4 text-zinc-400" />
             <span>تغيير الغلاف</span>
@@ -888,13 +895,14 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   await usePlayerStore.getState().deleteCloudTrackById(tr.id);
                 }
               }}
-              className="px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-3 cursor-pointer transition-colors"
+              className="px-3 py-2 text-xs sm:text-sm text-red-400 hover:bg-red-500/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
             >
               <Trash2 className="w-4 h-4 text-red-400" />
               <span>حذف من السحابة</span>
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
       {/* iOS Native Track Action Sheet */}
       <TrackActionSheet
@@ -922,7 +930,6 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
   const unavailableTrackIds = usePlayerStore((state) => state.unavailableTrackIds);
   const isUnavailable = unavailableTrackIds.includes(track.id) || !!track.unavailable;
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddedFeedback, setIsAddedFeedback] = useState(false);
 
   const handleRowClick = () => {
@@ -1176,73 +1183,20 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           {formatTime(track.duration)}
         </span>
 
-        <div className="relative group/menu flex items-center justify-center">
+        <div className="relative flex items-center justify-center">
           <button
             onClick={(e) => {
               e.stopPropagation();
               triggerHaptic('light');
-              if (window.innerWidth < 768 && onContextMenu) {
-                onContextMenu(track);
-              } else {
-                setIsMenuOpen(!isMenuOpen);
+              if (onContextMenu) {
+                onContextMenu(track, e.clientX, e.clientY);
               }
             }}
-            className="w-7 h-7 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+            className="w-8 h-8 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all cursor-pointer touch-manipulation"
             aria-label="Track options"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
-
-          <div
-            className={`${
-              isMenuOpen ? 'block' : 'hidden md:group-hover/menu:block'
-            } absolute right-0 top-8 z-30 w-52 bg-[#0e0e16]/98 border border-white/[0.14] rounded-2xl p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] space-y-1 backdrop-blur-2xl`}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().playNextInQueue(track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span>تشغيل كأغنية تالية</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().addToQueue(track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span>إضافة لقائمة الانتظار</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().setChangeArtworkModal(true, track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <ImageIcon className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span>تغيير الغلاف والبحث أونلاين</span>
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                usePlayerStore.getState().setMetadataEditorModal(true, track);
-                setIsMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-left transition-colors cursor-pointer"
-            >
-              <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
-              <span>تعديل وسوم ID3 والبيانات</span>
-            </button>
-          </div>
         </div>
       </div>
     </div>
