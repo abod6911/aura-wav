@@ -118,6 +118,8 @@ interface PlayerState {
   shuffle: boolean;
   repeatMode: RepeatMode;
   smartAutoplay: boolean;
+  trackTransitionDirection: 'next' | 'prev' | 'fade';
+  setTrackTransitionDirection: (direction: 'next' | 'prev' | 'fade') => void;
 
   // Desktop Spotify Layout
   isRightSidebarOpen: boolean;
@@ -600,6 +602,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     playbackRate: 1.0,
     shuffle: false,
     repeatMode: 'all',
+    trackTransitionDirection: 'fade',
+    setTrackTransitionDirection: (direction: 'next' | 'prev' | 'fade') => set({ trackTransitionDirection: direction }),
 
     isRightSidebarOpen: false,
     activeRightSidebarTab: 'queue',
@@ -1571,6 +1575,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         playbackState: 'buffering',
         currentTime: 0,
         duration: targetTrack.duration || 0,
+        trackTransitionDirection: 'next',
       });
 
       if (fromUserQueue) {
@@ -1632,6 +1637,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           playbackState: 'buffering',
           currentTime: 0,
           duration: rawPrev.duration || 0,
+          trackTransitionDirection: 'prev',
         });
         let prevTrack = rawPrev;
         if (!prevTrack.file && !prevTrack.blob) {

@@ -124,7 +124,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
 
   return (
     <div
-      className="fixed inset-0 z-[120] w-full h-[100dvh] bg-[#060609] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] select-none"
+      className="fixed inset-0 z-[120] w-full h-full min-h-full bg-[#09090B] text-white flex flex-col justify-between overflow-y-auto px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+16px)] pb-[calc(env(safe-area-inset-bottom,0px)+16px)] select-none"
       dir={dir}
     >
       {/* Background Subtle Ambient Tone */}

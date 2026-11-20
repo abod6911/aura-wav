@@ -93,7 +93,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.04 }}
           transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[100] h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#060609]/98 backdrop-blur-3xl select-none overflow-hidden"
+          className="fixed inset-0 z-[100] w-full h-full min-h-full flex flex-col items-center justify-center p-6 bg-[#09090B]/98 backdrop-blur-3xl select-none overflow-hidden"
         >
           {/* Ambient Neon Atmosphere */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">

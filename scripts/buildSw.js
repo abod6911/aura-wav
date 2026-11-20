@@ -22,7 +22,7 @@ if (fs.existsSync(assetsDir)) {
 
 console.log('[buildSw] Found bundle assets to cache:', assetFiles);
 
-const cacheVersion = 'aura-wav-v25-' + Date.now();
+const cacheVersion = 'aura-wav-v26-' + Date.now();
 let swContent = fs.readFileSync(swPublicPath, 'utf8');
 
 swContent = swContent.replace(/const CACHE_NAME = ['"].*?['"];/, "const CACHE_NAME = '" + cacheVersion + "';");

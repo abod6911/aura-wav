@@ -105,7 +105,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[60px] min-h-[60px] px-3.5 flex items-center justify-between gap-3 select-none transition-colors cursor-pointer active:bg-white/[0.04] ${
+        className={`relative z-10 w-full h-[60px] min-h-[60px] px-3.5 flex items-center justify-between gap-3 select-none apple-row-press cursor-pointer ${
           isCur ? 'bg-[#181820]' : 'bg-transparent'
         }`}
       >
@@ -175,7 +175,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           <button
             type="button"
             onClick={handleQuickQueue}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation active:scale-[0.92] transition-transform"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
             title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
             aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
           >
@@ -203,7 +203,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white active:scale-90 transition-transform cursor-pointer touch-manipulation"
+              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer touch-manipulation"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >

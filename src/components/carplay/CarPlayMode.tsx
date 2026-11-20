@@ -259,7 +259,7 @@ export const CarPlayMode: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.22 }}
-        className={`fixed inset-0 z-[9999] h-[100dvh] flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
+        className={`fixed inset-0 z-[9999] w-full h-full min-h-full flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
           highContrastMode === 'day' ? 'bg-[#F2F2F7] text-[#1C1C1E]' : 'bg-[#0A0A0E] text-white'
         }`}
         dir="rtl"

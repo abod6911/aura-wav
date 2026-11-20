@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import {
@@ -121,7 +122,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={toggleShuffle}
             title={t.shuffle}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`p-1.5 cursor-pointer apple-btn-tactile ${
               shuffle ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -132,31 +133,42 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={previousTrack}
             title={t.previous}
-            className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
+            className="p-1.5 text-zinc-300 hover:text-white cursor-pointer apple-btn-tactile apple-prev-btn"
           >
             <SkipBack className="w-4.5 h-4.5 fill-current" />
           </button>
 
-          {/* Clean White Circular Play/Pause Button */}
+          {/* Clean White Circular Play/Pause Button with Apple Spring Morph */}
           <button
             onClick={togglePlayPause}
             title={isPlaying ? t.pause : t.play}
-            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md apple-play-btn cursor-pointer shrink-0 overflow-hidden"
           >
-            {isPlaying ? (
-              <Pause className="w-4 h-4 fill-black text-black" />
-            ) : playbackState === 'buffering' ? (
-              <Loader2 className="w-4 h-4 animate-spin text-black" />
-            ) : (
-              <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isPlaying ? 'pause' : 'play'}
+                initial={{ opacity: 0, scale: 0.75, rotate: isPlaying ? -15 : 15 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.75, rotate: isPlaying ? 15 : -15 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                className="flex items-center justify-center"
+              >
+                {isPlaying ? (
+                  <Pause className="w-4 h-4 fill-black text-black" />
+                ) : playbackState === 'buffering' ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                ) : (
+                  <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </button>
 
           {/* Next Track */}
           <button
             onClick={() => nextTrack({ forceImmediate: true })}
             title={t.next}
-            className="p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer active:scale-90"
+            className="p-1.5 text-zinc-300 hover:text-white cursor-pointer apple-btn-tactile apple-next-btn"
           >
             <SkipForward className="w-4.5 h-4.5 fill-current" />
           </button>
@@ -165,7 +177,7 @@ export const PlayerBar: React.FC = () => {
           <button
             onClick={cycleRepeat}
             title={repeatMode === 'one' ? t.repeatOne : t.repeatAll}
-            className={`p-1.5 transition-colors cursor-pointer ${
+            className={`p-1.5 cursor-pointer apple-btn-tactile ${
               repeatMode !== 'off' ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
           >

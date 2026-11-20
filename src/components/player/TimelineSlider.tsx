@@ -235,9 +235,11 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
               className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden"
               style={{ 
                 width: `${initialPercent}%`,
-                backgroundColor: '#FA243C',
-                backgroundImage: 'linear-gradient(90deg, #FA243C 0%, #FF375F 60%, #FF758F 100%)',
-                boxShadow: '0 0 10px rgba(250, 36, 60, 0.7), inset 0 1px 1px rgba(255,255,255,0.4)',
+                backgroundColor: '#FA2D48',
+                backgroundImage: 'linear-gradient(90deg, #FA2D48 0%, #FF375F 60%, #FF758F 100%)',
+                boxShadow: isDragging
+                  ? '0 0 16px rgba(250, 45, 72, 0.85), inset 0 1px 1px rgba(255,255,255,0.5)'
+                  : '0 0 10px rgba(250, 45, 72, 0.7), inset 0 1px 1px rgba(255,255,255,0.4)',
               }}
             >
               <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/95 rounded-full shadow-[0_0_6px_#ffffff]" />
@@ -258,13 +260,13 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           {/* Tactile Thumb Knob */}
           <div
             ref={thumbRef}
-            className={`absolute -ml-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-transform duration-100 pointer-events-none z-20 ${
+            className={`absolute -ml-2.5 w-5 h-5 rounded-full flex items-center justify-center pointer-events-none z-20 transition-transform duration-200 ease-out ${
               isDragging ? 'scale-125' : 'scale-100 group-hover:scale-110'
             }`}
             style={{ left: `${initialPercent}%` }}
           >
-            <div className="w-3.5 h-3.5 rounded-full bg-white border border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.8)] flex items-center justify-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FA243C]" />
+            <div className="w-3.5 h-3.5 rounded-full bg-white border border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.8)] flex items-center justify-center transition-shadow duration-200">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />
             </div>
           </div>
         </div>
@@ -313,7 +315,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         aria-label="شريط تقدم الأغنية"
       >
         {/* Track Groove Background */}
-        <div className={`w-full ${isDragging ? 'h-2.5' : 'h-1.5'} group-hover:h-2.5 transition-all duration-150 rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
+        <div className={`w-full ${isDragging ? 'h-3' : 'h-1.5'} group-hover:h-3 transition-all duration-200 ease-out rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
           {/* Buffer Bar (Pre-loaded audio) */}
           <div
             className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
@@ -325,9 +327,11 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
             className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden"
             style={{ 
               width: `${initialPercent}%`,
-              backgroundColor: '#FA243C',
-              backgroundImage: 'linear-gradient(90deg, #FA243C 0%, #FF375F 60%, #FF758F 100%)',
-              boxShadow: '0 0 14px rgba(250, 36, 60, 0.75), inset 0 1px 1px rgba(255,255,255,0.4)',
+              backgroundColor: '#FA2D48',
+              backgroundImage: 'linear-gradient(90deg, #FA2D48 0%, #FF375F 60%, #FF758F 100%)',
+              boxShadow: isDragging
+                ? '0 0 20px rgba(250, 45, 72, 0.9), inset 0 1px 1px rgba(255,255,255,0.6)'
+                : '0 0 14px rgba(250, 45, 72, 0.75), inset 0 1px 1px rgba(255,255,255,0.4)',
             }}
           >
             {/* Luminous Leading Edge Sweep */}
@@ -349,15 +353,15 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         {/* Glowing Playhead Thumb Knob */}
         <div
           ref={thumbRef}
-          className={`absolute -ml-3 w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-100 pointer-events-none z-20 ${
+          className={`absolute -ml-3 w-6 h-6 rounded-full flex items-center justify-center pointer-events-none z-20 transition-transform duration-200 ease-out ${
             isDragging ? 'scale-125' : 'scale-100 group-hover:scale-110'
           }`}
           style={{ left: `${initialPercent}%` }}
         >
           <div 
-            className="w-4.5 h-4.5 rounded-full bg-white border border-white/90 shadow-[0_0_12px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center"
+            className="w-4.5 h-4.5 rounded-full bg-white border border-white/90 shadow-[0_0_12px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center transition-shadow duration-200"
           >
-            <div className="w-2 h-2 rounded-full bg-[#FA243C]" />
+            <div className="w-2 h-2 rounded-full bg-[#FA2D48]" />
           </div>
         </div>
       </div>

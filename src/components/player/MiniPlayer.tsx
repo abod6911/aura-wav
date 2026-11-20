@@ -79,10 +79,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       }}
       data-testid="mini-player"
       style={{
-        bottom: 'calc(54px + env(safe-area-inset-bottom, 0px) + 8px)',
+        bottom: 'calc(54px + max(12px, env(safe-area-inset-bottom, 0px)) + 8px)',
         touchAction: 'manipulation',
       }}
-      className="fixed inset-x-3 z-40 h-[60px] rounded-2xl px-2.5 flex items-center gap-3 bg-[#1C1C22]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto"
+      className="fixed inset-x-3 z-40 h-[60px] rounded-2xl px-2.5 flex items-center gap-3 bg-[#1C1C22]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto apple-row-press"
       dir={dir}
       onClick={handleExpand}
     >
@@ -132,16 +132,27 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white cursor-pointer active:scale-90 transition-transform touch-manipulation"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white cursor-pointer apple-play-btn touch-manipulation overflow-hidden"
           aria-label={isPlaying ? t.pause : t.play}
         >
-          {isPlaying ? (
-            <Pause className="w-5 h-5 fill-white text-white" />
-          ) : playbackState === 'buffering' ? (
-            <Loader2 className="w-5 h-5 animate-spin text-white" />
-          ) : (
-            <Play className="w-5 h-5 fill-white text-white translate-x-0.5" />
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={isPlaying ? 'pause' : 'play'}
+              initial={{ opacity: 0, scale: 0.72, rotate: isPlaying ? -15 : 15 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.72, rotate: isPlaying ? 15 : -15 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+              className="flex items-center justify-center"
+            >
+              {isPlaying ? (
+                <Pause className="w-5 h-5 fill-white text-white" />
+              ) : playbackState === 'buffering' ? (
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
+              ) : (
+                <Play className="w-5 h-5 fill-white text-white translate-x-0.5" />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </button>
 
         {/* Skip Forward Button */}
@@ -153,7 +164,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('light');
             nextTrack({ forceImmediate: true });
           }}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer active:scale-90 transition-transform touch-manipulation"
+          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-300 hover:text-white cursor-pointer apple-btn-tactile apple-next-btn touch-manipulation"
           aria-label={t.next}
         >
           <SkipForward className="w-4.5 h-4.5 fill-current" />

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-wav-v25';
+const CACHE_NAME = 'aura-wav-v26';
 const IMAGE_CACHE_NAME = 'aura-wav-images-v1';
 const STATIC_ASSETS = [
   '/',

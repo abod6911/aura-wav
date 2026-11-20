@@ -48,6 +48,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const userQueue = usePlayerStore((state) => state.userQueue);
   const favorites = usePlayerStore((state) => state.favorites);
+  const trackTransitionDirection = usePlayerStore((state) => state.trackTransitionDirection);
 
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const nextTrack = usePlayerStore((state) => state.nextTrack);
@@ -95,17 +96,25 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           handleClose();
         }
       }}
-      className="fixed inset-0 z-50 h-[100dvh] w-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-[#09090B] obsidian-grain overflow-hidden select-none touch-pan-y"
+      className="fixed inset-0 z-50 w-full h-full min-h-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-[#09090B] obsidian-grain overflow-hidden select-none touch-pan-y"
       dir={dir}
     >
-      {/* Dynamic Cover-Driven Ambient Engine */}
-      <div
-        className="absolute inset-0 -z-10 pointer-events-none transition-all duration-700 opacity-25 transform-gpu"
-        style={{
-          backgroundImage: `radial-gradient(circle at 50% 25%, rgba(var(--ambient-primary-rgb, 250, 36, 60), 0.28) 0%, transparent 65%), radial-gradient(circle at 80% 85%, rgba(var(--ambient-accent-rgb, 125, 18, 255), 0.18) 0%, transparent 60%)`,
-          transform: 'translateZ(0)',
-        }}
-      />
+      {/* Dual-Layer Blurred Ambient Backdrop Crossfade (750ms Apple Easing) */}
+      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden select-none">
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={currentTrack.id + '-ambient'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.35 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 transform-gpu"
+            style={{
+              backgroundImage: `radial-gradient(circle at 50% 28%, rgba(var(--ambient-primary-rgb, 250, 45, 72), 0.35) 0%, transparent 65%), radial-gradient(circle at 75% 80%, rgba(var(--ambient-accent-rgb, 250, 45, 72), 0.2) 0%, transparent 60%)`,
+            }}
+          />
+        </AnimatePresence>
+      </div>
 
       {/* ========================================================================= */}
       {/* LAYER 1: DRAG HANDLE & COMPACT HEADER BAR */}
@@ -165,26 +174,54 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           layoutId="aura-player-artwork"
           data-testid="expanded-artwork-container"
           animate={{
-            scale: isPlaying ? 1 : 0.88,
+            scale: isPlaying ? 1 : 0.84,
           }}
-          transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
           style={{
             boxShadow: isPlaying
-              ? '0 24px 50px -10px rgba(0, 0, 0, 0.85), 0 0 45px -8px var(--ambient-primary-glow, rgba(250, 36, 60, 0.3)), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-              : '0 12px 30px -8px rgba(0, 0, 0, 0.7)',
+              ? '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 45px -8px rgba(var(--ambient-primary-rgb, 250, 45, 72), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              : '0 8px 20px rgba(0, 0, 0, 0.3)',
           }}
-          className="relative w-[min(78vw,38vh,320px)] h-[min(78vw,38vh,320px)] max-h-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden border border-white/[0.14] select-none flex-shrink-0 shadow-2xl specular-highlight"
+          className="relative w-[min(78vw,38vh,320px)] h-[min(78vw,38vh,320px)] max-h-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden border border-white/[0.14] select-none flex-shrink-0 shadow-2xl specular-highlight transition-[box-shadow] duration-450"
         >
-          <img
-            src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
-            alt={currentTrack.title}
-            className="w-full h-full object-cover select-none pointer-events-none"
-            draggable={false}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/logo.svg';
-            }}
-          />
-          <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
+          <AnimatePresence mode="popLayout" custom={trackTransitionDirection} initial={false}>
+            <motion.img
+              key={currentTrack.id}
+              src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+              alt={currentTrack.title}
+              custom={trackTransitionDirection}
+              variants={{
+                enter: (direction: string) => ({
+                  x: direction === 'next' ? 28 : direction === 'prev' ? -28 : 0,
+                  scale: direction === 'fade' ? 0.96 : 0.94,
+                  opacity: 0,
+                  filter: 'blur(4px)',
+                }),
+                center: {
+                  x: 0,
+                  scale: 1,
+                  opacity: 1,
+                  filter: 'blur(0px)',
+                },
+                exit: (direction: string) => ({
+                  x: direction === 'next' ? -24 : direction === 'prev' ? 24 : 0,
+                  scale: 0.92,
+                  opacity: 0,
+                  filter: 'blur(3px)',
+                }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.85 }}
+              className="w-full h-full object-cover select-none pointer-events-none absolute inset-0"
+              draggable={false}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/logo.svg';
+              }}
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 vinyl-sheen pointer-events-none z-10" />
         </motion.div>
       </div>
 
@@ -194,13 +231,44 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       <div className="w-full max-w-md mx-auto flex-shrink-0 space-y-2 sm:space-y-3">
         {/* LAYER 3: TRACK META & FAVORITE ACTION */}
         <div className="w-full flex items-center justify-between gap-3 flex-shrink-0">
-          <div className="flex-1 min-w-0 text-start">
-            <h2 className="text-[17px] sm:text-[19px] font-bold text-white truncate tracking-tight leading-snug">
-              <bdi dir="auto">{currentTrack.title}</bdi>
-            </h2>
-            <p className="text-[13px] sm:text-[14px] text-white/60 truncate mt-0.5 font-medium leading-snug">
-              <bdi dir="auto">{currentTrack.artist}</bdi>
-            </p>
+          <div className="flex-1 min-w-0 text-start overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.h2
+                key={currentTrack.id + '-title'}
+                initial={{
+                  opacity: 0,
+                  x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
+                }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{
+                  opacity: 0,
+                  x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
+                }}
+                transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28 }}
+                className="text-[17px] sm:text-[19px] font-bold text-white truncate tracking-tight leading-snug"
+              >
+                <bdi dir="auto">{currentTrack.title}</bdi>
+              </motion.h2>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.p
+                key={currentTrack.id + '-artist'}
+                initial={{
+                  opacity: 0,
+                  x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
+                }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{
+                  opacity: 0,
+                  x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
+                }}
+                transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28, delay: 0.04 }}
+                className="text-[13px] sm:text-[14px] text-white/60 truncate mt-0.5 font-medium leading-snug"
+              >
+                <bdi dir="auto">{currentTrack.artist}</bdi>
+              </motion.p>
+            </AnimatePresence>
           </div>
 
           <button
@@ -210,12 +278,12 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('success');
               toggleFavorite(currentTrack.id);
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-[#FA243C] transition-transform active:scale-90 cursor-pointer rounded-full flex-shrink-0"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-[#FA2D48] apple-btn-tactile cursor-pointer rounded-full flex-shrink-0"
             aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
           >
             <Heart
               className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${
-                isFav ? 'text-[#FA243C] fill-[#FA243C] scale-105' : 'text-zinc-500'
+                isFav ? 'text-[#FA2D48] fill-[#FA2D48] scale-105' : 'text-zinc-500'
               }`}
             />
           </button>
@@ -246,14 +314,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               toggleShuffle();
             }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
-              shuffle ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
+              shuffle ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تشغيل عشوائي' : 'Shuffle'}
             aria-label="Shuffle"
           >
             <Shuffle className="w-5 h-5" />
-            {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
+            {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />}
           </button>
 
           {/* Previous Track */}
@@ -264,14 +332,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               previousTrack();
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none apple-btn-tactile apple-prev-btn"
             title={isRTL ? 'السابق' : 'Previous'}
             aria-label="Previous track"
           >
             <SkipBack className="w-6 h-6 fill-white text-white" />
           </button>
 
-          {/* Center Master Play/Pause Statement Button */}
+          {/* Center Master Play/Pause Statement Button with 15deg morph */}
           <button
             type="button"
             data-testid="expanded-play-pause-btn"
@@ -279,14 +347,25 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('medium');
               togglePlayPause();
             }}
-            className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-white text-black flex items-center justify-center shadow-xl active:scale-90 transition-transform cursor-pointer select-none flex-shrink-0"
+            className="w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-white text-black flex items-center justify-center shadow-xl apple-play-btn cursor-pointer select-none flex-shrink-0 overflow-hidden"
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
-            {isPlaying ? (
-              <Pause className="w-7 h-7 fill-black text-black" />
-            ) : (
-              <Play className="w-7 h-7 fill-black text-black translate-x-0.5" />
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={isPlaying ? 'pause' : 'play'}
+                initial={{ opacity: 0, scale: 0.72, rotate: isPlaying ? -15 : 15 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.72, rotate: isPlaying ? 15 : -15 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+                className="flex items-center justify-center"
+              >
+                {isPlaying ? (
+                  <Pause className="w-7 h-7 fill-black text-black" />
+                ) : (
+                  <Play className="w-7 h-7 fill-black text-black translate-x-0.5" />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </button>
 
           {/* Next Track */}
@@ -297,7 +376,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               nextTrack({ forceImmediate: true });
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-transform active:scale-90"
+            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none apple-btn-tactile apple-next-btn"
             title={isRTL ? 'التالي' : 'Next'}
             aria-label="Next track"
           >
@@ -312,14 +391,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               cycleRepeat();
             }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-all cursor-pointer select-none active:scale-90 ${
-              repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-400 hover:text-white'
+            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
+              repeatMode !== 'off' ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تكرار' : 'Repeat'}
             aria-label="Repeat"
           >
             {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
-            {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA243C]" />}
+            {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />}
           </button>
         </div>
 
@@ -332,7 +411,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setLyricsOpen(true);
             }}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer"
             title={isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'}
           >
             <Mic2 className="w-5 h-5" />
@@ -346,7 +425,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setEqualizerOpen(true);
             }}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer"
             title={isRTL ? 'المعادل والمؤثرات' : 'EQ & Effects'}
           >
             <Sliders className="w-5 h-5" />
@@ -361,7 +440,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setQueueOpen(true);
             }}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90 relative"
+            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer relative"
             title={isRTL ? 'قائمة الانتظار' : 'Queue'}
           >
             <div className="relative">

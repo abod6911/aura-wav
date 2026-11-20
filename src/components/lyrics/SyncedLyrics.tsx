@@ -167,7 +167,7 @@ const SyncedLyricsModal: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-50 bg-[#060609] h-[100dvh] flex flex-col select-none overflow-hidden"
+      className="fixed inset-0 z-50 bg-[#09090B] w-full h-full min-h-full flex flex-col select-none overflow-hidden"
     >
       {/* Subtle Ambient Tint (Apple Music Style) */}
       <div
