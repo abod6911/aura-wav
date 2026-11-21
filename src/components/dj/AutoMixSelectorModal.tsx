@@ -4,6 +4,7 @@ import { usePlayerStore } from '../../store/usePlayerStore';
 import { AutoMixStyle } from '../../lib/audioEngine';
 import { Sliders, X, Check, Disc, Waves, Zap, SlidersHorizontal, Gauge } from 'lucide-react';
 import { triggerHaptic } from '../../utils/haptics';
+import { AppleSwitch } from '../common/AppleSwitch';
 
 interface TransitionOption {
   id: AutoMixStyle;
@@ -99,7 +100,7 @@ export const AutoMixSelectorModal: React.FC = () => {
               setAutoMixModalOpen(false);
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-t-[28px] sm:rounded-3xl bg-[#101018] border-t sm:border border-white/10 flex flex-col overflow-hidden pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5 shadow-2xl"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-t-[28px] sm:rounded-3xl bg-[#101018] border-t sm:border border-white/10 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)] sm:pb-5 shadow-2xl"
         >
           {/* Unified Grab Handle */}
           <div
@@ -134,7 +135,7 @@ export const AutoMixSelectorModal: React.FC = () => {
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3.5 pb-6 space-y-3.5">
             {/* 1. Quick Playback Speed Controls */}
             <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
               <div className="flex items-center justify-between text-xs">
@@ -184,24 +185,12 @@ export const AutoMixSelectorModal: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                dir="ltr"
-                role="switch"
-                aria-checked={automixEnabled}
-                onClick={() => setAutoMix(!automixEnabled)}
-                className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors select-none active:scale-95 ${
-                  automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/20'
-                }`}
-              >
-                <motion.div
-                  layout
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className={`w-5.5 h-5.5 rounded-full bg-white shadow-md pointer-events-none ${
-                    automixEnabled ? 'ml-auto' : 'mr-auto'
-                  }`}
-                />
-              </button>
+              <AppleSwitch
+                checked={automixEnabled}
+                onChange={() => setAutoMix(!automixEnabled)}
+                activeColor="bg-[#FA2D48]"
+                label="تفعيل ميزة الـ AutoMix"
+              />
             </div>
 
             {/* 3. Transition Duration Slider */}
@@ -283,7 +272,7 @@ export const AutoMixSelectorModal: React.FC = () => {
           </div>
 
           {/* Footer CTA */}
-          <div className="p-4 border-t border-white/[0.08] shrink-0">
+          <div className="p-3 sm:p-4 border-t border-white/[0.08] shrink-0 bg-[#101018]">
             <button
               type="button"
               onClick={() => {
@@ -296,7 +285,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 store.nextTrack({ forceImmediate: true });
                 setAutoMixModalOpen(false);
               }}
-              className="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full h-11 sm:h-12 px-4 rounded-full bg-gradient-to-r from-[#FA2D48] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.98] transition-all cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
               <span>تجربة انتقال فوري بهذا النمط الآن</span>

@@ -114,8 +114,8 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
             />
 
             {/* Track Info Card Header */}
-            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-white/[0.05] border border-white/[0.08]">
-              <div className="w-14 h-14 min-w-[56px] min-h-[56px] max-w-[56px] max-h-[56px] rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-md flex-shrink-0">
+            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.05] border border-white/[0.08]">
+              <div className="w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-md flex-shrink-0">
                 <img
                   src={getOptimizedCoverUrl(track.coverUrl || track.artworkUrl, 'thumb')}
                   alt={track.title}
@@ -123,18 +123,16 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   loading="eager"
                 />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-start">
                 <h3
-                  dir="auto"
                   className="text-sm font-black text-white truncate block text-start tracking-tight"
                 >
-                  {track.title}
+                  <bdi dir="auto">{track.title}</bdi>
                 </h3>
                 <p
-                  dir="auto"
                   className="text-xs text-white/60 truncate block text-start mt-0.5"
                 >
-                  {track.artist}
+                  <bdi dir="auto">{track.artist}</bdi>
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-[10px] text-white/40 font-mono">
                   <span>{formatTime(track.duration || 180)}</span>

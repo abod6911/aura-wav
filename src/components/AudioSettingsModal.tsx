@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { X, Sliders, Flame, Gauge, Check, Disc, Megaphone, Waves, Zap, Radio } from 'lucide-react';
+import { AppleSwitch } from './common/AppleSwitch';
 
 interface AudioSettingsModalProps {
   isOpen: boolean;
@@ -131,24 +132,12 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                 <Radio className="w-3.5 h-3.5 text-[#FA2D48]" />
                 الدمج التلقائي الذكي (AutoMix)
               </label>
-              <button
-                type="button"
-                dir="ltr"
-                role="switch"
-                aria-checked={automixEnabled}
-                onClick={() => setAutoMix(!automixEnabled)}
-                className={`relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors select-none active:scale-95 ${
-                  automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
-                }`}
-              >
-                <motion.div
-                  layout
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className={`w-5.5 h-5.5 rounded-full bg-white shadow-md pointer-events-none ${
-                    automixEnabled ? 'ml-auto' : 'mr-auto'
-                  }`}
-                />
-              </button>
+              <AppleSwitch
+                checked={automixEnabled}
+                onChange={() => setAutoMix(!automixEnabled)}
+                activeColor="bg-[#FA2D48]"
+                label="الدمج التلقائي الذكي (AutoMix)"
+              />
             </div>
 
             {automixEnabled && (

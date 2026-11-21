@@ -545,7 +545,7 @@ export function App() {
           </div>
         )}
 
-        <div className="w-full max-w-[1440px] mx-auto px-0 md:px-6 lg:px-10 pb-16 md:pb-32 pt-2 md:pt-4 flex-1 flex flex-col min-w-0">
+        <div className="w-full max-w-[1440px] mx-auto px-0 md:px-6 lg:px-10 pb-0 md:pb-32 pt-1 md:pt-4 flex-1 flex flex-col min-w-0">
           {/* Dynamic Tab Views (Strict Conditional Rendering: ONLY activeTab in DOM) */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">

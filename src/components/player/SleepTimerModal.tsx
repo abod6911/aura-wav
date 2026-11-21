@@ -52,7 +52,7 @@ export const SleepTimerModal: React.FC = () => {
               setSleepTimerOpen(false);
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl space-y-5 overflow-y-auto"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl space-y-4 overflow-y-auto"
         >
           {/* iOS Top Drag Pill */}
           <div onClick={() => setSleepTimerOpen(false)} className="w-10 h-1.5 bg-white/25 hover:bg-white/40 rounded-full mx-auto mt-0 mb-3 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />

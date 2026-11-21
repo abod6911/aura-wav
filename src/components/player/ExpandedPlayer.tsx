@@ -427,7 +427,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           handleClose();
         }
       }}
-      className="fixed inset-0 z-50 w-full h-full min-h-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+12px)] bg-[#09090B] obsidian-grain overflow-hidden select-none"
+      className="fixed inset-0 z-50 w-full h-full min-h-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+6px)] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] bg-[#09090B] obsidian-grain overflow-hidden select-none"
       dir={dir}
     >
       {/* Dual-Layer Blurred Ambient Backdrop Crossfade (750ms Apple Easing) */}
@@ -454,7 +454,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         {/* Centered Drag Handle Pill */}
         <div
           onClick={handleClose}
-          className="w-10 h-1 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-2 cursor-pointer transition-colors"
+          className="w-9 h-1 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-1.5 cursor-pointer transition-colors"
         />
 
         <div className="w-full flex items-center justify-between">
@@ -463,7 +463,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             type="button"
             data-testid="minimize-player-btn"
             onClick={handleClose}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             aria-label="Collapse player"
           >
             <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
@@ -475,7 +475,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <button
                 type="button"
                 onClick={() => setSleepTimerOpen(true)}
-                className="px-2.5 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white flex items-center gap-1.5 cursor-pointer apple-btn-tactile transition-all"
+                className="px-2.5 py-0.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white flex items-center gap-1.5 cursor-pointer apple-btn-tactile transition-all"
               >
                 <Clock className="w-3.5 h-3.5 text-[#FA2D48] animate-pulse" />
                 <span className="text-[11px] font-mono font-bold text-white/95">
@@ -508,7 +508,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setActionSheetOpen(true);
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
             aria-label="More options"
           >
             <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
@@ -519,7 +519,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       {/* ========================================================================= */}
       {/* LAYER 2: CENTER STAGE (ARTWORK / SYNCED LYRICS / UP NEXT QUEUE) */}
       {/* ========================================================================= */}
-      <div className="flex-1 min-h-0 flex items-center justify-center py-2 sm:py-3 overflow-hidden">
+      <div className="flex-1 min-h-0 flex items-center justify-center py-1 sm:py-2.5 overflow-hidden">
         {activeCenterView === 'artwork' ? (
           /* Large Spring-Scaled Album Artwork with Horizontal Swipe Gesture */
           <motion.div
@@ -539,16 +539,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               }
             }}
             animate={{
-              scale: isPlaying ? 1 : 0.84,
+              scale: isPlaying ? 1 : 0.86,
             }}
             transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
             style={{
               boxShadow: isPlaying
-                ? '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 45px -8px rgba(var(--ambient-primary-rgb, 250, 45, 72), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                ? '0 20px 50px rgba(0, 0, 0, 0.5), 0 0 35px -8px rgba(var(--ambient-primary-rgb, 250, 45, 72), 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
                 : '0 8px 20px rgba(0, 0, 0, 0.3)',
               touchAction: 'pan-y',
             }}
-            className="relative w-[min(78vw,38vh,320px)] h-[min(78vw,38vh,320px)] max-h-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden border border-white/[0.14] select-none flex-shrink-0 shadow-2xl specular-highlight transition-[box-shadow] duration-450 cursor-grab active:cursor-grabbing"
+            className="relative w-[min(68vw,30vh,260px)] h-[min(68vw,30vh,260px)] sm:w-[min(75vw,36vh,320px)] sm:h-[min(75vw,36vh,320px)] max-h-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden border border-white/[0.14] select-none flex-shrink-0 shadow-2xl specular-highlight transition-[box-shadow] duration-450 cursor-grab active:cursor-grabbing"
           >
             <AnimatePresence mode="popLayout" custom={trackTransitionDirection} initial={false}>
               <motion.img
@@ -608,13 +608,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       {/* ========================================================================= */}
       {/* LOWER CONTROLS CLUSTER: Unified Proportional Spacing */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-md mx-auto flex-shrink-0 space-y-2 sm:space-y-3">
+      <div className="w-full max-w-md mx-auto flex-shrink-0 space-y-1 sm:space-y-2.5">
         {/* LAYER 3: TRACK META & FAVORITE ACTION */}
         <div className="w-full flex items-center justify-between gap-3 flex-shrink-0">
           <div className="flex-1 min-w-0 text-start overflow-hidden">
             <AnimatePresence mode="wait" initial={false}>
               <motion.h2
                 key={currentTrack.id + '-title'}
+                dir="auto"
                 initial={{
                   opacity: 0,
                   x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
@@ -625,15 +626,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
                 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28 }}
-                className="text-[17px] sm:text-[19px] font-bold text-white truncate tracking-tight leading-snug"
+                className="text-[16px] sm:text-[19px] font-bold text-white truncate tracking-tight leading-snug block"
               >
-                <bdi dir="auto">{currentTrack.title}</bdi>
+                {currentTrack.title}
               </motion.h2>
             </AnimatePresence>
 
             <AnimatePresence mode="wait" initial={false}>
               <motion.p
                 key={currentTrack.id + '-artist'}
+                dir="auto"
                 initial={{
                   opacity: 0,
                   x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
@@ -644,9 +646,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
                 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28, delay: 0.04 }}
-                className="text-[13px] sm:text-[14px] text-white/60 truncate mt-0.5 font-medium leading-snug"
+                className="text-[12px] sm:text-[14px] text-white/60 truncate mt-0.5 font-medium leading-snug block"
               >
-                <bdi dir="auto">{currentTrack.artist}</bdi>
+                {currentTrack.artist}
               </motion.p>
             </AnimatePresence>
           </div>
@@ -658,7 +660,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('success');
               toggleFavorite(currentTrack.id);
             }}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-zinc-400 hover:text-[#FA2D48] apple-btn-tactile cursor-pointer rounded-full flex-shrink-0"
+            className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-zinc-400 hover:text-[#FA2D48] apple-btn-tactile cursor-pointer rounded-full flex-shrink-0"
             aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
           >
             <Heart
@@ -694,13 +696,13 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               toggleShuffle();
             }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
+            className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
               shuffle ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تشغيل عشوائي' : 'Shuffle'}
             aria-label="Shuffle"
           >
-            <Shuffle className="w-5 h-5" />
+            <Shuffle className="w-4.5 h-4.5" />
             {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />}
           </button>
 
@@ -716,7 +718,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             title={isRTL ? 'السابق' : 'Previous'}
             aria-label="Previous track"
           >
-            <SkipBack className="w-6 h-6 fill-white text-white" />
+            <SkipBack className="w-5.5 h-5.5 fill-white text-white" />
           </button>
 
           {/* Center Master Play/Pause Statement Button with Buffering State */}
@@ -727,7 +729,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('medium');
               togglePlayPause();
             }}
-            className={`w-16 h-16 min-w-[64px] min-h-[64px] rounded-full bg-white text-black flex items-center justify-center shadow-xl apple-play-btn cursor-pointer select-none flex-shrink-0 overflow-hidden ${
+            className={`w-15 h-15 min-w-[60px] min-h-[60px] rounded-full bg-white text-black flex items-center justify-center shadow-xl apple-play-btn cursor-pointer select-none flex-shrink-0 overflow-hidden ${
               playbackState === 'buffering' ? 'ring-4 ring-white/40 animate-pulse' : ''
             }`}
             aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -742,11 +744,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 className="flex items-center justify-center"
               >
                 {playbackState === 'buffering' ? (
-                  <div className="w-7 h-7 rounded-full border-2 border-black/25 border-t-black animate-spin" />
+                  <div className="w-6 h-6 rounded-full border-2 border-black/25 border-t-black animate-spin" />
                 ) : isPlaying ? (
-                  <Pause className="w-7 h-7 fill-black text-black" />
+                  <Pause className="w-6 h-6 fill-black text-black" />
                 ) : (
-                  <Play className="w-7 h-7 fill-black text-black translate-x-0.5" />
+                  <Play className="w-6 h-6 fill-black text-black translate-x-0.5" />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -764,7 +766,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             title={isRTL ? 'التالي' : 'Next'}
             aria-label="Next track"
           >
-            <SkipForward className="w-6 h-6 fill-white text-white" />
+            <SkipForward className="w-5.5 h-5.5 fill-white text-white" />
           </button>
 
           {/* Repeat Button */}
@@ -775,19 +777,19 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               cycleRepeat();
             }}
-            className={`relative w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
+            className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
               repeatMode !== 'off' ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'تكرار' : 'Repeat'}
             aria-label="Repeat"
           >
-            {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
+            {repeatMode === 'one' ? <Repeat1 className="w-4.5 h-4.5" /> : <Repeat className="w-4.5 h-4.5" />}
             {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />}
           </button>
         </div>
 
         {/* LAYER 6: BOTTOM STUDIO DOCK (APPLE MUSIC 3 TOOLS: LYRICS, EQ, UP NEXT QUEUE) */}
-        <div className="flex items-center justify-around w-full pt-1.5 sm:pt-2 border-t border-white/[0.06] flex-shrink-0 select-none">
+        <div className="flex items-center justify-around w-full pt-1 sm:pt-2 border-t border-white/[0.06] flex-shrink-0 select-none">
           {/* 1. Synced Lyrics Toggle */}
           <button
             type="button"
@@ -795,14 +797,14 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setActiveCenterView((prev) => (prev === 'lyrics' ? 'artwork' : 'lyrics'));
             }}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer transition-colors ${
+            className={`flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer transition-colors ${
               activeCenterView === 'lyrics'
                 ? 'text-[#FA2D48]'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title={isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'}
           >
-            <Mic2 className="w-5 h-5" />
+            <Mic2 className="w-4.5 h-4.5" />
             <span className="text-[10px] font-medium">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
           </button>
 
@@ -813,10 +815,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setEqualizerOpen(true);
             }}
-            className="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer transition-colors"
+            className="flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer transition-colors"
             title={isRTL ? 'المعادل والمؤثرات' : 'EQ & Effects'}
           >
-            <Sliders className="w-5 h-5" />
+            <Sliders className="w-4.5 h-4.5" />
             <span className="text-[10px] font-medium">{isRTL ? 'المعادل' : 'EQ'}</span>
           </button>
 
@@ -828,7 +830,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               triggerHaptic('light');
               setActiveCenterView((prev) => (prev === 'queue' ? 'artwork' : 'queue'));
             }}
-            className={`flex flex-col items-center justify-center min-w-[52px] min-h-[44px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer relative transition-colors ${
+            className={`flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer relative transition-colors ${
               activeCenterView === 'queue'
                 ? 'text-[#FA2D48]'
                 : 'text-zinc-400 hover:text-white'
@@ -836,7 +838,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             title={isRTL ? 'قائمة الانتظار' : 'Queue'}
           >
             <div className="relative">
-              <ListMusic className="w-5 h-5" />
+              <ListMusic className="w-4.5 h-4.5" />
               {userQueue.length > 0 && (
                 <span className="absolute -top-1 -right-2 px-1 min-w-[15px] h-3.5 rounded-full bg-[#FA2D48] text-white text-[8.5px] font-mono font-bold flex items-center justify-center border border-black shadow">
                   {userQueue.length}

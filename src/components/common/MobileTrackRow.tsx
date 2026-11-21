@@ -105,20 +105,20 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[60px] min-h-[60px] px-3.5 flex items-center justify-between gap-3 select-none apple-row-press cursor-pointer ${
+        className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none apple-row-press cursor-pointer ${
           isCur ? 'bg-[#181820]' : 'bg-transparent'
         }`}
       >
         {/* Left: Index + Artwork + Title/Artist */}
-        <div className="flex items-center gap-3 min-w-0 flex-1 pe-1">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-1">
           {showIndex && index !== undefined && (
             <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 tabular-nums ${isCur ? 'text-[#FA2D48]' : 'text-zinc-500'}`}>
               {index + 1}
             </span>
           )}
 
-          {/* 48px x 48px rounded-lg Artwork */}
-          <div className="relative w-12 h-12 min-w-[48px] min-h-[48px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 aspect-square shadow-sm border border-white/10">
+          {/* 40px x 40px rounded-lg Artwork */}
+          <div className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 aspect-square shadow-sm border border-white/10">
             <img
               src={track.artworkUrl || track.coverUrl || '/logo.svg'}
               alt={track.title}
@@ -144,14 +144,14 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           <div className="min-w-0 flex-1">
             <h4
               dir="auto"
-              className={`text-[13px] sm:text-[14px] font-bold truncate block text-start leading-tight tracking-tight ${
+              className={`text-[13px] sm:text-[14px] font-bold truncate block leading-tight tracking-tight ${
                 isCur ? 'text-[#FA2D48]' : 'text-white'
               }`}
             >
               {track.title}
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-              <p dir="auto" className="text-[11px] text-zinc-400 truncate block text-start font-normal">
+              <p dir="auto" className="text-[11px] text-zinc-400 truncate block font-normal">
                 {track.artist}
               </p>
               {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
@@ -171,30 +171,30 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
             </span>
           )}
 
-          {/* Quick 1-tap Add to Queue (44px touch area) */}
+          {/* Quick 1-tap Add to Queue (40px touch area) */}
           <button
             type="button"
             onClick={handleQuickQueue}
-            className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
+            className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
             title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
             aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+              className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
                 isAddedFeedback
                   ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
                   : 'text-zinc-400 hover:text-white hover:bg-white/10'
               }`}
             >
               {isAddedFeedback ? (
-                <Check className="w-4 h-4 text-white stroke-[3]" />
+                <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
               ) : (
-                <ListPlus className="w-4 h-4" />
+                <ListPlus className="w-3.5 h-3.5" />
               )}
             </div>
           </button>
 
-          {/* 3-dots Menu Button (44px touch target) */}
+          {/* 3-dots Menu Button (40px touch target) */}
           {onOpenActionSheet && (
             <button
               type="button"
@@ -203,7 +203,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer touch-manipulation"
+              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer touch-manipulation"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >
@@ -213,7 +213,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         </div>
 
         {/* Inset Hairline Divider starting after artwork */}
-        <div className="absolute bottom-0 start-[76px] end-0 h-[1px] bg-white/[0.05] pointer-events-none" />
+        <div className="absolute bottom-0 start-[60px] end-0 h-[1px] bg-white/[0.05] pointer-events-none" />
       </motion.div>
     </div>
   );

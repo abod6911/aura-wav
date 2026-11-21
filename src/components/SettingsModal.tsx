@@ -24,6 +24,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { AppleSwitch } from './common/AppleSwitch';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -41,36 +42,17 @@ interface SettingsToggleProps {
 const SettingsToggle: React.FC<SettingsToggleProps> = ({
   checked,
   onChange,
-  activeColor = 'bg-[#FA243C]',
+  activeColor = 'bg-[#FA2D48]',
   label,
 }) => {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => {
-        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try {
-            navigator.vibrate(12);
-          } catch {}
-        }
-        onChange(!checked);
-      }}
-      dir="ltr"
-      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none select-none active:scale-95 ${
-        checked ? activeColor : 'bg-white/15'
-      }`}
-    >
-      <motion.div
-        layout
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
-          checked ? 'ml-auto' : 'mr-auto'
-        }`}
-      />
-    </button>
+    <AppleSwitch
+      checked={checked}
+      onChange={onChange}
+      activeColor={activeColor}
+      label={label}
+      size="sm"
+    />
   );
 };
 

@@ -80,10 +80,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
   return (
     <header
       style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
         backgroundColor: isScrolled ? '#09090B' : 'transparent',
       }}
-      className={`select-none w-full min-w-0 px-4 sm:px-8 pb-3 shrink-0 z-30 transition-all pointer-events-auto ${
+      className={`select-none w-full min-w-0 px-4 sm:px-8 pb-2 sm:pb-3 shrink-0 z-30 transition-all pointer-events-auto ${
         isScrolled
           ? 'bg-[#09090B]/95 backdrop-blur-2xl border-b border-white/[0.08]'
           : 'border-b border-white/[0.03]'
@@ -91,18 +91,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
       dir={dir}
     >
       {/* ── Mobile Header Bar (Apple Music Native iOS Style) ── */}
-      <div className="flex items-center justify-between sm:hidden w-full min-w-0 pt-1 pb-1">
-        <h1 className="text-2xl font-black tracking-tight text-white leading-none">
+      <div className="flex items-center justify-between sm:hidden w-full min-w-0 py-0.5">
+        <h1 className="text-[22px] font-black tracking-tight text-white leading-tight">
           {getPageTitle()}
         </h1>
 
         <button
           onClick={() => setSettingsOpen(true)}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] -me-1 flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
+          className="w-10 h-10 min-w-[40px] min-h-[40px] -me-1 flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
           title={currentUser ? currentUser.name : t.settings}
           aria-label={t.settings}
         >
-          <div className="w-9 h-9 rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center">
             <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
               {currentUser?.avatarUrl ? (
                 <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />

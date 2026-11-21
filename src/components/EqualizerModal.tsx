@@ -16,6 +16,7 @@ import {
   Gauge,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AppleSwitch } from './common/AppleSwitch';
 
 interface PresetItem {
   name: string;
@@ -189,27 +190,49 @@ export const EqualizerModal: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-          className="relative w-full max-w-4xl max-h-[90dvh] md:max-h-[90vh] bg-[#101013]/98 border-t md:border border-white/[0.08] rounded-t-3xl md:rounded-2xl shadow-2xl backdrop-blur-3xl p-5 sm:p-7 flex flex-col gap-5 overflow-y-auto z-10 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] md:pb-7"
+          className="relative w-full max-w-4xl max-h-[88dvh] md:max-h-[90vh] bg-[#101013]/98 border-t md:border border-white/[0.08] rounded-t-3xl md:rounded-2xl shadow-2xl backdrop-blur-3xl p-4 sm:p-7 flex flex-col gap-4 sm:gap-5 overflow-y-auto z-10 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] md:pb-7"
         >
           {/* Mobile Grabber Handle */}
           <div className="md:hidden w-10 h-1 rounded-full bg-white/20 mx-auto -mt-1 mb-1 shrink-0" />
-          {/* ── 1. Modal Header (Single Line Clean Architecture) ── */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06]">
-            {/* Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-zinc-200">
-                <Sliders className="w-4 h-4" />
+          {/* ── 1. Modal Header (Responsive Architecture) ── */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+            {/* Top row: Title + Actions */}
+            <div className="flex items-center justify-between w-full md:w-auto">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-zinc-200">
+                  <Sliders className="w-4 h-4" />
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                  المعادل الصوتي
+                </h2>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                المعادل الصوتي
-              </h2>
+
+              {/* Mobile Right Actions: Reset & Close */}
+              <div className="flex md:hidden items-center gap-1.5">
+                {modalTab === 'eq' && (
+                  <button
+                    onClick={() => applyEqPreset({ name: 'Flat', nameAr: 'افتراضي', gains: [0, 0, 0, 0, 0] })}
+                    title="إعادة التعيين إلى 0dB"
+                    className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setEqualizerOpen(false)}
+                  className="p-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Centered Apple-Style Segmented Control */}
-            <div className="flex items-center p-1 bg-white/[0.05] rounded-xl border border-white/[0.06] text-xs">
+            {/* Apple-Style Segmented Control (Full width on mobile, centered on desktop) */}
+            <div className="grid grid-cols-2 p-1 bg-white/[0.05] rounded-xl border border-white/[0.06] text-xs w-full md:w-auto">
               <button
                 onClick={() => setModalTab('eq')}
-                className={`px-4 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                className={`py-1.5 px-3 rounded-lg font-medium transition-all text-center cursor-pointer ${
                   modalTab === 'eq'
                     ? 'bg-white text-black font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
@@ -219,7 +242,7 @@ export const EqualizerModal: React.FC = () => {
               </button>
               <button
                 onClick={() => setModalTab('pro_dsp')}
-                className={`px-4 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                className={`py-1.5 px-3 rounded-lg font-medium transition-all text-center cursor-pointer ${
                   modalTab === 'pro_dsp'
                     ? 'bg-white text-black font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
@@ -229,8 +252,8 @@ export const EqualizerModal: React.FC = () => {
               </button>
             </div>
 
-            {/* Left Actions: Reset & Close */}
-            <div className="flex items-center gap-2">
+            {/* Desktop Left Actions: Reset & Close */}
+            <div className="hidden md:flex items-center gap-2">
               {modalTab === 'eq' && (
                 <button
                   onClick={() => applyEqPreset({ name: 'Flat', nameAr: 'افتراضي', gains: [0, 0, 0, 0, 0] })}
@@ -252,9 +275,9 @@ export const EqualizerModal: React.FC = () => {
 
           {/* ── TAB 1: PARAMETRIC EQUALIZER & CONSOLE ── */}
           {modalTab === 'eq' && (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-3.5 sm:gap-6">
               {/* Top Half: Studio SVG Interactive Frequency Graph */}
-              <div className="relative w-full h-[160px] bg-[#09090B] rounded-xl border border-white/[0.05] overflow-hidden select-none">
+              <div className="relative w-full h-[115px] sm:h-[160px] bg-[#09090B] rounded-xl border border-white/[0.05] overflow-hidden select-none">
                 {/* Calibration Grid Lines */}
                 <svg
                   ref={svgRef}
@@ -340,7 +363,7 @@ export const EqualizerModal: React.FC = () => {
                 </svg>
 
                 {/* Clean Studio Calibration dB Labels on the Outer Edge (Zero collision with curve!) */}
-                <div dir="ltr" className="absolute top-2 start-3 flex flex-col justify-between h-[135px] pointer-events-none text-[10px] font-mono text-zinc-500 tabular-nums">
+                <div dir="ltr" className="absolute top-1.5 start-2.5 flex flex-col justify-between h-[95px] sm:h-[135px] pointer-events-none text-[9px] sm:text-[10px] font-mono text-zinc-500 tabular-nums">
                   <span>+12 dB</span>
                   <span className="text-zinc-400 font-semibold">0 dB</span>
                   <span>-12 dB</span>
@@ -348,7 +371,7 @@ export const EqualizerModal: React.FC = () => {
               </div>
 
               {/* Middle Section: 5 Precision Studio Faders */}
-              <div dir="ltr" className="grid grid-cols-5 gap-3 sm:gap-6 px-2">
+              <div dir="ltr" className="grid grid-cols-5 gap-2 sm:gap-6 px-1 sm:px-2">
                 {EQ_BANDS.map((band, idx) => {
                   const gain = eqGains[idx];
                   const isBoost = gain > 0;
@@ -363,11 +386,11 @@ export const EqualizerModal: React.FC = () => {
                   return (
                     <div
                       key={band.freq}
-                      className="flex flex-col items-center justify-between h-44 group select-none"
+                      className="flex flex-col items-center justify-between h-36 sm:h-44 group select-none"
                     >
                       {/* dB Readout with tabular-nums */}
                       <span
-                        className={`text-xs font-mono font-semibold tabular-nums ${
+                        className={`text-[11px] sm:text-xs font-mono font-semibold tabular-nums ${
                           isBoost
                             ? 'text-[#FA2D48]'
                             : isCut
@@ -382,7 +405,7 @@ export const EqualizerModal: React.FC = () => {
                       <div
                         onDoubleClick={() => setEqGain(idx, 0)}
                         title="انقر مرتين لإعادة الضبط إلى 0dB"
-                        className="relative w-8 h-28 flex items-center justify-center cursor-pointer touch-none"
+                        className="relative w-8 h-20 sm:h-28 flex items-center justify-center cursor-pointer touch-none"
                       >
                         {/* Faint Tick Marks beside channel */}
                         <div className="absolute inset-y-0 -start-2 flex flex-col justify-between py-1 text-[7px] text-zinc-600 font-mono pointer-events-none">
@@ -484,25 +507,13 @@ export const EqualizerModal: React.FC = () => {
                       <p className="text-xs text-zinc-400 mt-0.5">انتقال لوغاريتمي سلس بين الأغاني المتتابعة</p>
                     </div>
 
-                    {/* iOS-Style Toggle */}
-                    <button
-                      type="button"
-                      dir="ltr"
-                      role="switch"
-                      aria-checked={automixEnabled}
-                      onClick={() => setAutoMix(!automixEnabled)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 overflow-hidden ${
-                        automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
-                      }`}
-                    >
-                      <motion.div
-                        layout
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
-                          automixEnabled ? 'ml-auto' : 'mr-auto'
-                        }`}
-                      />
-                    </button>
+                    {/* Bulletproof Apple iOS Toggle */}
+                    <AppleSwitch
+                      checked={automixEnabled}
+                      onChange={() => setAutoMix(!automixEnabled)}
+                      activeColor="bg-[#FA2D48]"
+                      label="الدمج التلقائي (AutoMix)"
+                    />
                   </div>
 
                   {/* Duration Slider */}
@@ -615,24 +626,12 @@ export const EqualizerModal: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  dir="ltr"
-                  role="switch"
-                  aria-checked={karaokeMode}
-                  onClick={() => setKaraokeMode(!karaokeMode)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
-                    karaokeMode ? 'bg-[#FA2D48]' : 'bg-white/10'
-                  }`}
-                >
-                  <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
-                      karaokeMode ? 'ml-auto' : 'mr-auto'
-                    }`}
-                  />
-                </button>
+                <AppleSwitch
+                  checked={karaokeMode}
+                  onChange={() => setKaraokeMode(!karaokeMode)}
+                  activeColor="bg-[#FA2D48]"
+                  label="عزل صوت المغني (Vocal Attenuator)"
+                />
               </div>
 
               {/* 3. Smart Loudness Normalization */}
@@ -647,24 +646,12 @@ export const EqualizerModal: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  dir="ltr"
-                  role="switch"
-                  aria-checked={loudnessNormalization}
-                  onClick={() => setLoudnessNormalization(!loudnessNormalization)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
-                    loudnessNormalization ? 'bg-[#FA2D48]' : 'bg-white/10'
-                  }`}
-                >
-                  <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    className={`h-5 w-5 rounded-full bg-white shadow-md pointer-events-none ${
-                      loudnessNormalization ? 'ml-auto' : 'mr-auto'
-                    }`}
-                  />
-                </button>
+                <AppleSwitch
+                  checked={loudnessNormalization}
+                  onChange={() => setLoudnessNormalization(!loudnessNormalization)}
+                  activeColor="bg-[#FA2D48]"
+                  label="تطبيع الصوت الذكي (Smart Loudness)"
+                />
               </div>
 
               {/* 4. Analog Tape & Tube Warmth */}

@@ -448,9 +448,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       )}
 
-      {/* 1.5 Featured Picks Editorial Shelf (Apple Music Style) */}
+      {/* 1.5 Featured Picks Editorial Shelf (Apple Music Style: Desktop only to prevent mobile clutter) */}
       {tracks.length > 0 && (
-        <div className="space-y-3.5">
+        <div className="hidden sm:block space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Radio className="w-4 h-4 text-[#FA2D48]" />
@@ -612,8 +612,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       </div>
 
-      {/* Quick Numeric Range Jump Bar */}
-      <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto select-none scrollbar-none">
+      {/* Quick Numeric Range Jump Bar (Desktop only) */}
+      <div className="hidden sm:flex items-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto select-none scrollbar-none">
         <span className="text-[11px] sm:text-xs font-bold text-zinc-400 flex-shrink-0 pl-1">
           تصفح سريع:
         </span>
@@ -645,8 +645,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         })}
       </div>
 
-      {/* 2.5 Mood & Vibe Bar (Apple Music Curated Moods) */}
-      <div className="space-y-3">
+      {/* 2.5 Mood & Vibe Bar (Apple Music Curated Moods - Desktop only) */}
+      <div className="hidden sm:block space-y-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none scrollbar-none">
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider pl-1 flex-shrink-0">
             أجواء ومزاج:
