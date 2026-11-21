@@ -8,7 +8,7 @@ export interface MediaSessionCallbacks {
   onSeek: (time: number) => void;
 }
 
-const ARTWORK_SIZES = ['512x512', '384x384', '256x256', '192x192', '128x128', '96x96'] as const;
+const ARTWORK_SIZES = ['96x96', '128x128', '192x192', '256x256', '384x384', '512x512'] as const;
 
 function buildArtworkObjects(url: string): MediaImage[] {
   const isPng = url.toLowerCase().endsWith('.png');
@@ -94,11 +94,18 @@ export function updateMediaSession(
   isPlaying: boolean,
   callbacks: MediaSessionCallbacks
 ): void {
-  if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !track) {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) {
     return;
   }
 
   activeCallbacks = callbacks;
+
+  if (!track) {
+    try {
+      navigator.mediaSession.playbackState = 'none';
+    } catch {}
+    return;
+  }
 
   // Declare audio intent on iOS 16.4+
   if ('audioSession' in navigator) {
@@ -109,7 +116,7 @@ export function updateMediaSession(
 
   // 1. Sync Document Title
   if (typeof document !== 'undefined') {
-    document.title = `${track.title} — ${track.artist} | AURA.WAV`;
+    document.title = `${track.title} — ${track.artist} | AuraWave`;
   }
 
   let rawArtwork = track.artworkUrl || track.coverUrl || '/icons/icon-512.png';
@@ -133,7 +140,7 @@ export function updateMediaSession(
     navigator.mediaSession.metadata = new MediaMetadata({
       title: track.title,
       artist: track.artist,
-      album: track.album || 'AURA.WAV',
+      album: track.album || 'AuraWave',
       artwork: buildArtworkObjects(fullArtworkUrl),
     });
   } catch (err) {

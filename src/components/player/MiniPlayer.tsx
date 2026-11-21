@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
-import { Play, Pause, SkipForward, Loader2 } from 'lucide-react';
+import { Play, Pause, SkipForward } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedCoverUrl } from '../../utils/imageOptimizer';
 import { triggerHaptic } from '../../utils/haptics';
@@ -16,6 +16,7 @@ interface MiniPlayerProps {
  */
 const MiniPlayerProgressBar: React.FC = () => {
   const barRef = useRef<HTMLDivElement>(null);
+  const playbackState = usePlayerStore((state) => state.playbackState);
 
   useEffect(() => {
     return usePlayerStore.subscribe((state) => {
@@ -37,11 +38,15 @@ const MiniPlayerProgressBar: React.FC = () => {
     <div className="absolute bottom-0 inset-x-0 h-[2px] bg-white/[0.08] overflow-hidden pointer-events-none">
       <div
         ref={barRef}
-        className="h-full transition-all duration-150 bg-[#FA2D48]"
+        className="h-full relative transition-all duration-150 bg-[#FA2D48]"
         style={{
           width: `${initialPct()}%`,
         }}
-      />
+      >
+        {playbackState === 'buffering' && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer" />
+        )}
+      </div>
     </div>
   );
 };
@@ -53,7 +58,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const playbackState = usePlayerStore((state) => state.playbackState);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const nextTrack = usePlayerStore((state) => state.nextTrack);
+  const previousTrack = usePlayerStore((state) => state.previousTrack);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const isSwipingHorizontal = useRef(false);
 
   if (!currentTrack) return null;
 
@@ -63,24 +73,69 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
     onExpand?.();
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    isSwipingHorizontal.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+
+    if (!isSwipingHorizontal.current) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) {
+        isSwipingHorizontal.current = true;
+      }
+    }
+
+    if (isSwipingHorizontal.current) {
+      setDragX(dx * 0.45);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+    const velocityX = Math.abs(dx) / Math.max(dt, 1);
+
+    if (isSwipingHorizontal.current) {
+      if (dx < -60 || (dx < -25 && velocityX > 0.4)) {
+        triggerHaptic('light');
+        nextTrack({ forceImmediate: true });
+      } else if (dx > 60 || (dx > 25 && velocityX > 0.4)) {
+        triggerHaptic('light');
+        previousTrack();
+      }
+    } else if (dy < -25) {
+      handleExpand();
+    }
+
+    touchStartRef.current = null;
+    isSwipingHorizontal.current = false;
+    setDragX(0);
+  };
+
   return (
     <motion.div
       initial={{ y: 60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 60, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-      drag="y"
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={{ top: 0.25, bottom: 0 }}
-      onDragEnd={(_, info) => {
-        if (info.offset.y < -20 || info.velocity.y < -120) {
-          handleExpand();
-        }
-      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       data-testid="mini-player"
       style={{
         bottom: 'calc(54px + max(12px, env(safe-area-inset-bottom, 0px)) + 8px)',
-        touchAction: 'manipulation',
+        transform: `translate3d(${dragX}px, 0, 0)`,
+        transition: dragX === 0 ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1)' : 'none',
+        touchAction: 'pan-y',
       }}
       className="fixed inset-x-3 z-40 h-[60px] rounded-2xl px-2.5 flex items-center gap-3 bg-[#1C1C22]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto apple-row-press"
       dir={dir}
@@ -123,7 +178,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         className="flex items-center gap-0.5 shrink-0 pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Play / Pause Button */}
+        {/* Play / Pause Button with Pulsing Buffering Ring */}
         <button
           type="button"
           data-testid="mini-play-pause-btn"
@@ -132,22 +187,24 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-white cursor-pointer apple-play-btn touch-manipulation overflow-hidden"
+          className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer apple-play-btn touch-manipulation overflow-hidden ${
+            playbackState === 'buffering' ? 'ring-2 ring-white/40' : ''
+          }`}
           aria-label={isPlaying ? t.pause : t.play}
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
-              key={isPlaying ? 'pause' : 'play'}
-              initial={{ opacity: 0, scale: 0.72, rotate: isPlaying ? -15 : 15 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 0.72, rotate: isPlaying ? 15 : -15 }}
+              key={isPlaying ? 'pause' : playbackState === 'buffering' ? 'buffering' : 'play'}
+              initial={{ opacity: 0, scale: 0.72 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.72 }}
               transition={{ type: 'spring', stiffness: 500, damping: 28 }}
               className="flex items-center justify-center"
             >
-              {isPlaying ? (
+              {playbackState === 'buffering' ? (
+                <div className="w-5 h-5 rounded-full border-2 border-white/25 border-t-white animate-spin" />
+              ) : isPlaying ? (
                 <Pause className="w-5 h-5 fill-white text-white" />
-              ) : playbackState === 'buffering' ? (
-                <Loader2 className="w-5 h-5 animate-spin text-white" />
               ) : (
                 <Play className="w-5 h-5 fill-white text-white translate-x-0.5" />
               )}

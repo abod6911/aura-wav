@@ -15,6 +15,7 @@ import { AuraDspNode } from './worklets/auraDspProcessor';
 export interface DJEngineCallbacks {
   onTrackEnded?: () => void;
   onPlaybackStateChange?: (isPlaying: boolean) => void;
+  onBufferingStateChange?: (isBuffering: boolean) => void;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPreloadNeeded?: (track: Track) => void;
   onAutoMixNeeded?: (style: AutoMixStyle, duration: number) => void;
@@ -869,6 +870,12 @@ export class DJAudioEngineFacade {
     }
   }
 
+  private notifyBufferingState(isBuffering: boolean): void {
+    if (this.callbacks.onBufferingStateChange) {
+      this.callbacks.onBufferingStateChange(isBuffering);
+    }
+  }
+
   private setupAudioListeners(channel: DeckChannel): void {
     channel.audio.addEventListener('ended', () => {
       if (this.activeChannelName === channel.name && !this.isAutoMixing) {
@@ -880,13 +887,40 @@ export class DJAudioEngineFacade {
 
     channel.audio.addEventListener('play', () => {
       if (this.activeChannelName === channel.name) {
+        this.notifyBufferingState(false);
         this.notifyPlaybackState(true);
       }
     });
 
     channel.audio.addEventListener('pause', () => {
       if (this.activeChannelName === channel.name && !this.isAutoMixing && !this.isSwitchingTrack) {
+        this.notifyBufferingState(false);
         this.notifyPlaybackState(false);
+      }
+    });
+
+    channel.audio.addEventListener('waiting', () => {
+      if (this.activeChannelName === channel.name) {
+        this.notifyBufferingState(true);
+      }
+    });
+
+    channel.audio.addEventListener('stalled', () => {
+      if (this.activeChannelName === channel.name && this.isPlaying()) {
+        this.notifyBufferingState(true);
+      }
+    });
+
+    channel.audio.addEventListener('canplay', () => {
+      if (this.activeChannelName === channel.name) {
+        this.notifyBufferingState(false);
+      }
+    });
+
+    channel.audio.addEventListener('playing', () => {
+      if (this.activeChannelName === channel.name) {
+        this.notifyBufferingState(false);
+        this.notifyPlaybackState(true);
       }
     });
 
@@ -894,6 +928,7 @@ export class DJAudioEngineFacade {
       const audioErr = channel.audio.error;
       console.warn(`[DJAudioEngine] DeckChannel ${channel.name} audio error:`, audioErr, e);
       if (this.activeChannelName === channel.name) {
+        this.notifyBufferingState(false);
         if (this.callbacks.onTrackError) {
           this.callbacks.onTrackError(channel.track, audioErr || new Error('Audio playback error'));
         }

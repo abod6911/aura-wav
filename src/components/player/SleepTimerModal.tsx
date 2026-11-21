@@ -13,6 +13,8 @@ export const SleepTimerModal: React.FC = () => {
   if (!isSleepTimerOpen) return null;
 
   const presets = [
+    { label: '5 دقائق (5m)', value: 5 },
+    { label: '10 دقائق (10m)', value: 10 },
     { label: '15 دقيقة (15m)', value: 15 },
     { label: '30 دقيقة (30m)', value: 30 },
     { label: '45 دقيقة (45m)', value: 45 },
@@ -63,7 +65,7 @@ export const SleepTimerModal: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-black text-white">مؤقت النوم الذكي</h3>
-                <p className="text-xs text-zinc-400">إيقاف التشغيل مع تلاشٍ أسي ناعم في آخر 60 ثانية</p>
+                <p className="text-xs text-zinc-400">إيقاف التشغيل مع تلاشٍ ناعم في آخر 3 ثوانٍ وحفظ مستوى الصوت</p>
               </div>
             </div>
 
@@ -141,12 +143,25 @@ export const SleepTimerModal: React.FC = () => {
               <span>عند نهاية الأغنية الحالية (End of Current Track)</span>
               {sleepTimerSetting === 'end_of_track' && <Check className="w-4 h-4" />}
             </button>
+
+            {/* Turn Off Option */}
+            {sleepTimerSetting !== null && (
+              <button
+                onClick={() => {
+                  setSleepTimer(null);
+                  setSleepTimerOpen(false);
+                }}
+                className="w-full px-4 py-3 mt-2 rounded-2xl text-xs font-bold flex items-center justify-center transition-all border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 cursor-pointer apple-spring"
+              >
+                <span>إيقاف المؤقت (Turn Off)</span>
+              </button>
+            )}
           </div>
 
-          {/* Exponential Fade Out Explanation Note */}
+          {/* Fade Out Explanation Note */}
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center gap-2.5 text-[11px] text-zinc-400">
             <Volume2 className="w-4 h-4 text-[#FA243C] flex-shrink-0" />
-            <span>يتم خفض الصوت تدريجياً وبشكل أسي خلال آخر 60 ثانية لنوم هادئ ومريح دون انقطاع مفاجئ.</span>
+            <span>يتم خفض الصوت تدريجياً وبشكل ناعم في آخر 3 ثوانٍ حتى الإيقاف التام، مع استعادة مستوى الصوت الأصلي تلقائياً.</span>
           </div>
         </motion.div>
       </div>

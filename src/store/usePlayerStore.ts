@@ -23,6 +23,7 @@ import { triggerHaptic } from '../utils/haptics';
 import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../services/cloudLibraryService';
 import { isCloudConfigured } from '../lib/supabase';
 import { handoffService } from '../services/handoffService';
+import { streamingPreloader } from '../services/streamingPreloader';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
@@ -445,6 +446,34 @@ export const resolveNextQueueTrack = async (state: {
   return null;
 };
 
+const pushTrackToHistory = (history: Track[], track: Track | null): Track[] => {
+  if (!track) return history;
+  const filtered = history.filter((t) => t.id !== track.id);
+  const updated = [track, ...filtered].slice(0, 30);
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(
+        'aura_history_last30',
+        JSON.stringify(
+          updated.map((t) => ({
+            id: t.id,
+            title: t.title,
+            artist: t.artist,
+            album: t.album,
+            artworkUrl: t.artworkUrl,
+            coverUrl: t.coverUrl,
+            duration: t.duration,
+            audioUrl: t.audioUrl,
+            trackNumber: t.trackNumber,
+            fileName: t.fileName,
+          }))
+        )
+      );
+    }
+  } catch {}
+  return updated;
+};
+
 export const usePlayerStore = create<PlayerState>((set, get) => {
   const updateTrackInAllArrays = (trackId: string, updates: Partial<Track>) => {
     const state = get();
@@ -468,11 +497,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       // Synchronize lockscreen & MediaSession position even when in background
       updateMediaSessionPosition(dur, cur);
 
-      // 25s Lookahead Smart Buffer Pre-fetch via SmartAudioBufferPool
+      // Smart Buffer Pre-fetch & Lookahead Streaming Preloader (15s remaining or 75% progress)
       const nextId = get().nextUpTrackId;
       if (nextId) {
         const nextTrk = get().tracks.find((t) => t.id === nextId) || null;
-        audioBufferPool.checkAndPrefetchNextTrack(cur, dur, nextTrk, fetchTrackBlob);
+        if (nextTrk) {
+          audioBufferPool.checkAndPrefetchNextTrack(cur, dur, nextTrk, fetchTrackBlob);
+          streamingPreloader.checkAndPreload(cur, dur, nextTrk);
+        }
       }
 
       // Gate React state re-renders when app is hidden to eliminate background CPU/battery drain
@@ -486,6 +518,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         } catch {}
         handoffService.broadcastPlaybackState(get().currentTrack, cur, dur, get().isPlaying);
       }
+    },
+    onBufferingStateChange: (isBuffering) => {
+      set({ playbackState: isBuffering ? 'buffering' : (get().isPlaying ? 'playing' : 'paused') });
     },
     onPlaybackStateChange: (isPlaying) => {
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
@@ -552,7 +587,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         nextUpTrackId: nextUpCleared,
         currentTime: 0,
         duration: incomingTrack.duration || 0,
-        history: current ? [...get().history, current] : get().history,
+        history: pushTrackToHistory(get().history, current),
       });
       updateMediaSession(incomingTrack, true, getMediaSessionCallbacks(get));
     },
@@ -975,19 +1010,49 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         // Restore last played track & position for native instant-boot experience (Apple Music style)
         let initialTrack: Track | null = null;
         let initialTime = 0;
+        let savedHistory: Track[] = [];
+        let savedShuffle = false;
+        let savedRepeatMode: RepeatMode = 'off';
+        let savedEqGains: [number, number, number, number, number] | null = null;
+        let savedEqPreset: string | null = null;
+
         try {
-          const savedLastTrackId = typeof localStorage !== 'undefined' ? localStorage.getItem('aura_last_track_id') : null;
-          const savedLastPos = typeof localStorage !== 'undefined' ? parseFloat(localStorage.getItem('aura_last_track_position') || '0') : 0;
-          if (savedLastTrackId) {
-            initialTrack = finalTracks.find((t) => t.id === savedLastTrackId) || null;
-          }
-          if (!initialTrack && finalTracks.length > 0) {
-            initialTrack = finalTracks[0];
-          }
-          if (initialTrack && !isNaN(savedLastPos) && savedLastPos > 0) {
-            initialTime = Math.min(initialTrack.duration || 180, savedLastPos);
+          if (typeof localStorage !== 'undefined') {
+            const savedLastTrackId = localStorage.getItem('aura_last_track_id');
+            const savedLastPos = parseFloat(localStorage.getItem('aura_last_track_position') || '0');
+            if (savedLastTrackId) {
+              initialTrack = finalTracks.find((t) => t.id === savedLastTrackId) || null;
+            }
+            if (!initialTrack && finalTracks.length > 0) {
+              initialTrack = finalTracks[0];
+            }
+            if (initialTrack && !isNaN(savedLastPos) && savedLastPos > 0) {
+              initialTime = Math.min(initialTrack.duration || 180, savedLastPos);
+            }
+
+            const h = localStorage.getItem('aura_history_last30');
+            if (h) {
+              try {
+                savedHistory = JSON.parse(h);
+              } catch {}
+            }
+
+            savedShuffle = localStorage.getItem('aura_shuffle') === 'true';
+            savedRepeatMode = (localStorage.getItem('aura_repeat_mode') as RepeatMode) || 'off';
+
+            const eqG = localStorage.getItem('aura_eq_gains');
+            if (eqG) {
+              try {
+                savedEqGains = JSON.parse(eqG);
+              } catch {}
+            }
+            savedEqPreset = localStorage.getItem('aura_eq_preset');
           }
         } catch {}
+
+        if (savedEqGains && Array.isArray(savedEqGains) && savedEqGains.length === 5) {
+          djAudioEngine.setEqGains(savedEqGains);
+        }
 
         set({
           tracks: finalTracks,
@@ -998,6 +1063,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           automixEnabled: automix.enabled,
           automixDuration: automix.duration,
           volume: vol,
+          shuffle: savedShuffle,
+          repeatMode: savedRepeatMode,
+          history: savedHistory,
+          ...(savedEqGains ? { eqGains: savedEqGains } : {}),
+          ...(savedEqPreset ? { activeEqPreset: savedEqPreset } : {}),
           downloadedTrackIds: (audioBlobKeys as string[]) || [],
           savedFolderName: resolvedFolderName,
           savedFolderTrackCount: finalFolderCount,
@@ -1597,7 +1667,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       } else {
         djAudioEngine.cancelActiveTransitions(true);
         set({
-          history: currentTrack ? [...get().history, currentTrack] : get().history,
+          history: pushTrackToHistory(get().history, currentTrack),
         });
         await get().playTrack(targetTrack);
       }
@@ -1682,6 +1752,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     toggleShuffle: () => {
       const state = get();
       const nextShuffle = !state.shuffle;
+      streamingPreloader.cancelOrInvalidate();
+      try {
+        localStorage.setItem('aura_shuffle', String(nextShuffle));
+      } catch {}
       if (nextShuffle) {
         const origQueue = [...state.queue];
         const current = state.currentTrack;
@@ -1716,6 +1790,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set((state) => {
         const modes: RepeatMode[] = ['off', 'all', 'one'];
         const next = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
+        try {
+          localStorage.setItem('aura_repeat_mode', next);
+        } catch {}
         return { repeatMode: next };
       });
     },
@@ -1941,11 +2018,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setEqGains(newGains);
       set({ eqGains: newGains, activeEqPreset: 'Custom' });
+      try {
+        localStorage.setItem('aura_eq_gains', JSON.stringify(newGains));
+        localStorage.setItem('aura_eq_preset', 'Custom');
+      } catch {}
     },
 
     applyEqPreset: (preset: EqualizerPreset) => {
       djAudioEngine.initContext().catch(() => {});
       djAudioEngine.setEqGains(preset.gains);
+      try {
+        localStorage.setItem('aura_eq_gains', JSON.stringify(preset.gains));
+        localStorage.setItem('aura_eq_preset', preset.name);
+      } catch {}
       const extraBass =
         preset.name === 'Bass Boost'
           ? 10
@@ -1982,6 +2067,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         get().addToast(`وصلت قائمة الانتظار للحد الأقصى (${MAX_USER_QUEUE} مسارات)`, undefined, 'warning');
         return;
       }
+      streamingPreloader.cancelOrInvalidate();
       // Deduplicate if already present
       const filtered = userQueue.filter((t) => t.id !== track.id);
       const updated = [...filtered, track];
@@ -2011,6 +2097,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
+      streamingPreloader.cancelOrInvalidate();
       const filtered = userQueue.filter((t) => t.id !== track.id);
       if (filtered.length >= MAX_USER_QUEUE) {
         filtered.pop(); // Keep within MAX_USER_QUEUE limit
@@ -2039,6 +2126,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     removeFromUserQueue: (index: number) => {
+      streamingPreloader.cancelOrInvalidate();
       const { userQueue } = get();
       const updated = [...userQueue];
       updated.splice(index, 1);
@@ -2049,6 +2137,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     reorderUserQueue: (startIndex: number, endIndex: number) => {
+      streamingPreloader.cancelOrInvalidate();
       const { userQueue } = get();
       const updated = [...userQueue];
       const [removed] = updated.splice(startIndex, 1);
@@ -2060,6 +2149,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     clearUserQueue: () => {
+      streamingPreloader.cancelOrInvalidate();
       set({
         userQueue: [],
         nextUpTrackId: null,
@@ -2341,19 +2431,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
 
         const nextSecs = cur - 1;
-        if (nextSecs === 60 || (cur > 60 && nextSecs <= 60)) {
-          // Smooth 60-second exponential audio volume fade-out
-          djAudioEngine.fadeVolume(0.0001, 60);
-        } else if (totalSecs < 60 && nextSecs === Math.floor(totalSecs * 0.2)) {
-          // Fallback fade for very short test timers
-          djAudioEngine.fadeVolume(0.0001, nextSecs);
+        if (nextSecs === 3 || (cur > 3 && nextSecs <= 3)) {
+          // Smooth 3-second Apple Music audio volume fade-out to 0
+          djAudioEngine.fadeVolume(0.0001, 3);
         }
 
         if (nextSecs <= 0) {
           clearInterval(sleepTimerInterval);
           sleepTimerInterval = null;
           djAudioEngine.pause();
-          djAudioEngine.setVolume(get().volume);
+          const origVol = get().volume;
+          djAudioEngine.setVolume(origVol > 0 ? origVol : 0.9);
           set({ isPlaying: false, sleepTimerSetting: null, sleepTimerRemaining: null });
           get().addToast('تم إيقاف الموسيقى بواسطة مؤقت النوم', undefined, 'info');
         } else {

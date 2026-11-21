@@ -50,6 +50,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   const [scrubSeconds, setScrubSeconds] = useState(0);
   const [showRemaining, setShowRemaining] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const playbackState = usePlayerStore((state) => state.playbackState);
 
   const trackRef = useRef<HTMLDivElement | null>(null);
   const fillBarRef = useRef<HTMLDivElement | null>(null);
@@ -324,7 +325,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           {/* Active Playback Progress Fill */}
           <div
             ref={fillBarRef}
-            className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden"
+            className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden relative"
             style={{ 
               width: `${initialPercent}%`,
               backgroundColor: '#FA2D48',
@@ -336,6 +337,9 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           >
             {/* Luminous Leading Edge Sweep */}
             <div className="absolute right-0 top-0 bottom-0 w-2.5 bg-white/95 rounded-full shadow-[0_0_8px_#ffffff]" />
+            {playbackState === 'buffering' && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer" />
+            )}
           </div>
         </div>
 

@@ -10,6 +10,7 @@ import { formatTime } from '../player/TimelineSlider';
 import {
   ListEnd,
   ListPlus,
+  ListMusic,
   Heart,
   FolderPlus,
   Pencil,
@@ -38,6 +39,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const playlists = usePlayerStore((state) => state.playlists);
   const playNextInQueue = usePlayerStore((state) => state.playNextInQueue);
   const addToQueue = usePlayerStore((state) => state.addToQueue);
+  const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
   const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
@@ -220,6 +222,20 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   <div className="flex-1 text-start">
                     <span className="block leading-tight">{isRTL ? 'إضافة إلى نهاية الانتظار' : 'Add to Queue'}</span>
                     <span className="text-[10px] text-zinc-400 font-normal">{isRTL ? 'إدراج المسار في قائمة الانتظار' : 'Append track to current queue'}</span>
+                  </div>
+                </button>
+
+                {/* 3. Go to Queue */}
+                <button
+                  onClick={() => handleAction(() => setQueueOpen(true))}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
+                    <ListMusic className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">{isRTL ? 'الانتقال إلى قائمة الانتظار' : 'Go to Queue'}</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">{isRTL ? 'عرض وإدارة المسارات القادمة' : 'View & manage upcoming tracks'}</span>
                   </div>
                 </button>
               </div>

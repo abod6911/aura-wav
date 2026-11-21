@@ -491,7 +491,7 @@ export const EqualizerModal: React.FC = () => {
                       role="switch"
                       aria-checked={automixEnabled}
                       onClick={() => setAutoMix(!automixEnabled)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 ${
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-200 select-none active:scale-95 overflow-hidden ${
                         automixEnabled ? 'bg-[#FA2D48]' : 'bg-white/10'
                       }`}
                     >

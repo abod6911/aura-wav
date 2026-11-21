@@ -1,6 +1,6 @@
 {
-  "name": "AURA.WAV — Offline-First PWA Music Player",
-  "short_name": "AURA.WAV",
+  "name": "AuraWave",
+  "short_name": "AuraWave",
   "id": "/",
   "start_url": "/",
   "scope": "/",
