@@ -22,9 +22,12 @@ import {
   User,
   LogOut,
   Plus,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { AppleSwitch } from './common/AppleSwitch';
+import { toggleNativeFullscreen, isFullscreenActive, onFullscreenChange } from '../utils/fullscreen';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -90,6 +93,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [isClearing, setIsClearing] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
+  const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive());
+
+  useEffect(() => {
+    return onFullscreenChange(setIsFullscreen);
+  }, []);
+
+  const handleFullscreenToggle = async () => {
+    const res = await toggleNativeFullscreen();
+    if (res.isIos) {
+      addToast(
+        'لتشغيل ملء الشاشة الكامل على iPhone: اضغط زر المشاركة (Share) في Safari ثم "إضافة إلى الصفحة الرئيسية"',
+        undefined,
+        'info'
+      );
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -368,6 +387,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 onChange={setReactiveVisualsEnabled}
                 activeColor="bg-[#FA243C]"
                 label={t.ambientGlowLabel}
+              />
+            </div>
+
+            {/* Fullscreen Mode Toggle */}
+            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-3">
+              <div className="min-w-0 pr-2">
+                <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Maximize className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+                  <span>{isRTL ? 'وضع ملء الشاشة (Fullscreen)' : 'Fullscreen Mode'}</span>
+                </h5>
+                <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
+                  {isRTL ? 'إخفاء أشرطة المتصفح وتكبير مساحة العرض بالكامل' : 'Hide browser bars and expand edge-to-edge'}
+                </p>
+              </div>
+              <SettingsToggle
+                checked={isFullscreen}
+                onChange={handleFullscreenToggle}
+                activeColor="bg-[#FA2D48]"
+                label={isRTL ? 'وضع ملء الشاشة' : 'Fullscreen Mode'}
               />
             </div>
           </div>

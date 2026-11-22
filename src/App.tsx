@@ -487,15 +487,9 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full min-h-full flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
-          : 'relative w-full h-full min-h-full flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
+          ? 'relative w-full h-full min-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
+          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
       }
-      style={{
-        transform: isMobile && isMobilePlayerOpen ? 'scale(0.96) translateY(-4px)' : 'none',
-        borderRadius: isMobile && isMobilePlayerOpen ? '22px' : '0px',
-        opacity: isMobile && isMobilePlayerOpen ? 0.86 : 1,
-        transition: 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 380ms cubic-bezier(0.22, 1, 0.36, 1), opacity 380ms cubic-bezier(0.22, 1, 0.36, 1)',
-      }}
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (

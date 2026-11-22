@@ -14,9 +14,13 @@ import {
   Radio,
   UploadCloud,
   X,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { syncPartyService, SyncRoomState } from '../services/syncPartyService';
 import { useStorageStore } from '../stores/useStorageStore';
+import { triggerHaptic } from '../utils/haptics';
+import { toggleNativeFullscreen, isFullscreenActive, onFullscreenChange } from '../utils/fullscreen';
 
 interface HeaderProps {
   onOpenImport: () => void;
@@ -26,10 +30,30 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false }) => {
   const { t, isRTL, dir } = useTranslation();
   const currentUser = usePlayerStore((state) => state.currentUser);
+  const addToast = usePlayerStore((state) => state.addToast);
   const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
   const setSyncPartyOpen = usePlayerStore((state) => state.setSyncPartyOpen);
   const [syncRoomState, setSyncRoomState] = useState<SyncRoomState>(syncPartyService.getState());
+  const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive());
+
+  useEffect(() => {
+    return onFullscreenChange(setIsFullscreen);
+  }, []);
+
+  const handleFullscreenToggle = async () => {
+    triggerHaptic('medium');
+    const res = await toggleNativeFullscreen();
+    if (res.isIos) {
+      addToast(
+        'لتشغيل ملء الشاشة الكامل على iPhone: اضغط زر المشاركة (Share) في Safari ثم "إضافة إلى الصفحة الرئيسية"',
+        undefined,
+        'info'
+      );
+    } else if (res.success && res.isFullscreen) {
+      addToast('تم تفعيل وضع ملء الشاشة الكامل', undefined, 'success');
+    }
+  };
 
   useEffect(() => {
     return syncPartyService.subscribe(setSyncRoomState);
@@ -96,22 +120,37 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           {getPageTitle()}
         </h1>
 
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="w-10 h-10 min-w-[40px] min-h-[40px] -me-1 flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
-          title={currentUser ? currentUser.name : t.settings}
-          aria-label={t.settings}
-        >
-          <div className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center">
-            <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-              {currentUser?.avatarUrl ? (
-                <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
-              ) : (
-                currentUser?.name?.[0]?.toUpperCase() || 'A'
-              )}
+        <div className="flex items-center gap-1.5 -me-1">
+          {/* Fullscreen Toggle Button */}
+          <button
+            type="button"
+            onClick={handleFullscreenToggle}
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.1] active:scale-90 flex items-center justify-center text-zinc-300 hover:text-white transition-all cursor-pointer"
+            title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
+            aria-label="Fullscreen"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4 text-[#FA2D48]" /> : <Maximize className="w-4 h-4" />}
+          </button>
+
+          {/* Profile / Settings Button */}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
+            title={currentUser ? currentUser.name : t.settings}
+            aria-label={t.settings}
+          >
+            <div className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.1] p-0.5 shadow-sm flex items-center justify-center">
+              <div className="w-full h-full bg-[#101014] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                {currentUser?.avatarUrl ? (
+                  <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />
+                ) : (
+                  currentUser?.name?.[0]?.toUpperCase() || 'A'
+                )}
+              </div>
             </div>
-          </div>
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* ── Desktop Header Bar (Ultra-Clean 3-Zone Architecture) ── */}
@@ -150,8 +189,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           </button>
         </div>
 
-        {/* Zone 3 (Left in RTL): Profile Avatar with Refined Secondary Dropdown */}
-        <div className="relative flex items-center" ref={profileMenuRef}>
+        {/* Zone 3 (Left in RTL): Fullscreen & Profile Avatar */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleFullscreenToggle}
+            className="w-8 h-8 rounded-full bg-[#18181C] hover:bg-[#202026] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/[0.04]"
+            title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
+            aria-label="Fullscreen"
+          >
+            {isFullscreen ? <Minimize className="w-3.5 h-3.5 text-[#FA2D48]" /> : <Maximize className="w-3.5 h-3.5" />}
+          </button>
+
+          <div className="relative flex items-center" ref={profileMenuRef}>
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all cursor-pointer overflow-hidden shadow-sm"
@@ -210,6 +260,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </header>
