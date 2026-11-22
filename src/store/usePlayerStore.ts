@@ -4,7 +4,7 @@ import { djAudioEngine, AutoMixStyle, ReverbSpace, SpatialMode, audioBufferPool 
 import { updateMediaSession, updateMediaSessionPosition, initMediaSessionHandlers } from '../audio/mediaSession';
 import { getDB, fetchOnlineArtwork } from '../lib/metadata';
 import { fetchLyricsOnline } from '../services/lyricsParser';
-import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
+import { resolveCatalogCover, resolveCatalogTrackItem, getDefaultLibraryTracks, fetchCatalogTracks, TRACKS_CATALOG } from '../data/tracksCatalog';
 import { authService, AuthUser } from '../services/authService';
 import {
   getAudioFileFromStorage,
@@ -18,7 +18,6 @@ import { resolvePlayableStream, resolvePlayableStreamInfo, clearResolvedStreamCa
 import { bulkSaveTracksToDexie, dexieDB } from '../db/dexieDB';
 import { queryDirectoryPermission, requestDirectoryPermission } from '../services/fileScanner';
 import { wakeLockManager } from '../services/wakeLockManager';
-import { syncLibraryToCarPlay, syncFavoritesToCarPlay, initCarPlayBridge } from '../services/carPlayBridge';
 import { triggerHaptic } from '../utils/haptics';
 import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../services/cloudLibraryService';
 import { isCloudConfigured } from '../lib/supabase';
@@ -293,8 +292,10 @@ interface PlayerState {
   clearLocalLibrary: () => Promise<void>;
   rescanLibrary: () => Promise<void>;
   createPlaylist: (name: string) => Promise<void>;
+  renamePlaylist: (id: string, newName: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
+  removeTrackFromPlaylist: (playlistId: string, trackId: string) => Promise<void>;
   setPlaybackState: (state: PlaybackState) => void;
   toggleRightSidebar: () => void;
   setRightSidebarOpen: (open: boolean) => void;
@@ -776,7 +777,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     initStore: async () => {
       try {
         initMediaSessionHandlers(getMediaSessionCallbacks(get));
-        initCarPlayBridge();
 
         // Listen for online/offline events for seamless offline continuity
         if (typeof window !== 'undefined') {
@@ -813,6 +813,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           savedFolderTrackCountVal,
           savedFolderTimestampVal,
           savedDirNameVal,
+          fetchedCatalog,
         ] = await Promise.all([
           db.getAll('tracks'),
           db.getAll('favorites'),
@@ -825,6 +826,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           db.get('settings', 'savedFolderTrackCount'),
           db.get('settings', 'savedFolderTimestamp'),
           db.get('settings', 'savedDirectoryName'),
+          fetchCatalogTracks().catch(() => [] as Track[]),
         ]);
 
         const resolvedFolderName = savedFolderNameVal || savedDirNameVal || 'Liked_Songs';
@@ -1077,7 +1079,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
         set({
           tracks: finalTracks,
-          catalogTracks: getDefaultLibraryTracks(),
+          catalogTracks: (fetchedCatalog && fetchedCatalog.length > 0) ? fetchedCatalog : getDefaultLibraryTracks(),
           filteredTracks: finalTracks,
           favorites: favIds,
           playlists: playlists || [],
@@ -1116,11 +1118,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             get().refreshStorageStats().catch(() => {});
           } catch {}
         });
-
-        // Sync to CarPlay on init
-        syncLibraryToCarPlay(finalTracks);
-        const resolvedFavs = finalTracks.filter((t) => favIds.includes(t.id));
-        syncFavoritesToCarPlay(resolvedFavs);
 
         // Ask the browser not to evict downloaded songs under storage pressure
         StorageManager.requestPersistence().catch(() => {});
@@ -1318,7 +1315,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         try {
           const offlineRec = await offlineStorage.getTrack(playableTrack.id);
           if (offlineRec && offlineRec.audioBlob) {
-            const blobUrl = offlineStorage.createTrackBlobUrl(offlineRec.audioBlob);
+            const targetDeck = djAudioEngine.getActiveChannelName ? djAudioEngine.getActiveChannelName() : 'default';
+            const blobUrl = offlineStorage.createTrackBlobUrl(offlineRec.audioBlob, targetDeck);
             playableTrack = {
               ...playableTrack,
               blob: offlineRec.audioBlob,
@@ -2584,6 +2582,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set((state) => ({ playlists: [...state.playlists, newPl] }));
     },
 
+    renamePlaylist: async (id: string, newName: string) => {
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      const { playlists } = get();
+      const pl = playlists.find((p) => p.id === id);
+      if (!pl) return;
+      const updatedPl: Playlist = { ...pl, name: trimmed };
+      const db = await getDB();
+      await db.put('playlists', updatedPl);
+      set({
+        playlists: playlists.map((p) => (p.id === id ? updatedPl : p)),
+      });
+    },
+
     deletePlaylist: async (id: string) => {
       const db = await getDB();
       await db.delete('playlists', id);
@@ -2598,6 +2610,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const updatedPl: Playlist = {
         ...pl,
         trackIds: [...pl.trackIds, trackId],
+      };
+      const db = await getDB();
+      await db.put('playlists', updatedPl);
+      set({
+        playlists: playlists.map((p) => (p.id === playlistId ? updatedPl : p)),
+      });
+    },
+
+    removeTrackFromPlaylist: async (playlistId: string, trackId: string) => {
+      const { playlists } = get();
+      const pl = playlists.find((p) => p.id === playlistId);
+      if (!pl) return;
+
+      const updatedPl: Playlist = {
+        ...pl,
+        trackIds: pl.trackIds.filter((id) => id !== trackId),
       };
       const db = await getDB();
       await db.put('playlists', updatedPl);

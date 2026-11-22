@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
+import { isCloudConfigured } from '../../lib/supabase';
 import { getOptimizedCoverUrl } from '../../utils/imageOptimizer';
 import { triggerHaptic } from '../../utils/haptics';
 import { formatTime } from '../player/TimelineSlider';
@@ -26,12 +27,14 @@ interface TrackActionSheetProps {
   track: Track | null;
   isOpen: boolean;
   onClose: () => void;
+  currentPlaylistId?: string;
 }
 
 export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   track,
   isOpen,
   onClose,
+  currentPlaylistId,
 }) => {
   const { isRTL, dir } = useTranslation();
   const favorites = usePlayerStore((state) => state.favorites);
@@ -45,6 +48,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
   const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
   const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
+  const removeTrackFromPlaylist = usePlayerStore((state) => state.removeTrackFromPlaylist);
   const addToast = usePlayerStore((state) => state.addToast);
   const deleteCloudTrackById = usePlayerStore((state) => state.deleteCloudTrackById);
 
@@ -305,8 +309,30 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   <span className="flex-1 text-start">{isRTL ? 'تغيير غلاف الألبوم' : 'Change Artwork'}</span>
                 </button>
 
-                {/* 8. Delete from Cloud (Only if online/cloud track) */}
-                {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
+                {/* 8. Remove from Current Playlist (If opened inside a playlist) */}
+                {currentPlaylistId && (
+                  <button
+                    onClick={() => handleAction(async () => {
+                      await removeTrackFromPlaylist(currentPlaylistId, track.id);
+                      addToast(
+                        isRTL ? 'تمت إزالة الأغنية من القائمة' : 'Removed from playlist',
+                        undefined,
+                        'info'
+                      );
+                    })}
+                    className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-red-500/10 active:bg-red-500/20 transition-colors text-red-400 font-medium text-xs sm:text-sm cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center shrink-0">
+                      <Trash2 className="w-4 h-4" />
+                    </div>
+                    <span className="flex-1 text-start">
+                      {isRTL ? 'إزالة من هذه القائمة' : 'Remove from Playlist'}
+                    </span>
+                  </button>
+                )}
+
+                {/* 9. Delete from Cloud (Only if cloud is configured and online/cloud track) */}
+                {isCloudConfigured() && (track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
                   <button
                     onClick={() => handleAction(async () => {
                       const user = usePlayerStore.getState().currentUser;

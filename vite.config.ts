@@ -60,9 +60,6 @@ export default defineConfig({
           if (id.includes('node_modules/dexie')) {
             return 'vendor-dexie';
           }
-          if (id.includes('tracksCatalog1750.json') || id.includes('tracksCatalog') || id.includes('cloudCatalog.json')) {
-            return 'catalog-data';
-          }
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'vendor-react';
           }

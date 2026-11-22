@@ -18,7 +18,7 @@ import {
   Minimize,
 } from 'lucide-react';
 import { syncPartyService, SyncRoomState } from '../services/syncPartyService';
-import { useStorageStore } from '../stores/useStorageStore';
+import { isCloudConfigured } from '../lib/supabase';
 import { triggerHaptic } from '../utils/haptics';
 import { toggleNativeFullscreen, isFullscreenActive, onFullscreenChange } from '../utils/fullscreen';
 
@@ -65,8 +65,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
-  const isQuotaWarning = useStorageStore((state) => state.isQuotaWarning);
-  const usagePercentage = useStorageStore((state) => state.usagePercentage);
+  const storageStats = usePlayerStore((state) => state.storageStats);
+  const isQuotaWarning = storageStats?.isQuotaWarning ?? false;
+  const usagePercentage = storageStats?.usagePercentage ?? 0;
 
   const getPageTitle = () => {
     switch (activeTab) {
@@ -230,13 +231,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
                 <Settings className="w-3.5 h-3.5 text-zinc-400" />
                 <span>{t.settings}</span>
               </button>
-              <button
-                onClick={() => { setIsProfileMenuOpen(false); setCloudUploaderOpen(true); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
-              >
-                <UploadCloud className="w-3.5 h-3.5 text-zinc-400" />
-                <span>رفع ملفات للسحابة</span>
-              </button>
+              {isCloudConfigured() && (
+                <button
+                  onClick={() => { setIsProfileMenuOpen(false); setCloudUploaderOpen(true); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>رفع ملفات للسحابة</span>
+                </button>
+              )}
               <button
                 onClick={() => { setIsProfileMenuOpen(false); setCarModeOpen(true); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.06] text-start transition-colors cursor-pointer"

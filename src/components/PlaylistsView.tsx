@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock, Shuffle } from 'lucide-react';
+import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock, Shuffle, Pencil, Check, X } from 'lucide-react';
 import { formatTime } from './player/TimelineSlider';
 import { useTranslation } from '../i18n/useTranslation';
 import { triggerHaptic } from '../utils/haptics';
@@ -14,7 +14,9 @@ export const PlaylistsView: React.FC = () => {
   const playlists = usePlayerStore((state) => state.playlists);
   const tracks = usePlayerStore((state) => state.tracks);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);
+  const renamePlaylist = usePlayerStore((state) => state.renamePlaylist);
   const deletePlaylist = usePlayerStore((state) => state.deletePlaylist);
+  const removeTrackFromPlaylist = usePlayerStore((state) => state.removeTrackFromPlaylist);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const favorites = usePlayerStore((state) => state.favorites);
@@ -28,6 +30,8 @@ export const PlaylistsView: React.FC = () => {
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
@@ -72,7 +76,56 @@ export const PlaylistsView: React.FC = () => {
               <ArrowRight className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">{selectedPlaylist.name}</h2>
+              {isRenaming ? (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!renameValue.trim()) return;
+                    await renamePlaylist(selectedPlaylist.id, renameValue.trim());
+                    addToast(isRTL ? 'تم تغيير اسم القائمة' : 'Playlist renamed', undefined, 'success');
+                    setIsRenaming(false);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    autoFocus
+                    className="h-9 px-3 rounded-xl bg-white/[0.08] border border-white/20 text-white font-bold text-sm focus:outline-none focus:border-[#FA243C]"
+                    style={{ fontSize: '16px' }}
+                  />
+                  <button
+                    type="submit"
+                    className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+                    title={isRTL ? 'حفظ' : 'Save'}
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsRenaming(false)}
+                    className="p-2 rounded-xl bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    title={isRTL ? 'إلغاء' : 'Cancel'}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </form>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">{selectedPlaylist.name}</h2>
+                  <button
+                    onClick={() => {
+                      setRenameValue(selectedPlaylist.name);
+                      setIsRenaming(true);
+                    }}
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    title={isRTL ? 'تعديل الاسم' : 'Rename'}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-zinc-400 mt-0.5 font-medium">
                 {playlistTracks.length} مسار في هذه القائمة
               </p>
@@ -267,6 +320,17 @@ export const PlaylistsView: React.FC = () => {
                           <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
                           <span>{isRTL ? 'إضافة للانتظار' : 'Add to Queue'}</span>
                         </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await removeTrackFromPlaylist(selectedPlaylist.id, track.id);
+                            addToast(isRTL ? 'تمت إزالة الأغنية من القائمة' : 'Removed from playlist', undefined, 'info');
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 text-start cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          <span>{isRTL ? 'إزالة من القائمة' : 'Remove from playlist'}</span>
+                        </button>
                       </div>
                     </div>
                   </motion.div>
@@ -286,6 +350,7 @@ export const PlaylistsView: React.FC = () => {
           track={actionSheetTrack}
           isOpen={!!actionSheetTrack}
           onClose={() => setActionSheetTrack(null)}
+          currentPlaylistId={selectedPlaylist.id}
         />
       </div>
     );

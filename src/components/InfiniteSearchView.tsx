@@ -8,6 +8,24 @@ import { OptimizedImage } from './common/OptimizedImage';
 import { MobileTrackRow } from './common/MobileTrackRow';
 import { TrackActionSheet } from './library/TrackActionSheet';
 
+interface GenreDef {
+  arName: string;
+  enName: string;
+  query: string;
+  gradient: string;
+}
+
+const GENRE_DEFS: GenreDef[] = [
+  { arName: 'موسيقى عربية', enName: 'Arabic Hits', query: 'عمرو دياب', gradient: 'from-[#FA243C] to-[#b00d1e]' },
+  { arName: 'بوب عالمي (Pop)', enName: 'Global Pop', query: 'Pop', gradient: 'from-[#8d67ab] to-[#5a3a78]' },
+  { arName: 'هيب هوب وراب', enName: 'Hip-Hop & Rap', query: 'Rap', gradient: 'from-[#ba5d07] to-[#803d00]' },
+  { arName: 'موسيقى هادئة', enName: 'Chill & Relax', query: 'Chill', gradient: 'from-[#1e3264] to-[#111c38]' },
+  { arName: 'روك وبديل', enName: 'Rock & Alternative', query: 'Rock', gradient: 'from-[#e61e32] to-[#990d1b]' },
+  { arName: 'إلكترونيك وEDM', enName: 'EDM & Dance', query: 'EDM', gradient: 'from-[#006450] to-[#003d31]' },
+  { arName: 'طرب وجلسات', enName: 'Classic Tarab', query: 'طرب', gradient: 'from-[#af2896] to-[#6d135c]' },
+  { arName: 'موسيقى عالمية', enName: 'World Music', query: 'Hits', gradient: 'from-[#503750] to-[#2c1d2c]' },
+];
+
 export const InfiniteSearchView: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
   const [query, setQuery] = useState('');
@@ -20,6 +38,7 @@ export const InfiniteSearchView: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
+  const [visibleSongCount, setVisibleSongCount] = useState(50);
   const [, startTransition] = useTransition();
 
   const tracks = usePlayerStore((state) => state.tracks);
@@ -28,6 +47,11 @@ export const InfiniteSearchView: React.FC = () => {
   const playbackState = usePlayerStore((state) => state.playbackState);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
+
+  // Reset progressive count on query change
+  useEffect(() => {
+    setVisibleSongCount(50);
+  }, [query]);
 
   // Debounced search with local catalog priority & full-length streaming
   useEffect(() => {
@@ -61,17 +85,6 @@ export const InfiniteSearchView: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const GENRES = [
-    { name: isRTL ? 'موسيقى عربية' : 'Arabic Hits', query: 'عمرو دياب', gradient: 'from-[#FA243C] to-[#b00d1e]' },
-    { name: isRTL ? 'بوب عالمي (Pop)' : 'Global Pop', query: 'Pop', gradient: 'from-[#8d67ab] to-[#5a3a78]' },
-    { name: isRTL ? 'هيب هوب وراب' : 'Hip-Hop & Rap', query: 'Rap', gradient: 'from-[#ba5d07] to-[#803d00]' },
-    { name: isRTL ? 'موسيقى هادئة' : 'Chill & Relax', query: 'Chill', gradient: 'from-[#1e3264] to-[#111c38]' },
-    { name: isRTL ? 'روك وبديل' : 'Rock & Alternative', query: 'Rock', gradient: 'from-[#e61e32] to-[#990d1b]' },
-    { name: isRTL ? 'إلكترونيك وEDM' : 'EDM & Dance', query: 'EDM', gradient: 'from-[#006450] to-[#003d31]' },
-    { name: isRTL ? 'طرب وجلسات' : 'Classic Tarab', query: 'طرب', gradient: 'from-[#af2896] to-[#6d135c]' },
-    { name: isRTL ? 'موسيقى عالمية' : 'World Music', query: 'Hits', gradient: 'from-[#503750] to-[#2c1d2c]' },
-  ];
-
   const handlePlaySong = (track: Track) => {
     if (currentTrack?.id === track.id) {
       if (isPlaying) {
@@ -97,7 +110,8 @@ export const InfiniteSearchView: React.FC = () => {
 
   // Strictly memoize genre stats to avoid 14,000 loop passes on every keystroke
   const genreStats = useMemo(() => {
-    return GENRES.map((g) => {
+    return GENRE_DEFS.map((g) => {
+      const name = isRTL ? g.arName : g.enName;
       const q = g.query.toLowerCase();
       const matched = tracks.filter((t) => {
         const genre = (t.genre || '').toLowerCase();
@@ -125,9 +139,9 @@ export const InfiniteSearchView: React.FC = () => {
         }
         idx++;
       }
-      return { ...g, count, covers };
+      return { name, query: g.query, gradient: g.gradient, count, covers };
     });
-  }, [tracks]);
+  }, [tracks, isRTL]);
 
   return (
     <div className="w-full text-white pb-6 md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
@@ -362,7 +376,7 @@ export const InfiniteSearchView: React.FC = () => {
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                {results.songs.map((trk) => (
+                {results.songs.slice(0, visibleSongCount).map((trk) => (
                   <MobileTrackRow
                     key={trk.id}
                     track={trk}
@@ -370,6 +384,16 @@ export const InfiniteSearchView: React.FC = () => {
                     onOpenActionSheet={setActionSheetTrack}
                   />
                 ))}
+                {results.songs.length > visibleSongCount && (
+                  <button
+                    onClick={() => setVisibleSongCount((prev) => prev + 50)}
+                    className="w-full py-3 mt-2 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-xs font-bold text-zinc-300 transition-colors cursor-pointer"
+                  >
+                    {isRTL
+                      ? `عرض المزيد (${results.songs.length - visibleSongCount} مسار إضافي)`
+                      : `Load More (${results.songs.length - visibleSongCount} remaining)`}
+                  </button>
+                )}
               </div>
             </div>
           )}

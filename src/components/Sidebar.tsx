@@ -7,7 +7,7 @@ import {
   Heart,
   Music,
   Sliders,
-  UploadCloud,
+  FolderOpen,
   Settings,
 } from 'lucide-react';
 
@@ -23,7 +23,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const favorites = usePlayerStore((state) => state.favorites);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
-  const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
 
   return (
     <aside
@@ -124,8 +123,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
         >
-          <UploadCloud className="w-4 h-4 shrink-0 text-zinc-400" />
-          <span>استيراد / السحابة</span>
+          <FolderOpen className="w-4 h-4 shrink-0 text-zinc-400" />
+          <span>{isRTL ? 'استيراد مجلد الأغاني' : 'Import Music Folder'}</span>
         </button>
 
         <button

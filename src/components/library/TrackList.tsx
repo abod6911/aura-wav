@@ -4,6 +4,7 @@ import { triggerHaptic } from '../../utils/haptics';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { usePlayerStore } from '../../store/usePlayerStore';
+import { isCloudConfigured } from '../../lib/supabase';
 import { Track } from '../../types';
 import {
   Search,
@@ -586,14 +587,16 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <span>السحابية ({cloudCount})</span>
           </button>
 
-          <button
-            onClick={() => setCloudUploaderOpen(true)}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer shrink-0 shadow-sm"
-            title="رفع ملفات موسيقية إلى السحابة"
-          >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>رفع للسحابة</span>
-          </button>
+          {isCloudConfigured() && (
+            <button
+              onClick={() => setCloudUploaderOpen(true)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/30 transition-all cursor-pointer shrink-0 shadow-sm"
+              title="رفع ملفات موسيقية إلى السحابة"
+            >
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>رفع للسحابة</span>
+            </button>
+          )}
 
           {/* Sort Dropdown */}
           <div className="relative flex items-center shrink-0">
@@ -874,7 +877,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <ImageIcon className="w-4 h-4 text-zinc-400" />
             <span>تغيير الغلاف</span>
           </button>
-          {(contextMenu.track.source === 'online' || (contextMenu.track.audioUrl && contextMenu.track.audioUrl.startsWith('http'))) && (
+          {isCloudConfigured() && (contextMenu.track.source === 'online' || (contextMenu.track.audioUrl && contextMenu.track.audioUrl.startsWith('http'))) && (
             <button
               onClick={async () => {
                 const tr = contextMenu.track;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Disc, Music, Sun, Moon, CloudSun, ArrowLeft } from 'lucide-react';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -33,6 +33,14 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
     setVisible(true);
   }, [forceShow, onComplete]);
 
+  const handleDismiss = useCallback(() => {
+    triggerHaptic('light');
+    localStorage.setItem('aura_welcome_seen', 'true');
+    sessionStorage.setItem('aura_welcome_seen', 'true');
+    setVisible(false);
+    if (onComplete) onComplete();
+  }, [onComplete]);
+
   // Once tracks are loaded in cold boot, auto-dismiss smoothly without blocking
   useEffect(() => {
     if (visible && !forceShow && tracks.length > 0) {
@@ -41,15 +49,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [visible, forceShow, tracks.length]);
-
-  const handleDismiss = () => {
-    triggerHaptic('light');
-    localStorage.setItem('aura_welcome_seen', 'true');
-    sessionStorage.setItem('aura_welcome_seen', 'true');
-    setVisible(false);
-    if (onComplete) onComplete();
-  };
+  }, [visible, forceShow, tracks.length, handleDismiss]);
 
   const [hour] = useState(() => new Date().getHours());
 

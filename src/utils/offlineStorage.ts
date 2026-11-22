@@ -31,6 +31,11 @@ const ARTWORK_CACHE_NAME = 'aurawave-artwork-v1';
 
 let dbPromise: Promise<IDBPDatabase<AuraWaveOfflineDBSchema>> | null = null;
 let activeBlobUrl: string | null = null;
+const deckBlobUrls: Record<'A' | 'B' | 'default', string | null> = {
+  A: null,
+  B: null,
+  default: null,
+};
 const allActiveBlobUrls = new Set<string>();
 
 type StorageChangeCallback = () => void;
@@ -342,28 +347,75 @@ export async function clearAllDownloads(): Promise<void> {
 }
 
 /**
- * Create a managed Blob URL for iOS Safari playback
- * Revokes the previous active URL to prevent iOS RAM leaks
+ * Create a managed Blob URL for iOS Safari playback.
+ * Supports dual-deck channel tracking ('A' | 'B' | 'default') so that when a new track is loaded
+ * on Deck B during an AutoMix crossfade, the active audio stream on Deck A is preserved
+ * without premature destruction.
  */
-export function createTrackBlobUrl(blob: Blob): string {
-  // Clean up previous active URL
-  revokeActiveBlobUrl();
-
+export function createTrackBlobUrl(blob: Blob, deck: 'A' | 'B' | 'default' = 'default'): string {
   const url = URL.createObjectURL(blob);
+
+  // If there was a previous URL on this exact deck, defer its revocation
+  // with a safety margin (5 seconds) so that hardware decoding finishes smoothly
+  const oldUrl = deckBlobUrls[deck];
+  if (oldUrl && oldUrl !== url) {
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(oldUrl);
+        allActiveBlobUrls.delete(oldUrl);
+      } catch {}
+    }, 5000);
+  }
+
+  deckBlobUrls[deck] = url;
   activeBlobUrl = url;
   allActiveBlobUrls.add(url);
   return url;
 }
 
 /**
- * Revoke the currently active Object URL
+ * Revoke the Object URL for a specific deck channel after a safety delay.
  */
-export function revokeActiveBlobUrl(): void {
-  if (activeBlobUrl) {
-    try {
-      URL.revokeObjectURL(activeBlobUrl);
-      allActiveBlobUrls.delete(activeBlobUrl);
-    } catch {}
+export function revokeDeckBlobUrl(deck: 'A' | 'B' | 'default', delayMs: number = 3000): void {
+  const url = deckBlobUrls[deck];
+  if (url) {
+    deckBlobUrls[deck] = null;
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url);
+        allActiveBlobUrls.delete(url);
+      } catch {}
+    }, delayMs);
+  }
+}
+
+/**
+ * Revoke the currently active Object URL with optional immediate flag.
+ * Defers revocation to prevent cutting off active crossfades on iOS Safari.
+ */
+export function revokeActiveBlobUrl(immediate: boolean = false): void {
+  if (immediate) {
+    if (activeBlobUrl) {
+      try {
+        URL.revokeObjectURL(activeBlobUrl);
+        allActiveBlobUrls.delete(activeBlobUrl);
+      } catch {}
+      activeBlobUrl = null;
+    }
+    return;
+  }
+
+  // Graceful deferred retirement (4 seconds)
+  const candidate = activeBlobUrl;
+  if (candidate) {
+    setTimeout(() => {
+      if (candidate !== deckBlobUrls.A && candidate !== deckBlobUrls.B) {
+        try {
+          URL.revokeObjectURL(candidate);
+          allActiveBlobUrls.delete(candidate);
+        } catch {}
+      }
+    }, 4000);
     activeBlobUrl = null;
   }
 }
@@ -372,6 +424,9 @@ export function revokeActiveBlobUrl(): void {
  * Revoke all created Object URLs (for app teardown)
  */
 export function revokeAllBlobUrls(): void {
+  deckBlobUrls.A = null;
+  deckBlobUrls.B = null;
+  deckBlobUrls.default = null;
   allActiveBlobUrls.forEach((url) => {
     try {
       URL.revokeObjectURL(url);

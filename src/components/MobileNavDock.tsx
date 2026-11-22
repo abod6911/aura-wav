@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { Radio, Search, Library, Heart } from 'lucide-react';
@@ -14,7 +14,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const lastTapRef = useRef<{ tabId: string; time: number }>({ tabId: '', time: 0 });
 
-  const handleTabClick = (tabId: 'home' | 'search' | 'library' | 'favorites') => {
+  const handleTabClick = useCallback((tabId: 'home' | 'search' | 'library' | 'favorites') => {
     triggerHaptic(8);
     const now = Date.now();
     const isDoubleTap = lastTapRef.current.tabId === tabId && now - lastTapRef.current.time < 500;
@@ -34,7 +34,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
     if (activeTab !== tabId) {
       setActiveTab(tabId);
     }
-  };
+  }, [activeTab, setActiveTab]);
 
   const tabs = [
     { id: 'home' as const, label: t.listenNow, icon: Radio },
