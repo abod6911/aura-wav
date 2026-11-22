@@ -67,6 +67,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const storageStats = usePlayerStore((state) => state.storageStats);
   const refreshStorageStats = usePlayerStore((state) => state.refreshStorageStats);
   const clearLocalLibrary = usePlayerStore((state) => state.clearLocalLibrary);
+  const isAutoCacheEnabled = usePlayerStore((state) => state.isAutoCacheEnabled);
+  const setAutoCacheEnabled = usePlayerStore((state) => state.setAutoCacheEnabled);
+  const clearAllOfflineStorage = usePlayerStore((state) => state.clearAllOfflineStorage);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
   const rescanLibrary = usePlayerStore((state) => state.rescanLibrary);
   const addToast = usePlayerStore((state) => state.addToast);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
@@ -500,12 +504,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
           </div>
 
-          {/* 3. Storage Metric & Library Group */}
-          <div className="p-4 rounded-2xl bg-[#16161A] border border-white/[0.06] space-y-3">
+          {/* 3. Storage Metric & Offline Group */}
+          <div className="p-4 rounded-2xl bg-[#16161A] border border-white/[0.06] space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
                 <Database className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
-                <span>{t.storageTitle}</span>
+                <span>التخزين والاستماع بدون إنترنت</span>
               </span>
               <span className="text-xs font-mono font-bold text-white bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15">
                 {storageStats?.engine === 'opfs' ? 'Apple Fast OPFS' : 'IndexedDB Engine'}
@@ -514,12 +518,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between">
-                <h4 className="text-xl font-black text-white tracking-tight">
+                <h4 className="text-lg font-black text-white tracking-tight">
                   {isLoadingStats ? (
                     <span className="text-sm text-zinc-400 font-normal">...</span>
                   ) : (
                     <span>
-                      {tracks.length} {t.songs} •{' '}
+                      {downloadedTrackIds.length} مسار محمّل •{' '}
                       <span className="text-[var(--apple-rose)] font-mono">{storageStats?.formattedSize || '0 MB'}</span>
                     </span>
                   )}
@@ -539,6 +543,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 />
               </div>
             </div>
+
+            {/* Smart Auto-Cache Toggle */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-white">التخزين التلقائي الذكي</div>
+                <div className="text-[11px] text-zinc-400">حفظ آخر 25 أغنية تم تشغيلها تلقائياً للاستماع دون إنترنت</div>
+              </div>
+              <AppleSwitch
+                checked={isAutoCacheEnabled}
+                onChange={setAutoCacheEnabled}
+                activeColor="bg-[#FA2D48]"
+                label="التخزين التلقائي الذكي"
+              />
+            </div>
+
+            {/* Clear All Offline Downloads Action */}
+            {downloadedTrackIds.length > 0 && (
+              <div className="pt-2 border-t border-white/[0.06]">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('هل أنت متأكد من مسح جميع الأغاني المحمّلة للاستماع بدون إنترنت؟')) {
+                      await clearAllOfflineStorage();
+                    }
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>مسح جميع ملفات الصوت المحمّلة</span>
+                </button>
+              </div>
+            )}
 
             <div className="pt-1 flex items-center justify-between text-[11px] text-zinc-400">
               <span className="flex items-center gap-1">

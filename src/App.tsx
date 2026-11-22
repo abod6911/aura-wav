@@ -19,6 +19,7 @@ import { WelcomeSplash } from './components/WelcomeSplash';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { useTranslation } from './i18n/useTranslation';
 import { authService } from './services/authService';
+import { WifiOff, Wifi } from 'lucide-react';
 
 // Code-split heavy modals and sheets for ultra-fast initial load & minimal memory
 const SyncedLyrics = lazy(() => import('./components/lyrics/SyncedLyrics').then((m) => ({ default: m.SyncedLyrics })));
@@ -69,16 +70,18 @@ function OfflineBanner() {
 
   if (!isOnline) {
     return (
-      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-amber-300 text-center text-xs font-medium backdrop-blur-md">
-        وضع بدون اتصال — تشغيل المسارات المحفوظة محلياً
+      <div className="sticky top-0 z-[100] w-full px-4 py-1.5 bg-amber-500/15 border-b border-amber-500/25 text-amber-300 text-center text-xs font-semibold backdrop-blur-xl flex items-center justify-center gap-2">
+        <WifiOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+        <span>وضع عدم الاتصال — تشغيل المسارات المحفوظة محلياً فقط</span>
       </div>
     );
   }
 
   if (showOnlineBanner) {
     return (
-      <div className="sticky top-0 z-[100] w-full px-4 py-2 bg-emerald-500/10 border-b border-emerald-500/20 text-emerald-400 text-center text-xs font-medium backdrop-blur-md transition-opacity duration-300">
-        تم استعادة الاتصال بالشبكة
+      <div className="sticky top-0 z-[100] w-full px-4 py-1.5 bg-emerald-500/15 border-b border-emerald-500/25 text-emerald-300 text-center text-xs font-semibold backdrop-blur-xl flex items-center justify-center gap-2 transition-opacity duration-300">
+        <Wifi className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span>تم استعادة الاتصال بالإنترنت</span>
       </div>
     );
   }

@@ -24,6 +24,7 @@ import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../service
 import { isCloudConfigured } from '../lib/supabase';
 import { handoffService } from '../services/handoffService';
 import { streamingPreloader } from '../services/streamingPreloader';
+import * as offlineStorage from '../utils/offlineStorage';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
@@ -63,6 +64,20 @@ async function fetchTrackBlob(track: Track): Promise<Blob | null> {
       }
     } catch {}
   }
+  return null;
+}
+
+/** Gets the cover artwork blob for a track */
+async function fetchTrackCoverBlob(track: Track): Promise<Blob | null> {
+  const url = track.coverUrl || track.artworkUrl;
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return null;
+  try {
+    const res = await fetch(url, { cache: 'force-cache' });
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob.size > 0) return blob;
+    }
+  } catch {}
   return null;
 }
 
@@ -172,6 +187,7 @@ interface PlayerState {
   isSpotlightOpen: boolean;
   isCarModeOpen: boolean;
   isOnline: boolean;
+  isAutoCacheEnabled: boolean;
   downloadedTrackIds: string[];
   downloadAllProgress: { current: number; total: number } | null;
   toasts: ToastItem[];
@@ -266,6 +282,8 @@ interface PlayerState {
   downloadPlaylistOffline: (playlistId: string) => Promise<void>;
   cancelOfflineDownload: () => void;
   cacheAllAvailableTracksOffline: () => Promise<void>;
+  setAutoCacheEnabled: (enabled: boolean) => void;
+  clearAllOfflineStorage: () => Promise<void>;
   isSettingsOpen: boolean;
   language: 'ar' | 'en';
   setLanguage: (lang: 'ar' | 'en') => void;
@@ -692,6 +710,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     activeLoopRoll: null,
     isCarModeOpen: false,
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isAutoCacheEnabled: typeof window !== 'undefined' ? localStorage.getItem('aurawave_autocache') !== 'false' : true,
     downloadedTrackIds: [],
     downloadAllProgress: null,
     toasts: [],
@@ -789,6 +808,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           automixSetting,
           volSetting,
           audioBlobKeys,
+          offlineTrackKeys,
           savedFolderNameVal,
           savedFolderTrackCountVal,
           savedFolderTimestampVal,
@@ -800,6 +820,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           db.get('settings', 'automix'),
           db.get('settings', 'volume'),
           db.getAllKeys('audioBlobs'),
+          offlineStorage.getAllTrackIds().catch(() => [] as string[]),
           db.get('settings', 'savedFolderName'),
           db.get('settings', 'savedFolderTrackCount'),
           db.get('settings', 'savedFolderTimestamp'),
@@ -1068,7 +1089,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           history: savedHistory,
           ...(savedEqGains ? { eqGains: savedEqGains } : {}),
           ...(savedEqPreset ? { activeEqPreset: savedEqPreset } : {}),
-          downloadedTrackIds: (audioBlobKeys as string[]) || [],
+          downloadedTrackIds: Array.from(new Set([...((audioBlobKeys as string[]) || []), ...(offlineTrackKeys || [])])),
           savedFolderName: resolvedFolderName,
           savedFolderTrackCount: finalFolderCount,
           savedFolderTimestamp: savedFolderTimestampVal || Date.now(),
@@ -1083,6 +1104,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
                 playbackState: 'paused' as PlaybackState,
               }
             : {}),
+        });
+
+        // Subscribe to offlineStorage changes
+        offlineStorage.onOfflineStorageChange(async () => {
+          try {
+            const ids = await offlineStorage.getAllTrackIds();
+            set((state) => ({
+              downloadedTrackIds: Array.from(new Set([...state.downloadedTrackIds, ...ids])),
+            }));
+            get().refreshStorageStats().catch(() => {});
+          } catch {}
         });
 
         // Sync to CarPlay on init
@@ -1258,9 +1290,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
+      offlineStorage.revokeActiveBlobUrl();
       const state = get();
 
       let playableTrack: Track = { ...track };
+
+      // Offline Guard: Prevent network fetch failure and toast informative guidance
+      if (!state.isOnline) {
+        const isDownloaded = state.downloadedTrackIds.includes(playableTrack.id) || !!playableTrack.file || !!playableTrack.blob;
+        if (!isDownloaded) {
+          const hasOffline = await offlineStorage.hasTrack(playableTrack.id);
+          if (!hasOffline) {
+            get().addToast('هذه الأغنية غير محمّلة للاستماع بدون إنترنت', undefined, 'warning');
+            return;
+          }
+        }
+      }
 
       const isLocalHost = typeof window !== 'undefined' && (
         window.location.hostname === 'localhost' ||
@@ -1268,21 +1313,33 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         window.location.hostname.startsWith('192.168.')
       );
 
-      // 1. Check in-memory file/blob or stored audio in OPFS / Dexie / IDB
+      // 1. Check in-memory file/blob or stored audio in AuraWaveOfflineDB / OPFS / Dexie
       if (!playableTrack.file && !playableTrack.blob) {
         try {
-          let blob = await getAudioFileFromStorage(playableTrack.id);
-          if (!blob && playableTrack.trackNumber) {
-            blob = await getAudioFileFromStorage(`track_catalog_${playableTrack.trackNumber}`);
-          }
-          if (blob) {
+          const offlineRec = await offlineStorage.getTrack(playableTrack.id);
+          if (offlineRec && offlineRec.audioBlob) {
+            const blobUrl = offlineStorage.createTrackBlobUrl(offlineRec.audioBlob);
             playableTrack = {
               ...playableTrack,
-              blob,
-              audioUrl: djAudioEngine.createManagedAudioUrl(blob),
+              blob: offlineRec.audioBlob,
+              audioUrl: blobUrl,
               isPreview: false,
               streamSource: 'local-blob',
             };
+          } else {
+            let blob = await getAudioFileFromStorage(playableTrack.id);
+            if (!blob && playableTrack.trackNumber) {
+              blob = await getAudioFileFromStorage(`track_catalog_${playableTrack.trackNumber}`);
+            }
+            if (blob) {
+              playableTrack = {
+                ...playableTrack,
+                blob,
+                audioUrl: djAudioEngine.createManagedAudioUrl(blob),
+                isPreview: false,
+                streamSource: 'local-blob',
+              };
+            }
           }
         } catch (err) {
           console.warn('Error retrieving audio blob from storage:', err);
@@ -1508,6 +1565,34 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           await get().handleTrackPlaybackError(playableTrack, new Error('Stream resolution failed'));
         } else {
           set({ isPlaying: true, playbackState: 'playing', consecutivePlaybackErrors: 0 });
+
+          // Smart Auto-Cache (LRU 25 tracks) in background for offline listening
+          if (get().isOnline && get().isAutoCacheEnabled && !get().downloadedTrackIds.includes(playableTrack.id)) {
+            const trackToCache = { ...playableTrack };
+            setTimeout(async () => {
+              try {
+                const blob = await fetchTrackBlob(trackToCache);
+                if (blob) {
+                  const coverBlob = await fetchTrackCoverBlob(trackToCache);
+                  await offlineStorage.saveTrack({
+                    id: trackToCache.id,
+                    audioBlob: blob,
+                    coverBlob,
+                    mimeType: blob.type || 'audio/mpeg',
+                    sizeBytes: blob.size,
+                    savedAt: Date.now(),
+                    isManualDownload: false,
+                    title: trackToCache.title,
+                    artist: trackToCache.artist,
+                    duration: trackToCache.duration,
+                  });
+                  await offlineStorage.manageLruCache(25);
+                  const allIds = await offlineStorage.getAllTrackIds();
+                  set((s) => ({ downloadedTrackIds: Array.from(new Set([...s.downloadedTrackIds, ...allIds])) }));
+                }
+              } catch {}
+            }, 1200);
+          }
 
           // Instant Pre-buffering: Prepare the upcoming track in idle DeckChannel for <15ms skip
           const nextUpcoming = get().userQueue[0] || (get().queue[0]?.id !== playableTrack.id ? get().queue[0] : get().queue[1]);
@@ -2568,45 +2653,64 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       let stoppedReason: 'cancelled' | 'storage' | 'offline' | null = null;
 
       try {
-        const db = await getDB();
-        for (let i = 0; i < needed.length; i++) {
-          if (offlineDownloadCancelled) {
-            stoppedReason = 'cancelled';
-            break;
-          }
-          if (typeof navigator !== 'undefined' && !navigator.onLine) {
-            stoppedReason = 'offline';
-            break;
-          }
-          // Re-check free space every few songs so we never fill the device storage
-          if (i % 5 === 0 && !(await hasEnoughStorageFor(25 * 1024 * 1024))) {
-            stoppedReason = 'storage';
-            break;
-          }
-
-          const track = needed[i];
-          try {
-            const blob = await fetchTrackBlob(track);
-            if (blob) {
-              await saveAudioFileToStorage(track.id, blob);
-              if (track.trackNumber) {
-                await saveAudioFileToStorage(`track_catalog_${track.trackNumber}`, blob);
-              }
-              saved.add(track.id);
-              savedCount++;
-            } else {
-              failedCount++;
+        // Concurrency pool with limit = 2
+        const queue = [...needed];
+        const runWorker = async () => {
+          while (queue.length > 0) {
+            if (offlineDownloadCancelled) {
+              stoppedReason = 'cancelled';
+              break;
             }
-          } catch (err) {
-            failedCount++;
-            console.warn('[Offline] Failed to save track:', track.title, err);
-          }
+            if (typeof navigator !== 'undefined' && !navigator.onLine) {
+              stoppedReason = 'offline';
+              break;
+            }
+            if (!(await hasEnoughStorageFor(25 * 1024 * 1024))) {
+              stoppedReason = 'storage';
+              break;
+            }
 
-          set({
-            downloadAllProgress: { current: i + 1, total: needed.length },
-            downloadedTrackIds: Array.from(saved),
-          });
-        }
+            const track = queue.shift();
+            if (!track) break;
+
+            try {
+              const blob = await fetchTrackBlob(track);
+              if (blob) {
+                const coverBlob = await fetchTrackCoverBlob(track);
+                await offlineStorage.saveTrack({
+                  id: track.id,
+                  audioBlob: blob,
+                  coverBlob,
+                  mimeType: blob.type || 'audio/mpeg',
+                  sizeBytes: blob.size,
+                  savedAt: Date.now(),
+                  isManualDownload: true,
+                  title: track.title,
+                  artist: track.artist,
+                  duration: track.duration,
+                });
+                await saveAudioFileToStorage(track.id, blob);
+                if (track.trackNumber) {
+                  await saveAudioFileToStorage(`track_catalog_${track.trackNumber}`, blob);
+                }
+                saved.add(track.id);
+                savedCount++;
+              } else {
+                failedCount++;
+              }
+            } catch (err) {
+              failedCount++;
+              console.warn('[Offline] Failed to save track:', track.title, err);
+            }
+
+            set({
+              downloadAllProgress: { current: savedCount + failedCount, total: needed.length },
+              downloadedTrackIds: Array.from(saved),
+            });
+          }
+        };
+
+        await Promise.all([runWorker(), runWorker()]);
       } catch (err) {
         console.warn('Error during offline caching:', err);
         addToast('حدث خطأ أثناء الحفظ للأوفلاين', undefined, 'warning');
@@ -2668,6 +2772,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const { tracks } = get();
       if (tracks.length === 0) return;
       await get().downloadTracksForOffline(tracks, 'المكتبة كاملة');
+    },
+
+    setAutoCacheEnabled: (enabled: boolean) => {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('aurawave_autocache', enabled ? 'true' : 'false');
+        } catch {}
+      }
+      set({ isAutoCacheEnabled: enabled });
+    },
+
+    clearAllOfflineStorage: async () => {
+      await offlineStorage.clearAllDownloads();
+      await clearAllLocalStorage();
+      set({ downloadedTrackIds: [] });
+      get().refreshStorageStats().catch(() => {});
+      get().addToast('تم مسح جميع الملفات المحمّلة للاستماع دون إنترنت بنجاح', undefined, 'success');
     },
     setCarModeOpen: (open: boolean) => set({ isCarModeOpen: open }),
     toggleCarMode: () => set((state) => ({ isCarModeOpen: !state.isCarModeOpen })),

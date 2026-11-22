@@ -11,6 +11,11 @@
 
 import { clearDexieLibrary } from '../db/dexieDB';
 import { dexieDB } from '../db/dexieDB';
+import {
+  getTrack as getOfflineTrack,
+  deleteTrack as deleteOfflineTrack,
+  clearAllDownloads as clearAllOfflineDownloads,
+} from '../utils/offlineStorage';
 
 type StorageChangeCallback = () => void;
 
@@ -150,11 +155,19 @@ export async function getAudioFileFromStorage(trackId: string): Promise<Blob | n
     }
   } catch {}
 
+  // 3. Try AuraWaveOfflineDB
+  try {
+    const offlineRec = await getOfflineTrack(trackId);
+    if (offlineRec && offlineRec.audioBlob) {
+      return offlineRec.audioBlob;
+    }
+  } catch {}
+
   return null;
 }
 
 /**
- * Delete an audio file from OPFS and Dexie
+ * Delete an audio file from OPFS, Dexie, and AuraWaveOfflineDB
  */
 export async function deleteAudioFileFromStorage(trackId: string): Promise<void> {
   const opfsDir = await getOPFSDirectory();
@@ -167,6 +180,10 @@ export async function deleteAudioFileFromStorage(trackId: string): Promise<void>
 
   try {
     await dexieDB.audioBlobs.delete(trackId);
+  } catch {}
+
+  try {
+    await deleteOfflineTrack(trackId);
   } catch {}
 
   notifyStorageChange();
@@ -191,6 +208,13 @@ export async function clearAllLocalStorage(): Promise<void> {
     await clearDexieLibrary();
   } catch (err) {
     console.warn('[StorageManager] Clear Dexie error:', err);
+  }
+
+  // Clear AuraWaveOfflineDB
+  try {
+    await clearAllOfflineDownloads();
+  } catch (err) {
+    console.warn('[StorageManager] Clear Offline DB error:', err);
   }
 
   notifyStorageChange();

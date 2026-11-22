@@ -31,10 +31,14 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
   const addToQueue = usePlayerStore((state) => state.addToQueue);
   const addToast = usePlayerStore((state) => state.addToast);
+  const isOnline = usePlayerStore((state) => state.isOnline);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
 
   const [isAddedFeedback, setIsAddedFeedback] = useState(false);
 
   const isCur = currentTrack?.id === track.id;
+  const isAvailableOffline = downloadedTrackIds.includes(track.id) || !!track.file || !!track.blob;
+  const isDimmed = !isOnline && !isAvailableOffline;
   const playList = trackList || contextList;
 
   const x = useMotionValue(0);
@@ -43,6 +47,10 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
 
   const handleRowClick = () => {
     triggerHaptic('light');
+    if (isDimmed) {
+      addToast('هذه الأغنية غير محمّلة للاستماع بدون إنترنت', undefined, 'warning');
+      return;
+    }
     if (isCur) {
       togglePlayPause();
     } else {
@@ -105,9 +113,9 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none apple-row-press cursor-pointer ${
+        className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none apple-row-press cursor-pointer transition-opacity duration-200 ${
           isCur ? 'bg-[#181820]' : 'bg-transparent'
-        }`}
+        } ${isDimmed ? 'opacity-40' : 'opacity-100'}`}
       >
         {/* Left: Index + Artwork + Title/Artist */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-1">

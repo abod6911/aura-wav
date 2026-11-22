@@ -26,6 +26,8 @@ import {
   ArrowDown,
   Trash2,
   Music2,
+  CheckCircle2,
+  ArrowDownToLine,
 } from 'lucide-react';
 
 interface ExpandedPlayerProps {
@@ -382,6 +384,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
+  const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
   const reorderUserQueue = usePlayerStore((state) => state.reorderUserQueue);
   const removeFromUserQueue = usePlayerStore((state) => state.removeFromUserQueue);
   const clearUserQueue = usePlayerStore((state) => state.clearUserQueue);
@@ -394,6 +398,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [isActionSheetOpen, setActionSheetOpen] = useState(false);
 
   const isFav = favorites.includes(currentTrack.id);
+  const isDownloaded = downloadedTrackIds.includes(currentTrack.id);
 
   const handleClose = () => {
     triggerHaptic('light');
@@ -653,22 +658,47 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </AnimatePresence>
           </div>
 
-          <button
-            type="button"
-            data-testid="expanded-favorite-btn"
-            onClick={() => {
-              triggerHaptic('success');
-              toggleFavorite(currentTrack.id);
-            }}
-            className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-zinc-400 hover:text-[#FA2D48] apple-btn-tactile cursor-pointer rounded-full flex-shrink-0"
-            aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
-          >
-            <Heart
-              className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${
-                isFav ? 'text-[#FA2D48] fill-[#FA2D48] scale-105' : 'text-zinc-500'
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Offline Download Button */}
+            <button
+              type="button"
+              data-testid="expanded-download-btn"
+              onClick={() => {
+                triggerHaptic('light');
+                downloadTrackForOffline(currentTrack.id);
+              }}
+              disabled={isDownloaded}
+              className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center apple-btn-tactile cursor-pointer rounded-full flex-shrink-0 transition-colors ${
+                isDownloaded ? 'text-emerald-400' : 'text-zinc-400 hover:text-white'
               }`}
-            />
-          </button>
+              aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
+              title={isDownloaded ? 'محفوظة للاستماع دون إنترنت' : 'تنزيل للاستماع دون إنترنت'}
+            >
+              {isDownloaded ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <ArrowDownToLine className="w-5 h-5" />
+              )}
+            </button>
+
+            {/* Favorite Button */}
+            <button
+              type="button"
+              data-testid="expanded-favorite-btn"
+              onClick={() => {
+                triggerHaptic('success');
+                toggleFavorite(currentTrack.id);
+              }}
+              className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center text-zinc-400 hover:text-[#FA2D48] apple-btn-tactile cursor-pointer rounded-full flex-shrink-0"
+              aria-label={isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+            >
+              <Heart
+                className={`w-5 h-5 sm:w-6 sm:h-6 transition-transform ${
+                  isFav ? 'text-[#FA2D48] fill-[#FA2D48] scale-105' : 'text-zinc-500'
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* LAYER 4: ISOLATED ZERO-RERENDER TIMELINE SLIDER */}

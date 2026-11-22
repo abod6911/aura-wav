@@ -7,6 +7,7 @@ import { LoudnessNormalizer } from './dsp/LoudnessNormalizer';
 import { createAudioTimerWorker, AudioTimerController } from './workers/audioTimer.worker';
 import { AutoMixStyle, DeckChannelName, ReverbSpace } from './types';
 import { getAudioFileFromStorage } from '../../services/storageManager';
+import { getTrack as getOfflineTrack } from '../../utils/offlineStorage';
 import { resolvePlayableStream } from '../../services/streamingEngine';
 import { SpatialReverbEngine, SpatialMode } from './dsp/SpatialReverbEngine';
 import { VocalAttenuator } from './dsp/VocalAttenuator';
@@ -1024,7 +1025,20 @@ export class DJAudioEngineFacade {
       return track.audioUrl;
     }
 
-    // 3. Stored offline Blob from OPFS / Dexie / IDB (always prefer offline local copy!)
+    // 3. Stored offline Blob from AuraWaveOfflineDB / OPFS / Dexie (always prefer offline local copy!)
+    try {
+      const offlineRecord = await getOfflineTrack(track.id);
+      if (offlineRecord && offlineRecord.audioBlob && offlineRecord.audioBlob.size > 0) {
+        return this.createManagedAudioUrl(offlineRecord.audioBlob);
+      }
+      if (track.trackNumber) {
+        const catRecord = await getOfflineTrack(`track_catalog_${track.trackNumber}`);
+        if (catRecord && catRecord.audioBlob && catRecord.audioBlob.size > 0) {
+          return this.createManagedAudioUrl(catRecord.audioBlob);
+        }
+      }
+    } catch {}
+
     try {
       let storedBlob = await getAudioFileFromStorage(track.id);
       if (!storedBlob && track.trackNumber) {
