@@ -62,6 +62,11 @@ export default {
         '8.5': '2.125rem',
         '9.5': '2.375rem',
       },
+      zIndex: {
+        '60': '60',
+        '70': '70',
+        '80': '80',
+      },
       borderRadius: {
         'squircle-sm': '12px',
         'squircle-md': '18px',
