@@ -566,7 +566,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               <Sparkles className="w-5 h-5 text-emerald-400" />
               <span>{isRTL ? 'ميكساتك اليومية' : 'Your Daily Mixes'}</span>
             </h2>
-            <span className="text-xs text-zinc-400 font-medium">
+            <span className="hidden xs:inline text-xs text-zinc-400 font-medium">
               تتحدث يومياً في منتصف الليل
             </span>
           </div>
