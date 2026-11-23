@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -93,7 +93,7 @@ html, body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
-  background-color: #000000 !important;
+  background-color: #121212 !important;
   color: #f4f4f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Readex Pro", "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.015em;
@@ -116,7 +116,7 @@ html, body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background-color: #000000 !important;
+  background-color: #121212 !important;
 }
 
 /* Fullscreen API normalization */
@@ -143,7 +143,7 @@ html, body {
     height: 100%;
     min-height: 100%;
     min-height: 100dvh;
-    background-color: #000000 !important;
+    background-color: #121212 !important;
   }
 }
 
@@ -233,7 +233,7 @@ button, a, input, select, [role="button"], .cursor-pointer {
     -webkit-backdrop-filter: blur(8px);
   }
 
-  /* ── CRITICAL: Prevent iOS viewport zoom on input focus ── */
+  /* â”€â”€ CRITICAL: Prevent iOS viewport zoom on input focus â”€â”€ */
   input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
   textarea,
   select {
