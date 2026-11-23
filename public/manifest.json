@@ -5,7 +5,6 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["fullscreen", "standalone", "window-controls-overlay"],
   "background_color": "#09090B",
   "theme_color": "#09090B",
   "description": "مشغل موسيقى متطور بدون إنترنت، يدعم AutoMix الذكي، الكلمات المتزامنة والمعادل الصوتي",
