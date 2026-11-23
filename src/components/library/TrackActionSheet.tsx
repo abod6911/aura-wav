@@ -79,14 +79,14 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const content = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center select-none" dir={dir}>
+        <div className="fixed inset-0 z-80 flex items-end justify-center select-none" dir={dir}>
           {/* Frosted Glass Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[101]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-0"
           />
 
           {/* iOS Native Bottom Action Sheet */}
@@ -108,7 +108,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
               backgroundColor: '#101018',
               paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 24px)',
             }}
-            className="relative z-[102] w-full max-w-lg bg-[#101018] border-t border-white/[0.14] rounded-t-[32px] shadow-[0_-25px_80px_rgba(0,0,0,0.95)] p-4 sm:p-5 space-y-3.5 max-h-[85dvh] overflow-y-auto no-scrollbar pointer-events-auto"
+            className="relative z-10 w-full max-w-lg bg-[#101018] border-t border-white/[0.14] rounded-t-[32px] shadow-[0_-25px_80px_rgba(0,0,0,0.95)] p-4 sm:p-5 space-y-3.5 max-h-[85dvh] overflow-y-auto no-scrollbar pointer-events-auto"
             dir={dir}
           >
             {/* Top iOS Grab Handle */}
@@ -364,7 +364,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
             {/* Bottom Cancel Button */}
             <button
               onClick={onClose}
-              className="w-full py-3.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm text-center transition-all cursor-pointer border border-white/10"
+              className="w-full py-3.5 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm text-center transition-[color,background-color,border-color,transform] cursor-pointer border border-white/10"
             >
               {isRTL ? 'إلغاء' : 'Cancel'}
             </button>

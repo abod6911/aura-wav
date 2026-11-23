@@ -40,7 +40,7 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 select-none">
+      <div className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -113,7 +113,7 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                 <button
                   key={rate}
                   onClick={() => setPlaybackRate(rate)}
-                  className={`py-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
+                  className={`py-2 rounded-xl text-xs font-bold font-mono transition-colors cursor-pointer ${
                     playbackRate === rate
                       ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
                       : 'bg-white/[0.04] text-zinc-300 hover:bg-white/[0.08] border border-white/[0.06]'
@@ -146,7 +146,7 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                   <button
                     key={style.id}
                     onClick={() => setAutomixStyle(style.id as any)}
-                    className={`p-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
                       automixStyle === style.id
                         ? 'bg-[#FA243C]/20 border border-[#FA243C]/60 text-white'
                         : 'bg-white/[0.04] text-zinc-400 hover:text-white border border-white/[0.06]'
@@ -174,7 +174,7 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                     playDJSound(snd.id);
                     addToast(`DJ Effect: ${snd.name}`, undefined, 'info');
                   }}
-                  className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-amber-500/20 active:scale-95 text-center transition-all cursor-pointer border border-white/[0.06] group"
+                  className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-amber-500/20 active:scale-95 text-center transition-[color,background-color,border-color,transform] cursor-pointer border border-white/[0.06] group"
                 >
                   <snd.Icon className="w-5 h-5 mx-auto text-amber-400 group-hover:scale-110 transition-transform" />
                   <span className="text-[10px] text-zinc-400 group-hover:text-white block truncate mt-1">{snd.name}</span>
@@ -190,14 +190,14 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                 onClose();
                 setEqualizerOpen(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-colors cursor-pointer"
             >
               <Sliders className="w-3.5 h-3.5 text-[#FA243C]" />
               <span>فتح المعادل الصوتي (EQ)</span>
             </button>
             <button
               onClick={onClose}
-              className="px-5 py-2 rounded-full bg-white text-black text-xs font-bold hover:scale-105 transition-all cursor-pointer shadow-md"
+              className="px-5 py-2 rounded-full bg-white text-black text-xs font-bold hover:scale-105 transition-[color,background-color,border-color,transform] cursor-pointer shadow-md"
             >
               تم
             </button>

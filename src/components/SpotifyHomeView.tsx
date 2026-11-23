@@ -113,7 +113,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             triggerHaptic('light');
             setActiveTab('favorites');
           }}
-          className="group relative flex items-center h-12 sm:h-16 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-all cursor-pointer overflow-hidden shadow-sm"
+          className="group relative flex items-center h-12 sm:h-16 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm"
         >
           <div className="w-12 h-12 min-w-[48px] min-h-[48px] sm:w-16 sm:h-16 sm:min-w-[64px] flex items-center justify-center bg-gradient-to-br from-[#FA2D48] to-[#FF375F] shrink-0 shadow-md">
             <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
@@ -135,7 +135,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             <div
               key={trk.id}
               onClick={() => handleTrackClick(trk, sourcePool)}
-              className={`group relative flex items-center h-12 sm:h-16 rounded-xl border transition-all cursor-pointer overflow-hidden shadow-sm ${
+              className={`group relative flex items-center h-12 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-sm ${
                 idx >= 5 ? 'hidden md:flex' : 'flex'
               } ${
                 isCur
@@ -234,7 +234,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <div className="flex items-center gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
                   <button
                     onClick={() => handleTrackClick(spotlightTrack)}
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 font-semibold text-xs flex items-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer"
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 font-semibold text-xs flex items-center gap-2 shadow-lg transition-[color,background-color,border-color,transform] active:scale-95 cursor-pointer"
                   >
                     {currentTrack?.id === spotlightTrack.id && isPlaying ? (
                       <>
@@ -280,7 +280,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   <div
                     key={trk.id}
                     onClick={() => handleTrackClick(trk, sourcePool)}
-                    className="group flex items-center gap-3 p-2 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-all cursor-pointer"
+                    className="group flex items-center gap-3 p-2 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-colors cursor-pointer"
                   >
                     <img
                       src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
@@ -338,10 +338,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, madeForYou)}
-                  className="group relative flex flex-col cursor-pointer transition-all select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
+                  className="group relative flex flex-col cursor-pointer transition-colors select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
                 >
                   {/* Clean Square Artwork Container */}
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-all">
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-colors">
                     <img
                       src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
                       alt={trk.title}
@@ -351,7 +351,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     />
 
                     {/* Corner Floating Glass Play Button on Hover */}
-                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-200">
+                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -412,10 +412,10 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <div
                   key={trk.id}
                   onClick={() => handleTrackClick(trk, trendingHits)}
-                  className="group relative flex flex-col cursor-pointer transition-all select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
+                  className="group relative flex flex-col cursor-pointer transition-colors select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
                 >
                   {/* Clean Square Artwork Container */}
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-all">
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-colors">
                     <img
                       src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
                       alt={trk.title}
@@ -425,7 +425,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     />
 
                     {/* Corner Floating Glass Play Button on Hover */}
-                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-200">
+                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -502,7 +502,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               setActiveTab('search');
             }
           }}
-          className="mt-2 w-full py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] transition-all border border-white/[0.06] text-center text-xs font-medium text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          className="mt-2 w-full py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] transition-[color,background-color,border-color,transform] border border-white/[0.06] text-center text-xs font-medium text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <span>
             {tracks.length > 0

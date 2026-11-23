@@ -1,5 +1,5 @@
 import * as mm from 'music-metadata-browser';
-import { getDB } from '../db/indexedDB';
+import { getDB } from '../db/dexieDB';
 
 export { getDB };
 

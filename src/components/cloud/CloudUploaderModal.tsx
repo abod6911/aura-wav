@@ -343,7 +343,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xl select-none"
+      className="fixed inset-0 z-70 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-xl select-none"
       dir={dir}
     >
       <motion.div
@@ -421,7 +421,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
               <button
                 type="button"
                 onClick={() => { setAuthMode('signin'); setAuthError(null); }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   authMode === 'signin' ? 'bg-[#FA243C] text-white shadow-md' : 'text-white/50 hover:text-white'
                 }`}
               >
@@ -430,7 +430,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
               <button
                 type="button"
                 onClick={() => { setAuthMode('signup'); setAuthError(null); }}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                   authMode === 'signup' ? 'bg-[#FA243C] text-white shadow-md' : 'text-white/50 hover:text-white'
                 }`}
               >
@@ -495,7 +495,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:from-[#e01e35] hover:to-[#eb2f56] text-white text-xs font-extrabold shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98] disabled:opacity-50 mt-4"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:from-[#e01e35] hover:to-[#eb2f56] text-white text-xs font-extrabold shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer transition-[color,background-color,border-color,transform] active:scale-[0.98] disabled:opacity-50 mt-4"
               >
                 {authLoading ? (
                   <>
@@ -543,7 +543,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
-          className={`mt-4 p-5 sm:p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none ${
+          className={`mt-4 p-5 sm:p-6 rounded-2xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none ${
             isDragging
               ? 'border-[#FA243C] bg-[#FA243C]/10 scale-[0.99]'
               : 'border-white/[0.12] hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.04]'
@@ -604,7 +604,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-all"
+                    className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-colors"
                   >
                     {/* Artwork Preview */}
                     <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
@@ -665,7 +665,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                       {item.status === 'uploading' && (
                         <div className="w-full h-1 bg-white/[0.08] rounded-full overflow-hidden mt-1.5">
                           <div
-                            className="h-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] transition-all duration-150 rounded-full"
+                            className="h-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] transition-colors duration-150 rounded-full"
                             style={{ width: `${item.progress}%` }}
                           />
                         </div>
@@ -713,7 +713,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
             <button
               onClick={startUpload}
               disabled={isUploadingAll || readyCount === 0 || !cloudReady}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:scale-100 disabled:pointer-events-none"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-40 disabled:scale-100 disabled:pointer-events-none"
             >
               {isUploadingAll ? (
                 <>

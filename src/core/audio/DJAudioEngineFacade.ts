@@ -7,11 +7,12 @@ import { LoudnessNormalizer } from './dsp/LoudnessNormalizer';
 import { createAudioTimerWorker, AudioTimerController } from './workers/audioTimer.worker';
 import { AutoMixStyle, DeckChannelName, ReverbSpace } from './types';
 import { getAudioFileFromStorage } from '../../services/storageManager';
-import { getTrack as getOfflineTrack } from '../../utils/offlineStorage';
+import { getTrack as getOfflineTrack, createTrackBlobUrl } from '../../utils/offlineStorage';
 import { resolvePlayableStream } from '../../services/streamingEngine';
 import { SpatialReverbEngine, SpatialMode } from './dsp/SpatialReverbEngine';
 import { VocalAttenuator } from './dsp/VocalAttenuator';
 import { AuraDspNode } from './worklets/auraDspProcessor';
+import { isDirectNativeAudioMode, setIOSDspEnabled } from './deviceAudioPolicy';
 
 export interface DJEngineCallbacks {
   onTrackEnded?: () => void;
@@ -24,6 +25,7 @@ export interface DJEngineCallbacks {
   onTransitionComplete?: (track: Track) => void;
   onAutoMixStateChange?: (isMixing: boolean, style: AutoMixStyle) => void;
   onTrackError?: (track: Track | null, error: any) => void;
+  onNetworkStalled?: (track: Track | null, currentTime: number) => void;
 }
 
 export class DJAudioEngineFacade {
@@ -90,8 +92,9 @@ export class DJAudioEngineFacade {
 
   
   // --- Managed Audio ObjectURLs (Zero-Leak Lifecycle) ---
-  public createManagedAudioUrl(blob: Blob): string {
-    const url = URL.createObjectURL(blob);
+  public createManagedAudioUrl(blob: Blob, deck: 'A' | 'B' | 'default' = 'default'): string {
+    const safeDelayMs = Math.max(5000, (this.automixDuration + 3) * 1000);
+    const url = createTrackBlobUrl(blob, deck, safeDelayMs);
     this.managedAudioObjectUrls.add(url);
     return url;
   }
@@ -160,6 +163,10 @@ export class DJAudioEngineFacade {
   // --- AudioContext Initialization & Priming ---
 
   public async initContext(): Promise<AudioContext | null> {
+    if (isDirectNativeAudioMode()) {
+      return null;
+    }
+
     if (!this.ctx && typeof window !== 'undefined') {
       try {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -258,6 +265,12 @@ export class DJAudioEngineFacade {
       }
 
       this.ensureChannelsAttached();
+
+      if (isDirectNativeAudioMode()) {
+        this.pauseIosKeepAlive();
+        return;
+      }
+
       this.initContext().catch(() => {});
       this.startIosKeepAlive();
 
@@ -465,6 +478,11 @@ export class DJAudioEngineFacade {
   }
 
   public async transitionTo(targetTrack: Track, style: AutoMixStyle = this.automixStyle, durationSec = this.automixDuration): Promise<void> {
+    if (isDirectNativeAudioMode()) {
+      await this.playTrack(targetTrack);
+      return;
+    }
+
     await this.initContext();
     if (!this.ctx) {
       await this.playTrack(targetTrack);
@@ -528,32 +546,74 @@ export class DJAudioEngineFacade {
   }
 
   /**
-   * Preload Next Track (Zero-Latency Dual-Deck Buffer Preloading)
+   * Preload Next Track (Zero-Delay Next-Track Preloading)
+   * - If next track is in Dexie offline, no network request is made.
+   * - In Desktop / Dual-Deck mode: silenty preloads into idle deck channel (preload='auto').
+   * - In iOS Direct Native Mode: never activates Deck B or AudioContext; performs lightweight connection warmup only.
    */
   public async preloadNextTrack(track: Track): Promise<void> {
     if (!track) return;
-    const idleDeck = this.getInactiveDeck();
 
-    // Skip if already preloaded
+    // 1. If stored offline in Dexie, no network request needed
+    try {
+      const localBlob = await getAudioFileFromStorage(track.id);
+      if (localBlob) {
+        if (!isDirectNativeAudioMode()) {
+          const idleDeck = this.getInactiveDeck();
+          if (idleDeck.track?.id === track.id && idleDeck.audio.src) return;
+          const url = this.createManagedAudioUrl(localBlob);
+          idleDeck.loadTrackUrl(track, url, true);
+          idleDeck.setVolume(0);
+        }
+        return;
+      }
+    } catch {}
+
+    // 2. Cloud Track (Hugging Face / Remote):
+    // Case A: iOS Direct Native Mode -> Never activate Deck B or AudioContext.
+    // Warm up network connection via lightweight HEAD request only.
+    if (isDirectNativeAudioMode()) {
+      if (track.audioUrl && track.audioUrl.startsWith('http')) {
+        try {
+          fetch(track.audioUrl, { method: 'HEAD', mode: 'no-cors' }).catch(() => {});
+        } catch {}
+      }
+      return;
+    }
+
+    // Case B: Desktop / Dual-Deck Mode -> Silently preload into idle deck channel
+    const idleDeck = this.getInactiveDeck();
     if (idleDeck.track?.id === track.id && idleDeck.audio.src) {
       return;
     }
 
     try {
-      const blob = await getAudioFileFromStorage(track.id);
-      if (blob) {
-        const url = this.createManagedAudioUrl(blob);
-        idleDeck.loadTrackUrl(track, url, true);
+      const url = await this.resolveTrackUrl(track);
+      if (url) {
+        idleDeck.audio.preload = 'auto';
+        idleDeck.loadTrackUrl(track, url, url.startsWith('blob:'));
         idleDeck.setVolume(0);
-      } else {
-        const url = await this.resolveTrackUrl(track);
-        if (url) {
-          idleDeck.loadTrackUrl(track, url, url.startsWith('blob:'));
-          idleDeck.setVolume(0);
-        }
       }
     } catch (err) {
       console.warn('[DJAudioEngine] Preload notice:', err);
+    }
+  }
+
+  /**
+   * Immediately cancel any active preloading when user reorders queue or skips
+   */
+  public cancelPreload(): void {
+    this.preloadTriggered = false;
+    if (!isDirectNativeAudioMode()) {
+      const idleDeck = this.getInactiveDeck();
+      if (idleDeck && idleDeck.audio && idleDeck.audio.src) {
+        try {
+          idleDeck.stop();
+          idleDeck.audio.src = '';
+          idleDeck.audio.removeAttribute('src');
+          idleDeck.track = null;
+        } catch {}
+      }
     }
   }
 
@@ -878,7 +938,16 @@ export class DJAudioEngineFacade {
   }
 
   private setupAudioListeners(channel: DeckChannel): void {
+    let stallTimer: ReturnType<typeof setTimeout> | null = null;
+    const clearStallTimer = () => {
+      if (stallTimer) {
+        clearTimeout(stallTimer);
+        stallTimer = null;
+      }
+    };
+
     channel.audio.addEventListener('ended', () => {
+      clearStallTimer();
       if (this.activeChannelName === channel.name && !this.isAutoMixing) {
         if (this.callbacks.onTrackEnded) {
           this.callbacks.onTrackEnded();
@@ -894,6 +963,7 @@ export class DJAudioEngineFacade {
     });
 
     channel.audio.addEventListener('pause', () => {
+      clearStallTimer();
       if (this.activeChannelName === channel.name && !this.isAutoMixing && !this.isSwitchingTrack) {
         this.notifyBufferingState(false);
         this.notifyPlaybackState(false);
@@ -909,16 +979,31 @@ export class DJAudioEngineFacade {
     channel.audio.addEventListener('stalled', () => {
       if (this.activeChannelName === channel.name && this.isPlaying()) {
         this.notifyBufferingState(true);
+        if (!stallTimer) {
+          stallTimer = setTimeout(() => {
+            if (this.activeChannelName === channel.name && this.isPlaying()) {
+              console.warn(`[DJAudioEngine] Stream stalled for >8s on ${channel.name}`);
+              const curTime = channel.getCurrentTime();
+              if (this.callbacks.onNetworkStalled) {
+                this.callbacks.onNetworkStalled(channel.track, curTime);
+              } else if (this.callbacks.onTrackError) {
+                this.callbacks.onTrackError(channel.track, new Error('MEDIA_STALL_TIMEOUT'));
+              }
+            }
+          }, 8000);
+        }
       }
     });
 
     channel.audio.addEventListener('canplay', () => {
+      clearStallTimer();
       if (this.activeChannelName === channel.name) {
         this.notifyBufferingState(false);
       }
     });
 
     channel.audio.addEventListener('playing', () => {
+      clearStallTimer();
       if (this.activeChannelName === channel.name) {
         this.notifyBufferingState(false);
         this.notifyPlaybackState(true);
@@ -926,6 +1011,7 @@ export class DJAudioEngineFacade {
     });
 
     channel.audio.addEventListener('error', (e) => {
+      clearStallTimer();
       const audioErr = channel.audio.error;
       console.warn(`[DJAudioEngine] DeckChannel ${channel.name} audio error:`, audioErr, e);
       if (this.activeChannelName === channel.name) {
@@ -935,6 +1021,17 @@ export class DJAudioEngineFacade {
         }
       }
     });
+  }
+
+  public updateIosDspMode(enabled: boolean): void {
+    setIOSDspEnabled(enabled);
+    if (isDirectNativeAudioMode()) {
+      this.pauseIosKeepAlive();
+      this.channelA.audio.removeAttribute('crossOrigin');
+      this.channelB.audio.removeAttribute('crossOrigin');
+    } else {
+      this.initContext().catch(() => {});
+    }
   }
 
   private setupTimerLoop(): void {
@@ -953,19 +1050,28 @@ export class DJAudioEngineFacade {
         }
       }
 
-      // Check Preload Threshold: Trigger preload early (within 2 seconds of playback starting)
-      // This pre-buffers the next track into the inactive deck for instant 0ms track skipping
+      // Check Preload Threshold: Trigger preload when remaining <= 15 seconds (and network is online)
       const remaining = dur - cur;
-      if (cur >= 2.0 && !this.preloadTriggered && active.track) {
+      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      const preloadThreshold = dur > 30 ? 15.0 : Math.max(5.0, dur * 0.4);
+
+      if (
+        !this.preloadTriggered &&
+        active.track &&
+        cur >= 3.0 &&
+        remaining <= preloadThreshold &&
+        isOnline
+      ) {
         this.preloadTriggered = true;
         if (this.callbacks.onPreloadNeeded) {
           this.callbacks.onPreloadNeeded(active.track);
         }
       }
 
-      // Check AutoMix Threshold (Guard against false-positives at track start)
+      // Check AutoMix Threshold (Guard against false-positives at track start and in Direct Native Mode)
       if (
         this.automixEnabled &&
+        !isDirectNativeAudioMode() &&
         !this.isAutoMixing &&
         !this.autoMixTriggered &&
         cur >= 3.0 &&

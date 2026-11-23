@@ -174,7 +174,7 @@ export const EqualizerModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div data-testid="equalizer-modal" className="fixed inset-0 z-50 select-none flex items-end md:items-center justify-center p-0 md:p-6">
+      <div data-testid="equalizer-modal" className="fixed inset-0 z-70 select-none flex items-end md:items-center justify-center p-0 md:p-6">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -232,7 +232,7 @@ export const EqualizerModal: React.FC = () => {
             <div className="grid grid-cols-2 p-1 bg-white/[0.05] rounded-xl border border-white/[0.06] text-xs w-full md:w-auto">
               <button
                 onClick={() => setModalTab('eq')}
-                className={`py-1.5 px-3 rounded-lg font-medium transition-all text-center cursor-pointer ${
+                className={`py-1.5 px-3 rounded-lg font-medium transition-colors text-center cursor-pointer ${
                   modalTab === 'eq'
                     ? 'bg-white text-black font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
@@ -242,7 +242,7 @@ export const EqualizerModal: React.FC = () => {
               </button>
               <button
                 onClick={() => setModalTab('pro_dsp')}
-                className={`py-1.5 px-3 rounded-lg font-medium transition-all text-center cursor-pointer ${
+                className={`py-1.5 px-3 rounded-lg font-medium transition-colors text-center cursor-pointer ${
                   modalTab === 'pro_dsp'
                     ? 'bg-white text-black font-semibold shadow-sm'
                     : 'text-zinc-400 hover:text-white'
@@ -346,7 +346,7 @@ export const EqualizerModal: React.FC = () => {
                           r={isHovered ? 14 : 9}
                           fill="#FA2D48"
                           fillOpacity={isHovered ? 0.35 : 0.15}
-                          className="transition-all duration-150"
+                          className="transition-colors duration-150"
                         />
                         {/* Crisp white inner handle */}
                         <circle
@@ -424,13 +424,13 @@ export const EqualizerModal: React.FC = () => {
                           {/* Bi-directional Fill starting from Center (50%) */}
                           {gain > 0 && (
                             <div
-                              className="absolute bottom-1/2 w-full bg-[#FA2D48] transition-all"
+                              className="absolute bottom-1/2 w-full bg-[#FA2D48] transition-colors"
                               style={{ height: `${(gain / 12) * 50}%` }}
                             />
                           )}
                           {gain < 0 && (
                             <div
-                              className="absolute top-1/2 w-full bg-pink-400/80 transition-all"
+                              className="absolute top-1/2 w-full bg-pink-400/80 transition-colors"
                               style={{ height: `${(Math.abs(gain) / 12) * 50}%` }}
                             />
                           )}
@@ -556,7 +556,7 @@ export const EqualizerModal: React.FC = () => {
                         <button
                           key={val}
                           onClick={() => setBassBoost(val)}
-                          className={`py-1.5 rounded-lg text-xs font-semibold tabular-nums transition-all cursor-pointer ${
+                          className={`py-1.5 rounded-lg text-xs font-semibold tabular-nums transition-colors cursor-pointer ${
                             isSel
                               ? 'bg-white text-black shadow-sm'
                               : 'text-zinc-400 hover:text-white'
@@ -591,7 +591,7 @@ export const EqualizerModal: React.FC = () => {
                       <button
                         key={space.id}
                         onClick={() => setReverbSpace(space.id)}
-                        className={`p-3 rounded-xl border text-start transition-all flex items-start gap-3 cursor-pointer ${
+                        className={`p-3 rounded-xl border text-start transition-colors flex items-start gap-3 cursor-pointer ${
                           isSelected
                             ? 'bg-white/[0.1] border-white/20 shadow-md'
                             : 'bg-white/[0.03] border-white/[0.05] hover:bg-white/[0.06]'

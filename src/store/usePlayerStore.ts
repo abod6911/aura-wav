@@ -15,7 +15,7 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream, resolvePlayableStreamInfo, clearResolvedStreamCache } from '../services/streamingEngine';
-import { bulkSaveTracksToDexie, dexieDB } from '../db/dexieDB';
+import { bulkSaveTracksToDexie, dexieDB, migrateAndCleanOldOfflineDB } from '../db/dexieDB';
 import { queryDirectoryPermission, requestDirectoryPermission } from '../services/fileScanner';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { triggerHaptic } from '../utils/haptics';
@@ -24,9 +24,27 @@ import { isCloudConfigured } from '../lib/supabase';
 import { handoffService } from '../services/handoffService';
 import { streamingPreloader } from '../services/streamingPreloader';
 import * as offlineStorage from '../utils/offlineStorage';
+import { userSyncService, SyncStatus } from '../services/userSyncService';
 
 // ── Offline download helpers ───────────────────────────────────────────────
 let offlineDownloadCancelled = false;
+
+// ── Network Resilience & Auto-Reconnect helpers ────────────────────────────
+let networkRetryAttempts = 0;
+let networkRetryTimeout: ReturnType<typeof setTimeout> | null = null;
+let activeOnlineResumeHandler: (() => void) | null = null;
+
+function cancelNetworkAutoResume() {
+  if (networkRetryTimeout) {
+    clearTimeout(networkRetryTimeout);
+    networkRetryTimeout = null;
+  }
+  if (activeOnlineResumeHandler && typeof window !== 'undefined') {
+    window.removeEventListener('online', activeOnlineResumeHandler);
+    activeOnlineResumeHandler = null;
+  }
+  networkRetryAttempts = 0;
+}
 
 /** True if the origin has at least `bytes` of free quota (or if it can't be determined). */
 async function hasEnoughStorageFor(bytes: number): Promise<boolean> {
@@ -66,18 +84,10 @@ async function fetchTrackBlob(track: Track): Promise<Blob | null> {
   return null;
 }
 
-/** Gets the cover artwork blob for a track */
+/** Gets the cover artwork blob for a track with dual-strategy offline caching */
 async function fetchTrackCoverBlob(track: Track): Promise<Blob | null> {
   const url = track.coverUrl || track.artworkUrl;
-  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return null;
-  try {
-    const res = await fetch(url, { cache: 'force-cache' });
-    if (res.ok) {
-      const blob = await res.blob();
-      if (blob.size > 0) return blob;
-    }
-  } catch {}
-  return null;
+  return await offlineStorage.fetchAndCacheArtwork(track.id, url);
 }
 
 export const EQ_PRESETS: EqualizerPreset[] = [
@@ -105,6 +115,10 @@ interface PlayerState {
   currentUser: AuthUser | null;
   isAuthLoading: boolean;
   isAuthScreenOpen: boolean;
+
+  // Cloud Sync Status
+  syncStatus: SyncStatus;
+  lastSyncedAt: number | null;
 
   // Library & Data
   tracks: Track[]; // User's private personal library
@@ -306,6 +320,7 @@ interface PlayerState {
   toggleCarMode: () => void;
   setDeviceSwitcherOpen: (open: boolean) => void;
   handleTrackPlaybackError: (failedTrack: Track | null, error?: any) => Promise<void>;
+  handleNetworkStreamError: (failedTrack: Track | null, lastPos?: number) => Promise<void>;
   handleOfflineTransition: () => Promise<void>;
   requestDirectoryAccess: () => Promise<boolean>;
   // Cloud Streaming & Storage Platform
@@ -316,6 +331,7 @@ interface PlayerState {
   syncCloudLibrary: () => Promise<void>;
   addCloudTrack: (track: Track) => Promise<void>;
   deleteCloudTrackById: (trackId: string) => Promise<boolean>;
+  triggerManualSync: () => Promise<void>;
 }
 
 let sleepTimerInterval: any = null;
@@ -490,6 +506,7 @@ const pushTrackToHistory = (history: Track[], track: Track | null): Track[] => {
       );
     }
   } catch {}
+  userSyncService.syncHistoryItem(track.id);
   return updated;
 };
 
@@ -542,6 +559,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({ playbackState: isBuffering ? 'buffering' : (get().isPlaying ? 'playing' : 'paused') });
     },
     onPlaybackStateChange: (isPlaying) => {
+      if (isPlaying) {
+        networkRetryAttempts = 0;
+        if (networkRetryTimeout) {
+          clearTimeout(networkRetryTimeout);
+          networkRetryTimeout = null;
+        }
+      }
       set({ isPlaying, playbackState: isPlaying ? 'playing' : 'paused' });
       handoffService.broadcastPlaybackState(get().currentTrack, get().currentTime, get().duration, isPlaying);
       if (isPlaying) {
@@ -555,7 +579,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
     onTrackError: (failedTrack, error) => {
-      get().handleTrackPlaybackError(failedTrack, error).catch(() => {});
+      const isNetworkError = (typeof navigator !== 'undefined' && !navigator.onLine) || (error && (
+        error.message?.includes('network') ||
+        error.message?.includes('stalled') ||
+        error.message?.includes('timeout') ||
+        error.name === 'NetworkError'
+      ));
+      if (isNetworkError) {
+        get().handleNetworkStreamError(failedTrack).catch(() => {});
+      } else {
+        get().handleTrackPlaybackError(failedTrack, error).catch(() => {});
+      }
+    },
+    onNetworkStalled: (stalledTrack, curTime) => {
+      get().handleNetworkStreamError(stalledTrack, curTime).catch(() => {});
     },
     onTrackEnded: () => {
       const { repeatMode, currentTrack, sleepTimerSetting, addToast, volume } = get();
@@ -634,6 +671,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     currentUser: authService.getCurrentUser(),
     isAuthLoading: true,
     isAuthScreenOpen: false,
+    syncStatus: 'idle',
+    lastSyncedAt: null,
     tracks: [],
     catalogTracks: getDefaultLibraryTracks(),
     filteredTracks: [],
@@ -777,6 +816,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     initStore: async () => {
       try {
         initMediaSessionHandlers(getMediaSessionCallbacks(get));
+        migrateAndCleanOldOfflineDB().catch(() => {});
+
+        // Initialize Authentication & Cross-Device Sync Services
+        authService.init().then((u) => {
+          set({ currentUser: u, isAuthLoading: false });
+        }).catch(() => {
+          set({ isAuthLoading: false });
+        });
+
+        authService.onAuthStateChange((u) => {
+          set({ currentUser: u, isAuthLoading: false });
+        });
+
+        userSyncService.init();
+        userSyncService.onSyncStatusChange((status, lastSyncedAt) => {
+          set({ syncStatus: status, lastSyncedAt });
+        });
 
         // Listen for online/offline events for seamless offline continuity
         if (typeof window !== 'undefined') {
@@ -1267,6 +1323,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playTrack: async (track: Track, newQueue?: Track[]) => {
+      cancelNetworkAutoResume();
       const currentRequestId = ++activePlayRequestId;
 
       // 0ms INSTANT OPTIMISTIC UI UPDATE: Immediately switch currentTrack, artwork, and status
@@ -1316,7 +1373,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           const offlineRec = await offlineStorage.getTrack(playableTrack.id);
           if (offlineRec && offlineRec.audioBlob) {
             const targetDeck = djAudioEngine.getActiveChannelName ? djAudioEngine.getActiveChannelName() : 'default';
-            const blobUrl = offlineStorage.createTrackBlobUrl(offlineRec.audioBlob, targetDeck);
+            const safeDelayMs = Math.max(5000, ((get().automixDuration || 6) + 3) * 1000);
+            const blobUrl = offlineStorage.createTrackBlobUrl(offlineRec.audioBlob, targetDeck, safeDelayMs);
             playableTrack = {
               ...playableTrack,
               blob: offlineRec.audioBlob,
@@ -1667,6 +1725,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const shouldPause = isPlaying || isAudioActive || isEnginePlaying;
 
       if (shouldPause) {
+        cancelNetworkAutoResume();
         djAudioEngine.pause();
         set({ isPlaying: false });
         updateMediaSession(currentTrack, false, getMediaSessionCallbacks(get));
@@ -1697,6 +1756,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
+      cancelNetworkAutoResume();
       triggerHaptic('light');
       djAudioEngine.primeDecks();
       const state = get();
@@ -1768,6 +1828,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     previousTrack: async () => {
+      cancelNetworkAutoResume();
       triggerHaptic('light');
       djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
@@ -1839,6 +1900,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       try {
         localStorage.setItem('aura_shuffle', String(nextShuffle));
       } catch {}
+      userSyncService.syncSettings({ shuffle: nextShuffle });
       if (nextShuffle) {
         const origQueue = [...state.queue];
         const current = state.currentTrack;
@@ -1876,6 +1938,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         try {
           localStorage.setItem('aura_repeat_mode', next);
         } catch {}
+        userSyncService.syncSettings({ repeat_mode: next });
         return { repeatMode: next };
       });
     },
@@ -1886,6 +1949,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       djAudioEngine.setAutoMix(enabled, dur);
       set({ automixEnabled: enabled, automixDuration: dur });
       getDB().then((db) => db.put('settings', { enabled, duration: dur }, 'automix'));
+      userSyncService.syncSettings({ automix_duration: dur });
     },
 
     setAutomixStyle: (style: AutoMixStyle) => {
@@ -1894,6 +1958,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       try {
         localStorage.setItem('aura_automix_style', style);
       } catch {}
+      userSyncService.syncSettings({ automix_style: style });
     },
 
     setSoundboardOpen: (open: boolean) => set({ isSoundboardOpen: open }),
@@ -1922,6 +1987,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           ? [...state.favorites, trackId]
           : state.favorites.filter((id) => id !== trackId),
       }));
+
+      userSyncService.syncFavoriteToggle(trackId, isFav).catch(() => {});
     },
 
     clearFavorites: async () => {
@@ -2105,6 +2172,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         localStorage.setItem('aura_eq_gains', JSON.stringify(newGains));
         localStorage.setItem('aura_eq_preset', 'Custom');
       } catch {}
+      userSyncService.syncSettings({ eq_gains: newGains, eq_preset: 'Custom' });
     },
 
     applyEqPreset: (preset: EqualizerPreset) => {
@@ -2114,6 +2182,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         localStorage.setItem('aura_eq_gains', JSON.stringify(preset.gains));
         localStorage.setItem('aura_eq_preset', preset.name);
       } catch {}
+      userSyncService.syncSettings({ eq_gains: preset.gains as [number, number, number, number, number], eq_preset: preset.name });
       const extraBass =
         preset.name === 'Bass Boost'
           ? 10
@@ -2132,6 +2201,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     reorderQueue: (startIndex: number, endIndex: number) => {
+      djAudioEngine.cancelPreload();
+      streamingPreloader.cancelOrInvalidate();
       const newQueue = [...get().queue];
       const [removed] = newQueue.splice(startIndex, 1);
       newQueue.splice(endIndex, 0, removed);
@@ -2139,6 +2210,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     removeFromQueue: (index: number) => {
+      djAudioEngine.cancelPreload();
+      streamingPreloader.cancelOrInvalidate();
       const newQueue = [...get().queue];
       newQueue.splice(index, 1);
       set({ queue: newQueue });
@@ -2280,7 +2353,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setRightSidebarOpen: (open: boolean) => set({ isRightSidebarOpen: open }),
     setActiveRightSidebarTab: (tab: 'queue' | 'now_playing') => set({ activeRightSidebarTab: tab }),
     setActiveFilterPill: (pill: 'all' | 'music' | 'podcasts') => set({ activeFilterPill: pill }),
-    clearQueue: () => set({ queue: [], originalQueue: [], userQueue: [], nextUpTrackId: null }),
+    clearQueue: () => {
+      djAudioEngine.cancelPreload();
+      streamingPreloader.cancelOrInvalidate();
+      set({ queue: [], originalQueue: [], userQueue: [], nextUpTrackId: null });
+    },
     setExpandedPlayerTab: (tab: 'main' | 'up_next' | 'lyrics' | 'related') =>
       set({ expandedPlayerTab: tab }),
     setLyricsOpen: (open: boolean) => set({ isLyricsOpen: open }),
@@ -2580,6 +2657,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const db = await getDB();
       await db.put('playlists', newPl);
       set((state) => ({ playlists: [...state.playlists, newPl] }));
+      userSyncService.syncPlaylistUpsert(newPl).catch(() => {});
     },
 
     renamePlaylist: async (id: string, newName: string) => {
@@ -2594,12 +2672,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({
         playlists: playlists.map((p) => (p.id === id ? updatedPl : p)),
       });
+      userSyncService.syncPlaylistUpsert(updatedPl).catch(() => {});
     },
 
     deletePlaylist: async (id: string) => {
       const db = await getDB();
       await db.delete('playlists', id);
       set((state) => ({ playlists: state.playlists.filter((p) => p.id !== id) }));
+      userSyncService.syncPlaylistDelete(id).catch(() => {});
     },
 
     addTrackToPlaylist: async (playlistId: string, trackId: string) => {
@@ -2616,6 +2696,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({
         playlists: playlists.map((p) => (p.id === playlistId ? updatedPl : p)),
       });
+      userSyncService.syncPlaylistUpsert(updatedPl).catch(() => {});
     },
 
     removeTrackFromPlaylist: async (playlistId: string, trackId: string) => {
@@ -2632,6 +2713,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({
         playlists: playlists.map((p) => (p.id === playlistId ? updatedPl : p)),
       });
+      userSyncService.syncPlaylistUpsert(updatedPl).catch(() => {});
     },
 
     downloadTrackForOffline: async (trackId: string) => {
@@ -2821,6 +2903,86 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     setCarModeOpen: (open: boolean) => set({ isCarModeOpen: open }),
     toggleCarMode: () => set((state) => ({ isCarModeOpen: !state.isCarModeOpen })),
 
+    handleNetworkStreamError: async (failedTrack: Track | null, lastPos?: number) => {
+      const state = get();
+      const current = failedTrack || state.currentTrack;
+      if (!current) return;
+
+      // If it's a downloaded or local blob/file, fall back to handleTrackPlaybackError directly
+      const isDirectLocal = !!current.file || !!current.blob || state.downloadedTrackIds.includes(current.id);
+      if (isDirectLocal) {
+        await state.handleTrackPlaybackError(current, new Error('Local audio file read error'));
+        return;
+      }
+
+      const activeAudio = djAudioEngine.getActiveAudio();
+      const lastKnownTime = (typeof lastPos === 'number' && lastPos > 0)
+        ? lastPos
+        : (activeAudio?.currentTime || state.currentTime || 0);
+
+      // Clean up previous retry timeout & handler
+      if (networkRetryTimeout) {
+        clearTimeout(networkRetryTimeout);
+        networkRetryTimeout = null;
+      }
+      if (activeOnlineResumeHandler && typeof window !== 'undefined') {
+        window.removeEventListener('online', activeOnlineResumeHandler);
+        activeOnlineResumeHandler = null;
+      }
+
+      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+
+      if (!isOnline) {
+        state.addToast('انقطع الاتصال — سيستأنف التشغيل تلقائياً عند عودة الشبكة', undefined, 'info');
+        set({ playbackState: 'buffering' });
+
+        activeOnlineResumeHandler = async () => {
+          activeOnlineResumeHandler = null;
+          networkRetryAttempts = 0;
+          get().addToast('تمت استعادة الاتصال — جاري استئناف التشغيل...', undefined, 'success');
+          try {
+            await get().playTrack(current);
+            if (lastKnownTime > 0) {
+              get().seek(lastKnownTime);
+            }
+          } catch (err) {
+            console.warn('[AutoResume] Resume after online failed:', err);
+          }
+        };
+
+        if (typeof window !== 'undefined') {
+          window.addEventListener('online', activeOnlineResumeHandler, { once: true });
+        }
+        return;
+      }
+
+      // If online, retry up to 3 times with exponential backoff (1.5s, 3s, 6s)
+      if (networkRetryAttempts < 3) {
+        networkRetryAttempts++;
+        const delays = [1500, 3000, 6000];
+        const delay = delays[networkRetryAttempts - 1] || 3000;
+
+        state.addToast(`ضعف في الاتصال، جاري إعادة المحاولة (${networkRetryAttempts}/3)...`, undefined, 'info');
+        set({ playbackState: 'buffering' });
+
+        networkRetryTimeout = setTimeout(async () => {
+          networkRetryTimeout = null;
+          try {
+            await get().playTrack(current);
+            if (lastKnownTime > 0) {
+              get().seek(lastKnownTime);
+            }
+          } catch (err) {
+            console.warn(`[AutoRetry] Attempt ${networkRetryAttempts} failed:`, err);
+          }
+        }, delay);
+      } else {
+        // Exceeded 3 retries: delegate to standard error handler
+        networkRetryAttempts = 0;
+        await state.handleTrackPlaybackError(current, new Error('Network retries exhausted'));
+      }
+    },
+
     handleTrackPlaybackError: async (failedTrack: Track | null, error?: any) => {
       const state = get();
       const current = failedTrack || state.currentTrack;
@@ -2910,6 +3072,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         console.warn('requestDirectoryAccess error:', err);
         return false;
       }
+    },
+
+    triggerManualSync: async () => {
+      await userSyncService.triggerFullSync();
     },
   };
 });

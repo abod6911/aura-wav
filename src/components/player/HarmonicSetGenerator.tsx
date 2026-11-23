@@ -92,7 +92,7 @@ export const HarmonicSetGenerator: React.FC = () => {
   if (!isHarmonicJourneyOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl select-none animate-fadeIn">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl select-none animate-fadeIn">
       <motion.div
         initial={{ opacity: 0, scale: 0.94 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -129,7 +129,7 @@ export const HarmonicSetGenerator: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 my-5 relative z-10" dir="ltr">
           <button
             onClick={() => setSelectedMode('harmonic')}
-            className={`p-3.5 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 rounded-2xl border text-left transition-colors ${
               selectedMode === 'harmonic'
                 ? 'bg-purple-500/20 border-purple-400 text-white shadow-lg shadow-purple-500/30'
                 : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/[0.08]'
@@ -144,7 +144,7 @@ export const HarmonicSetGenerator: React.FC = () => {
 
           <button
             onClick={() => setSelectedMode('workout')}
-            className={`p-3.5 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 rounded-2xl border text-left transition-colors ${
               selectedMode === 'workout'
                 ? 'bg-amber-500/20 border-amber-400 text-white shadow-lg shadow-amber-500/30'
                 : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/[0.08]'
@@ -159,7 +159,7 @@ export const HarmonicSetGenerator: React.FC = () => {
 
           <button
             onClick={() => setSelectedMode('chill')}
-            className={`p-3.5 rounded-2xl border text-left transition-all ${
+            className={`p-3.5 rounded-2xl border text-left transition-colors ${
               selectedMode === 'chill'
                 ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-lg shadow-cyan-500/30'
                 : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/[0.08]'
@@ -215,7 +215,7 @@ export const HarmonicSetGenerator: React.FC = () => {
           </button>
           <button
             onClick={handleLaunchJourney}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-purple-600 hover:from-red-600 hover:to-purple-700 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-purple-600 hover:from-red-600 hover:to-purple-700 text-white font-bold text-xs shadow-lg shadow-purple-500/25 transition-[color,background-color,border-color,transform] hover:scale-105 active:scale-95"
           >
             <Play className="w-4 h-4 fill-current" />
             <span>بدء الرحلة التوافقية الآن</span>

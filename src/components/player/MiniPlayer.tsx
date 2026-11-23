@@ -5,6 +5,7 @@ import { Play, Pause, SkipForward } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedCoverUrl } from '../../utils/imageOptimizer';
 import { triggerHaptic } from '../../utils/haptics';
+import { getOfflineArtworkUrl } from '../../utils/offlineStorage';
 
 interface MiniPlayerProps {
   onExpand: () => void;
@@ -38,7 +39,7 @@ const MiniPlayerProgressBar: React.FC = () => {
     <div className="absolute bottom-0 inset-x-0 h-[2px] bg-white/[0.08] overflow-hidden pointer-events-none">
       <div
         ref={barRef}
-        className="h-full relative transition-all duration-150 bg-[#FA2D48]"
+        className="h-full relative transition-colors duration-150 bg-[#FA2D48]"
         style={{
           width: `${initialPct()}%`,
         }}
@@ -157,7 +158,16 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             transition={{ duration: 0.2 }}
             className="w-full h-full object-cover shrink-0 select-none pointer-events-none"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/logo.svg';
+              const img = e.currentTarget as HTMLImageElement;
+              getOfflineArtworkUrl(currentTrack.id).then((blobUrl) => {
+                if (blobUrl && img.src !== blobUrl) {
+                  img.src = blobUrl;
+                } else {
+                  img.src = '/logo.svg';
+                }
+              }).catch(() => {
+                img.src = '/logo.svg';
+              });
             }}
           />
         </AnimatePresence>

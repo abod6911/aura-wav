@@ -163,7 +163,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[90] flex items-end justify-center p-0 select-none">
+      <div className="fixed inset-0 z-60 flex items-end justify-center p-0 select-none">
         {/* Dark frosted glass backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -248,7 +248,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                       boxShadow: isActive ? `0 0 24px ${pad.glowColor}` : undefined,
                       borderColor: isActive ? pad.color : 'rgba(255,255,255,0.08)',
                     }}
-                    className={`relative overflow-hidden rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 border transition-all duration-150 cursor-pointer select-none bg-gradient-to-b ${pad.gradient} ${
+                    className={`relative overflow-hidden rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 border transition-colors duration-150 cursor-pointer select-none bg-gradient-to-b ${pad.gradient} ${
                       isActive ? 'bg-white/[0.16] scale-[0.98]' : 'hover:bg-white/[0.06]'
                     }`}
                   >
@@ -289,7 +289,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                   setPlaybackRate(1.0);
                   addToast('تمت إعادة ضبط سرعة ونغمة الـ DJ إلى 1.0x', undefined, 'info');
                 }}
-                className="rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-all cursor-pointer select-none"
+                className="rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1.5 border border-white/[0.08] hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] transition-colors cursor-pointer select-none"
               >
                 <RotateCcw className="w-5 h-5 text-zinc-400" />
                 <div className="text-center">
@@ -355,7 +355,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                     triggerHaptic(10);
                     setPlaybackRate(rate);
                   }}
-                  className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-colors cursor-pointer ${
                     Math.abs(playbackRate - rate) < 0.01
                       ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md shadow-[var(--apple-red)]/30'
                       : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08]'
@@ -384,7 +384,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                     'info'
                   );
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
                   automixEnabled
                     ? 'bg-purple-500/25 border-purple-500/50 text-purple-300'
                     : 'bg-white/5 border-white/10 text-zinc-500'
@@ -406,7 +406,7 @@ export const DJFxSheet: React.FC<DJFxSheetProps> = ({ isOpen: propIsOpen, onClos
                       setAutomixStyle(style.id);
                       if (!automixEnabled) setAutoMix(true, automixDuration);
                     }}
-                    className={`p-2.5 rounded-2xl border text-right transition-all cursor-pointer flex flex-col gap-1 ${
+                    className={`p-2.5 rounded-2xl border text-right transition-colors cursor-pointer flex flex-col gap-1 ${
                       isSelected
                         ? 'bg-gradient-to-r from-[var(--apple-red)]/20 to-[var(--apple-rose)]/20 border-[var(--apple-rose)]/50 shadow-md shadow-[var(--apple-rose)]/20'
                         : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.06] text-zinc-300'

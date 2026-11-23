@@ -316,7 +316,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         aria-label="شريط تقدم الأغنية"
       >
         {/* Track Groove Background */}
-        <div className={`w-full ${isDragging ? 'h-3' : 'h-1.5'} group-hover:h-3 transition-all duration-200 ease-out rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
+        <div className={`w-full ${isDragging ? 'h-3' : 'h-1.5'} group-hover:h-3 transition-colors duration-200 ease-out rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
           {/* Buffer Bar (Pre-loaded audio) */}
           <div
             className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"

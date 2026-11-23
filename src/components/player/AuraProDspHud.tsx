@@ -185,7 +185,7 @@ export const AuraProDspHud: React.FC<AuraProDspHudProps> = ({ compact = false })
           {/* 8D Spatial Audio Button */}
           <button
             onClick={toggle8DSpatial}
-            className={`flex-1 py-2 px-2.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
+            className={`flex-1 py-2 px-2.5 rounded-xl border flex flex-col items-center gap-1 transition-colors ${
               spatialMode === '8d'
                 ? 'bg-cyan-500/25 border-cyan-400/50 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.3)]'
                 : 'bg-white/[0.04] border-white/10 text-zinc-400 hover:text-white hover:bg-white/[0.08]'
@@ -199,7 +199,7 @@ export const AuraProDspHud: React.FC<AuraProDspHudProps> = ({ compact = false })
           {/* Vinyl Brake Button */}
           <button
             onClick={triggerVinylBrake}
-            className="flex-1 py-2 px-2.5 rounded-xl border bg-white/[0.04] border-white/10 text-zinc-300 hover:text-white hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-300 transition-all flex flex-col items-center gap-1 active:scale-95"
+            className="flex-1 py-2 px-2.5 rounded-xl border bg-white/[0.04] border-white/10 text-zinc-300 hover:text-white hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-300 transition-[color,background-color,border-color,transform] flex flex-col items-center gap-1 active:scale-95"
           >
             <Disc3 className="w-4 h-4 text-red-400" />
             <span className="text-[11px] font-black">VINYL BRAKE</span>
@@ -216,7 +216,7 @@ export const AuraProDspHud: React.FC<AuraProDspHudProps> = ({ compact = false })
             </span>
             <button
               onClick={() => setHarmonicJourneyOpen(true)}
-              className="text-[10px] font-bold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30 transition-all hover:scale-105"
+              className="text-[10px] font-bold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30 transition-[color,background-color,border-color,transform] hover:scale-105"
             >
               <Compass className="w-3 h-3" />
               <span>Harmonic Path</span>
@@ -228,7 +228,7 @@ export const AuraProDspHud: React.FC<AuraProDspHudProps> = ({ compact = false })
               <button
                 key={roll}
                 onClick={() => setLoopRoll(activeLoopRoll === roll ? null : roll)}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-black transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-mono font-black transition-colors ${
                   activeLoopRoll === roll
                     ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/40 ring-1 ring-white/50'
                     : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12] hover:text-white border border-white/10'

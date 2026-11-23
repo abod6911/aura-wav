@@ -231,7 +231,7 @@ export const SpotlightCommandModal: React.FC = () => {
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] sm:pt-24 px-3 sm:px-4 bg-black/70 backdrop-blur-2xl"
+        className="fixed inset-0 z-70 flex items-start justify-center pt-[calc(env(safe-area-inset-top,0px)+16px)] sm:pt-24 px-3 sm:px-4 bg-black/70 backdrop-blur-2xl"
         onClick={() => setSpotlightOpen(false)}
         dir={dir}
       >
@@ -289,7 +289,7 @@ export const SpotlightCommandModal: React.FC = () => {
                       <div
                         key={action.id}
                         onClick={action.action}
-                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl cursor-pointer transition-all ${
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl cursor-pointer transition-colors ${
                           isSelected
                             ? 'bg-gradient-to-r from-[#FA243C]/20 to-[#FF375F]/20 border border-[#FA243C]/40 text-white shadow-md'
                             : 'hover:bg-white/[0.05] text-white/80'
@@ -333,7 +333,7 @@ export const SpotlightCommandModal: React.FC = () => {
                           playTrack(track, tracks);
                           setSpotlightOpen(false);
                         }}
-                        className={`flex items-center gap-3 px-3.5 py-2 rounded-2xl cursor-pointer transition-all ${
+                        className={`flex items-center gap-3 px-3.5 py-2 rounded-2xl cursor-pointer transition-colors ${
                           isSelected
                             ? 'bg-white/[0.12] border border-[#FA243C]/40 text-white shadow-md'
                             : 'hover:bg-white/[0.05] text-white/80 border border-transparent'
@@ -378,7 +378,7 @@ export const SpotlightCommandModal: React.FC = () => {
                         playTrack(t, tracks);
                         setSpotlightOpen(false);
                       }}
-                      className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] cursor-pointer transition-all"
+                      className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] cursor-pointer transition-colors"
                     >
                       <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center font-bold text-white text-sm shadow-md">
                         {t.artist.slice(0, 1).toUpperCase()}
@@ -412,7 +412,7 @@ export const SpotlightCommandModal: React.FC = () => {
                     setActiveTab('search');
                     setSpotlightOpen(false);
                   }}
-                  className="px-5 py-2 rounded-full bg-white text-black text-xs font-bold shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-full bg-white text-black text-xs font-bold shadow-lg hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer"
                 >
                   {isRTL ? 'فتح البحث السحابي المباشر' : 'Open Worldwide Streaming Search'}
                 </button>

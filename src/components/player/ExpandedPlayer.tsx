@@ -7,6 +7,7 @@ import { TimelineSlider } from './TimelineSlider';
 import { TrackActionSheet } from '../library/TrackActionSheet';
 import { getActiveLyricIndex } from '../../services/lyricsParser';
 import { Track } from '../../types';
+import { getOfflineArtworkUrl } from '../../utils/offlineStorage';
 import {
   ChevronDown,
   MoreHorizontal,
@@ -99,7 +100,7 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
                 triggerHaptic('light');
                 onSeek(line.time);
               }}
-              className={`py-2.5 px-3 rounded-2xl transition-all duration-300 cursor-pointer ${
+              className={`py-2.5 px-3 rounded-2xl transition-colors duration-300 cursor-pointer ${
                 isActive
                   ? 'bg-white/[0.08] backdrop-blur-md'
                   : 'hover:bg-white/[0.03]'
@@ -107,7 +108,7 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
               dir={isArabic ? 'rtl' : 'ltr'}
             >
               <p
-                className={`font-sans tracking-tight transition-all duration-300 leading-relaxed ${
+                className={`font-sans tracking-tight transition-colors duration-300 leading-relaxed ${
                   isActive
                     ? 'text-[21px] sm:text-[23px] font-black text-white scale-100 opacity-100 drop-shadow-md'
                     : 'text-[17px] sm:text-[18px] font-semibold text-white/35 scale-[0.98] blur-[0.4px] hover:blur-0 hover:text-white/70'
@@ -480,7 +481,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <button
                 type="button"
                 onClick={() => setSleepTimerOpen(true)}
-                className="px-2.5 py-0.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white flex items-center gap-1.5 cursor-pointer apple-btn-tactile transition-all"
+                className="px-2.5 py-0.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white flex items-center gap-1.5 cursor-pointer apple-btn-tactile transition-colors"
               >
                 <Clock className="w-3.5 h-3.5 text-[#FA2D48] animate-pulse" />
                 <span className="text-[11px] font-mono font-bold text-white/95">
@@ -588,7 +589,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 className="w-full h-full object-cover select-none pointer-events-none absolute inset-0"
                 draggable={false}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/logo.svg';
+                  const img = e.currentTarget as HTMLImageElement;
+                  getOfflineArtworkUrl(currentTrack.id).then((blobUrl) => {
+                    if (blobUrl && img.src !== blobUrl) {
+                      img.src = blobUrl;
+                    } else {
+                      img.src = '/logo.svg';
+                    }
+                  }).catch(() => {
+                    img.src = '/logo.svg';
+                  });
                 }}
               />
             </AnimatePresence>

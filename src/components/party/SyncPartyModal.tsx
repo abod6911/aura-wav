@@ -142,7 +142,7 @@ export const SyncPartyModal: React.FC = () => {
       role="dialog"
       aria-modal="true"
       aria-label={t.syncParty}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-xl select-none animate-fadeIn"
+      className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-xl select-none animate-fadeIn"
       dir={dir}
     >
       {/* Backdrop click dismiss */}
@@ -224,7 +224,7 @@ export const SyncPartyModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      className={`p-2.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                         copied
                           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                           : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/10 text-white'
@@ -316,7 +316,7 @@ export const SyncPartyModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('host')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'host'
                       ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md'
                       : 'text-zinc-400 hover:text-white'
@@ -328,7 +328,7 @@ export const SyncPartyModal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('join')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'join'
                       ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md'
                       : 'text-zinc-400 hover:text-white'
@@ -355,7 +355,7 @@ export const SyncPartyModal: React.FC = () => {
                     type="button"
                     onClick={handleHostRoom}
                     disabled={isSubmitting}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] via-[#FF375F] to-[#FA243C] text-white font-black text-sm shadow-lg shadow-[#FA243C]/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all disabled:opacity-50"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] via-[#FF375F] to-[#FA243C] text-white font-black text-sm shadow-lg shadow-[#FA243C]/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-[color,background-color,border-color,transform] disabled:opacity-50"
                   >
                     <Radio className="w-4 h-4 animate-pulse" />
                     <span>{isSubmitting ? t.connectingParty : t.hostParty}</span>
@@ -383,7 +383,7 @@ export const SyncPartyModal: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || !joinCodeInput.trim()}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-black text-sm shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-all disabled:opacity-40"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-black text-sm shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-[color,background-color,border-color,transform] disabled:opacity-40"
                   >
                     <Users className="w-4 h-4" />
                     <span>{isSubmitting ? t.connectingParty : t.joinParty}</span>

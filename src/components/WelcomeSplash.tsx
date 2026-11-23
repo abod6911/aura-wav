@@ -98,7 +98,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           {/* Ambient Neon Atmosphere */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[75vw] max-w-[600px] max-h-[600px] rounded-full filter blur-[60px] transition-all duration-1000"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[75vw] max-w-[600px] max-h-[600px] rounded-full filter blur-[60px] transition-colors duration-1000"
               style={{ backgroundColor: glow }}
             />
             <div className="absolute top-[20%] right-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[var(--apple-red)]/15 rounded-full filter blur-[40px]" />
@@ -231,7 +231,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={handleDismiss}
-              className="w-full py-4 px-8 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(250,36,60,0.45)] hover:shadow-[0_0_50px_rgba(250,36,60,0.65)] transition-all cursor-pointer"
+              className="w-full py-4 px-8 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(250,36,60,0.45)] hover:shadow-[0_0_50px_rgba(250,36,60,0.65)] transition-colors cursor-pointer"
             >
               <span>ابدأ الاستماع الآن</span>
               <ArrowLeft className="w-5 h-5" />

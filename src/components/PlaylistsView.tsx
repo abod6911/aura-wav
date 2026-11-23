@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { ListMusic, Plus, Play, Trash2, ArrowRight, Heart, MoreHorizontal, Radio, ListPlus, Clock, Shuffle, Pencil, Check, X } from 'lucide-react';
@@ -35,9 +35,37 @@ export const PlaylistsView: React.FC = () => {
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
-  const playlistTracks = selectedPlaylist
-    ? tracks.filter((t) => selectedPlaylist.trackIds.includes(t.id))
-    : [];
+  const playlistTracks = useMemo(() => {
+    return selectedPlaylist
+      ? tracks.filter((t) => selectedPlaylist.trackIds.includes(t.id))
+      : [];
+  }, [selectedPlaylist, tracks]);
+
+  const [visibleCount, setVisibleCount] = useState(50);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(50);
+  }, [selectedPlaylistId]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 50, playlistTracks.length));
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [playlistTracks.length]);
+
+  const visibleTracks = useMemo(() => {
+    return playlistTracks.slice(0, visibleCount);
+  }, [playlistTracks, visibleCount]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,7 +203,7 @@ export const PlaylistsView: React.FC = () => {
           <div>
             {/* Mobile Fast Track List (120fps Native Rows + Swipe-to-Queue) */}
             <div className="block md:hidden space-y-1">
-              {playlistTracks.map((track) => (
+              {visibleTracks.map((track) => (
                 <MobileTrackRow
                   key={track.id}
                   track={track}
@@ -197,7 +225,7 @@ export const PlaylistsView: React.FC = () => {
                 <span />
               </div>
 
-            {playlistTracks.map((track, idx) => {
+            {visibleTracks.map((track, idx) => {
               const isCur = currentTrack?.id === track.id;
               const isFav = favorites.includes(track.id);
               const isNextUp = usePlayerStore.getState().nextUpTrackId === track.id;
@@ -338,6 +366,12 @@ export const PlaylistsView: React.FC = () => {
               );
             })}
             </div>
+
+            {visibleTracks.length < playlistTracks.length && (
+              <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
+                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-20 text-zinc-400 text-sm border border-dashed border-white/10 rounded-3xl">
@@ -370,7 +404,7 @@ export const PlaylistsView: React.FC = () => {
             triggerHaptic('light');
             setIsCreating(!isCreating);
           }}
-          className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#FA243C]/30 aura-tap-btn cursor-pointer"
+          className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#FA243C]/30 aura-tap-btn cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>قائمة جديدة</span>
@@ -392,7 +426,7 @@ export const PlaylistsView: React.FC = () => {
             className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C] transition-colors"
             autoFocus
           />
-          <button type="submit" className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md aura-tap-btn cursor-pointer">
+          <button type="submit" className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-colors shadow-md aura-tap-btn cursor-pointer">
             إنشاء
           </button>
           <button type="button" onClick={() => setIsCreating(false)} className="px-3 py-2 rounded-full bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer aura-tap-btn">
@@ -438,14 +472,14 @@ export const PlaylistsView: React.FC = () => {
                 triggerHaptic('light');
                 setIsCreating(true);
               }}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-[color,background-color,border-color,transform] shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{isRTL ? 'إنشاء قائمة جديدة' : 'Create New Playlist'}</span>
             </button>
             <button
               onClick={() => usePlayerStore.getState().setActiveTab('search')}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
             >
               <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
             </button>

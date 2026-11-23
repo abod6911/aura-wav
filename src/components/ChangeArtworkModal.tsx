@@ -99,7 +99,7 @@ export const ChangeArtworkModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none overflow-y-auto">
+      <div className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/85 backdrop-blur-2xl select-none overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: '100%' }}
           animate={{ opacity: 1, y: 0 }}
@@ -161,7 +161,7 @@ export const ChangeArtworkModal: React.FC = () => {
               onClick={handleGenerateLuxuryCover}
               disabled={isApplying}
               title="إنشاء غلاف استوديو فخم 512x512 PNG متوافق مع الداينمك آيلند"
-              className="px-3 py-1.5 rounded-full bg-[var(--apple-rose)]/15 hover:bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all flex-shrink-0 active:scale-95"
+              className="px-3 py-1.5 rounded-full bg-[var(--apple-rose)]/15 hover:bg-[var(--apple-rose)]/25 text-[var(--apple-rose)] border border-[var(--apple-rose)]/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-[color,background-color,border-color,transform] flex-shrink-0 active:scale-95"
             >
               <ImageIcon className="w-3.5 h-3.5" />
               <span>غلاف استوديو</span>
@@ -191,7 +191,7 @@ export const ChangeArtworkModal: React.FC = () => {
             <button
               type="submit"
               disabled={isSearching}
-              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-[var(--apple-red)]/30 cursor-pointer flex-shrink-0 active:scale-95"
+              className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition-[color,background-color,border-color,transform] shadow-md shadow-[var(--apple-red)]/30 cursor-pointer flex-shrink-0 active:scale-95"
             >
               {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               <span>بحث</span>

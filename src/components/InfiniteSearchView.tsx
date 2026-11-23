@@ -147,7 +147,7 @@ export const InfiniteSearchView: React.FC = () => {
     <div className="w-full text-white pb-6 md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
       <div className="relative max-w-xl mx-auto mb-4">
-        <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#FA2D48]/60 rounded-xl transition-all shadow-md border border-white/[0.08] px-3.5 h-11">
+        <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#FA2D48]/60 rounded-xl transition-colors shadow-md border border-white/[0.08] px-3.5 h-11">
           <Search className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           <input
             type="search"
@@ -178,7 +178,7 @@ export const InfiniteSearchView: React.FC = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer aura-tap-btn shrink-0 ${
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer aura-tap-btn shrink-0 ${
                 activeCategory === cat.id
                   ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
                   : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
@@ -265,7 +265,7 @@ export const InfiniteSearchView: React.FC = () => {
               </h3>
               <div
                 onClick={() => handlePlaySong(results.topResult!)}
-                className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-all cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group min-w-0"
+                className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-colors cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group min-w-0"
               >
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                   <div className="relative flex-shrink-0">
@@ -306,7 +306,7 @@ export const InfiniteSearchView: React.FC = () => {
                     e.stopPropagation();
                     handlePlaySong(results.topResult!);
                   }}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer shrink-0"
                   aria-label="Play song"
                 >
                   {currentTrack?.id === results.topResult.id && isPlaying ? (
@@ -338,7 +338,7 @@ export const InfiniteSearchView: React.FC = () => {
                     <div
                       key={art.id}
                       onClick={() => setQuery(art.name)}
-                      className="p-4 rounded-2xl apple-glass-card hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 flex flex-col items-center text-center cursor-pointer transition-all hover:scale-[1.03] active:scale-[0.98] group apple-spring"
+                      className="p-4 rounded-2xl apple-glass-card hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 flex flex-col items-center text-center cursor-pointer transition-[color,background-color,border-color,transform] hover:scale-[1.03] active:scale-[0.98] group apple-spring"
                     >
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md mb-3">
                         <div className="w-full h-full rounded-full overflow-hidden bg-black/60">

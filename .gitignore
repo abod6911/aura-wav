@@ -19,6 +19,9 @@ dist-ssr
 .DS_Store
 *.sw?
 
+# Large / Temporary Data
+*.backup.json
+
 # Vercel & Large Assets
 # Python cache
 __pycache__/

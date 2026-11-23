@@ -43,7 +43,7 @@ export const QueueDrawer: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end select-none">
+      <div className="fixed inset-0 z-60 flex items-end sm:items-stretch sm:justify-end select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -122,7 +122,7 @@ export const QueueDrawer: React.FC = () => {
                 triggerHaptic(12);
                 setHarmonicJourneyOpen(true);
               }}
-              className="w-full p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] text-white flex items-center justify-between transition-all cursor-pointer group shadow-sm active:scale-[0.98]"
+              className="w-full p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] text-white flex items-center justify-between transition-[color,background-color,border-color,transform] cursor-pointer group shadow-sm active:scale-[0.98]"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="p-2 rounded-xl bg-[#FA2D48]/15 text-[#FA2D48] border border-[#FA2D48]/25 group-hover:scale-105 transition-transform">

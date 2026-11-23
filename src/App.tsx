@@ -114,7 +114,7 @@ function DirectoryPermissionBanner() {
       <button
         type="button"
         onClick={() => requestAccess()}
-        className="px-3.5 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-sm cursor-pointer flex-shrink-0 active:scale-95 transition-all"
+        className="px-3.5 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-xs font-semibold shadow-sm cursor-pointer flex-shrink-0 active:scale-95 transition-[color,background-color,border-color,transform]"
       >
         {t.grantDirectoryAccess}
       </button>
@@ -493,7 +493,7 @@ export function App() {
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#FA2D48]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
+        <div className="fixed inset-0 z-[100] bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#FA2D48]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
           <div className="p-6 rounded-[28px] bg-[#FA2D48]/15 text-[#FA2D48] mb-4 border border-[#FA2D48]/30 shadow-2xl">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -596,7 +596,7 @@ export function App() {
           {/* Floating MiniPlayer right above Tab Bar */}
           {currentTrack && <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />}
           {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
-          <div className="fixed bottom-0 inset-x-0 z-50 pointer-events-auto">
+          <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-auto">
             <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
           </div>
         </>

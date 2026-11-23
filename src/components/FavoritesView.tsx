@@ -77,23 +77,23 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   // Progressive loading for 120fps Mobile view
   const [mobileDisplayLimit, setMobileDisplayLimit] = useState(35);
   const mobileLoadMoreRef = useRef<HTMLDivElement | null>(null);
+  const desktopLoadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMobileDisplayLimit(35);
   }, [searchQuery, favorites]);
 
   useEffect(() => {
-    const el = mobileLoadMoreRef.current;
-    if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries.some((e) => e.isIntersecting)) {
           setMobileDisplayLimit((prev) => Math.min(prev + 35, displayedTracks.length));
         }
       },
       { rootMargin: '300px' }
     );
-    observer.observe(el);
+    if (mobileLoadMoreRef.current) observer.observe(mobileLoadMoreRef.current);
+    if (desktopLoadMoreRef.current) observer.observe(desktopLoadMoreRef.current);
     return () => observer.disconnect();
   }, [displayedTracks.length]);
 
@@ -160,7 +160,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             type="button"
             onClick={handlePlayAll}
             disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#FA2D48] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            className="h-11 rounded-xl bg-[#FA2D48] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
           >
             <Play className="w-4 h-4 fill-white text-white" />
             <span>{isRTL ? 'تشغيل' : 'Play'}</span>
@@ -169,7 +169,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             type="button"
             onClick={handleShufflePlay}
             disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#1C1C21] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            className="h-11 rounded-xl bg-[#1C1C21] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
           >
             <Shuffle className="w-4 h-4 text-zinc-300" />
             <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
@@ -260,7 +260,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isRTL ? 'ابحث داخل أغانيك المفضلة...' : 'Search within favorites...'}
               style={{ fontSize: '16px' }}
-              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-all [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
+              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
                 isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
             />
@@ -303,7 +303,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
             <button
               onClick={() => usePlayerStore.getState().setActiveTab('search')}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-all shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-[color,background-color,border-color,transform] shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <Search className="w-3.5 h-3.5" />
               <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
@@ -311,7 +311,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             {onOpenImport && (
               <button
                 onClick={onOpenImport}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 flex items-center justify-center gap-2"
               >
                 <span>{isRTL ? 'استيراد أغانٍ من جهازي' : 'Import Local Songs'}</span>
               </button>
@@ -353,7 +353,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
             {/* Track Rows */}
             <div className="divide-y divide-white/[0.02] pt-1">
-            {displayedTracks.map((track, idx) => {
+            {progressiveMobileTracks.map((track, idx) => {
               const isCurrent = currentTrack?.id === track.id;
               const isRowPlaying = isCurrent && isPlaying;
               const isMenuOpen = activeMenuTrackId === track.id;
@@ -369,7 +369,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     }
                   }}
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
-                  className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-all duration-150 select-none active:scale-[0.99] my-1 ${
+                  className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-150 select-none active:scale-[0.99] my-1 ${
                     isCurrent
                       ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
                       : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
@@ -464,7 +464,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                         triggerHaptic();
                         addToQueue(track);
                       }}
-                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-all cursor-pointer active:scale-90"
+                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-[color,background-color,border-color,transform] cursor-pointer active:scale-90"
                       title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
                     >
                       <ListPlus className="w-4 h-4" />
@@ -477,7 +477,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                         triggerHaptic();
                         toggleFavorite(track.id);
                       }}
-                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#FA243C] transition-all cursor-pointer active:scale-125"
+                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#FA243C] transition-[color,background-color,border-color,transform] cursor-pointer active:scale-125"
                       title={isRTL ? 'إزالة من المفضلة' : 'Remove from favorites'}
                     >
                       <Heart className="w-4 h-4 fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]" />
@@ -541,6 +541,12 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               );
             })}
           </div>
+          {/* Sentinel for progressive infinite loading on desktop */}
+          {progressiveMobileTracks.length < displayedTracks.length && (
+            <div ref={desktopLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
+              <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+            </div>
+          )}
         </div>
       </div>
     )}

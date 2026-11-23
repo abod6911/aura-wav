@@ -24,10 +24,13 @@ import {
   Plus,
   Maximize,
   Minimize,
+  Cloud,
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { AppleSwitch } from './common/AppleSwitch';
 import { toggleNativeFullscreen, isFullscreenActive, onFullscreenChange } from '../utils/fullscreen';
+import { isIOSDevice, isIOSDspEnabled } from '../core/audio/deviceAudioPolicy';
+import { djAudioEngine } from '../lib/audioEngine';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -59,6 +62,21 @@ const SettingsToggle: React.FC<SettingsToggleProps> = ({
   );
 };
 
+function formatLastSynced(timestamp: number | null, isRTL: boolean): string {
+  if (!timestamp) return isRTL ? 'لم تتم المزامنة بعد' : 'Not synced yet';
+  const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+  if (diffSec < 60) return isRTL ? 'تمت المزامنة الآن' : 'Synced just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) {
+    return isRTL ? `تمت المزامنة منذ ${diffMin} دقيقة` : `Synced ${diffMin}m ago`;
+  }
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) {
+    return isRTL ? `تمت المزامنة منذ ${diffHours} ساعة` : `Synced ${diffHours}h ago`;
+  }
+  return new Date(timestamp).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US');
+}
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onOpenImport }) => {
   const dragControls = useDragControls();
   const { t, language, setLanguage, isRTL, dir } = useTranslation();
@@ -77,6 +95,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const rescanLibrary = usePlayerStore((state) => state.rescanLibrary);
   const addToast = usePlayerStore((state) => state.addToast);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
+  const syncStatus = usePlayerStore((state) => state.syncStatus);
+  const lastSyncedAt = usePlayerStore((state) => state.lastSyncedAt);
+  const triggerManualSync = usePlayerStore((state) => state.triggerManualSync);
 
   // Audio settings from store
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
@@ -94,10 +115,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [isRescanning, setIsRescanning] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive());
+  const [iosDspEnabled, setIosDspEnabledState] = useState<boolean>(() => isIOSDspEnabled());
 
   useEffect(() => {
     return onFullscreenChange(setIsFullscreen);
   }, []);
+
+  const handleToggleIosDsp = (val: boolean) => {
+    setIosDspEnabledState(val);
+    djAudioEngine.updateIosDspMode(val);
+    addToast(
+      isRTL
+        ? 'تم حفظ الإعداد — يُفضّل إعادة تشغيل المسار لتطبيق الوضع الجديد'
+        : 'Setting saved — re-playing track recommended to apply changes',
+      undefined,
+      'info'
+    );
+  };
 
   const handleFullscreenToggle = async () => {
     const res = await toggleNativeFullscreen();
@@ -188,7 +222,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 select-none">
+      <div className="fixed inset-0 z-70 select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -214,7 +248,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               onClose();
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[88dvh] w-full max-w-full sm:max-w-lg sm:mx-auto bg-[#111114] border-t sm:border border-white/[0.08] rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-4 sm:gap-5"
+          className="fixed bottom-0 inset-x-0 z-70 max-h-[88dvh] w-full max-w-full sm:max-w-lg sm:mx-auto bg-[#111114] border-t sm:border border-white/[0.08] rounded-t-[28px] sm:rounded-3xl p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 shadow-2xl overflow-y-auto overflow-x-hidden flex flex-col gap-4 sm:gap-5"
           dir={dir}
         >
           {/* iOS Mobile Top Drag Grabber Pill */}
@@ -278,7 +312,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                  className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 shrink-0"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
@@ -290,7 +324,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     onClose();
                     setAuthScreenOpen(true);
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
+                  className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
                 >
                   <User className="w-3.5 h-3.5" />
                   <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
@@ -328,6 +362,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             )}
           </div>
 
+          {/* Cloud Sync Status Card */}
+          <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                  <Cloud className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-bold text-white flex items-center gap-1.5 truncate">
+                    {isRTL ? 'المزامنة السحابية (الحساب)' : 'Cloud Sync (Account)'}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 mt-0.5 truncate">
+                    {currentUser && !currentUser.isGuest ? (
+                      <span className="text-emerald-400 font-medium">
+                        {syncStatus === 'syncing'
+                          ? (isRTL ? 'جارٍ المزامنة السحابية...' : 'Syncing cloud data...')
+                          : syncStatus === 'offline'
+                          ? (isRTL ? 'غير متصل — البيانات محفوظة محلياً' : 'Offline — Saved locally')
+                          : formatLastSynced(lastSyncedAt, isRTL)}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-500">
+                        {isRTL ? 'وضع محلي / ضيف (غير متصل بحساب سحابي)' : 'Local / Guest mode (Not synced)'}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {currentUser && !currentUser.isGuest && (
+                <button
+                  type="button"
+                  disabled={syncStatus === 'syncing'}
+                  onClick={async () => {
+                    try {
+                      await triggerManualSync();
+                      addToast(isRTL ? 'تمت المزامنة السحابية بنجاح' : 'Cloud sync completed successfully', undefined, 'success');
+                    } catch {
+                      addToast(isRTL ? 'تعذرت المزامنة' : 'Sync failed', undefined, 'warning');
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 hover:text-sky-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50 shrink-0"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'syncing' ? 'animate-spin text-sky-400' : ''}`} />
+                  <span>{syncStatus === 'syncing' ? (isRTL ? 'جارٍ المزامنة...' : 'Syncing...') : (isRTL ? 'مزامنة الآن' : 'Sync Now')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* 1. Language & Display Group */}
           <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3.5">
             <div className="flex items-center justify-between">
@@ -349,7 +433,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <button
                   type="button"
                   onClick={() => handleLanguageChange('ar')}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-transform cursor-pointer active:scale-98 ${
                     language === 'ar'
                       ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
                       : 'text-zinc-400 hover:text-white'
@@ -361,7 +445,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <button
                   type="button"
                   onClick={() => handleLanguageChange('en')}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-98 ${
+                  className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-transform cursor-pointer active:scale-98 ${
                     language === 'en'
                       ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
                       : 'text-zinc-400 hover:text-white'
@@ -471,7 +555,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   </p>
                 </div>
                 <span
-                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border transition-all ${
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border transition-colors ${
                     bassBoost > 0
                       ? 'bg-[var(--apple-rose)]/20 border-[var(--apple-rose)]/40 text-[var(--apple-rose)]'
                       : 'bg-white/[0.04] border-white/[0.08] text-zinc-500'
@@ -498,7 +582,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       }
                       setBassBoost(p.val);
                     }}
-                    className={`py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                    className={`py-1.5 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${
                       bassBoost === p.val
                         ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md shadow-[var(--apple-red)]/30'
                         : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
@@ -523,6 +607,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
 
+            {/* iOS Direct Native Audio vs Advanced DSP Toggle (Visible on iOS or inside Audio settings) */}
+            {isIOSDevice() && (
+              <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+                <div className="space-y-0.5 max-w-[75%]">
+                  <div className="text-xs font-bold text-white">
+                    {isRTL ? 'معالجة الصوت المتقدمة (المعادل و AutoMix) على iOS' : 'Advanced DSP (EQ & AutoMix) on iOS'}
+                  </div>
+                  <div className="text-[11px] text-zinc-400">
+                    {isRTL ? 'إيقاف هذا الخيار (موصى به) يضمن استمرار الصوت في الخلفية وشاشة قفل الآيفون بدون انقطاع' : 'Disabling this (recommended) ensures continuous background and lockscreen playback on iPhone'}
+                  </div>
+                </div>
+                <AppleSwitch
+                  checked={iosDspEnabled}
+                  onChange={handleToggleIosDsp}
+                  activeColor="bg-[#FA2D48]"
+                  label={isRTL ? 'معالجة الصوت المتقدمة' : 'Advanced DSP'}
+                />
+              </div>
+            )}
+
             {/* Equalizer Quick Access Button */}
             <div className="pt-2 border-t border-white/[0.06]">
               <button
@@ -531,7 +635,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClose();
                   setEqualizerOpen(true);
                 }}
-                className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-xs font-bold text-zinc-200 flex items-center justify-between transition-all cursor-pointer active:scale-98"
+                className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-xs font-bold text-zinc-200 flex items-center justify-between transition-[color,background-color,border-color,transform] cursor-pointer active:scale-98"
               >
                 <span className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-[var(--apple-rose)]" />
@@ -576,7 +680,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {/* Progress bar */}
               <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(250,36,60,0.5)]"
+                  className="h-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] rounded-full transition-colors duration-500 shadow-[0_0_10px_rgba(250,36,60,0.5)]"
                   style={{ width: `${Math.max(5, storageStats?.usagePercentage || 12)}%` }}
                 />
               </div>
@@ -606,7 +710,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       await clearAllOfflineStorage();
                     }
                   }}
-                  className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs flex items-center justify-center gap-2 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>مسح جميع ملفات الصوت المحمّلة</span>
@@ -633,7 +737,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 onClose();
                 onOpenImport();
               }}
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-[#FA243C]/25"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer shadow-lg shadow-[#FA243C]/25"
             >
               <FolderPlus className="w-4 h-4" />
               <span>{t.importFolder}</span>
@@ -643,7 +747,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <button
               onClick={handleRescan}
               disabled={isRescanning}
-              className="w-full py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white font-semibold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
             >
               <RefreshCw className={`w-4 h-4 text-purple-400 ${isRescanning ? 'animate-spin' : ''}`} />
               <span>{isRescanning ? (isRTL ? 'جاري الفحص...' : 'Scanning...') : t.rescanLibrary}</span>
@@ -666,7 +770,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 }
                 window.location.href = window.location.origin + '/?t=' + Date.now();
               }}
-              className="w-full py-3 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] text-zinc-300 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
+              className="w-full py-3 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] text-zinc-300 font-semibold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
             >
               <RotateCcw className="w-4 h-4 text-cyan-400" />
               <span>{isRTL ? 'تحديث التطبيق الفوري (Reload App)' : 'Reload App & Reset Cache'}</span>
@@ -676,7 +780,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             {!showConfirmClear ? (
               <button
                 onClick={() => setShowConfirmClear(true)}
-                className="w-full py-3 px-4 rounded-2xl bg-red-950/20 hover:bg-red-950/40 border border-red-500/20 hover:border-red-500/40 text-red-400 font-semibold text-sm flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer"
+                className="w-full py-3 px-4 rounded-2xl bg-red-950/20 hover:bg-red-950/40 border border-red-500/20 hover:border-red-500/40 text-red-400 font-semibold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
               >
                 <Trash2 className="w-4 h-4 text-red-400" />
                 <span>{t.clearCache}</span>
@@ -691,13 +795,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <button
                     onClick={handleClear}
                     disabled={isClearing}
-                    className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                    className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95"
                   >
                     {isClearing ? '...' : isRTL ? 'نعم، تفريغ المكتبة' : 'Yes, purge library'}
                   </button>
                   <button
                     onClick={() => setShowConfirmClear(false)}
-                    className="py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-300 font-bold text-xs transition-all cursor-pointer active:scale-95"
+                    className="py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-300 font-bold text-xs transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95"
                   >
                     {isRTL ? 'إلغاء' : 'Cancel'}
                   </button>

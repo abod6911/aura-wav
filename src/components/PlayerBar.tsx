@@ -206,7 +206,7 @@ export const PlayerBar: React.FC = () => {
           data-testid="lyrics-toggle-btn"
           onClick={() => setLyricsOpen(!isLyricsOpen)}
           title={t.syncedLyrics}
-          className={`px-2 py-1 rounded-lg cursor-pointer text-[11px] font-bold transition-all border ${
+          className={`px-2 py-1 rounded-lg cursor-pointer text-[11px] font-bold transition-colors border ${
             isLyricsOpen
               ? 'bg-white/[0.12] text-white border-white/20'
               : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/[0.04]'

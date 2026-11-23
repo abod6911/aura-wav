@@ -60,7 +60,7 @@ const LyricLineRow: React.FC<LyricLineRowProps> = memo(({
         triggerHaptic('light');
         onSeek(time);
       }}
-      className={`cursor-pointer transition-all duration-200 py-3.5 px-5 rounded-2xl select-none ${
+      className={`cursor-pointer transition-colors duration-200 py-3.5 px-5 rounded-2xl select-none ${
         isActive
           ? 'bg-white/[0.07] border border-white/[0.10]'
           : 'hover:bg-white/[0.02]'
@@ -68,7 +68,7 @@ const LyricLineRow: React.FC<LyricLineRowProps> = memo(({
       dir={isArabic ? 'rtl' : 'ltr'}
     >
       <p
-        className={`tracking-tight font-sans transition-all duration-200 leading-relaxed ${
+        className={`tracking-tight font-sans transition-colors duration-200 leading-relaxed ${
           isActive
             ? 'text-[22px] font-black text-white scale-100 opacity-100'
             : 'text-[18px] font-semibold text-white/40 scale-[0.98] hover:text-white/60'
@@ -167,11 +167,11 @@ const SyncedLyricsModal: React.FC = () => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-50 bg-[#09090B] w-full h-full min-h-full flex flex-col select-none overflow-hidden"
+      className="fixed inset-0 z-60 bg-[#09090B] w-full h-full min-h-full flex flex-col select-none overflow-hidden"
     >
       {/* Subtle Ambient Tint (Apple Music Style) */}
       <div
-        className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-15 pointer-events-none transition-all duration-1000 ease-out"
+        className="absolute -top-[20%] -left-[15%] w-[75vw] h-[75vw] rounded-full filter blur-[140px] opacity-15 pointer-events-none transition-opacity duration-1000 ease-out"
         style={{ backgroundColor: accentColor }}
       />
       <div className="absolute inset-0 -z-10 bg-black/45 backdrop-blur-[50px] pointer-events-none" />
@@ -190,7 +190,7 @@ const SyncedLyricsModal: React.FC = () => {
               triggerHaptic('light');
               setKaraokeMode(!karaokeMode);
             }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
               karaokeMode
                 ? 'bg-[#FA2D48] text-white shadow-lg shadow-[#FA2D48]/35 ring-1 ring-white/20'
                 : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'

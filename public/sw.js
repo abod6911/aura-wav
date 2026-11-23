@@ -64,11 +64,16 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 2. Artwork Images: Cache-first with network fallback, opaque cross-origin caching, and SVG fallback
-  if (event.request.destination === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) {
+  if (
+    event.request.destination === 'image' ||
+    /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url) ||
+    url.includes('mzstatic.com') ||
+    url.includes('/covers/')
+  ) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(ARTWORK_CACHE_NAME);
-        const cached = await cache.match(event.request);
+        const cached = await cache.match(event.request, { ignoreSearch: true });
         if (cached) return cached;
 
         try {

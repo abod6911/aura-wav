@@ -1,4 +1,3 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { dexieDB } from '../db/dexieDB';
 
 export interface OfflineTrackRecord {
@@ -14,22 +13,6 @@ export interface OfflineTrackRecord {
   duration?: number;
 }
 
-interface AuraWaveOfflineDBSchema extends DBSchema {
-  tracks: {
-    key: string;
-    value: OfflineTrackRecord;
-    indexes: {
-      by_manual: number; // 1 for true, 0 for false
-      by_saved: number;
-    };
-  };
-}
-
-const DB_NAME = 'AuraWaveOfflineDB';
-const DB_VERSION = 1;
-const ARTWORK_CACHE_NAME = 'aurawave-artwork-v1';
-
-let dbPromise: Promise<IDBPDatabase<AuraWaveOfflineDBSchema>> | null = null;
 let activeBlobUrl: string | null = null;
 const deckBlobUrls: Record<'A' | 'B' | 'default', string | null> = {
   A: null,
@@ -37,6 +20,10 @@ const deckBlobUrls: Record<'A' | 'B' | 'default', string | null> = {
   default: null,
 };
 const allActiveBlobUrls = new Set<string>();
+const deckRevocationTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+// Memory cache for offline artwork ObjectURLs to prevent memory leaks and redundant DB reads
+const artworkBlobUrls = new Map<string, string>();
 
 type StorageChangeCallback = () => void;
 const changeListeners = new Set<StorageChangeCallback>();
@@ -52,27 +39,6 @@ function notifyChange(): void {
       cb();
     } catch {}
   });
-}
-
-/**
- * Initializes AuraWaveOfflineDB and requests persistent storage from the browser
- */
-export async function getOfflineDB(): Promise<IDBPDatabase<AuraWaveOfflineDBSchema>> {
-  if (!dbPromise) {
-    dbPromise = openDB<AuraWaveOfflineDBSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('tracks')) {
-          const store = db.createObjectStore('tracks', { keyPath: 'id' });
-          store.createIndex('by_manual', 'isManualDownload');
-          store.createIndex('by_saved', 'savedAt');
-        }
-      },
-    });
-
-    // Request persistent storage from iOS Safari / Chrome
-    requestPersistence().catch(() => {});
-  }
-  return dbPromise;
 }
 
 /**
@@ -96,55 +62,47 @@ export async function requestPersistence(): Promise<boolean> {
 }
 
 /**
- * Check if a track is saved offline
+ * Check if a track is saved offline in Dexie
  */
 export async function hasTrack(id: string): Promise<boolean> {
   try {
-    const db = await getOfflineDB();
-    const count = await db.count('tracks', id);
-    if (count > 0) return true;
-
-    // Fallback check in Dexie
-    const dexieCount = await dexieDB.audioBlobs.where('id').equals(id).count();
-    return dexieCount > 0;
+    const count = await dexieDB.audioBlobs.where('id').equals(id).count();
+    return count > 0;
   } catch {
     return false;
   }
 }
 
 /**
- * Retrieve an offline track record
+ * Retrieve an offline track record directly from Dexie
  */
 export async function getTrack(id: string): Promise<OfflineTrackRecord | null> {
   try {
-    const db = await getOfflineDB();
-    const record = await db.get('tracks', id);
-    if (record && record.audioBlob && record.audioBlob.size > 0) {
-      return record;
-    }
+    const audioRec = await dexieDB.audioBlobs.get(id);
+    if (!audioRec || !audioRec.blob || audioRec.blob.size === 0) return null;
 
-    // Fallback: check Dexie audioBlobs
-    const dexieItem = await dexieDB.audioBlobs.get(id);
-    if (dexieItem && dexieItem.blob) {
-      return {
-        id,
-        audioBlob: dexieItem.blob,
-        mimeType: dexieItem.blob.type || 'audio/mpeg',
-        sizeBytes: dexieItem.blob.size,
-        savedAt: Date.now(),
-        isManualDownload: false,
-        title: '',
-        artist: '',
-      };
-    }
+    const artworkRec = await dexieDB.artworkBlobs.get(id);
+    return {
+      id,
+      audioBlob: audioRec.blob,
+      coverBlob: artworkRec ? artworkRec.blob : null,
+      mimeType: audioRec.mimeType || audioRec.blob.type || 'audio/mpeg',
+      sizeBytes: audioRec.sizeBytes || audioRec.blob.size,
+      savedAt: audioRec.savedAt || Date.now(),
+      isManualDownload: !!audioRec.isManualDownload,
+      title: audioRec.title || '',
+      artist: audioRec.artist || '',
+      duration: audioRec.duration,
+    };
   } catch (err) {
     console.warn(`[OfflineStorage] Error getting track ${id}:`, err);
+    return null;
   }
-  return null;
 }
 
 /**
- * Save track into AuraWaveOfflineDB + Dexie dual-engine
+ * Save track into Dexie single-source-of-truth database.
+ * Eliminates duplicate storage, reclaiming 50% device memory!
  */
 export async function saveTrack(data: {
   id: string;
@@ -159,43 +117,30 @@ export async function saveTrack(data: {
   duration?: number;
 }): Promise<void> {
   try {
-    const db = await getOfflineDB();
     const sizeBytes = data.audioBlob.size + (data.coverBlob ? data.coverBlob.size : 0);
     const mimeType = data.mimeType || data.audioBlob.type || 'audio/mpeg';
 
-    const record: OfflineTrackRecord = {
-      id: data.id,
-      audioBlob: data.audioBlob,
-      coverBlob: data.coverBlob || null,
-      mimeType,
-      sizeBytes,
-      savedAt: Date.now(),
-      isManualDownload: !!data.isManualDownload,
-      title: data.title || 'Untitled',
-      artist: data.artist || 'Unknown Artist',
-      duration: data.duration,
-    };
+    await dexieDB.transaction('rw', [dexieDB.audioBlobs, dexieDB.artworkBlobs], async () => {
+      await dexieDB.audioBlobs.put({
+        id: data.id,
+        blob: data.audioBlob,
+        mimeType,
+        sizeBytes,
+        savedAt: data.savedAt || Date.now(),
+        isManualDownload: !!data.isManualDownload,
+        title: data.title || 'Untitled',
+        artist: data.artist || 'Unknown Artist',
+        duration: data.duration,
+      });
 
-    await db.put('tracks', record);
-
-    // Sync to Dexie audioBlobs for complete dual-engine persistence
-    try {
-      await dexieDB.audioBlobs.put({ id: data.id, blob: data.audioBlob });
       if (data.coverBlob) {
-        await dexieDB.artworkBlobs.put({ id: data.id, blob: data.coverBlob, mimeType: data.coverBlob.type });
+        await dexieDB.artworkBlobs.put({
+          id: data.id,
+          blob: data.coverBlob,
+          mimeType: data.coverBlob.type || 'image/jpeg',
+        });
       }
-    } catch {}
-
-    // Also populate Service Worker artwork cache for offline visual guarantees
-    if (data.coverBlob && typeof caches !== 'undefined') {
-      try {
-        const cache = await caches.open(ARTWORK_CACHE_NAME);
-        const artworkUrl = `/offline-artwork/${data.id}`;
-        await cache.put(artworkUrl, new Response(data.coverBlob, {
-          headers: { 'Content-Type': data.coverBlob.type || 'image/jpeg' },
-        }));
-      } catch {}
-    }
+    });
 
     notifyChange();
   } catch (err) {
@@ -205,82 +150,86 @@ export async function saveTrack(data: {
 }
 
 /**
- * Delete a track from offline storage
+ * Delete a downloaded track and its artwork from Dexie
  */
 export async function deleteTrack(id: string): Promise<void> {
   try {
-    const db = await getOfflineDB();
-    await db.delete('tracks', id);
-
-    try {
+    await dexieDB.transaction('rw', [dexieDB.audioBlobs, dexieDB.artworkBlobs], async () => {
       await dexieDB.audioBlobs.delete(id);
       await dexieDB.artworkBlobs.delete(id);
-    } catch {}
-
+    });
+    revokeOfflineArtworkUrl(id);
     notifyChange();
   } catch (err) {
-    console.warn(`[OfflineStorage] Error deleting track ${id}:`, err);
+    console.error(`[OfflineStorage] Error deleting track ${id}:`, err);
+    throw err;
   }
 }
 
 /**
- * Get all downloaded track IDs
- */
-export async function getAllTrackIds(): Promise<string[]> {
-  try {
-    const db = await getOfflineDB();
-    const keys = await db.getAllKeys('tracks');
-    const ids = new Set<string>(keys);
-
-    // Also include any in Dexie audioBlobs
-    try {
-      const dexieKeys = await dexieDB.audioBlobs.toCollection().primaryKeys();
-      dexieKeys.forEach((k) => ids.add(k));
-    } catch {}
-
-    return Array.from(ids);
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get all downloaded track records
+ * Retrieve all offline track records from Dexie
  */
 export async function getAllTracks(): Promise<OfflineTrackRecord[]> {
   try {
-    const db = await getOfflineDB();
-    return await db.getAll('tracks');
-  } catch {
+    const audioRecords = await dexieDB.audioBlobs.toArray();
+    const artworkRecords = await dexieDB.artworkBlobs.toArray();
+    const artworkMap = new Map(artworkRecords.map((a) => [a.id, a.blob]));
+
+    return audioRecords.map((rec) => ({
+      id: rec.id,
+      audioBlob: rec.blob,
+      coverBlob: artworkMap.get(rec.id) || null,
+      mimeType: rec.mimeType || rec.blob?.type || 'audio/mpeg',
+      sizeBytes: rec.sizeBytes || rec.blob?.size || 0,
+      savedAt: rec.savedAt || Date.now(),
+      isManualDownload: !!rec.isManualDownload,
+      title: rec.title || '',
+      artist: rec.artist || '',
+      duration: rec.duration,
+    }));
+  } catch (err) {
+    console.error('[OfflineStorage] Error getting all tracks:', err);
     return [];
   }
 }
 
 /**
- * Smart LRU Cache Management:
- * Keeps the most recent `maxAutoCached` songs played (default: 25).
- * NEVER evicts manual downloads (`isManualDownload === true`).
+ * Retrieve all offline track IDs from Dexie
  */
-export async function manageLruCache(maxAutoCached = 25): Promise<void> {
+export async function getAllTrackIds(): Promise<string[]> {
   try {
-    const db = await getOfflineDB();
-    const all = await db.getAll('tracks');
+    const keys = await dexieDB.audioBlobs.toCollection().primaryKeys();
+    return keys as string[];
+  } catch (err) {
+    console.error('[OfflineStorage] Error getting all track IDs:', err);
+    return [];
+  }
+}
 
-    // Filter to auto-cached tracks only
-    const autoCached = all.filter((t) => !t.isManualDownload);
+/**
+ * LRU Cache eviction for auto-cached tracks (preserves manual downloads)
+ */
+export async function manageLruCache(maxAutoCached: number = 25): Promise<void> {
+  try {
+    const allAudio = await dexieDB.audioBlobs.toArray();
+    const autoCached = allAudio.filter((r) => !r.isManualDownload);
 
     if (autoCached.length > maxAutoCached) {
-      // Sort oldest first
-      autoCached.sort((a, b) => a.savedAt - b.savedAt);
-      const toRemove = autoCached.slice(0, autoCached.length - maxAutoCached);
+      autoCached.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));
+      const toEvict = autoCached.slice(0, autoCached.length - maxAutoCached);
 
-      for (const track of toRemove) {
-        await deleteTrack(track.id);
-        console.log(`[OfflineStorage] LRU evicted auto-cached track: ${track.title}`);
-      }
+      await dexieDB.transaction('rw', [dexieDB.audioBlobs, dexieDB.artworkBlobs], async () => {
+        for (const item of toEvict) {
+          await dexieDB.audioBlobs.delete(item.id);
+          await dexieDB.artworkBlobs.delete(item.id);
+        }
+      });
+
+      console.log(`[OfflineStorage] LRU cache evicted ${toEvict.length} auto-cached tracks`);
+      notifyChange();
     }
   } catch (err) {
-    console.warn('[OfflineStorage] Error in LRU eviction:', err);
+    console.warn('[OfflineStorage] LRU eviction error:', err);
   }
 }
 
@@ -298,9 +247,12 @@ export async function getStorageStats(): Promise<{
   let trackCount = 0;
 
   try {
-    const tracks = await getAllTracks();
-    trackCount = tracks.length;
-    usedBytes = tracks.reduce((acc, t) => acc + (t.sizeBytes || t.audioBlob?.size || 0), 0);
+    const audioBlobs = await dexieDB.audioBlobs.toArray();
+    const artworkBlobs = await dexieDB.artworkBlobs.toArray();
+    trackCount = audioBlobs.length;
+    usedBytes =
+      audioBlobs.reduce((acc, b) => acc + (b.sizeBytes || b.blob?.size || 0), 0) +
+      artworkBlobs.reduce((acc, a) => acc + (a.blob?.size || 0), 0);
   } catch {}
 
   let quotaBytes: number | undefined;
@@ -330,15 +282,10 @@ export async function getStorageStats(): Promise<{
  */
 export async function clearAllDownloads(): Promise<void> {
   try {
-    const db = await getOfflineDB();
-    await db.clear('tracks');
-
-    try {
-      await dexieDB.audioBlobs.clear();
-      await dexieDB.artworkBlobs.clear();
-    } catch {}
-
-    revokeActiveBlobUrl();
+    await dexieDB.audioBlobs.clear();
+    await dexieDB.artworkBlobs.clear();
+    revokeAllArtworkBlobUrls();
+    revokeAllDeckBlobUrls();
     notifyChange();
   } catch (err) {
     console.error('[OfflineStorage] Error clearing downloads:', err);
@@ -352,25 +299,44 @@ export async function clearAllDownloads(): Promise<void> {
  * on Deck B during an AutoMix crossfade, the active audio stream on Deck A is preserved
  * without premature destruction.
  */
-export function createTrackBlobUrl(blob: Blob, deck: 'A' | 'B' | 'default' = 'default'): string {
+export function createTrackBlobUrl(
+  blob: Blob,
+  deck: 'A' | 'B' | 'default' = 'default',
+  revokeDelayMs: number = 15000
+): string {
   const url = URL.createObjectURL(blob);
 
-  // If there was a previous URL on this exact deck, defer its revocation
-  // with a safety margin (5 seconds) so that hardware decoding finishes smoothly
   const oldUrl = deckBlobUrls[deck];
   if (oldUrl && oldUrl !== url) {
-    setTimeout(() => {
+    if (deckRevocationTimers.has(oldUrl)) {
+      clearTimeout(deckRevocationTimers.get(oldUrl)!);
+      deckRevocationTimers.delete(oldUrl);
+    }
+
+    const timer = setTimeout(() => {
       try {
         URL.revokeObjectURL(oldUrl);
         allActiveBlobUrls.delete(oldUrl);
       } catch {}
-    }, 5000);
+      deckRevocationTimers.delete(oldUrl);
+    }, Math.max(5000, revokeDelayMs));
+
+    deckRevocationTimers.set(oldUrl, timer);
   }
 
   deckBlobUrls[deck] = url;
   activeBlobUrl = url;
   allActiveBlobUrls.add(url);
   return url;
+}
+
+/**
+ * Cancel all pending revocation timers and immediately revoke all deck Blob URLs.
+ */
+export function revokeAllDeckBlobUrls(): void {
+  deckRevocationTimers.forEach((timer) => clearTimeout(timer));
+  deckRevocationTimers.clear();
+  revokeAllBlobUrls();
 }
 
 /**
@@ -405,7 +371,6 @@ export function revokeActiveBlobUrl(immediate: boolean = false): void {
     return;
   }
 
-  // Graceful deferred retirement (4 seconds)
   const candidate = activeBlobUrl;
   if (candidate) {
     setTimeout(() => {
@@ -446,4 +411,124 @@ export function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   const val = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
   return `${val} ${sizes[i]}`;
+}
+
+// ── 100% Offline Artwork Guarantee (Dual-Strategy Fetch & Memory-Managed Cache) ──
+
+/**
+ * Dual-strategy offline artwork fetcher:
+ * 1. Path 1 (CORS Blob in Dexie): fetches with mode: 'cors'. If success, returns Blob to be saved in Dexie artworkBlobs,
+ *    and also puts it in 'aurawave-artwork-v1' Cache API.
+ * 2. Path 2 (Opaque Fallback for CORS-restricted hosts like mzstatic): fetches with mode: 'no-cors' and writes directly
+ *    into caches.open('aurawave-artwork-v1') via cache.put(coverUrl, response) so ServiceWorker can serve it to <img> tags offline.
+ */
+export async function fetchAndCacheArtwork(trackId: string, coverUrl?: string | null): Promise<Blob | null> {
+  if (!coverUrl || coverUrl.startsWith('data:') || coverUrl.startsWith('blob:')) {
+    return null;
+  }
+
+  // Path 1: Try CORS fetch to store in Dexie and Cache API
+  try {
+    const res = await fetch(coverUrl, { mode: 'cors', cache: 'force-cache' });
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob && blob.size > 0) {
+        if (typeof caches !== 'undefined') {
+          try {
+            const cache = await caches.open('aurawave-artwork-v1');
+            cache.put(
+              coverUrl,
+              new Response(blob, {
+                status: 200,
+                headers: { 'Content-Type': blob.type || 'image/jpeg' },
+              })
+            ).catch(() => {});
+          } catch {}
+        }
+        return blob;
+      }
+    }
+  } catch {
+    // CORS failed or rejected by CDN
+  }
+
+  // Path 2: Fallback to no-cors opaque response directly into Cache API
+  if (typeof caches !== 'undefined') {
+    try {
+      const opaqueRes = await fetch(coverUrl, { mode: 'no-cors' });
+      if (opaqueRes && (opaqueRes.type === 'opaque' || opaqueRes.status === 200)) {
+        const cache = await caches.open('aurawave-artwork-v1');
+        await cache.put(coverUrl, opaqueRes);
+      }
+    } catch (noCorsErr) {
+      console.warn(`[OfflineStorage] Failed to cache fallback artwork for ${trackId}:`, noCorsErr);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get or create an object URL for a track's offline artwork blob.
+ * Automatically manages memory and cleans up oldest entries to prevent leaks.
+ */
+export async function getOfflineArtworkUrl(trackId: string): Promise<string | null> {
+  if (!trackId) return null;
+  if (artworkBlobUrls.has(trackId)) {
+    return artworkBlobUrls.get(trackId)!;
+  }
+  try {
+    const rec = await dexieDB.artworkBlobs.get(trackId);
+    if (rec && rec.blob && rec.blob.size > 0) {
+      const url = URL.createObjectURL(rec.blob);
+      if (artworkBlobUrls.size > 60) {
+        const firstKey = artworkBlobUrls.keys().next().value;
+        if (firstKey) {
+          const oldUrl = artworkBlobUrls.get(firstKey);
+          if (oldUrl) {
+            try {
+              URL.revokeObjectURL(oldUrl);
+            } catch {}
+          }
+          artworkBlobUrls.delete(firstKey);
+        }
+      }
+      artworkBlobUrls.set(trackId, url);
+      return url;
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Synchronous memory lookup for already generated artwork ObjectURLs.
+ */
+export function getSynchronousOfflineArtworkUrl(trackId: string): string | null {
+  if (!trackId) return null;
+  return artworkBlobUrls.get(trackId) || null;
+}
+
+/**
+ * Revoke and remove a single track's artwork ObjectURL from memory.
+ */
+export function revokeOfflineArtworkUrl(trackId: string): void {
+  const url = artworkBlobUrls.get(trackId);
+  if (url) {
+    try {
+      URL.revokeObjectURL(url);
+    } catch {}
+    artworkBlobUrls.delete(trackId);
+  }
+}
+
+/**
+ * Revoke all artwork ObjectURLs in memory.
+ */
+export function revokeAllArtworkBlobUrls(): void {
+  artworkBlobUrls.forEach((url) => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch {}
+  });
+  artworkBlobUrls.clear();
 }

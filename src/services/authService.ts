@@ -1,6 +1,7 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { dexieDB } from '../db/dexieDB';
-import { supabase as sharedSupabaseClient } from '../lib/supabase';
+import { supabase as sharedSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
+import { userSyncService } from './userSyncService';
 
 export interface AuthUser {
   id: string;
@@ -107,9 +108,12 @@ class AuthService {
             this.currentUser = this.mapSupabaseUser(session.user);
             this.saveSession(this.currentUser);
             this.notifyListeners();
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              userSyncService.triggerFullSync(session.user.id).catch(() => {});
+            }
           } else if (event === 'SIGNED_OUT') {
             // ONLY wipe session if Supabase explicitly fired a user-initiated SIGNED_OUT event
-            if (this.currentUser && this.currentUser.id.startsWith('sp_')) {
+            if (this.currentUser && !this.currentUser.isGuest) {
               this.currentUser = null;
               this.clearSession();
               this.notifyListeners();
@@ -182,7 +186,7 @@ class AuthService {
     }
 
     // 1. Try Supabase Auth first if available
-    if (supabaseClient && cleanId.includes('@')) {
+    if (supabaseClient && isSupabaseConfigured() && cleanId.includes('@')) {
       try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({
           email: cleanId,
@@ -192,10 +196,42 @@ class AuthService {
         if (!error && data.user) {
           const user = this.mapSupabaseUser(data.user);
           this.setCurrentUser(user);
+          userSyncService.triggerFullSync(user.id).catch(() => {});
           return { user, error: null };
         }
+
+        if (error) {
+          // Check if local vault has an account before showing cloud error
+          const users = this.getVaultUsers();
+          const pwdHash = await hashPassword(password);
+          const foundLocal = users.find(
+            (u) =>
+              (u.email.toLowerCase() === cleanId || u.name.toLowerCase() === cleanId) &&
+              u.passwordHash === pwdHash
+          );
+
+          if (foundLocal) {
+            const user: AuthUser = {
+              id: foundLocal.id,
+              email: foundLocal.email,
+              name: foundLocal.name,
+              avatarUrl: foundLocal.avatarUrl,
+              createdAt: foundLocal.createdAt,
+            };
+            this.setCurrentUser(user);
+            return { user, error: null };
+          }
+
+          let msg = error.message;
+          if (msg.includes('Invalid login credentials')) {
+            msg = 'بيانات الدخول غير صحيحة، يرجى التأكد من البريد الإلكتروني وكلمة المرور';
+          } else if (msg.includes('Email not confirmed')) {
+            msg = 'يرجى تأكيد بريدك الإلكتروني عبر الرابط المرسل إليك أولاً';
+          }
+          return { user: null, error: msg };
+        }
       } catch (e: any) {
-        console.warn('[AuthService] Supabase sign-in warning:', e);
+        console.warn('[AuthService] Supabase sign-in warning, falling back to vault:', e);
       }
     }
 
@@ -250,7 +286,7 @@ class AuthService {
     }
 
     // 1. Try Supabase Auth if available
-    if (supabaseClient && cleanEmail.includes('@')) {
+    if (supabaseClient && isSupabaseConfigured() && cleanEmail.includes('@')) {
       try {
         const { data, error } = await supabaseClient.auth.signUp({
           email: cleanEmail,
@@ -263,12 +299,20 @@ class AuthService {
         if (!error && data.user) {
           const user = this.mapSupabaseUser(data.user, cleanName);
           this.setCurrentUser(user);
+          userSyncService.triggerFullSync(user.id).catch(() => {});
           return { user, error: null };
         } else if (error) {
-          console.warn('[AuthService] Supabase signup error, falling back to vault:', error.message);
+          console.warn('[AuthService] Supabase signup error:', error.message);
+          let msg = error.message;
+          if (msg.includes('User already registered') || msg.includes('already exists')) {
+            msg = 'البريد الإلكتروني مسجل مسبقاً، يرجى تسجيل الدخول';
+          } else if (msg.includes('Password should be at least')) {
+            msg = 'يجب أن تتكون كلمة المرور من 6 خانات على الأقل';
+          }
+          return { user: null, error: msg };
         }
       } catch (e: any) {
-        console.warn('[AuthService] Supabase signup exception:', e);
+        console.warn('[AuthService] Supabase signup exception, falling back to vault:', e);
       }
     }
 

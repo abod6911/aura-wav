@@ -162,7 +162,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
                   backgroundColor: isPlayed ? accentColor : undefined,
                   boxShadow: isPlayed ? `0 0 8px ${accentColor}66` : undefined,
                 }}
-                className={`w-full rounded-full transition-all duration-150 ${
+                className={`w-full rounded-full transition-colors duration-150 ${
                   isPlayed
                     ? 'scale-y-100'
                     : isHovered

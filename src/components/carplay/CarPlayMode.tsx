@@ -23,9 +23,10 @@ import {
 import { usePlayerStore } from '../../store/usePlayerStore';
 
 const CarPlayScrubber: React.FC = () => {
-  const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const seek = usePlayerStore((s) => s.seek);
+  const progressBarRef = useRef<HTMLDivElement | null>(null);
+  const timeTextRef = useRef<HTMLSpanElement | null>(null);
 
   const formatTime = (seconds: number) => {
     if (!isFinite(seconds) || seconds < 0) return '0:00';
@@ -33,6 +34,25 @@ const CarPlayScrubber: React.FC = () => {
     const s = Math.floor(seconds % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
+
+  useEffect(() => {
+    const updateProgress = (cur: number, d: number) => {
+      if (progressBarRef.current) {
+        progressBarRef.current.style.width = `${d > 0 ? (cur / d) * 100 : 0}%`;
+      }
+      if (timeTextRef.current) {
+        timeTextRef.current.textContent = formatTime(cur);
+      }
+    };
+
+    updateProgress(usePlayerStore.getState().currentTime, duration);
+
+    const unsub = usePlayerStore.subscribe((state) => {
+      updateProgress(state.currentTime, state.duration);
+    });
+
+    return () => unsub();
+  }, [duration]);
 
   return (
     <div className="w-full mt-3 landscape:mt-2 max-w-sm px-2">
@@ -46,14 +66,15 @@ const CarPlayScrubber: React.FC = () => {
         }}
       >
         <div
-          className="h-full bg-gradient-to-r from-[#FA243C] to-rose-400 rounded-full transition-all duration-100"
+          ref={progressBarRef}
+          className="h-full bg-gradient-to-r from-[#FA243C] to-rose-400 rounded-full"
           style={{
-            width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+            width: '0%',
           }}
         />
       </div>
       <div className="flex justify-between items-center text-[11px] font-mono text-zinc-400 mt-1.5 font-bold">
-        <span>{formatTime(currentTime)}</span>
+        <span ref={timeTextRef}>0:00</span>
         <span>{formatTime(duration)}</span>
       </div>
     </div>
@@ -259,14 +280,14 @@ export const CarPlayMode: React.FC = () => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.22 }}
-        className={`fixed inset-0 z-[9999] w-full h-full min-h-full flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
+        className={`fixed inset-0 z-[999] w-full h-full min-h-full flex flex-col select-none overflow-hidden font-sans transition-colors duration-300 ${
           highContrastMode === 'day' ? 'bg-[#F2F2F7] text-[#1C1C1E]' : 'bg-[#0A0A0E] text-white'
         }`}
         dir="rtl"
       >
         {/* Dynamic Subtle In-Car Ambient Glow */}
         <div
-          className="absolute inset-0 opacity-20 pointer-events-none transition-all duration-700 blur-[130px]"
+          className="absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 blur-[130px]"
           style={{
             background: `radial-gradient(circle at 50% 25%, ${accentColor} 0%, transparent 70%)`,
           }}
@@ -294,7 +315,7 @@ export const CarPlayMode: React.FC = () => {
               {/* Day / Night High Contrast Switcher */}
               <button
                 onClick={() => setHighContrastMode(m => m === 'night' ? 'day' : 'night')}
-                className={`p-1.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`p-1.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
                   highContrastMode === 'day'
                     ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-sm'
                     : 'bg-white/[0.08] text-zinc-300 border-white/10 hover:text-white'
@@ -328,7 +349,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.93 }}
                 onClick={() => setCarModeOpen(false)}
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-pointer ${
                   highContrastMode === 'day' ? 'bg-black/[0.05] border-black/10 text-zinc-800' : 'bg-white/[0.08] hover:bg-red-500/20 hover:text-red-400 border-white/10 text-zinc-300'
                 }`}
                 title="خروج من وضع السيارة"
@@ -342,7 +363,7 @@ export const CarPlayMode: React.FC = () => {
           <div className="flex landscape:hidden items-center p-1 rounded-xl bg-white/[0.08] border border-white/10 w-full">
             <button
               onClick={() => setPortraitTab('playlist')}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                 portraitTab === 'playlist'
                   ? 'bg-white text-black shadow-md'
                   : 'text-zinc-400 hover:text-white'
@@ -354,7 +375,7 @@ export const CarPlayMode: React.FC = () => {
 
             <button
               onClick={() => setPortraitTab('now_playing')}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                 portraitTab === 'now_playing'
                   ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
                   : 'text-zinc-400 hover:text-white'
@@ -370,7 +391,7 @@ export const CarPlayMode: React.FC = () => {
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => setCarModeOpen(false)}
-              className="w-11 h-11 rounded-2xl bg-white/[0.08] hover:bg-red-500/20 hover:text-red-400 border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
+              className="w-11 h-11 rounded-2xl bg-white/[0.08] hover:bg-red-500/20 hover:text-red-400 border border-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
               title="خروج من وضع السيارة"
             >
               <X className="w-5 h-5" />
@@ -453,7 +474,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => seek(Math.max(0, usePlayerStore.getState().currentTime - 15))}
-                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-12 landscape:h-12 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
+                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-12 landscape:h-12 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
                 title="ترجيع 15 ثانية"
               >
                 <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -463,7 +484,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => previousTrack()}
-                className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] landscape:w-[68px] landscape:h-[68px] rounded-3xl bg-white/[0.14] hover:bg-white/[0.22] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer shadow-xl active:scale-95"
+                className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] landscape:w-[68px] landscape:h-[68px] rounded-3xl bg-white/[0.14] hover:bg-white/[0.22] border border-white/20 flex items-center justify-center text-white transition-[color,background-color,border-color,transform] cursor-pointer shadow-xl active:scale-95"
                 title="المسار السابق"
               >
                 <SkipBack className="w-8 h-8 sm:w-9 sm:h-9" />
@@ -473,7 +494,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 onClick={togglePlayPause}
-                className="w-20 h-20 sm:w-24 sm:h-24 landscape:w-20 landscape:h-20 rounded-full bg-white text-black flex items-center justify-center shadow-[0_15px_45px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                className="w-20 h-20 sm:w-24 sm:h-24 landscape:w-20 landscape:h-20 rounded-full bg-white text-black flex items-center justify-center shadow-[0_15px_45px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer"
                 title={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
               >
                 {isPlaying ? (
@@ -487,7 +508,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => nextTrack({ forceImmediate: true })}
-                className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] landscape:w-[68px] landscape:h-[68px] rounded-3xl bg-white/[0.14] hover:bg-white/[0.22] border border-white/20 flex items-center justify-center text-white transition-all cursor-pointer shadow-xl active:scale-95"
+                className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] landscape:w-[68px] landscape:h-[68px] rounded-3xl bg-white/[0.14] hover:bg-white/[0.22] border border-white/20 flex items-center justify-center text-white transition-[color,background-color,border-color,transform] cursor-pointer shadow-xl active:scale-95"
                 title="المسار التالي"
               >
                 <SkipForward className="w-8 h-8 sm:w-9 sm:h-9" />
@@ -497,7 +518,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => seek(Math.min(duration, usePlayerStore.getState().currentTime + 15))}
-                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-12 landscape:h-12 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-all cursor-pointer"
+                className="w-12 h-12 sm:w-14 sm:h-14 landscape:w-12 landscape:h-12 rounded-2xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 flex items-center justify-center text-zinc-300 transition-colors cursor-pointer"
                 title="تقديم 15 ثانية"
               >
                 <RotateCw className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -509,7 +530,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleShuffle}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   shuffle
                     ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-lg shadow-[#FA243C]/30'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
@@ -522,7 +543,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => currentTrack && toggleFavorite(currentTrack.id)}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   activeFav
                     ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
@@ -535,7 +556,7 @@ export const CarPlayMode: React.FC = () => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={cycleRepeat}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all cursor-pointer ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   repeatMode !== 'off'
                     ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-lg shadow-[#FA243C]/30'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
@@ -573,7 +594,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('all')}
-                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-colors cursor-pointer shadow-md select-none ${
                     filterMode === 'all'
                       ? 'bg-white text-black border-white shadow-white/20'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -594,7 +615,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('favorites')}
-                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-colors cursor-pointer shadow-md select-none ${
                     filterMode === 'favorites'
                       ? 'bg-rose-600 text-white border-rose-500 shadow-rose-600/30'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -615,7 +636,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('energy')}
-                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-colors cursor-pointer shadow-md select-none ${
                     filterMode === 'energy'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-amber-500/30 font-black'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -636,7 +657,7 @@ export const CarPlayMode: React.FC = () => {
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setFilterMode('chill')}
-                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-all cursor-pointer shadow-md select-none ${
+                  className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-colors cursor-pointer shadow-md select-none ${
                     filterMode === 'chill'
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-600/30'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
@@ -677,7 +698,7 @@ export const CarPlayMode: React.FC = () => {
                           setPortraitTab('now_playing');
                         }
                       }}
-                      className={`min-h-[74px] h-[74px] flex items-center justify-between px-4 py-2.5 rounded-2xl border cursor-pointer transition-all select-none ${
+                      className={`min-h-[74px] h-[74px] flex items-center justify-between px-4 py-2.5 rounded-2xl border cursor-pointer transition-colors select-none ${
                         isCurrent
                           ? 'bg-white/[0.16] border-[#FA243C] text-white shadow-lg ring-1 ring-[#FA243C]/40'
                           : highContrastMode === 'day'

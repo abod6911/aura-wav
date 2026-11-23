@@ -118,14 +118,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 select-none">
+    <div className="fixed inset-0 z-70 select-none">
       {/* Backdrop */}
       <div
         onClick={onClose}
         className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
       />
 
-      <div className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-8 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl space-y-5 sm:space-y-6 overflow-y-auto">
+      <div className="fixed bottom-0 inset-x-0 z-70 max-h-[85dvh] sm:max-w-lg sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-8 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] sm:pb-8 shadow-2xl space-y-5 sm:space-y-6 overflow-y-auto">
         {/* iOS Top Drag Pill */}
         <div
           onClick={onClose}
@@ -181,7 +181,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             {/* Primary Action Card */}
             <div
               onClick={handlePrimaryClick}
-              className="p-6 sm:p-8 rounded-[24px] border-2 border-dashed border-[var(--apple-rose)]/35 hover:border-[var(--apple-rose)]/70 bg-[var(--apple-rose)]/[0.04] hover:bg-[var(--apple-rose)]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
+              className="p-6 sm:p-8 rounded-[24px] border-2 border-dashed border-[var(--apple-rose)]/35 hover:border-[var(--apple-rose)]/70 bg-[var(--apple-rose)]/[0.04] hover:bg-[var(--apple-rose)]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-colors group"
             >
               <div className="p-4 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] group-hover:scale-110 transition-transform mb-3">
                 <UploadCloud className="w-8 h-8" />
@@ -199,7 +199,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <button
                 type="button"
                 onClick={() => filesInputRef.current?.click()}
-                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <FileAudio className="w-4 h-4 text-[var(--apple-rose)]" />
                 <span>اختيار ملفات متعددة (هاتف / آيفون)</span>
@@ -213,7 +213,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                     folderInputRef.current?.click();
                   }
                 }}
-                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <FolderOpen className="w-4 h-4 text-blue-400" />
                 <span>اختيار مجلد كامل (كمبيوتر)</span>
@@ -237,7 +237,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                   await cacheAllAvailableTracksOffline();
                 }}
                 disabled={!!downloadAllProgress || (tracks.length > 0 && downloadedTrackIds.length === tracks.length)}
-                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 shadow-md shadow-emerald-500/20"
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 disabled:opacity-50 text-white text-xs font-bold whitespace-nowrap transition-[color,background-color,border-color,transform] cursor-pointer flex-shrink-0 shadow-md shadow-emerald-500/20"
               >
                 {downloadAllProgress
                   ? `جاري الحفظ: ${downloadAllProgress.current}/${downloadAllProgress.total}`
@@ -284,7 +284,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <div className="space-y-2 max-w-xs mx-auto">
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] h-full rounded-full transition-all duration-150"
+                    className="bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] h-full rounded-full transition-colors duration-150"
                     style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                   />
                 </div>
@@ -312,7 +312,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 
             <button
               onClick={onClose}
-              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold transition-all shadow-[0_4px_24px_rgba(250,36,60,0.4)] hover:shadow-[0_6px_28px_rgba(250,36,60,0.6)] cursor-pointer active:scale-98"
+              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold transition-[color,background-color,border-color,transform] shadow-[0_4px_24px_rgba(250,36,60,0.4)] hover:shadow-[0_6px_28px_rgba(250,36,60,0.6)] cursor-pointer active:scale-98"
             >
               بدء الاستماع الآن
             </button>

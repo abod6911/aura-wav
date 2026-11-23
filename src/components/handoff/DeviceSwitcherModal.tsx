@@ -32,7 +32,6 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const currentTime = usePlayerStore((state) => state.currentTime);
   const duration = usePlayerStore((state) => state.duration);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const seek = usePlayerStore((state) => state.seek);
@@ -52,13 +51,14 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
     });
 
     // Broadcast our own current state immediately when opening devices sheet
-    handoffService.broadcastPlaybackState(currentTrack, currentTime, duration, isPlaying);
+    const curTime = usePlayerStore.getState().currentTime;
+    handoffService.broadcastPlaybackState(currentTrack, curTime, duration, isPlaying);
 
     return () => {
       unsubDevices();
       unsubState();
     };
-  }, [isOpen, currentTrack, currentTime, duration, isPlaying]);
+  }, [isOpen, currentTrack, duration, isPlaying]);
 
   if (!isOpen) return null;
 
@@ -82,7 +82,8 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
 
   const handleShareCurrentSession = () => {
     triggerHaptic('light');
-    handoffService.broadcastPlaybackState(currentTrack, currentTime, duration, isPlaying);
+    const curTime = usePlayerStore.getState().currentTime;
+    handoffService.broadcastPlaybackState(currentTrack, curTime, duration, isPlaying);
     
     // Copy quick sync link to clipboard
     const syncUrl = window.location.href;
@@ -108,7 +109,7 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -219,7 +220,7 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
 
                   <button
                     onClick={() => handleResumeRemote(remoteState)}
-                    className="ms-3 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-[#FA243C] text-white text-xs font-bold shadow-lg shadow-purple-600/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    className="ms-3 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-[#FA243C] text-white text-xs font-bold shadow-lg shadow-purple-600/30 hover:brightness-110 active:scale-95 transition-[color,background-color,border-color,transform] flex items-center gap-1.5 shrink-0 cursor-pointer"
                   >
                     <Play className="w-3 h-3 fill-white" />
                     <span>{isRTL ? 'استئناف هنا' : 'Resume'}</span>
@@ -238,7 +239,7 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={handleShareCurrentSession}
-                  className="p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/[0.08] text-start transition-all flex items-center gap-3 cursor-pointer"
+                  className="p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/[0.08] text-start transition-[color,background-color,border-color,transform] flex items-center gap-3 cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
                     <Share2 className="w-4 h-4" />
@@ -256,7 +257,7 @@ export const DeviceSwitcherModal: React.FC<DeviceSwitcherModalProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={handleShareCurrentSession}
-                  className="p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/[0.08] text-start transition-all flex items-center gap-3 cursor-pointer"
+                  className="p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] border border-white/[0.08] text-start transition-[color,background-color,border-color,transform] flex items-center gap-3 cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
                     {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}

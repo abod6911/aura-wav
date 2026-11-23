@@ -1,4 +1,5 @@
 import { Track } from '../types';
+import { getOfflineArtworkUrl, getSynchronousOfflineArtworkUrl } from '../utils/offlineStorage';
 
 export interface MediaSessionCallbacks {
   onPlay: () => void;
@@ -120,13 +121,16 @@ export function updateMediaSession(
   }
 
   let rawArtwork = track.artworkUrl || track.coverUrl || '/icons/icon-512.png';
-  if (rawArtwork.includes('.svg') || rawArtwork.startsWith('data:image/svg')) {
+  const syncOfflineArt = getSynchronousOfflineArtworkUrl(track.id);
+  if (syncOfflineArt) {
+    rawArtwork = syncOfflineArt;
+  } else if (rawArtwork.includes('.svg') || rawArtwork.startsWith('data:image/svg')) {
     rawArtwork = '/icons/icon-512.png';
   }
 
   let fullArtworkUrl: string;
   try {
-    if (rawArtwork.startsWith('http://') || rawArtwork.startsWith('https://')) {
+    if (rawArtwork.startsWith('http://') || rawArtwork.startsWith('https://') || rawArtwork.startsWith('blob:')) {
       fullArtworkUrl = rawArtwork;
     } else {
       fullArtworkUrl = new URL(rawArtwork, window.location.origin).href;
@@ -145,6 +149,17 @@ export function updateMediaSession(
     });
   } catch (err) {
     console.warn('[MediaSession] Initial MediaMetadata error:', err);
+  }
+
+  // Check for stored offline artwork in Dexie to guarantee lock screen display in airplane mode
+  if (!syncOfflineArt && track.id) {
+    getOfflineArtworkUrl(track.id).then((localUrl) => {
+      if (localUrl && navigator.mediaSession.metadata) {
+        try {
+          navigator.mediaSession.metadata.artwork = buildArtworkObjects(localUrl);
+        } catch {}
+      }
+    }).catch(() => {});
   }
 
   try {

@@ -29,7 +29,7 @@ export const SleepTimerModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 select-none">
+      <div className="fixed inset-0 z-70 select-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -52,7 +52,7 @@ export const SleepTimerModal: React.FC = () => {
               setSleepTimerOpen(false);
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl space-y-4 overflow-y-auto"
+          className="fixed bottom-0 inset-x-0 z-70 max-h-[85dvh] sm:max-w-md sm:mx-auto bg-[#101018] border-t sm:border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] sm:pb-6 shadow-2xl space-y-4 overflow-y-auto"
         >
           {/* iOS Top Drag Pill */}
           <div onClick={() => setSleepTimerOpen(false)} className="w-10 h-1.5 bg-white/25 hover:bg-white/40 rounded-full mx-auto mt-0 mb-3 sm:hidden flex-shrink-0 cursor-pointer transition-colors" />
@@ -115,7 +115,7 @@ export const SleepTimerModal: React.FC = () => {
                       setSleepTimer(p.value);
                       setSleepTimerOpen(false);
                     }}
-                    className={`px-4 py-3.5 rounded-2xl text-xs font-bold flex items-center justify-between transition-all border cursor-pointer apple-spring ${
+                    className={`px-4 py-3.5 rounded-2xl text-xs font-bold flex items-center justify-between transition-colors border cursor-pointer apple-spring ${
                       isActive
                         ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] border-[#FA243C]/50 text-white shadow-lg shadow-[#FA243C]/30'
                         : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
@@ -134,7 +134,7 @@ export const SleepTimerModal: React.FC = () => {
                 setSleepTimer('end_of_track');
                 setSleepTimerOpen(false);
               }}
-              className={`w-full px-4 py-3.5 mt-2 rounded-2xl text-xs font-bold flex items-center justify-between transition-all border cursor-pointer apple-spring ${
+              className={`w-full px-4 py-3.5 mt-2 rounded-2xl text-xs font-bold flex items-center justify-between transition-colors border cursor-pointer apple-spring ${
                 sleepTimerSetting === 'end_of_track'
                   ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] border-[#FA243C]/50 text-white shadow-lg shadow-[#FA243C]/30'
                   : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
@@ -151,7 +151,7 @@ export const SleepTimerModal: React.FC = () => {
                   setSleepTimer(null);
                   setSleepTimerOpen(false);
                 }}
-                className="w-full px-4 py-3 mt-2 rounded-2xl text-xs font-bold flex items-center justify-center transition-all border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 cursor-pointer apple-spring"
+                className="w-full px-4 py-3 mt-2 rounded-2xl text-xs font-bold flex items-center justify-center transition-colors border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 cursor-pointer apple-spring"
               >
                 <span>إيقاف المؤقت (Turn Off)</span>
               </button>

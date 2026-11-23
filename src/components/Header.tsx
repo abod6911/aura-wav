@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)',
         backgroundColor: isScrolled ? '#09090B' : 'transparent',
       }}
-      className={`select-none w-full min-w-0 px-4 sm:px-8 pb-2 sm:pb-3 shrink-0 z-30 transition-all pointer-events-auto ${
+      className={`select-none w-full min-w-0 px-4 sm:px-8 pb-2 sm:pb-3 shrink-0 z-30 transition-colors pointer-events-auto ${
         isScrolled
           ? 'bg-[#09090B]/95 backdrop-blur-2xl border-b border-white/[0.08]'
           : 'border-b border-white/[0.03]'
@@ -126,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           <button
             type="button"
             onClick={handleFullscreenToggle}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.1] active:scale-90 flex items-center justify-center text-zinc-300 hover:text-white transition-all cursor-pointer"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] hover:bg-white/[0.1] active:scale-90 flex items-center justify-center text-zinc-300 hover:text-white transition-[color,background-color,border-color,transform] cursor-pointer"
             title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
             aria-label="Fullscreen"
           >
@@ -205,7 +205,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           <div className="relative flex items-center" ref={profileMenuRef}>
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-xs font-bold text-white transition-all cursor-pointer overflow-hidden shadow-sm"
+            className="w-8 h-8 rounded-full bg-[#18181C] border border-white/[0.08] hover:border-white/20 flex items-center justify-center text-xs font-bold text-white transition-colors cursor-pointer overflow-hidden shadow-sm"
             title={currentUser ? currentUser.name : t.profile}
           >
             {currentUser?.avatarUrl ? (
@@ -218,7 +218,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport, isScrolled = false
           {/* Clean secondary dropdown menu */}
           {isProfileMenuOpen && (
             <div
-              className="absolute top-10 start-0 min-w-[210px] bg-[#16161A] border border-white/[0.08] rounded-xl p-1.5 shadow-2xl backdrop-blur-2xl z-50 text-xs text-zinc-300 animate-fadeIn"
+              className="absolute top-10 start-0 min-w-[210px] bg-[#16161A] border border-white/[0.08] rounded-xl p-1.5 shadow-2xl backdrop-blur-2xl z-80 text-xs text-zinc-300 animate-fadeIn"
             >
               <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
                 <span className="font-semibold text-white block truncate">{currentUser?.name || 'مستخدم AuraWave'}</span>

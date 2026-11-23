@@ -46,7 +46,7 @@ export const RightSidebar: React.FC = () => {
         <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/[0.06] text-xs">
           <button
             onClick={() => setActiveRightSidebarTab('queue')}
-            className={`font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeRightSidebarTab === 'queue'
                 ? 'bg-white text-black shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -56,7 +56,7 @@ export const RightSidebar: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveRightSidebarTab('now_playing')}
-            className={`font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+            className={`font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeRightSidebarTab === 'now_playing'
                 ? 'bg-white text-black shadow-sm'
                 : 'text-zinc-400 hover:text-white'
@@ -158,7 +158,7 @@ export const RightSidebar: React.FC = () => {
                   {userQueue.map((track, idx) => (
                     <div
                       key={`sidebar_user_${track.id}_${idx}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] transition-all cursor-pointer"
+                      className="group flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] transition-colors cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
                       <span className="w-4 text-center text-[10px] font-bold text-[#FA243C] font-mono">
@@ -249,7 +249,7 @@ export const RightSidebar: React.FC = () => {
                   {queue.slice(0, 40).map((track, idx) => (
                     <div
                       key={`sidebar_playlist_${track.id}_${idx}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/[0.06] transition-all cursor-pointer"
+                      className="group flex items-center gap-2.5 p-2 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/[0.06] transition-colors cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
                       <span className="w-4 text-center text-[10px] text-white/40 group-hover:hidden font-mono">
@@ -281,7 +281,7 @@ export const RightSidebar: React.FC = () => {
                           e.stopPropagation();
                           removeFromQueue(idx);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-white/50 hover:text-red-400 transition-all cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-white/50 hover:text-red-400 transition-colors cursor-pointer"
                         title={isRTL ? 'إزالة' : 'Remove'}
                       >
                         <X className="w-3.5 h-3.5" />

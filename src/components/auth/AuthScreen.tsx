@@ -175,7 +175,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                 <div
                   key={acc.id}
                   onClick={() => handleSelectSaved(acc)}
-                  className="w-full p-3 rounded-2xl bg-[#12121c] hover:bg-[#181826] border border-white/[0.08] hover:border-white/20 flex items-center justify-between gap-3 cursor-pointer transition-all active:scale-[0.98] group"
+                  className="w-full p-3 rounded-2xl bg-[#12121c] hover:bg-[#181826] border border-white/[0.08] hover:border-white/20 flex items-center justify-between gap-3 cursor-pointer transition-[color,background-color,border-color,transform] active:scale-[0.98] group"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] flex-shrink-0">
@@ -236,7 +236,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                   setMode('signin');
                   setErrorMessage(null);
                 }}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer ${
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors relative z-10 cursor-pointer ${
                   mode === 'signin' ? 'text-white' : 'text-white/50 hover:text-white'
                 }`}
               >
@@ -257,7 +257,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                   setMode('signup');
                   setErrorMessage(null);
                 }}
-                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all relative z-10 cursor-pointer ${
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors relative z-10 cursor-pointer ${
                   mode === 'signup' ? 'text-white' : 'text-white/50 hover:text-white'
                 }`}
               >
@@ -354,7 +354,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 mt-1 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FA243C]/30 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                className="w-full h-11 mt-1 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FA243C]/30 active:scale-[0.98] transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -388,7 +388,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
         <button
           type="button"
           onClick={handleGuest}
-          className="text-xs font-semibold text-zinc-400 hover:text-white px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] active:scale-95 transition-all cursor-pointer"
+          className="text-xs font-semibold text-zinc-400 hover:text-white px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer"
         >
           {isRTL ? 'المتابعة كضيف' : 'Continue as Guest'}
         </button>

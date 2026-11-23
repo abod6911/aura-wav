@@ -8,7 +8,7 @@ export const ToastContainer: React.FC = () => {
   const removeToast = usePlayerStore((state) => state.removeToast);
 
   return (
-    <div className="fixed top-[calc(env(safe-area-inset-top,0px)+12px)] inset-x-4 max-w-sm mx-auto md:top-auto md:bottom-28 md:right-8 md:left-auto md:mx-0 z-[105] flex flex-col gap-2 pointer-events-none select-none w-full">
+    <div className="fixed top-[calc(env(safe-area-inset-top,0px)+12px)] inset-x-4 max-w-sm mx-auto md:top-auto md:bottom-28 md:right-8 md:left-auto md:mx-0 z-[100] flex flex-col gap-2 pointer-events-none select-none w-full">
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div

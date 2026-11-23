@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { handleStreamRequest } from './src/server/streamMiddleware.js';
 
 function audioStreamingPlugin() {
@@ -22,11 +21,6 @@ function audioStreamingPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), audioStreamingPlugin()],
-  resolve: {
-    alias: {
-      jsmediatags: path.resolve(import.meta.dirname, 'node_modules/jsmediatags/dist/jsmediatags.min.js'),
-    },
-  },
   server: {
     host: true,
     port: 5173,

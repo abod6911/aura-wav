@@ -79,7 +79,7 @@ export const HandoffBanner: React.FC = () => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -30, scale: 0.95 }}
         transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-        className="fixed top-3 sm:top-5 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 max-w-lg w-full pointer-events-auto"
+        className="fixed top-3 sm:top-5 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100] max-w-lg w-full pointer-events-auto"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         <div className="relative flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#101018]/95 backdrop-blur-2xl border border-[#FA243C]/35 shadow-[0_12px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(250,36,60,0.2)] specular-highlight overflow-hidden">
@@ -126,7 +126,7 @@ export const HandoffBanner: React.FC = () => {
             <button
               type="button"
               onClick={handleResume}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold shadow-lg shadow-[#FA243C]/30 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold shadow-lg shadow-[#FA243C]/30 hover:brightness-110 active:scale-95 transition-[color,background-color,border-color,transform] flex items-center gap-1.5 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
               <span>{isRTL ? 'استئناف' : 'Resume'}</span>

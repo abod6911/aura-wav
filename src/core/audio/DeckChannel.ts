@@ -1,5 +1,6 @@
 import { Track } from '../../types';
 import { DeckChannelName } from './types';
+import { isDirectNativeAudioMode } from './deviceAudioPolicy';
 
 /**
  * DeckChannel: Encapsulates AudioNode graphs and playback mechanisms
@@ -48,7 +49,14 @@ export class DeckChannel {
     this.name = name;
     this.audio = new Audio();
     this.audio.preload = 'auto';
-    this.audio.crossOrigin = 'anonymous';
+
+    // Only apply anonymous crossOrigin in DSP mode (Desktop, Android, or iOS with DSP).
+    // In Direct Native Audio Mode, omit crossOrigin to avoid CDN redirect and playback blocks.
+    if (!isDirectNativeAudioMode()) {
+      this.audio.crossOrigin = 'anonymous';
+    } else {
+      this.audio.removeAttribute('crossOrigin');
+    }
 
     // Optimize mobile audio element behavior & bit-perfect pitch preservation
     this.audio.preservesPitch = true;
@@ -66,6 +74,12 @@ export class DeckChannel {
    * Bind the channel's AudioNode graph to the shared AudioContext and master input bus
    */
   public bindAudioGraph(ctx: AudioContext, destination: AudioNode): void {
+    // In iOS Direct Native Audio Mode, strictly do NOT attach createMediaElementSource.
+    // Streaming directly through native <audio> keeps background & lockscreen playback 100% stable.
+    if (isDirectNativeAudioMode()) {
+      return;
+    }
+
     if (this.ctx === ctx && this.channelGainNode) {
       return; // Already initialized on this context
     }
@@ -194,7 +208,11 @@ export class DeckChannel {
     this.isBufferPlayback = false;
     this.isPreloaded = false;
 
-    this.audio.crossOrigin = 'anonymous';
+    if (!isDirectNativeAudioMode()) {
+      this.audio.crossOrigin = 'anonymous';
+    } else {
+      this.audio.removeAttribute('crossOrigin');
+    }
     this.audio.preservesPitch = true;
     (this.audio as any).mozPreservesPitch = true;
     (this.audio as any).webkitPreservesPitch = true;
@@ -232,7 +250,7 @@ export class DeckChannel {
     const clamped = Math.max(0, Math.min(1, volume));
     this.volumeLevel = clamped;
 
-    if (this.channelGainNode && this.ctx) {
+    if (this.channelGainNode && this.ctx && !isDirectNativeAudioMode()) {
       // Keep audio element at unity volume so Web Audio channelGainNode controls clean gain
       this.audio.volume = 1.0;
       const now = this.ctx.currentTime;
@@ -244,7 +262,9 @@ export class DeckChannel {
         this.channelGainNode.gain.setValueAtTime(clamped, now);
       }
     } else {
-      this.audio.volume = clamped;
+      try {
+        this.audio.volume = clamped;
+      } catch {}
     }
   }
 
@@ -394,7 +414,7 @@ export class DeckChannel {
    * Play deck
    */
   public async play(): Promise<void> {
-    if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted')) {
+    if (this.ctx && !isDirectNativeAudioMode() && (this.ctx.state === 'suspended' || (this.ctx as any).state === 'interrupted')) {
       await this.ctx.resume().catch(() => {});
     }
 
@@ -408,8 +428,29 @@ export class DeckChannel {
     } catch (err: any) {
       if (err.name === 'NotAllowedError') {
         console.warn(`[DeckChannel ${this.name}] Autoplay blocked: user gesture required`);
-      } else if (this.track?.previewUrl && this.audio.src !== this.track.previewUrl) {
+        throw err;
+      }
+
+      // Smart CORS / Redirect Fallback:
+      // If crossOrigin was set and playback threw an error (CORS policy failure or redirect without CORS),
+      // strip crossOrigin, reload and retry playback directly.
+      if (this.audio.crossOrigin) {
+        console.warn(`[DeckChannel ${this.name}] Play failed with crossOrigin, falling back to direct stream without CORS:`, err);
+        this.audio.removeAttribute('crossOrigin');
+        const curSrc = this.audio.src;
+        this.audio.src = curSrc;
+        this.audio.load();
+        try {
+          await this.audio.play();
+          return;
+        } catch (fallbackErr) {
+          console.warn(`[DeckChannel ${this.name}] Direct fallback also failed:`, fallbackErr);
+        }
+      }
+
+      if (this.track?.previewUrl && this.audio.src !== this.track.previewUrl) {
         console.warn(`[DeckChannel ${this.name}] Primary stream error, falling back to direct stream:`, this.track.previewUrl);
+        this.audio.removeAttribute('crossOrigin');
         this.audio.src = this.track.previewUrl;
         await this.audio.play().catch(() => {});
         return;

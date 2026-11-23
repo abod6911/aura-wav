@@ -74,7 +74,7 @@ export const AutoMixSelectorModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 select-none">
+      <div className="fixed inset-0 z-70 select-none">
         {/* Backdrop dismiss */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -100,7 +100,7 @@ export const AutoMixSelectorModal: React.FC = () => {
               setAutoMixModalOpen(false);
             }
           }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[85dvh] sm:max-w-md sm:mx-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-t-[28px] sm:rounded-3xl bg-[#101018] border-t sm:border border-white/10 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)] sm:pb-5 shadow-2xl"
+          className="fixed bottom-0 inset-x-0 z-70 max-h-[85dvh] sm:max-w-md sm:mx-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 rounded-t-[28px] sm:rounded-3xl bg-[#101018] border-t sm:border border-white/10 flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)] sm:pb-5 shadow-2xl"
         >
           {/* Unified Grab Handle */}
           <div
@@ -161,7 +161,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                       setPlaybackRate(item.rate);
                       addToast(`سرعة التشغيل: ${item.rate}x`, undefined, 'info');
                     }}
-                    className={`py-2.5 px-3 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer active:scale-95 ${
+                    className={`py-2.5 px-3 rounded-xl text-xs font-mono font-bold border transition-transform cursor-pointer active:scale-95 ${
                       playbackRate === item.rate
                         ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-[0_2px_12px_rgba(250,36,60,0.4)]'
                         : 'bg-white/[0.05] text-zinc-300 border-white/[0.08] hover:bg-white/[0.1]'
@@ -231,7 +231,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                   <div
                     key={opt.id}
                     onClick={() => handleSelectStyle(opt.id)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-start justify-between gap-3 active:scale-[0.99] ${
+                    className={`p-3.5 rounded-2xl border transition-transform cursor-pointer select-none flex items-start justify-between gap-3 active:scale-[0.99] ${
                       isSelected
                         ? 'bg-[#FA243C]/15 border-[#FA243C]/40 shadow-lg shadow-[#FA243C]/10'
                         : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.08]'
@@ -285,7 +285,7 @@ export const AutoMixSelectorModal: React.FC = () => {
                 store.nextTrack({ forceImmediate: true });
                 setAutoMixModalOpen(false);
               }}
-              className="w-full h-11 sm:h-12 px-4 rounded-full bg-gradient-to-r from-[#FA2D48] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.98] transition-all cursor-pointer"
+              className="w-full h-11 sm:h-12 px-4 rounded-full bg-gradient-to-r from-[#FA2D48] to-[#FF375F] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.98] transition-[color,background-color,border-color,transform] cursor-pointer"
             >
               <Zap className="w-4 h-4 fill-white" />
               <span>تجربة انتقال فوري بهذا النمط الآن</span>

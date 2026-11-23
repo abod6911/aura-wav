@@ -105,7 +105,7 @@ export const MetadataEditorModal: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl select-none overflow-y-auto">
+      <div className="fixed inset-0 z-70 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-2xl select-none overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -178,7 +178,7 @@ export const MetadataEditorModal: React.FC = () => {
                         type="button"
                         key={cand.id}
                         onClick={() => handleSelectCandidate(cand)}
-                        className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 hover:border-[#FA243C] flex-shrink-0 transition-all cursor-pointer"
+                        className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 hover:border-[#FA243C] flex-shrink-0 transition-colors cursor-pointer"
                       >
                         <img
                           src={cand.artworkUrl}
@@ -313,7 +313,7 @@ export const MetadataEditorModal: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs flex items-center gap-2 transition-all shadow-lg shadow-[#FA243C]/25 cursor-pointer hover:scale-105 active:scale-95"
+                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs flex items-center gap-2 transition-[color,background-color,border-color,transform] shadow-lg shadow-[#FA243C]/25 cursor-pointer hover:scale-105 active:scale-95"
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>حفظ التعديلات في OPFS</span>
