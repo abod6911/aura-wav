@@ -21,6 +21,9 @@ import {
   X,
   Music,
   Trash2,
+  User,
+  Disc3,
+  Radio,
 } from 'lucide-react';
 
 interface TrackActionSheetProps {
@@ -45,12 +48,14 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
-  const setMetadataEditorModal = usePlayerStore((state) => state.setMetadataEditorModal);
-  const setChangeArtworkModal = usePlayerStore((state) => state.setChangeArtworkModal);
+  const setTrackEditOpen = usePlayerStore((state) => state.setTrackEditOpen);
   const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const removeTrackFromPlaylist = usePlayerStore((state) => state.removeTrackFromPlaylist);
   const addToast = usePlayerStore((state) => state.addToast);
   const deleteCloudTrackById = usePlayerStore((state) => state.deleteCloudTrackById);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
+  const startSongRadio = usePlayerStore((state) => state.startSongRadio);
 
   const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
 
@@ -227,6 +232,20 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   </div>
                 </button>
 
+                {/* 2.5 Start Song Radio */}
+                <button
+                  onClick={() => handleAction(() => startSongRadio(track))}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-[#1DB954]/15 text-[#1DB954] flex items-center justify-center shrink-0">
+                    <Radio className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">{isRTL ? 'بدء راديو الأغنية' : 'Start Song Radio'}</span>
+                    <span className="text-[10px] text-zinc-400 font-normal">{isRTL ? 'تشغيل باقة أغانٍ من نفس الطابع الموسيقي' : 'Plays a curated mix around this track'}</span>
+                  </div>
+                </button>
+
                 {/* 3. Go to Queue */}
                 <button
                   onClick={() => handleAction(() => setQueueOpen(true))}
@@ -285,31 +304,51 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                 </button>
               </div>
 
+              {/* Group 2.5: Navigation to Artist / Album */}
+              <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] divide-y divide-white/[0.06] overflow-hidden">
+                {track.artist && (
+                  <button
+                    onClick={() => handleAction(() => openArtist(track.artist))}
+                    className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <span className="flex-1 text-start">
+                      {isRTL ? `الانتقال إلى الفنان (${track.artist})` : `Go to Artist (${track.artist})`}
+                    </span>
+                  </button>
+                )}
+
+                {track.album && (
+                  <button
+                    onClick={() => handleAction(() => openAlbum(track.album, track.artist))}
+                    className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0">
+                      <Disc3 className="w-4 h-4" />
+                    </div>
+                    <span className="flex-1 text-start">
+                      {isRTL ? `الانتقال إلى الألبوم (${track.album})` : `Go to Album (${track.album})`}
+                    </span>
+                  </button>
+                )}
+              </div>
+
               {/* Group 3: Metadata & Actions */}
               <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] divide-y divide-white/[0.06] overflow-hidden">
-                {/* 6. Edit Metadata */}
+                {/* 6. Edit Track & Artwork */}
                 <button
-                  onClick={() => handleAction(() => setMetadataEditorModal(true, track))}
+                  onClick={() => handleAction(() => setTrackEditOpen(true, track))}
                   className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white/90 font-medium text-xs sm:text-sm cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
                     <Pencil className="w-4 h-4" />
                   </div>
-                  <span className="flex-1 text-start">{isRTL ? 'تعديل بيانات الأغنية' : 'Edit Track Info'}</span>
+                  <span className="flex-1 text-start">{isRTL ? 'تعديل المسار والغلاف' : 'Edit Track & Artwork'}</span>
                 </button>
 
-                {/* 7. Change Artwork */}
-                <button
-                  onClick={() => handleAction(() => setChangeArtworkModal(true, track))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white/90 font-medium text-xs sm:text-sm cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0">
-                    <ImageIcon className="w-4 h-4" />
-                  </div>
-                  <span className="flex-1 text-start">{isRTL ? 'تغيير غلاف الألبوم' : 'Change Artwork'}</span>
-                </button>
-
-                {/* 8. Remove from Current Playlist (If opened inside a playlist) */}
+                {/* 7. Remove from Current Playlist (If opened inside a playlist) */}
                 {currentPlaylistId && (
                   <button
                     onClick={() => handleAction(async () => {

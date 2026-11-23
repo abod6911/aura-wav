@@ -255,7 +255,7 @@ export const AtmosphereBackground: React.FC = () => {
         <div
           className="absolute inset-0 transition-opacity duration-1000 ease-out"
           style={{
-            backgroundImage: `radial-gradient(circle 80vw at 50% 10%, rgba(var(--ambient-primary-rgb, 250, 45, 72), 0.08) 0%, transparent 65%), radial-gradient(circle 70vw at 0% 90%, rgba(var(--ambient-accent-rgb, 250, 45, 72), 0.05) 0%, transparent 60%)`,
+            backgroundImage: `radial-gradient(circle 80vw at 50% 10%, rgba(var(--ambient-primary-rgb, 29, 185, 84), 0.08) 0%, transparent 65%), radial-gradient(circle 70vw at 0% 90%, rgba(var(--ambient-accent-rgb, 29, 185, 84), 0.05) 0%, transparent 60%)`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />

@@ -1,15 +1,25 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { Play, Pause, Heart, ChevronRight } from 'lucide-react';
+import { Play, Pause, Heart, Sparkles, User, Disc3, Clock, ChevronRight } from 'lucide-react';
 import { Track } from '../types';
 import { triggerHaptic } from '../utils/haptics';
 import { MobileTrackRow } from './common/MobileTrackRow';
 import { TrackActionSheet } from './library/TrackActionSheet';
+import { isArabicText } from '../utils/formatters';
+import {
+  generateDailyMixes,
+  generateOnRepeatMix,
+  generateRediscoverMix,
+  SmartMix,
+} from '../utils/mixEngine';
+import { getAllArtists } from '../utils/catalogSelectors';
 
 interface SpotifyHomeViewProps {
   onOpenImport?: () => void;
 }
+
+type HomeFilter = 'all' | 'mixes' | 'artists' | 'recent';
 
 export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -22,61 +32,183 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
+  const navigateTo = usePlayerStore((state) => state.navigateTo);
   const userQueue = usePlayerStore((state) => state.userQueue);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
+  const openSmartMix = usePlayerStore((state) => state.openSmartMix);
+  const history = usePlayerStore((state) => state.history);
+  const playStatsMap = usePlayerStore((state) => state.playStatsMap);
+  const playlists = usePlayerStore((state) => state.playlists);
 
+  const [homeFilter, setHomeFilter] = useState<HomeFilter>('all');
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
 
   const sourcePool = useMemo(() => {
     return tracks.length > 0 ? tracks : (catalogTracks.length > 0 ? catalogTracks : []);
   }, [tracks, catalogTracks]);
 
-  // Extract slices strictly once without recalculating on every re-render
-  const { quickTracks, madeForYou, trendingHits, topTen } = useMemo(() => {
-    const quick: Track[] = [];
-    const made: Track[] = [];
-    const trending: Track[] = [];
-    const top: Track[] = [];
+  // 1. Generate Smart Mixes
+  const dailyMixes = useMemo(() => {
+    return generateDailyMixes(sourcePool, favorites, playStatsMap);
+  }, [sourcePool, favorites, playStatsMap]);
 
-    const seenArtists = new Set<string>();
+  const onRepeatMix = useMemo(() => {
+    return generateOnRepeatMix(sourcePool, playStatsMap, favorites, history);
+  }, [sourcePool, playStatsMap, favorites, history]);
 
-    for (let i = 0; i < sourcePool.length; i++) {
-      const trk = sourcePool[i];
-      const art = (trk.artist || '').toLowerCase().trim();
+  const rediscoverMix = useMemo(() => {
+    return generateRediscoverMix(sourcePool, playStatsMap, history);
+  }, [sourcePool, playStatsMap, history]);
 
-      // Quick access pool: up to 7 tracks (plus Liked Songs makes 8)
-      if (quick.length < 7 && !seenArtists.has(art)) {
-        seenArtists.add(art);
-        quick.push(trk);
-      }
+  const allSmartMixes = useMemo<SmartMix[]>(() => {
+    const list: SmartMix[] = [...dailyMixes];
+    if (onRepeatMix && onRepeatMix.tracks.length > 0) list.push(onRepeatMix);
+    if (rediscoverMix && rediscoverMix.tracks.length > 0) list.push(rediscoverMix);
+    return list;
+  }, [dailyMixes, onRepeatMix, rediscoverMix]);
 
-      if (made.length < 12 && i % 2 === 0) {
-        made.push(trk);
-      } else if (trending.length < 12) {
-        trending.push(trk);
-      }
+  // 2. Artists in Library
+  const topArtists = useMemo(() => {
+    return getAllArtists(sourcePool).slice(0, 18);
+  }, [sourcePool]);
 
-      if (top.length < 10) {
-        top.push(trk);
-      }
+  // 3. Quick Access Grid Construction with Strict Deduplication
+  const { quickCards, displayedIds } = useMemo(() => {
+    const ids = new Set<string>();
+    type QuickCardItem =
+      | { type: 'favorites' }
+      | { type: 'mix'; mixId: string; title: string; covers: string[] }
+      | { type: 'playlist'; playlistId: string; name: string; trackCount: number; coverUrl?: string }
+      | { type: 'track'; track: Track };
 
-      if (quick.length >= 7 && made.length >= 12 && trending.length >= 12 && top.length >= 10) {
-        break;
+    const cards: QuickCardItem[] = [{ type: 'favorites' }];
+
+    // Pick unique tracks from history first
+    const seenTrackIds = new Set<string>();
+    for (const hTrack of history) {
+      if (!seenTrackIds.has(hTrack.id)) {
+        seenTrackIds.add(hTrack.id);
+        ids.add(hTrack.id);
+        cards.push({ type: 'track', track: hTrack });
+        if (cards.length >= 5) break;
       }
     }
 
-    return {
-      quickTracks: quick,
-      madeForYou: made,
-      trendingHits: trending,
-      topTen: top,
-    };
-  }, [sourcePool]);
+    // If short on history, fill from top played or favorites
+    if (cards.length < 5) {
+      const sortedByPlay = [...sourcePool].sort((a, b) => {
+        const cA = playStatsMap[a.id]?.playCount || 0;
+        const cB = playStatsMap[b.id]?.playCount || 0;
+        return cB - cA;
+      });
 
-  // Spotlight Track
+      for (const t of sortedByPlay) {
+        if (!seenTrackIds.has(t.id)) {
+          seenTrackIds.add(t.id);
+          ids.add(t.id);
+          cards.push({ type: 'track', track: t });
+          if (cards.length >= 5) break;
+        }
+      }
+    }
+
+    // Add user playlist if available
+    if (playlists.length > 0) {
+      const pl = playlists[0];
+      cards.push({
+        type: 'playlist',
+        playlistId: pl.id,
+        name: pl.name,
+        trackCount: pl.trackIds?.length || 0,
+        coverUrl: pl.coverUrl,
+      });
+    }
+
+    // Add second user playlist or fallback track
+    if (playlists.length > 1 && cards.length < 7) {
+      const pl2 = playlists[1];
+      cards.push({
+        type: 'playlist',
+        playlistId: pl2.id,
+        name: pl2.name,
+        trackCount: pl2.trackIds?.length || 0,
+        coverUrl: pl2.coverUrl,
+      });
+    }
+
+    // Add Daily Mix 1 as the 8th card
+    if (dailyMixes.length > 0 && cards.length < 8) {
+      const dm1 = dailyMixes[0];
+      cards.push({
+        type: 'mix',
+        mixId: dm1.id,
+        title: dm1.title,
+        covers: dm1.collageCovers,
+      });
+    }
+
+    // If still under 8, fill with unique tracks
+    if (cards.length < 8) {
+      for (const t of sourcePool) {
+        if (!seenTrackIds.has(t.id)) {
+          seenTrackIds.add(t.id);
+          ids.add(t.id);
+          cards.push({ type: 'track', track: t });
+          if (cards.length >= 8) break;
+        }
+      }
+    }
+
+    return { quickCards: cards.slice(0, 8), displayedIds: ids };
+  }, [history, sourcePool, playStatsMap, playlists, dailyMixes]);
+
+  // 4. Deduplicated Recently Played Tracks
+  const recentTracks = useMemo(() => {
+    const list: Track[] = [];
+    const seen = new Set<string>();
+
+    for (const h of history) {
+      if (!displayedIds.has(h.id) && !seen.has(h.id)) {
+        seen.add(h.id);
+        list.push(h);
+        if (list.length >= 12) break;
+      }
+    }
+
+    // Fallback if history is scarce: use most played tracks not in displayedIds
+    if (list.length < 8) {
+      const sortedByPlay = [...sourcePool].sort((a, b) => {
+        const cA = playStatsMap[a.id]?.playCount || 0;
+        const cB = playStatsMap[b.id]?.playCount || 0;
+        return cB - cA;
+      });
+
+      for (const t of sortedByPlay) {
+        if (!displayedIds.has(t.id) && !seen.has(t.id)) {
+          seen.add(t.id);
+          list.push(t);
+          if (list.length >= 12) break;
+        }
+      }
+    }
+
+    return list;
+  }, [history, sourcePool, playStatsMap, displayedIds]);
+
+  // 5. Deduplicated Rediscover Tracks
+  const rediscoverTracks = useMemo(() => {
+    if (!rediscoverMix) return [];
+    return rediscoverMix.tracks
+      .filter((t) => !displayedIds.has(t.id))
+      .slice(0, 12);
+  }, [rediscoverMix, displayedIds]);
+
+  // Spotlight Track (Current or First Track)
   const spotlightTrack = currentTrack || (sourcePool.length > 0 ? sourcePool[0] : null);
   const isSpotlightFav = spotlightTrack ? favorites.includes(spotlightTrack.id) : false;
 
-  // Up Next tracks for Hero side panel
+  // Up Next tracks for Desktop Hero
   const upNextTracks = useMemo(() => {
     if (userQueue.length > 0) return userQueue.slice(0, 2);
     if (!spotlightTrack) return [];
@@ -97,166 +229,267 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   }, [currentTrack?.id, togglePlayPause, playTrack]);
 
   return (
-    <div className="w-full flex flex-col gap-4 sm:gap-7 pt-1 sm:pt-2 pb-2 sm:pb-8 overflow-x-hidden select-none" dir={dir}>
-      {/* ── Top Header Title (Desktop Only: Mobile Header displays sticky page title) ── */}
-      <div className="hidden sm:flex items-center justify-between">
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
-          {t.listenNow}
-        </h1>
-      </div>
-
-      {/* ── 1. Quick Access Grid (Balanced 6 cards on mobile, 8 on desktop, flush image) ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 w-full">
-        {/* Card 1: Liked Songs */}
-        <div
-          onClick={() => {
-            triggerHaptic('light');
-            setActiveTab('favorites');
-          }}
-          className="group relative flex items-center h-12 sm:h-16 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm"
-        >
-          <div className="w-12 h-12 min-w-[48px] min-h-[48px] sm:w-16 sm:h-16 sm:min-w-[64px] flex items-center justify-center bg-gradient-to-br from-[#FA2D48] to-[#FF375F] shrink-0 shadow-md">
-            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white fill-white" />
-          </div>
-          <div className="min-w-0 flex-1 px-2.5 sm:px-3 py-0.5 text-start">
-            <span className="text-xs font-bold text-white truncate block leading-tight">
-              {t.likedSongsCard}
-            </span>
-            <span className="text-[10px] sm:text-[11px] text-zinc-400 block tabular-nums mt-0.5 font-medium">
-              {favorites.length} {t.songs}
-            </span>
-          </div>
+    <div className="w-full flex flex-col gap-5 sm:gap-8 pt-1 sm:pt-3 pb-24 overflow-x-hidden select-none" dir={dir}>
+      {/* ── Top Header & Filter Pills ── */}
+      <div className="flex flex-col gap-3">
+        <div className="hidden sm:flex items-center justify-between">
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+            {t.listenNow}
+          </h1>
         </div>
 
-        {/* Cards 2-8: Quick Tracks from Library (Max 5 on mobile = 6 total, 7 on desktop = 8 total) */}
-        {quickTracks.slice(0, 7).map((trk, idx) => {
-          const isCur = currentTrack?.id === trk.id;
-          return (
-            <div
-              key={trk.id}
-              onClick={() => handleTrackClick(trk, sourcePool)}
-              className={`group relative flex items-center h-12 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-sm ${
-                idx >= 5 ? 'hidden md:flex' : 'flex'
-              } ${
-                isCur
-                  ? 'bg-[#1e1b22] border-[#FA2D48]/40'
-                  : 'bg-[#18181C] hover:bg-[#202026] border-white/[0.04]'
-              }`}
-            >
-              <img
-                src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
-                alt={trk.title}
-                loading="lazy"
-                decoding="async"
-                className="w-12 h-12 min-w-[48px] min-h-[48px] sm:w-16 sm:h-16 sm:min-w-[64px] object-cover shrink-0 bg-black/40 shadow-sm"
-              />
-              <div className="min-w-0 flex-1 px-2 sm:px-3 py-0.5">
-                <span
-                  dir="auto"
-                  className={`text-xs font-bold truncate block leading-tight ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
-                >
-                  {trk.title}
-                </span>
-                <span
-                  dir="auto"
-                  className="text-[10px] sm:text-[11px] text-zinc-400 truncate block mt-0.5 font-medium leading-tight"
-                >
-                  {trk.artist}
-                </span>
-              </div>
-
-              {/* Hover circular play button (Desktop only) */}
+        {/* Filter Pills (Spotify Style) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          {[
+            { id: 'all', label: isRTL ? 'الكل' : 'All' },
+            { id: 'mixes', label: isRTL ? 'ميكساتك' : 'Daily Mixes' },
+            { id: 'artists', label: isRTL ? 'الفنانون' : 'Artists' },
+            { id: 'recent', label: isRTL ? 'استمعت مؤخراً' : 'Recently Played' },
+          ].map((pill) => {
+            const isActive = homeFilter === pill.id;
+            return (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTrackClick(trk, sourcePool);
+                key={pill.id}
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setHomeFilter(pill.id as HomeFilter);
                 }}
-                className="hidden sm:flex w-8 h-8 rounded-full bg-white text-black items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0 shadow-lg cursor-pointer hover:scale-105 active:scale-95 me-2"
-                aria-label={isCur && isPlaying ? t.pause : t.play}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer ${
+                  isActive
+                    ? 'bg-white text-black'
+                    : 'bg-[#242424] text-white hover:bg-[#323232] border border-white/5'
+                }`}
               >
-                {isCur && isPlaying ? (
-                  <Pause className="w-3.5 h-3.5 fill-black text-black" />
-                ) : (
-                  <Play className="w-3.5 h-3.5 fill-black text-black translate-x-0.5" />
-                )}
+                {pill.label}
               </button>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* ── 2. Editorial Glass Hero Card (Hidden on Mobile to save screen real estate) ── */}
-      {spotlightTrack && (
+      {/* ── 1. Quick Access Grid (Displayed on 'all' filter) ── */}
+      {homeFilter === 'all' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 w-full">
+          {quickCards.map((card, idx) => {
+            if (card.type === 'favorites') {
+              return (
+                <div
+                  key="quick-favorites"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setActiveTab('favorites');
+                  }}
+                  className="group relative flex items-center h-13 sm:h-16 rounded-lg bg-[#181818] hover:bg-[#282828] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm"
+                >
+                  <div className="w-13 h-13 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] shrink-0 shadow-md">
+                    <Heart className="w-5 h-5 text-white fill-white" />
+                  </div>
+                  <div className="min-w-0 flex-1 px-3 text-start">
+                    <span className="text-xs sm:text-sm font-bold text-white truncate block leading-tight">
+                      {t.likedSongsCard}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-[#B3B3B3] block tabular-nums mt-0.5 font-medium">
+                      {favorites.length} {t.songs}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            if (card.type === 'mix') {
+              return (
+                <div
+                  key={`quick-mix-${card.mixId}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    openSmartMix(card.mixId);
+                  }}
+                  className={`group relative flex items-center h-13 sm:h-16 rounded-lg bg-[#181818] hover:bg-[#282828] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm ${
+                    idx >= 6 ? 'hidden xl:flex' : 'flex'
+                  }`}
+                >
+                  <div className="w-13 h-13 sm:w-16 sm:h-16 grid grid-cols-2 grid-rows-2 bg-[#242424] shrink-0 overflow-hidden">
+                    {card.covers.map((cUrl, cIdx) => (
+                      <img key={cIdx} src={cUrl} alt="" className="w-full h-full object-cover" />
+                    ))}
+                  </div>
+                  <div className="min-w-0 flex-1 px-3 text-start">
+                    <span className="text-xs sm:text-sm font-bold text-white truncate block leading-tight">
+                      {card.title}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-emerald-400 block truncate mt-0.5 font-medium">
+                      ميكس مخصص لك
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            if (card.type === 'playlist') {
+              return (
+                <div
+                  key={`quick-pl-${card.playlistId}`}
+                  onClick={() => {
+                    triggerHaptic('light');
+                    navigateTo({ tab: 'playlists', playlistId: card.playlistId });
+                  }}
+                  className={`group relative flex items-center h-13 sm:h-16 rounded-lg bg-[#181818] hover:bg-[#282828] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm ${
+                    idx >= 6 ? 'hidden xl:flex' : 'flex'
+                  }`}
+                >
+                  <div className="w-13 h-13 sm:w-16 sm:h-16 flex items-center justify-center bg-[#242424] shrink-0 text-zinc-400">
+                    <Disc3 className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0 flex-1 px-3 text-start">
+                    <span className="text-xs sm:text-sm font-bold text-white truncate block leading-tight">
+                      {card.name}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-[#B3B3B3] block tabular-nums mt-0.5 font-medium">
+                      {card.trackCount} مسار
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // Track card
+            const trk = card.track;
+            const isCur = currentTrack?.id === trk.id;
+
+            return (
+              <div
+                key={`quick-trk-${trk.id}`}
+                onClick={() => handleTrackClick(trk, sourcePool)}
+                className={`group relative flex items-center h-13 sm:h-16 rounded-lg border transition-colors cursor-pointer overflow-hidden shadow-sm ${
+                  idx >= 6 ? 'hidden xl:flex' : 'flex'
+                } ${
+                  isCur
+                    ? 'bg-[#282828] border-[#1DB954]/40'
+                    : 'bg-[#181818] hover:bg-[#282828] border-white/[0.04]'
+                }`}
+              >
+                <img
+                  src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
+                  alt={trk.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-13 h-13 sm:w-16 sm:h-16 object-cover shrink-0 bg-black/40"
+                />
+                <div className="min-w-0 flex-1 px-2.5 sm:px-3 text-start">
+                  <span
+                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
+                    className={`text-xs sm:text-sm font-bold truncate block leading-tight ${
+                      isCur ? 'text-[#1DB954]' : 'text-white'
+                    }`}
+                  >
+                    {trk.title}
+                  </span>
+                  <span
+                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (trk.artist) openArtist(trk.artist);
+                    }}
+                    className="text-[10px] sm:text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-medium leading-tight transition-colors"
+                  >
+                    {trk.artist}
+                  </span>
+                </div>
+
+                {/* Hover Play Button (Desktop) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTrackClick(trk, sourcePool);
+                  }}
+                  className="hidden md:flex w-8 h-8 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black items-center justify-center opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-200 shrink-0 shadow-lg cursor-pointer hover:scale-105 active:scale-95 me-2.5"
+                  aria-label={isCur && isPlaying ? t.pause : t.play}
+                >
+                  {isCur && isPlaying ? (
+                    <Pause className="w-4 h-4 fill-black text-black" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── 2. Editorial Matte Hero Card (Desktop only, displayed on 'all') ── */}
+      {homeFilter === 'all' && spotlightTrack && (
         <div className="hidden md:grid grid-cols-1 lg:grid-cols-12 gap-4 w-full">
-          {/* Main Featured Track Card (65% width on desktop) */}
-          <div
-            className="lg:col-span-8 min-h-[190px] sm:h-[210px] rounded-2xl p-4 sm:p-6 flex items-center justify-between relative overflow-hidden bg-[#141418] border border-white/[0.07] select-none"
-          >
-            {/* Cinematic subtle blur derived from current track artwork */}
+          {/* Main Featured Track Card */}
+          <div className="lg:col-span-8 min-h-[190px] rounded-2xl p-5 flex items-center justify-between relative overflow-hidden bg-[#181818] border border-white/[0.06] select-none">
+            {/* Cinematic subtle blur */}
             <div
-              className="absolute inset-0 -z-10 bg-cover bg-center opacity-25 blur-[60px] pointer-events-none"
+              className="absolute inset-0 -z-10 bg-cover bg-center opacity-20 blur-[50px] pointer-events-none"
               style={{
-                backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'})`,
+                backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/cover.jpg'})`,
               }}
             />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#09090B] via-[#09090B]/80 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#121212] via-[#121212]/70 to-transparent pointer-events-none" />
 
-            <div className="flex items-center gap-4 sm:gap-5 min-w-0 flex-1 z-10">
-              {/* Crisp Large Album Cover */}
+            <div className="flex items-center gap-5 min-w-0 flex-1 z-10">
               <div className="relative shrink-0">
                 <img
-                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/logo.svg'}
+                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/cover.jpg'}
                   alt={spotlightTrack.title}
                   loading="eager"
-                  decoding="async"
-                  className="w-24 h-24 sm:w-36 sm:h-36 rounded-xl object-cover shadow-2xl border border-white/10 bg-black/50"
+                  className="w-28 h-28 lg:w-32 lg:h-32 rounded-xl object-cover shadow-2xl ring-1 ring-white/10 bg-black/50"
                 />
               </div>
 
-              {/* Information & Action Buttons */}
-              <div className="min-w-0 flex-1 space-y-1 sm:space-y-1.5">
-                <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider text-zinc-400 uppercase block">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <span className="text-[11px] font-bold tracking-wider text-emerald-400 uppercase block">
                   {currentTrack?.id === spotlightTrack.id ? 'قيد التشغيل الآن' : 'استمع الآن'}
                 </span>
 
-                <h2
-                  className="text-base sm:text-2xl font-bold text-white truncate tracking-tight"
-                >
+                <h2 className="text-xl lg:text-2xl font-black text-white truncate tracking-tight">
                   <bdi dir="auto">{spotlightTrack.title}</bdi>
                 </h2>
 
                 <p
-                  className="text-xs sm:text-sm text-zinc-400 font-medium truncate"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (spotlightTrack.artist) openArtist(spotlightTrack.artist);
+                  }}
+                  className="text-xs sm:text-sm text-zinc-300 hover:text-white hover:underline cursor-pointer font-medium truncate transition-colors"
                 >
                   <bdi dir="auto">{spotlightTrack.artist}</bdi>
                 </p>
 
-                <div className="flex items-center gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
+                <div className="flex items-center gap-3 pt-2">
                   <button
+                    type="button"
                     onClick={() => handleTrackClick(spotlightTrack)}
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 font-semibold text-xs flex items-center gap-2 shadow-lg transition-[color,background-color,border-color,transform] active:scale-95 cursor-pointer"
+                    className="px-5 py-2.5 rounded-full bg-white text-black hover:bg-zinc-200 font-bold text-xs flex items-center gap-2 shadow-lg transition-transform active:scale-95 cursor-pointer"
                   >
                     {currentTrack?.id === spotlightTrack.id && isPlaying ? (
                       <>
-                        <Pause className="w-3.5 h-3.5 fill-black text-black" />
+                        <Pause className="w-4 h-4 fill-black text-black" />
                         <span>إيقاف مؤقت</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-3.5 h-3.5 fill-black text-black translate-x-0.5" />
+                        <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
                         <span>{currentTrack?.id === spotlightTrack.id ? 'متابعة الاستماع' : 'تشغيل'}</span>
                       </>
                     )}
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => toggleFavorite(spotlightTrack.id)}
-                    className="p-2 sm:p-2.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                    className="p-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition-colors cursor-pointer"
                     title={isSpotlightFav ? t.favoriteRemoved : t.favoriteAdded}
                   >
                     <Heart
                       className={`w-4 h-4 transition-transform active:scale-125 ${
-                        isSpotlightFav ? 'text-[#FA2D48] fill-[#FA2D48]' : ''
+                        isSpotlightFav ? 'text-[#1DB954] fill-[#1DB954]' : ''
                       }`}
                     />
                   </button>
@@ -265,8 +498,8 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             </div>
           </div>
 
-          {/* Up Next / التالي في القائمة Card (35% width on desktop) */}
-          <div className="lg:col-span-4 hidden lg:flex flex-col justify-between h-[210px] rounded-2xl p-5 bg-[#141418] border border-white/[0.07]">
+          {/* Up Next / التالي في القائمة */}
+          <div className="lg:col-span-4 hidden lg:flex flex-col justify-between rounded-2xl p-4 bg-[#181818] border border-white/[0.06]">
             <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
               <span className="text-xs font-bold text-zinc-300">التالي في القائمة</span>
               <span className="text-[11px] text-zinc-500 tabular-nums font-mono">
@@ -278,23 +511,25 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               {upNextTracks.length > 0 ? (
                 upNextTracks.map((trk) => (
                   <div
-                    key={trk.id}
+                    key={`hero-next-${trk.id}`}
                     onClick={() => handleTrackClick(trk, sourcePool)}
-                    className="group flex items-center gap-3 p-2 rounded-xl bg-[#18181C] hover:bg-[#202026] border border-white/[0.04] transition-colors cursor-pointer"
+                    className="group flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors cursor-pointer"
                   >
                     <img
-                      src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
                       alt={trk.title}
-                      className="w-9 h-9 rounded-lg object-cover shrink-0 bg-black/40"
+                      className="w-10 h-10 rounded-lg object-cover shrink-0 bg-black/40"
                     />
                     <div className="min-w-0 flex-1">
-                      <span
-                        className="text-xs font-medium text-white truncate block"
-                      >
+                      <span className="text-xs font-semibold text-white truncate block">
                         <bdi dir="auto">{trk.title}</bdi>
                       </span>
                       <span
-                        className="text-[10px] text-zinc-400 truncate block"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (trk.artist) openArtist(trk.artist);
+                        }}
+                        className="text-[10px] text-zinc-400 hover:text-white hover:underline cursor-pointer truncate block transition-colors"
                       >
                         <bdi dir="auto">{trk.artist}</bdi>
                       </span>
@@ -309,11 +544,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               )}
             </div>
 
-            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500">
-              <span>قائمة التشغيل الذكية</span>
+            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400">
+              <span>قائمة التشغيل</span>
               <button
+                type="button"
                 onClick={() => usePlayerStore.getState().toggleRightSidebar()}
-                className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="text-emerald-400 hover:underline cursor-pointer"
               >
                 عرض الكل
               </button>
@@ -322,42 +558,115 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </div>
       )}
 
-      {/* ── 3. Section: Made For You (Horizontal Carousel on Mobile, Grid on Desktop) ── */}
-      {madeForYou.length > 0 && (
+      {/* ── 3. Section: ميكساتك اليومية (Daily Mixes + On Repeat + Rediscover) ── */}
+      {(homeFilter === 'all' || homeFilter === 'mixes') && allSmartMixes.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-              {t.madeForYou}
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-400" />
+              <span>{isRTL ? 'ميكساتك اليومية' : 'Your Daily Mixes'}</span>
+            </h2>
+            <span className="text-xs text-zinc-400 font-medium">
+              تتحدث يومياً في منتصف الليل
+            </span>
+          </div>
+
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:gap-4 md:overflow-visible">
+            {allSmartMixes.map((mix) => (
+              <div
+                key={mix.id}
+                onClick={() => {
+                  triggerHaptic('light');
+                  openSmartMix(mix.id);
+                }}
+                className="group relative flex flex-col p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[150px] xs:w-[165px] shrink-0 snap-start md:w-auto"
+              >
+                {/* 2x2 Collage Cover */}
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/5 grid grid-cols-2 grid-rows-2">
+                  {mix.collageCovers.map((cov, cIdx) => (
+                    <img
+                      key={cIdx}
+                      src={cov}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ))}
+
+                  {/* Corner Floating Play Button on Hover */}
+                  <div className="absolute bottom-2 end-2 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (mix.tracks.length > 0) {
+                          playTrack(mix.tracks[0], mix.tracks);
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                      title="تشغيل الميكس"
+                    >
+                      <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Badge & Title & Subtitle */}
+                <span className="text-[10px] font-bold text-emerald-400 mt-2 uppercase tracking-wider truncate">
+                  {mix.badge}
+                </span>
+                <h4
+                  dir={isArabicText(mix.title) ? 'rtl' : 'ltr'}
+                  className="text-xs sm:text-sm font-bold text-white truncate leading-snug mt-0.5"
+                >
+                  {mix.title}
+                </h4>
+                <p
+                  dir={isArabicText(mix.subtitle) ? 'rtl' : 'ltr'}
+                  className="text-[11px] text-[#B3B3B3] truncate mt-0.5 leading-tight"
+                >
+                  {mix.subtitle}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 4. Section: استمعت مؤخراً (Deduplicated Recently Played) ── */}
+      {(homeFilter === 'all' || homeFilter === 'recent') && recentTracks.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-zinc-400" />
+              <span>{isRTL ? 'استمعت مؤخراً' : 'Recently Played'}</span>
             </h2>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-5 md:overflow-visible">
-            {madeForYou.slice(0, 12).map((trk) => {
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+            {recentTracks.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
                 <div
-                  key={trk.id}
-                  onClick={() => handleTrackClick(trk, madeForYou)}
-                  className="group relative flex flex-col cursor-pointer transition-colors select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
+                  key={`recent-${trk.id}`}
+                  onClick={() => handleTrackClick(trk, recentTracks)}
+                  className="group relative flex flex-col p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[135px] xs:w-[150px] shrink-0 snap-start md:w-auto"
                 >
-                  {/* Clean Square Artwork Container */}
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-colors">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/5 mb-2">
                     <img
-                      src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
                       alt={trk.title}
                       loading="lazy"
-                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-
-                    {/* Corner Floating Glass Play Button on Hover */}
-                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
+                    <div className="absolute bottom-2 end-2 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleTrackClick(trk, madeForYou);
+                          handleTrackClick(trk, recentTracks);
                         }}
-                        className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                        className="w-10 h-10 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                         aria-label={isCur && isPlaying ? t.pause : t.play}
                       >
                         {isCur && isPlaying ? (
@@ -367,27 +676,25 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                         )}
                       </button>
                     </div>
-
-                    {/* Playing Indicator */}
-                    {isCur && isPlaying && (
-                      <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px] flex items-center justify-center gap-1">
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-1 h-4" />
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-2 h-2.5" />
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-3 h-5" />
-                      </div>
-                    )}
                   </div>
 
-                  {/* Title & Artist */}
                   <h4
-                    className={`text-xs font-semibold truncate text-start block mt-1.5 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
+                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
+                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug ${
+                      isCur ? 'text-[#1DB954]' : 'text-white'
+                    }`}
                   >
-                    <bdi dir="auto">{trk.title}</bdi>
+                    {trk.title}
                   </h4>
                   <span
-                    className="text-[11px] text-[#8E8E93] truncate text-start block mt-0.5 font-normal"
+                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (trk.artist) openArtist(trk.artist);
+                    }}
+                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal transition-colors"
                   >
-                    <bdi dir="auto">{trk.artist}</bdi>
+                    {trk.artist}
                   </span>
                 </div>
               );
@@ -396,42 +703,100 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </section>
       )}
 
-      {/* ── 4. Section: Trending Hits (Horizontal Carousel on Mobile, Grid on Desktop) ── */}
-      {trendingHits.length > 0 && (
+      {/* ── 5. Section: فنانون في مكتبتك (Top Artists with Circular Avatars) ── */}
+      {(homeFilter === 'all' || homeFilter === 'artists') && topArtists.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">
-              {isRTL ? 'الأكثر استماعاً' : 'Trending Hits'}
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <User className="w-5 h-5 text-zinc-400" />
+              <span>{isRTL ? 'فنانون في مكتبتك' : 'Artists in Your Library'}</span>
             </h2>
+            <button
+              type="button"
+              onClick={() => setActiveTab('library')}
+              className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              عرض الكل
+            </button>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-1 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-5 md:overflow-visible">
-            {trendingHits.slice(0, 12).map((trk) => {
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+            {topArtists.map((artist) => (
+              <div
+                key={`artist-${artist.name}`}
+                onClick={() => {
+                  triggerHaptic('light');
+                  openArtist(artist.name);
+                }}
+                className="group relative flex flex-col items-center p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[130px] xs:w-[145px] shrink-0 snap-start md:w-auto text-center"
+              >
+                <div className="relative w-full aspect-square rounded-full overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/10 mb-2">
+                  <img
+                    src={artist.artworkUrl || '/cover.jpg'}
+                    alt={artist.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+                <h4
+                  dir={isArabicText(artist.name) ? 'rtl' : 'ltr'}
+                  className="text-xs sm:text-sm font-bold text-white truncate w-full"
+                >
+                  {artist.name}
+                </h4>
+                <span className="text-[11px] text-[#B3B3B3] mt-0.5">
+                  فنان • {artist.trackCount} مسار
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── 6. Section: اكتشف من مكتبتك (Deduplicated Rediscover Tracks) ── */}
+      {(homeFilter === 'all' || homeFilter === 'mixes') && rediscoverTracks.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <span>{isRTL ? 'اكتشف من مكتبتك' : 'Rediscover from Library'}</span>
+              </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">مسارات لم تستمع إليها منذ فترة طويلة</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openSmartMix('rediscover')}
+              className="text-xs font-bold text-emerald-400 hover:underline cursor-pointer"
+            >
+              عرض الميكس كاملاً
+            </button>
+          </div>
+
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+            {rediscoverTracks.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
                 <div
-                  key={trk.id}
-                  onClick={() => handleTrackClick(trk, trendingHits)}
-                  className="group relative flex flex-col cursor-pointer transition-colors select-none w-[128px] xs:w-[138px] shrink-0 snap-start md:w-auto"
+                  key={`rediscover-${trk.id}`}
+                  onClick={() => handleTrackClick(trk, rediscoverTracks)}
+                  className="group relative flex flex-col p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[135px] xs:w-[150px] shrink-0 snap-start md:w-auto"
                 >
-                  {/* Clean Square Artwork Container */}
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-[#16161A] shadow-md border border-white/[0.05] group-hover:shadow-xl group-hover:border-white/15 transition-colors">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/5 mb-2">
                     <img
-                      src={trk.coverUrl || trk.artworkUrl || '/logo.svg'}
+                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
                       alt={trk.title}
                       loading="lazy"
-                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-
-                    {/* Corner Floating Glass Play Button on Hover */}
-                    <div className="absolute bottom-2.5 end-2.5 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
+                    <div className="absolute bottom-2 end-2 z-20 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-[opacity,transform] duration-200">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleTrackClick(trk, trendingHits);
+                          handleTrackClick(trk, rediscoverTracks);
                         }}
-                        className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+                        className="w-10 h-10 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                         aria-label={isCur && isPlaying ? t.pause : t.play}
                       >
                         {isCur && isPlaying ? (
@@ -441,27 +806,25 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                         )}
                       </button>
                     </div>
-
-                    {/* Playing Indicator */}
-                    {isCur && isPlaying && (
-                      <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[1px] flex items-center justify-center gap-1">
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-1 h-4" />
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-2 h-2.5" />
-                        <span className="w-1 bg-[#FA2D48] rounded-full aura-soundbar-3 h-5" />
-                      </div>
-                    )}
                   </div>
 
-                  {/* Title & Artist */}
                   <h4
-                    className={`text-xs font-semibold truncate text-start block mt-1.5 leading-snug ${isCur ? 'text-[#FA2D48]' : 'text-white'}`}
+                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
+                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug ${
+                      isCur ? 'text-[#1DB954]' : 'text-white'
+                    }`}
                   >
-                    <bdi dir="auto">{trk.title}</bdi>
+                    {trk.title}
                   </h4>
                   <span
-                    className="text-[11px] text-[#8E8E93] truncate text-start block mt-0.5 font-normal"
+                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (trk.artist) openArtist(trk.artist);
+                    }}
+                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal transition-colors"
                   >
-                    <bdi dir="auto">{trk.artist}</bdi>
+                    {trk.artist}
                   </span>
                 </div>
               );
@@ -470,50 +833,26 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         </section>
       )}
 
-      {/* ── 5. Top 10 Latest Tracks List ── */}
-      <section className="flex flex-col gap-3 pt-2">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight text-white">
-            {isRTL ? 'أحدث المسارات' : 'Latest Tracks'}
-          </h2>
-          <span className="text-[11px] text-zinc-500 tabular-nums font-mono">10 {t.songs}</span>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          {topTen.map((trk, idx) => (
-            <MobileTrackRow
-              key={trk.id}
-              track={trk}
-              index={idx}
-              showIndex={true}
-              contextList={sourcePool}
-              onOpenActionSheet={setActionSheetTrack}
-            />
-          ))}
-        </div>
-
-        {/* View All Library / Explore Button */}
+      {/* ── 7. All Library Navigation Pill ── */}
+      <div className="pt-2">
         <button
+          type="button"
           onClick={() => {
             triggerHaptic('medium');
-            if (tracks.length > 0) {
-              setActiveTab('library');
-            } else {
-              setActiveTab('search');
-            }
+            setActiveTab('library');
           }}
-          className="mt-2 w-full py-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.99] transition-[color,background-color,border-color,transform] border border-white/[0.06] text-center text-xs font-medium text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 cursor-pointer"
+          className="w-full py-3.5 rounded-xl bg-[#181818] hover:bg-[#242424] active:scale-[0.99] transition-colors border border-white/5 text-center text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>
-            {tracks.length > 0
-              ? (isRTL ? `عرض جميع مسارات المكتبة (${tracks.length})` : `View All Library Tracks (${tracks.length})`)
-              : (isRTL ? `عرض جميع الأغاني (${catalogTracks.length})` : `View All Songs (${catalogTracks.length})`)}
+            {isRTL
+              ? `تصفح مكتبتك الكاملة (${tracks.length || catalogTracks.length} مسار)`
+              : `Browse Complete Library (${tracks.length || catalogTracks.length} tracks)`}
           </span>
           <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
         </button>
-      </section>
+      </div>
 
-      {/* Track Action Sheet */}
+      {/* Track Action Sheet for Mobile and Desktop options */}
       <TrackActionSheet
         track={actionSheetTrack}
         isOpen={!!actionSheetTrack}

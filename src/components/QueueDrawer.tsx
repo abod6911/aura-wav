@@ -1,7 +1,7 @@
 import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { X, ListMusic, Trash2, ArrowUp, ArrowDown, Play, Compass, Disc3, ListPlus } from 'lucide-react';
+import { X, ListMusic, Trash2, ArrowUp, ArrowDown, Play, Disc3, ListPlus } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
 export const QueueDrawer: React.FC = () => {
@@ -9,7 +9,6 @@ export const QueueDrawer: React.FC = () => {
   const { t, dir } = useTranslation();
   const isQueueOpen = usePlayerStore((state) => state.isQueueOpen);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
-  const setHarmonicJourneyOpen = usePlayerStore((state) => state.setHarmonicJourneyOpen);
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
@@ -111,35 +110,6 @@ export const QueueDrawer: React.FC = () => {
               aria-label="Close"
             >
               <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Smart Harmonic Mix Generator Trigger */}
-          <div className="pt-2.5 pb-1 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic(12);
-                setHarmonicJourneyOpen(true);
-              }}
-              className="w-full p-2.5 sm:p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] text-white flex items-center justify-between transition-[color,background-color,border-color,transform] cursor-pointer group shadow-sm active:scale-[0.98]"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-2 rounded-xl bg-[#FA2D48]/15 text-[#FA2D48] border border-[#FA2D48]/25 group-hover:scale-105 transition-transform">
-                  <Compass className="w-4 h-4 animate-spin-slow" />
-                </div>
-                <div className="text-start min-w-0">
-                  <span className="text-xs font-bold text-white block truncate">
-                    {t.smartHarmonicMix}
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block truncate">
-                    {t.harmonicMixDesc}
-                  </span>
-                </div>
-              </div>
-              <span className="text-[11px] text-zinc-400 group-hover:text-white transition-colors flex-shrink-0">
-                ←
-              </span>
             </button>
           </div>
 

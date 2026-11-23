@@ -1,7 +1,9 @@
 import React from 'react';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { X, Trash2, ListMusic, Heart, Play, Radio, Disc, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Trash2, Heart, Radio, Disc, ArrowUp, ArrowDown, User, ArrowRight, ArrowLeft, ListMusic, Play } from 'lucide-react';
+import { getArtistProfile } from '../utils/catalogSelectors';
+import { SmartSaveButton } from './common/SmartSaveButton';
 
 export const RightSidebar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -22,6 +24,15 @@ export const RightSidebar: React.FC = () => {
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
+  const tracks = usePlayerStore((state) => state.tracks);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
+
+  const currentArtist = currentTrack?.artist;
+  const artistProfile = React.useMemo(() => {
+    if (!currentArtist) return null;
+    return getArtistProfile(tracks, currentArtist);
+  }, [tracks, currentArtist]);
 
   const isFavorite = React.useMemo(() => favorites.includes(currentTrack?.id ?? ''), [favorites, currentTrack?.id]);
 
@@ -34,12 +45,12 @@ export const RightSidebar: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const accentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
+  const accentColor = currentTrack?.dominantColor || currentTrack?.accentColor || '#1DB954';
 
   return (
     <aside
       dir={dir}
-      className="hidden xl:flex w-80 flex-col bg-[#111114] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-[100dvh] pb-24 overflow-hidden shrink-0"
+      className="hidden xl:flex w-80 flex-col bg-[#121212] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-[100dvh] pb-24 overflow-hidden shrink-0"
     >
       {/* Header with Clean Segmented Tabs */}
       <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] flex-shrink-0">
@@ -94,7 +105,7 @@ export const RightSidebar: React.FC = () => {
                   />
                   {isPlaying && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#FA243C] animate-ping" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#1DB954] animate-ping" />
                     </div>
                   )}
                 </div>
@@ -102,21 +113,14 @@ export const RightSidebar: React.FC = () => {
                   <h5 className="text-xs font-bold text-white truncate leading-relaxed">
                     <bdi dir="auto">{currentTrack.title}</bdi>
                   </h5>
-                  <p className="text-[11px] text-white/60 truncate mt-0.5 leading-relaxed">
+                  <p
+                    onClick={() => openArtist(currentTrack.artist)}
+                    className="text-[11px] text-white/60 hover:text-white hover:underline truncate mt-0.5 leading-relaxed cursor-pointer transition-colors"
+                  >
                     <bdi dir="auto">{currentTrack.artist}</bdi>
                   </p>
                 </div>
-                <button
-                  onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-2 text-white/60 hover:text-[#FA243C] transition-colors cursor-pointer"
-                  aria-label="Favorite"
-                >
-                  <Heart
-                    className={`w-4 h-4 transition-transform active:scale-125 ${
-                      isFavorite ? 'text-[#FA243C] fill-[#FA243C]' : ''
-                    }`}
-                  />
-                </button>
+                <SmartSaveButton track={currentTrack} size="sm" />
               </div>
             </div>
           )}
@@ -129,7 +133,7 @@ export const RightSidebar: React.FC = () => {
                   <span className="text-[11px] font-extrabold uppercase tracking-wider text-white/75">
                     {isRTL ? 'قائمة الانتظار المباشرة' : 'Direct Queue'}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/35 font-mono">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/35 font-mono">
                     {userQueue.length}/{MAX_USER_QUEUE}
                   </span>
                 </div>
@@ -161,7 +165,7 @@ export const RightSidebar: React.FC = () => {
                       className="group flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] transition-colors cursor-pointer"
                       onClick={() => playTrack(track)}
                     >
-                      <span className="w-4 text-center text-[10px] font-bold text-[#FA243C] font-mono">
+                      <span className="w-4 text-center text-[10px] font-bold text-[#1DB954] font-mono">
                         {idx + 1}
                       </span>
 
@@ -175,7 +179,13 @@ export const RightSidebar: React.FC = () => {
                         <p className="text-xs font-bold text-white truncate leading-relaxed">
                           <bdi dir="auto">{track.title}</bdi>
                         </p>
-                        <p className="text-[10px] text-white/60 truncate leading-relaxed">
+                        <p
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openArtist(track.artist);
+                          }}
+                          className="text-[10px] text-white/60 hover:text-white hover:underline truncate leading-relaxed cursor-pointer transition-colors"
+                        >
                           <bdi dir="auto">{track.artist}</bdi>
                         </p>
                       </div>
@@ -264,10 +274,16 @@ export const RightSidebar: React.FC = () => {
                       />
 
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-white group-hover:text-[#FF375F] truncate transition-colors leading-relaxed">
+                        <p className="text-xs font-bold text-white group-hover:text-[#1ED760] truncate transition-colors leading-relaxed">
                           <bdi dir="auto">{track.title}</bdi>
                         </p>
-                        <p className="text-[10px] text-white/60 truncate leading-relaxed">
+                        <p
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openArtist(track.artist);
+                          }}
+                          className="text-[10px] text-white/60 hover:text-white hover:underline truncate leading-relaxed cursor-pointer transition-colors"
+                        >
                           <bdi dir="auto">{track.artist}</bdi>
                         </p>
                       </div>
@@ -318,31 +334,31 @@ export const RightSidebar: React.FC = () => {
                   <h3 className="text-base font-black text-white truncate hover:underline cursor-pointer leading-relaxed">
                     <bdi dir="auto">{currentTrack.title}</bdi>
                   </h3>
-                  <p className="text-xs text-white/70 truncate mt-0.5 hover:underline cursor-pointer leading-relaxed">
+                  <p
+                    onClick={() => openArtist(currentTrack.artist)}
+                    className="text-xs text-white/70 hover:text-white truncate mt-0.5 hover:underline cursor-pointer leading-relaxed transition-colors"
+                  >
                     <bdi dir="auto">{currentTrack.artist}</bdi>
                   </p>
                 </div>
-                <button
-                  onClick={() => toggleFavorite(currentTrack.id)}
-                  className="p-1.5 text-white/60 hover:text-[#FA243C] transition-colors cursor-pointer"
-                  aria-label="Favorite"
-                >
-                  <Heart
-                    className={`w-5 h-5 transition-transform active:scale-125 ${
-                      isFavorite ? 'text-[#FA243C] fill-[#FA243C]' : ''
-                    }`}
-                  />
-                </button>
+                <SmartSaveButton track={currentTrack} size="md" />
               </div>
 
               {/* Audio Specs Apple Glass Card */}
               <div className="p-3.5 rounded-2xl apple-glass-card border border-white/[0.1] space-y-2.5 text-xs">
                 <div className="flex items-center justify-between text-white/65">
                   <span className="flex items-center gap-1.5 font-medium">
-                    <Disc className="w-3.5 h-3.5 text-[#FA243C]" />
+                    <Disc className="w-3.5 h-3.5 text-[#1DB954]" />
                     <span>{isRTL ? 'الألبوم' : 'Album'}</span>
                   </span>
-                  <span className="text-white font-bold truncate max-w-[140px]">
+                  <span
+                    onClick={() => {
+                      if (currentTrack.album) openAlbum(currentTrack.album, currentTrack.artist);
+                    }}
+                    className={`text-white font-bold truncate max-w-[140px] ${
+                      currentTrack.album ? 'hover:underline cursor-pointer' : ''
+                    }`}
+                  >
                     <bdi dir="auto">{currentTrack.album || (isRTL ? 'ألبوم فردي' : 'Single')}</bdi>
                   </span>
                 </div>
@@ -360,24 +376,44 @@ export const RightSidebar: React.FC = () => {
                 </div>
               </div>
 
-              {/* Artist Card */}
-              <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-2.5">
+              {/* Spotify Rich Artist Card */}
+              <div className="p-3.5 rounded-2xl bg-[#181818] border border-white/[0.08] space-y-3">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/55 block">
                   {isRTL ? 'عن الفنان' : 'About Artist'}
                 </span>
+
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center font-black text-white text-sm shadow-md shadow-[#FA243C]/25">
-                    {currentTrack.artist.slice(0, 1).toUpperCase()}
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden bg-[#242424] shrink-0 ring-1 ring-white/10">
+                    <img
+                      src={artistProfile?.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                      alt={currentTrack.artist}
+                      className="w-full h-full object-cover aspect-square"
+                      loading="lazy"
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h5 className="text-xs font-bold text-white truncate leading-relaxed">
+                    <h5
+                      onClick={() => openArtist(currentTrack.artist)}
+                      className="text-xs font-bold text-white hover:underline cursor-pointer truncate leading-relaxed"
+                    >
                       <bdi dir="auto">{currentTrack.artist}</bdi>
                     </h5>
-                    <p className="text-[10px] text-white/60">
-                      {isRTL ? 'فنان في مكتبتك' : 'Artist in your library'}
+                    <p className="text-[10px] text-zinc-400 truncate">
+                      {artistProfile
+                        ? `${artistProfile.tracks.length} أغنية • ${artistProfile.albums.length} ألبوم`
+                        : (isRTL ? 'فنان في مكتبتك' : 'Artist in your library')}
                     </p>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => openArtist(currentTrack.artist)}
+                  className="w-full py-2 px-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span>{isRTL ? 'عرض صفحة الفنان' : 'View Artist'}</span>
+                  {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                </button>
               </div>
             </>
           ) : (

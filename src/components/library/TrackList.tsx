@@ -1,5 +1,6 @@
 import { TrackActionSheet } from './TrackActionSheet';
 import { MobileTrackRow } from '../common/MobileTrackRow';
+import { PlaylistsView } from '../PlaylistsView';
 import { triggerHaptic } from '../../utils/haptics';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -18,6 +19,7 @@ import {
   MoreHorizontal,
   Radio,
   ListPlus,
+  Plus,
   Shuffle,
   Clock,
   Mic2,
@@ -33,7 +35,10 @@ import {
   Cloud,
   UploadCloud,
   Trash2,
+  Users,
+  Disc3,
 } from 'lucide-react';
+import { getAllArtists, getAllAlbums } from '../../utils/catalogSelectors';
 import { formatTime } from '../player/TimelineSlider';
 import { motion } from 'framer-motion';
 import { OptimizedImage } from '../common/OptimizedImage';
@@ -43,7 +48,7 @@ interface TrackListProps {
   onOpenImport: () => void;
 }
 
-type SortOption = 'number' | 'title' | 'artist' | 'duration';
+type SortOption = 'number' | 'title' | 'artist' | 'duration' | 'most_played';
 
 export type RangeOption = 'all' | '1-100' | '101-250' | '251-500' | '501-1000' | '1001-1750';
 
@@ -61,13 +66,38 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
   const cacheAllAvailableTracksOffline = usePlayerStore((state) => state.cacheAllAvailableTracksOffline);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
+  const playlists = usePlayerStore((state) => state.playlists);
+  const createPlaylist = usePlayerStore((state) => state.createPlaylist);
+  const addToast = usePlayerStore((state) => state.addToast);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
+  const playStatsMap = usePlayerStore((state) => state.playStatsMap);
 
+  const [mobileSubTab, setMobileSubTab] = useState<'tracks' | 'playlists' | 'artists' | 'albums' | 'downloaded'>('tracks');
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics' | 'offline' | 'cloud'>('all');
   const [activeRange, setActiveRange] = useState<RangeOption>('all');
   const [sortBy, setSortBy] = useState<SortOption>('number');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
+
+  const mobileArtists = useMemo(() => {
+    return mobileSubTab === 'artists' ? getAllArtists(tracks) : [];
+  }, [tracks, mobileSubTab]);
+
+  const mobileAlbums = useMemo(() => {
+    return mobileSubTab === 'albums' ? getAllAlbums(tracks) : [];
+  }, [tracks, mobileSubTab]);
+
+  const handleCreatePlaylist = async () => {
+    const defaultName = isRTL ? `قائمة تشغيل رقم ${playlists.length + 1}` : `My Playlist #${playlists.length + 1}`;
+    const name = window.prompt(isRTL ? 'اسم قائمة التشغيل الجديدة:' : 'New playlist name:', defaultName);
+    if (name && name.trim()) {
+      await createPlaylist(name.trim());
+      addToast(isRTL ? `تم إنشاء قائمة "${name.trim()}"` : `Created playlist "${name.trim()}"`, undefined, 'success');
+      setMobileSubTab('playlists');
+    }
+  };
 
   useEffect(() => {
     const handleClose = () => setContextMenu(null);
@@ -165,11 +195,16 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       if (sortBy === 'duration') {
         return b.duration - a.duration;
       }
+      if (sortBy === 'most_played') {
+        const countA = playStatsMap[a.id]?.playCount || 0;
+        const countB = playStatsMap[b.id]?.playCount || 0;
+        return countB - countA;
+      }
       return 0;
     });
 
     return list;
-  }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds]);
+  }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds, playStatsMap]);
 
   // 120fps Viewport Virtualization
   const ROW_HEIGHT = 72;
@@ -271,66 +306,177 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
   return (
     <div className="space-y-2.5 sm:space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
-      {/* 1. Mobile Compact Header (Sleek Apple Music style, under 60px) */}
-      {tracks.length > 0 && (
-        <div className="sm:hidden flex items-center justify-between gap-2.5 p-2 rounded-2xl bg-[#12121c]/90 border border-white/[0.08] backdrop-blur-xl">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
-              {heroCovers.map((src, i) => (
+      {/* Mobile Library Hub: Spotify Filter Pills */}
+      <div className="sm:hidden flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        <button
+          onClick={handleCreatePlaylist}
+          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#282828] text-white flex items-center justify-center shrink-0 cursor-pointer"
+          title={isRTL ? 'إنشاء قائمة تشغيل' : 'Create playlist'}
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => {
+            setMobileSubTab('tracks');
+            if (activeFilter === 'offline') setActiveFilter('all');
+          }}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+            mobileSubTab === 'tracks' && activeFilter !== 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          }`}
+        >
+          {isRTL ? 'الأغاني' : 'Tracks'}
+        </button>
+        <button
+          onClick={() => setMobileSubTab('playlists')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+            mobileSubTab === 'playlists' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          }`}
+        >
+          {isRTL ? 'قوائم التشغيل' : 'Playlists'}
+        </button>
+        <button
+          onClick={() => setMobileSubTab('artists')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+            mobileSubTab === 'artists' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          }`}
+        >
+          {isRTL ? 'الفنانون' : 'Artists'}
+        </button>
+        <button
+          onClick={() => setMobileSubTab('albums')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+            mobileSubTab === 'albums' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          }`}
+        >
+          {isRTL ? 'الألبومات' : 'Albums'}
+        </button>
+        <button
+          onClick={() => {
+            setMobileSubTab('downloaded');
+            setActiveFilter('offline');
+          }}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
+            mobileSubTab === 'downloaded' || activeFilter === 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          }`}
+        >
+          {isRTL ? 'المحمّلة' : 'Downloaded'}
+        </button>
+      </div>
+
+      {mobileSubTab === 'playlists' ? (
+        <PlaylistsView />
+      ) : mobileSubTab === 'artists' ? (
+        <div className="sm:hidden grid grid-cols-2 gap-3 p-1">
+          {mobileArtists.map((artist) => (
+            <div
+              key={artist.name}
+              onClick={() => openArtist(artist.name)}
+              className="p-3 rounded-2xl bg-[#181818] border border-white/5 active:bg-[#242424] transition-colors cursor-pointer flex flex-col items-center text-center select-none"
+            >
+              <div className="w-24 h-24 rounded-full overflow-hidden mb-2.5 bg-[#242424] ring-1 ring-white/10 shadow-md">
                 <img
-                  key={i}
-                  src={src}
-                  alt={`Cover ${i + 1}`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/logo.svg';
-                  }}
+                  src={artist.artworkUrl}
+                  alt={artist.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover aspect-square"
                 />
-              ))}
-            </div>
-            <div className="min-w-0 flex-1 text-start">
-              <h1 className="text-[14px] font-black text-white truncate leading-tight">
-                {isRTL ? 'مكتبتي الموسيقية' : 'My Library'}
-              </h1>
-              <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5">
-                <span>{tracks.length} {isRTL ? 'مسار' : 'tracks'}</span>
-                <span className="mx-1">•</span>
-                <span>{formattedTotalTime}</span>
+              </div>
+              <h4 className="text-xs font-bold text-white truncate w-full" dir="auto">
+                {artist.name}
+              </h4>
+              <p className="text-[10px] text-zinc-400 mt-0.5 truncate w-full">
+                {isRTL ? `فنان • ${artist.trackCount} مسار` : `Artist • ${artist.trackCount} tracks`}
               </p>
             </div>
-          </div>
-
-          {/* Compact Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={handlePlayAll}
-              className="h-8 px-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-[#FA243C]/30 active:scale-95 transition-transform cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 fill-white text-white" />
-              <span>{isRTL ? 'تشغيل' : 'Play'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleShufflePlay}
-              className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
-              title={isRTL ? 'خلط عشوائي' : 'Shuffle'}
-            >
-              <Shuffle className="w-3.5 h-3.5 text-zinc-300" />
-            </button>
-
-            <button
-              type="button"
-              onClick={onOpenImport}
-              className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
-              title={isRTL ? 'تغيير المجلد' : 'Change folder'}
-            >
-              <FolderOpen className="w-3.5 h-3.5 text-[#FA243C]" />
-            </button>
-          </div>
+          ))}
         </div>
-      )}
+      ) : mobileSubTab === 'albums' ? (
+        <div className="sm:hidden grid grid-cols-2 gap-3 p-1">
+          {mobileAlbums.map((album) => (
+            <div
+              key={album.name}
+              onClick={() => openAlbum(album.name, album.artist)}
+              className="p-3 rounded-2xl bg-[#181818] border border-white/5 active:bg-[#242424] transition-colors cursor-pointer flex flex-col select-none"
+            >
+              <div className="aspect-square w-full rounded-xl overflow-hidden mb-2 bg-[#242424] ring-1 ring-white/10 shadow-md">
+                <img
+                  src={album.artworkUrl}
+                  alt={album.name}
+                  loading="lazy"
+                  className="w-full h-full object-cover aspect-square"
+                />
+              </div>
+              <h4 className="text-xs font-bold text-white truncate w-full" dir="auto">
+                {album.name}
+              </h4>
+              <p className="text-[10px] text-zinc-400 mt-0.5 truncate w-full">
+                {album.artist}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* 1. Mobile Compact Header */}
+          {tracks.length > 0 && (
+            <div className="sm:hidden flex items-center justify-between gap-2.5 p-2 rounded-2xl bg-[#181818] border border-white/[0.08] backdrop-blur-xl">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-md border border-white/15 flex-shrink-0 grid grid-cols-2 grid-rows-2 bg-[#121218]">
+                  {heroCovers.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt={`Cover ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '/logo.svg';
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="min-w-0 flex-1 text-start">
+                  <h1 className="text-[14px] font-black text-white truncate leading-tight">
+                    {isRTL ? 'مكتبتي الموسيقية' : 'My Library'}
+                  </h1>
+                  <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5">
+                    <span>{tracks.length} {isRTL ? 'مسار' : 'tracks'}</span>
+                    <span className="mx-1">•</span>
+                    <span>{formattedTotalTime}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Compact Actions */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handlePlayAll}
+                  className="h-8 px-3 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-xs flex items-center gap-1 shadow-md shadow-black/40 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-black text-black" />
+                  <span>{isRTL ? 'تشغيل' : 'Play'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleShufflePlay}
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+                  title={isRTL ? 'خلط عشوائي' : 'Shuffle'}
+                >
+                  <Shuffle className="w-3.5 h-3.5 text-zinc-300" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onOpenImport}
+                  className="w-8 h-8 rounded-full bg-white/[0.08] border border-white/10 text-white flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+                  title={isRTL ? 'تغيير المجلد' : 'Change folder'}
+                >
+                  <FolderOpen className="w-3.5 h-3.5 text-[#1DB954]" />
+                </button>
+              </div>
+            </div>
+          )}
 
       {/* Grand Editorial Hero Banner (Desktop: sm:block hidden) */}
       {tracks.length > 0 ? (
@@ -367,7 +513,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <div className="flex-1 text-start space-y-1 sm:space-y-3 min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/[0.06] border border-white/[0.1] text-zinc-300 text-[10px] sm:text-xs font-semibold">
-                    <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#FA243C]" />
+                    <FolderOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#1DB954]" />
                     <span>المجلد: <strong className="text-white font-bold">{savedFolderName || 'Liked_Songs'}</strong></span>
                   </div>
 
@@ -403,7 +549,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               <button
                 type="button"
                 onClick={handlePlayAll}
-                className="flex-1 md:flex-initial h-12 sm:h-14 px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 active:scale-[0.93] transition-transform duration-75 cursor-pointer"
+                className="flex-1 md:flex-initial h-12 sm:h-14 px-6 sm:px-8 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 sm:gap-2.5 shadow-lg shadow-[#1DB954]/35 active:scale-[0.93] transition-transform duration-75 cursor-pointer"
               >
                 <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white" />
                 <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
@@ -422,8 +568,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       ) : (
         /* Empty State Hero CTA */
-        <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] p-5 sm:p-8 md:p-12 bg-gradient-to-b from-[#FA243C]/20 via-[#FA243C]/5 to-[#07070a] border border-white/[0.1] text-center space-y-3 sm:space-y-4 backdrop-blur-2xl">
-          <FolderOpen className="w-10 h-10 sm:w-14 sm:h-14 mx-auto text-[#FA243C] animate-bounce" />
+        <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] p-5 sm:p-8 md:p-12 bg-gradient-to-b from-[#1DB954]/20 via-[#1DB954]/5 to-[#07070a] border border-white/[0.1] text-center space-y-3 sm:space-y-4 backdrop-blur-2xl">
+          <FolderOpen className="w-10 h-10 sm:w-14 sm:h-14 mx-auto text-[#1DB954] animate-bounce" />
           <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white">{isRTL ? 'مكتبتك فارغة حالياً' : 'Your Library is Empty'}</h2>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">
             {isRTL
@@ -433,7 +579,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 pt-1 sm:pt-2">
             <button
               onClick={onOpenImport}
-              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs sm:text-sm transition-[color,background-color,border-color,transform] shadow-xl shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-bold text-xs sm:text-sm transition-[color,background-color,border-color,transform] shadow-xl shadow-[#1DB954]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <FolderOpen className="w-4 h-4" />
               <span>{isRTL ? 'استيراد أغاني من جهازي' : 'Import Local Songs'}</span>
@@ -454,7 +600,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         <div className="hidden sm:block space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-[#FA2D48]" />
+              <Radio className="w-4 h-4 text-[#1DB954]" />
               <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                 مختارات Apple Music لك
               </h3>
@@ -484,7 +630,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#FA243C] transition-colors" dir="auto">
+                  <h4 className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-[#1DB954] transition-colors" dir="auto">
                     {t.title}
                   </h4>
                   <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-medium" dir="auto">
@@ -513,7 +659,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ fontSize: '16px' }}
-            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-2xl py-2.5 pr-10 pl-10 text-white placeholder-zinc-500 focus:outline-none transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
+            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#1DB954]/60 rounded-2xl py-2.5 pr-10 pl-10 text-white placeholder-zinc-500 focus:outline-none transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
           />
           {searchQuery && (
             <button
@@ -543,7 +689,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             onClick={() => setActiveFilter('favorites')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
               activeFilter === 'favorites'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
+                ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-extrabold shadow-md shadow-[#1DB954]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
@@ -555,7 +701,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             onClick={() => setActiveFilter('lyrics')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
               activeFilter === 'lyrics'
-                ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold shadow-md shadow-[#FA243C]/25'
+                ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-extrabold shadow-md shadow-[#1DB954]/25'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
             }`}
           >
@@ -607,6 +753,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-base sm:text-xs font-bold py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer"
             >
               <option value="number" className="bg-[#121218] text-white">الترتيب: الرقم #</option>
+              <option value="most_played" className="bg-[#121218] text-white">الترتيب: الأكثر استماعاً</option>
               <option value="title" className="bg-[#121218] text-white">الترتيب: العنوان (A-Z)</option>
               <option value="artist" className="bg-[#121218] text-white">الترتيب: اسم الفنان</option>
               <option value="duration" className="bg-[#121218] text-white">الترتيب: الأطول مدة</option>
@@ -638,7 +785,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               }}
               className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-colors border cursor-pointer ${
                 isSel
-                  ? 'bg-[#FA243C]/20 border-[#FA243C]/40 text-[#FF375F] shadow-sm'
+                  ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1ED760] shadow-sm'
                   : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
               }`}
             >
@@ -668,7 +815,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 onClick={() => setActiveMood(isSelected ? null : m.id)}
                 className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 border cursor-pointer apple-spring ${
                   isSelected
-                    ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white border-[#FA243C]/50 shadow-lg shadow-[#FA243C]/30 scale-105 font-extrabold'
+                    ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white border-[#1DB954]/50 shadow-lg shadow-[#1DB954]/30 scale-105 font-extrabold'
                     : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.06]'
                 }`}
               >
@@ -680,9 +827,9 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
         {/* Active Mood Radio Banner */}
         {activeMood && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#FA2D48]/20 via-[#FA2D48]/10 to-[#08080c] border border-[#FA2D48]/30 animate-fadeIn">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 via-[#1DB954]/10 to-[#08080c] border border-[#1DB954]/30 animate-fadeIn">
             <div className="flex items-center gap-2.5">
-              <Radio className="w-4 h-4 text-[#FA2D48] animate-pulse" />
+              <Radio className="w-4 h-4 text-[#1DB954] animate-pulse" />
               <span className="text-xs font-bold text-white">
                 تم تفعيل وضع المزاج: {filtered.length} مسار متوافق
               </span>
@@ -691,7 +838,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePlayAll}
-                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FA2D48] to-[#FF375F] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#FA2D48]/25 transition-[color,background-color,border-color,transform] cursor-pointer hover:scale-105 active:scale-95"
+                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#1DB954]/25 transition-[color,background-color,border-color,transform] cursor-pointer hover:scale-105 active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-white text-white" />
                 <span>تشغيل راديو هذا المزاج</span>
@@ -737,7 +884,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 ))}
                 {progressiveMobileTracks.length < filtered.length && (
                   <div ref={mobileLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
-                    <div className="w-5 h-5 rounded-full border-2 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
+                    <div className="w-5 h-5 rounded-full border-2 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
                   </div>
                 )}
               </>
@@ -785,6 +932,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       </div>
       </>
       )}
+      </>
+      )}
 
       {/* Floating Scroll to Top Action Button */}
       {showScrollTop && (
@@ -800,7 +949,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           className="fixed bottom-24 right-4 z-40 px-4 py-2.5 rounded-full apple-glass-dock text-white flex items-center gap-2 text-xs font-bold hover:bg-white/20 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer select-none apple-spring"
           title="العودة للأعلى"
         >
-          <ArrowUp className="w-4 h-4 text-[#FA243C]" />
+          <ArrowUp className="w-4 h-4 text-[#1DB954]" />
           <span>للأعلى</span>
         </motion.button>
       )}
@@ -819,7 +968,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             }}
             className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
-            <ListEnd className="w-4 h-4 text-[#FA243C]" />
+            <ListEnd className="w-4 h-4 text-[#1DB954]" />
             <span>تشغيل التالي</span>
           </button>
           <button
@@ -829,8 +978,19 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             }}
             className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
-            <ListPlus className="w-4 h-4 text-[#FA243C]" />
+            <ListPlus className="w-4 h-4 text-[#1DB954]" />
             <span>إضافة للقائمة</span>
+          </button>
+          <button
+            onClick={() => {
+              const tr = contextMenu.track;
+              setContextMenu(null);
+              usePlayerStore.getState().startSongRadio(tr);
+            }}
+            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Radio className="w-4 h-4 text-[#1DB954]" />
+            <span>بدء راديو الأغنية</span>
           </button>
           <button
             onClick={() => {
@@ -839,7 +999,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             }}
             className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
-            <Heart className={`w-4 h-4 ${favorites.includes(contextMenu.track.id) ? 'text-[#FA243C] fill-[#FA243C]' : 'text-[#FA243C]'}`} />
+            <Heart className={`w-4 h-4 ${favorites.includes(contextMenu.track.id) ? 'text-[#1DB954] fill-[#1DB954]' : 'text-[#1DB954]'}`} />
             <span>{favorites.includes(contextMenu.track.id) ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}</span>
           </button>
           <button
@@ -857,25 +1017,42 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </span>
           </button>
           <div className="h-px bg-white/10 my-1 mx-2" />
+          {contextMenu.track.artist && (
+            <button
+              onClick={() => {
+                const art = contextMenu.track.artist;
+                setContextMenu(null);
+                usePlayerStore.getState().openArtist(art);
+              }}
+              className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+            >
+              <Users className="w-4 h-4 text-cyan-400" />
+              <span>الانتقال إلى الفنان</span>
+            </button>
+          )}
+          {contextMenu.track.album && (
+            <button
+              onClick={() => {
+                const alb = contextMenu.track.album!;
+                const art = contextMenu.track.artist;
+                setContextMenu(null);
+                usePlayerStore.getState().openAlbum(alb, art);
+              }}
+              className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
+            >
+              <Disc3 className="w-4 h-4 text-indigo-400" />
+              <span>الانتقال إلى الألبوم</span>
+            </button>
+          )}
           <button
             onClick={() => {
-              usePlayerStore.getState().setMetadataEditorModal(true, contextMenu.track);
+              usePlayerStore.getState().setTrackEditOpen(true, contextMenu.track);
               setContextMenu(null);
             }}
             className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
           >
             <Pencil className="w-4 h-4 text-zinc-400" />
-            <span>تعديل البيانات</span>
-          </button>
-          <button
-            onClick={() => {
-              usePlayerStore.getState().setChangeArtworkModal(true, contextMenu.track);
-              setContextMenu(null);
-            }}
-            className="px-3 py-2 text-xs sm:text-sm text-white/90 hover:bg-white/10 rounded-xl flex items-center gap-2.5 cursor-pointer transition-colors"
-          >
-            <ImageIcon className="w-4 h-4 text-zinc-400" />
-            <span>تغيير الغلاف</span>
+            <span>تعديل المسار والغلاف</span>
           </button>
           {isCloudConfigured() && (contextMenu.track.source === 'online' || (contextMenu.track.audioUrl && contextMenu.track.audioUrl.startsWith('http'))) && (
             <button
@@ -989,7 +1166,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         isUnavailable ? 'opacity-50 hover:opacity-80 ' : ''
       }${
         isCurrent
-          ? 'bg-[#181824]/90 border border-[#FA243C]/40 shadow-[0_4px_24px_rgba(250,36,60,0.16)]'
+          ? 'bg-[#181824]/90 border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(250,36,60,0.16)]'
           : isNextUp
           ? 'bg-purple-500/10 border border-purple-500/35'
           : 'bg-[#101016]/60 hover:bg-[#151520] border border-white/[0.05] hover:border-white/[0.1]'
@@ -1010,14 +1187,14 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         <div className="md:group-hover:hidden flex items-center justify-center">
           {isCurrent && isPlaying ? (
             <div className="flex items-end gap-[2px] h-3.5">
-              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
-              <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
-              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
+              <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-1 h-full" />
+              <span className="w-1 bg-[#1ED760] rounded-full aura-soundbar-2 h-2/3" />
+              <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-3 h-4/5" />
             </div>
           ) : (
             <span
               className={`text-xs font-mono tabular-nums transition-colors ${
-                isCurrent ? 'text-[#FA243C] font-black' : 'text-white/50'
+                isCurrent ? 'text-[#1DB954] font-black' : 'text-white/50'
               }`}
             >
               {displayIndex}
@@ -1038,9 +1215,9 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           />
           {isCurrent && isPlaying && (
             <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center gap-[2px]">
-              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-3.5" />
-              <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2.5" />
-              <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4" />
+              <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-1 h-3.5" />
+              <span className="w-1 bg-[#1ED760] rounded-full aura-soundbar-2 h-2.5" />
+              <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-3 h-4" />
             </div>
           )}
         </div>
@@ -1048,7 +1225,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           <div className="flex items-center gap-1.5">
             <h4
               className={`text-[14px] sm:text-[15px] font-semibold truncate tracking-tight leading-snug ${
-                isCurrent ? 'text-[#FA243C]' : 'text-white group-hover:text-white'
+                isCurrent ? 'text-[#1DB954]' : 'text-white group-hover:text-white'
               }`}
             >
               <bdi dir="auto">{track.title}</bdi>
@@ -1073,7 +1250,13 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
             )}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-white/60 truncate mt-0.5">
-            <span className="truncate font-medium">
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                if (track.artist) usePlayerStore.getState().openArtist(track.artist);
+              }}
+              className="truncate font-medium hover:text-white hover:underline cursor-pointer transition-colors"
+            >
               <bdi dir="auto">{track.artist}</bdi>
             </span>
             <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
@@ -1081,7 +1264,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
               Lossless
             </span>
             {track.syncedLyrics && track.syncedLyrics.length > 0 && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FA243C]/20 text-[#FA243C] font-bold tracking-wider uppercase flex-shrink-0 border border-[#FA243C]/30">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#1DB954]/20 text-[#1DB954] font-bold tracking-wider uppercase flex-shrink-0 border border-[#1DB954]/30">
                 LYRICS
               </span>
             )}
@@ -1097,7 +1280,15 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
 
       {/* 3. Album / Genre */}
       <div className="hidden md:block text-xs text-white/60 truncate leading-relaxed">
-        <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            if (track.album) usePlayerStore.getState().openAlbum(track.album, track.artist);
+          }}
+          className={track.album ? 'hover:text-white hover:underline cursor-pointer transition-colors' : ''}
+        >
+          <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
+        </span>
       </div>
 
       {/* 4. Action Cluster: Play Next (44x44px) + Heart (44x44px) + More Menu */}
@@ -1123,7 +1314,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
           {isAddedFeedback ? (
             <Check className="w-5 h-5 text-white stroke-[3]" />
           ) : (
-            <ListPlus className="w-5 h-5 text-white/80 hover:text-[#FA243C]" />
+            <ListPlus className="w-5 h-5 text-white/80 hover:text-[#1DB954]" />
           )}
         </motion.button>
 
@@ -1142,7 +1333,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isFav ? 'text-[#FA243C] fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
+              isFav ? 'text-[#1DB954] fill-[#1DB954] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
             }`}
           />
         </motion.button>

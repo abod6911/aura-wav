@@ -6,13 +6,13 @@ export interface AmbientPalette {
 }
 
 const DEFAULT_PALETTE: AmbientPalette = {
-  primary: 'rgb(250, 36, 60)', // Apple Music Signature Red
-  secondary: 'rgb(255, 45, 85)', // Apple Music Rose Pink
-  accent: 'rgb(255, 94, 126)', // Soft Apple Glow
+  primary: 'rgb(29, 185, 84)', // Spotify Green
+  secondary: 'rgb(30, 215, 96)', // Vibrant Green
+  accent: 'rgb(36, 48, 40)', // Matte Ambient Tone
   glowMesh: `
-    radial-gradient(circle at 25% 25%, rgba(250, 36, 60, 0.45) 0%, transparent 65%),
-    radial-gradient(circle at 80% 75%, rgba(255, 45, 85, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 50% 85%, rgba(214, 14, 46, 0.3) 0%, transparent 65%)
+    radial-gradient(circle at 25% 25%, rgba(29, 185, 84, 0.25) 0%, transparent 65%),
+    radial-gradient(circle at 80% 75%, rgba(30, 215, 96, 0.20) 0%, transparent 60%),
+    radial-gradient(circle at 50% 85%, rgba(18, 18, 18, 0.3) 0%, transparent 65%)
   `,
 };
 

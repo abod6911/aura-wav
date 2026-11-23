@@ -9,6 +9,10 @@ import { PlaylistsView } from './components/PlaylistsView';
 import { FavoritesView } from './components/FavoritesView';
 import { SpotifyHomeView } from './components/SpotifyHomeView';
 import { InfiniteSearchView } from './components/InfiniteSearchView';
+import { ArtistView } from './components/views/ArtistView';
+import { AlbumView } from './components/views/AlbumView';
+import { GenreView } from './components/views/GenreView';
+import { SmartMixView } from './components/views/SmartMixView';
 import { RightSidebar } from './components/RightSidebar';
 import { PlayerBar } from './components/PlayerBar';
 import { MiniPlayer } from './components/player/MiniPlayer';
@@ -28,18 +32,14 @@ const QueueDrawer = lazy(() => import('./components/QueueDrawer').then((m) => ({
 const ImportModal = lazy(() => import('./components/ImportModal').then((m) => ({ default: m.ImportModal })));
 const SleepTimerModal = lazy(() => import('./components/SleepTimerModal').then((m) => ({ default: m.SleepTimerModal })));
 const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal').then((m) => ({ default: m.KeyboardShortcutsModal })));
-const ChangeArtworkModal = lazy(() => import('./components/ChangeArtworkModal').then((m) => ({ default: m.ChangeArtworkModal })));
-const MetadataEditorModal = lazy(() => import('./components/library/MetadataEditorModal').then((m) => ({ default: m.MetadataEditorModal })));
+const TrackEditModal = lazy(() => import('./components/library/TrackEditModal').then((m) => ({ default: m.TrackEditModal })));
 const SettingsModal = lazy(() => import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal })));
-const DJFxSheet = lazy(() => import('./components/dj/DJFxSheet').then((m) => ({ default: m.DJFxSheet })));
-const AutoMixSelectorModal = lazy(() => import('./components/dj/AutoMixSelectorModal').then((m) => ({ default: m.AutoMixSelectorModal })));
 const CarPlayMode = lazy(() => import('./components/carplay/CarPlayMode').then((m) => ({ default: m.CarPlayMode })));
 const SpotlightCommandModal = lazy(() => import('./components/search/SpotlightCommandModal').then((m) => ({ default: m.SpotlightCommandModal })));
 const SyncPartyModal = lazy(() => import('./components/party/SyncPartyModal').then((m) => ({ default: m.SyncPartyModal })));
-const HarmonicSetGenerator = lazy(() => import('./components/player/HarmonicSetGenerator').then((m) => ({ default: m.HarmonicSetGenerator })));
 const CloudUploaderModal = lazy(() => import('./components/cloud/CloudUploaderModal').then((m) => ({ default: m.CloudUploaderModal })));
-const DeviceSwitcherModal = lazy(() => import('./components/handoff/DeviceSwitcherModal').then((m) => ({ default: m.DeviceSwitcherModal })));
 import { HandoffBanner } from './components/handoff/HandoffBanner';
+import { extractThemeFromArtwork, getExtractedThemeSync, ExtractedTheme } from './utils/colorExtractor';
 
 import { djAudioEngine } from './lib/audioEngine';
 
@@ -183,18 +183,12 @@ export function App() {
   const setSettingsOpen = usePlayerStore((state) => state.setSettingsOpen);
   const isWelcomeOpen = usePlayerStore((state) => state.isWelcomeOpen);
   const setWelcomeOpen = usePlayerStore((state) => state.setWelcomeOpen);
-  const isChangeArtworkOpen = usePlayerStore((state) => state.isChangeArtworkOpen);
-  const isMetadataEditorOpen = usePlayerStore((state) => state.isMetadataEditorOpen);
-  const isSoundboardOpen = usePlayerStore((state) => state.isSoundboardOpen);
-  const isAutoMixModalOpen = usePlayerStore((state) => state.isAutoMixModalOpen);
+  const isTrackEditOpen = usePlayerStore((state) => state.isTrackEditOpen);
   const isCarModeOpen = usePlayerStore((state) => state.isCarModeOpen);
   const isSpotlightOpen = usePlayerStore((state) => state.isSpotlightOpen);
   const isSyncPartyOpen = usePlayerStore((state) => state.isSyncPartyOpen);
-  const isHarmonicJourneyOpen = usePlayerStore((state) => state.isHarmonicJourneyOpen);
   const isCloudUploaderOpen = usePlayerStore((state) => state.isCloudUploaderOpen);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
-  const isDeviceSwitcherOpen = usePlayerStore((state) => state.isDeviceSwitcherOpen);
-  const setDeviceSwitcherOpen = usePlayerStore((state) => state.setDeviceSwitcherOpen);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
 
   const prevVolumeRef = useRef(0.8);
@@ -235,37 +229,30 @@ export function App() {
     setIsHeaderScrolled(targetScroll > 20);
   }, [activeTab]);
 
-  // Synchronize dynamic Acoustic Obsidian & Vinyl-Glass ambient engine with album artwork
+  // Synchronize dynamic Acoustic Obsidian & Vinyl-Glass ambient engine with real artwork color
   useEffect(() => {
-    const primary = currentTrack?.dominantColor || currentTrack?.accentColor || '#FA243C';
-    const accent = currentTrack?.secondaryColor || '#7D12FF';
+    if (!currentTrack) return;
+    const fallbackSeed = currentTrack.album || currentTrack.artist || currentTrack.title || 'aurawave';
+    const artUrl = currentTrack.artworkUrl || currentTrack.coverUrl;
+    const initialTheme = getExtractedThemeSync(artUrl, fallbackSeed);
 
-    const parseRgb = (c: string, defaultRgb: string) => {
-      if (!c) return defaultRgb;
-      if (c.startsWith('#')) {
-        const hex = c.replace('#', '');
-        const full = hex.length === 3 ? hex.split('').map((x) => x + x).join('') : hex;
-        const r = parseInt(full.substring(0, 2), 16) || 250;
-        const g = parseInt(full.substring(2, 4), 16) || 36;
-        const b = parseInt(full.substring(4, 6), 16) || 60;
-        return `${r}, ${g}, ${b}`;
-      }
-      const m = c.match(/\d+[\s,]+\d+[\s,]+\d+/);
-      return m ? m[0].replace(/\s+/g, ', ') : defaultRgb;
+    const applyTheme = (t: ExtractedTheme) => {
+      const rgbStr = `${t.primaryRgb[0]}, ${t.primaryRgb[1]}, ${t.primaryRgb[2]}`;
+      const rootStyle = document.documentElement.style;
+      rootStyle.setProperty('--aura-accent', t.accentHex);
+      rootStyle.setProperty('--ambient-primary-rgb', rgbStr);
+      rootStyle.setProperty('--ambient-accent-rgb', rgbStr);
+      rootStyle.setProperty('--ambient-card-tint', t.cardTint);
+      rootStyle.setProperty('--ambient-header-gradient', t.headerGradientRgb);
     };
 
-    const primaryRgb = parseRgb(primary, '250, 36, 60');
-    const accentRgb = parseRgb(accent, '125, 18, 255');
+    applyTheme(initialTheme);
 
-    const rootStyle = document.documentElement.style;
-    rootStyle.setProperty('--aura-accent', primary);
-    rootStyle.setProperty('--aura-accent-hover', primary);
-    rootStyle.setProperty('--aura-accent-glow', `rgba(${primaryRgb}, 0.16)`);
-    rootStyle.setProperty('--ambient-primary', primary);
-    rootStyle.setProperty('--ambient-accent', accent);
-    rootStyle.setProperty('--ambient-primary-rgb', primaryRgb);
-    rootStyle.setProperty('--ambient-accent-rgb', accentRgb);
-    rootStyle.setProperty('--ambient-primary-glow', `rgba(${primaryRgb}, 0.22)`);
+    if (artUrl) {
+      extractThemeFromArtwork(artUrl, fallbackSeed).then((extracted) => {
+        applyTheme(extracted);
+      });
+    }
   }, [currentTrack]);
 
   // Initialize DB, Party URL invite, and Service Worker
@@ -579,6 +566,26 @@ export function App() {
                   <PlaylistsView />
                 </div>
               )}
+              {activeTab === 'artist' && (
+                <div key="tab-artist" className="animate-tab-enter">
+                  <ArtistView />
+                </div>
+              )}
+              {activeTab === 'album' && (
+                <div key="tab-album" className="animate-tab-enter">
+                  <AlbumView />
+                </div>
+              )}
+              {activeTab === 'genre' && (
+                <div key="tab-genre" className="animate-tab-enter">
+                  <GenreView />
+                </div>
+              )}
+              {activeTab === 'smart_mix' && (
+                <div key="tab-smart-mix" className="animate-tab-enter">
+                  <SmartMixView />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -634,24 +641,14 @@ export function App() {
             onOpenImport={() => setIsImportModalOpen(true)}
           />
         )}
-        {isChangeArtworkOpen && <ChangeArtworkModal />}
-        {isMetadataEditorOpen && <MetadataEditorModal />}
-        {isSoundboardOpen && <DJFxSheet />}
-        {isAutoMixModalOpen && <AutoMixSelectorModal />}
+        {isTrackEditOpen && <TrackEditModal />}
         {isCarModeOpen && <CarPlayMode />}
         {isSpotlightOpen && <SpotlightCommandModal />}
         {isSyncPartyOpen && <SyncPartyModal />}
-        {isHarmonicJourneyOpen && <HarmonicSetGenerator />}
         {isCloudUploaderOpen && (
           <CloudUploaderModal
             isOpen={isCloudUploaderOpen}
             onClose={() => setCloudUploaderOpen(false)}
-          />
-        )}
-        {isDeviceSwitcherOpen && (
-          <DeviceSwitcherModal
-            isOpen={isDeviceSwitcherOpen}
-            onClose={() => setDeviceSwitcherOpen(false)}
           />
         )}
       </Suspense>

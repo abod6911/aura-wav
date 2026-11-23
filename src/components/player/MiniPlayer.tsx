@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedCoverUrl } from '../../utils/imageOptimizer';
 import { triggerHaptic } from '../../utils/haptics';
 import { getOfflineArtworkUrl } from '../../utils/offlineStorage';
+import { isArabicText } from '../../utils/formatters';
+import { useTrackTheme } from '../../utils/colorExtractor';
 
 interface MiniPlayerProps {
   onExpand: () => void;
@@ -39,7 +41,7 @@ const MiniPlayerProgressBar: React.FC = () => {
     <div className="absolute bottom-0 inset-x-0 h-[2px] bg-white/[0.08] overflow-hidden pointer-events-none">
       <div
         ref={barRef}
-        className="h-full relative transition-colors duration-150 bg-[#FA2D48]"
+        className="h-full relative transition-colors duration-150 bg-[#1DB954]"
         style={{
           width: `${initialPct()}%`,
         }}
@@ -53,7 +55,7 @@ const MiniPlayerProgressBar: React.FC = () => {
 };
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
-  const { t, dir } = useTranslation();
+  const { t, isRTL, dir } = useTranslation();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackState = usePlayerStore((state) => state.playbackState);
@@ -65,6 +67,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const [dragX, setDragX] = useState(0);
   const isSwipingHorizontal = useRef(false);
+  const theme = useTrackTheme(currentTrack);
 
   if (!currentTrack) return null;
 
@@ -135,17 +138,18 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       style={{
         bottom: 'calc(50px + env(safe-area-inset-bottom, 0px) + 8px)',
         transform: `translate3d(${dragX}px, 0, 0)`,
-        transition: dragX === 0 ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1)' : 'none',
+        transition: dragX === 0 ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.5s ease' : 'none',
+        backgroundColor: theme.miniPlayerBg,
         touchAction: 'pan-y',
       }}
-      className="fixed inset-x-3 z-40 h-[54px] rounded-2xl px-2.5 flex items-center gap-2.5 bg-[#1C1C22]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto apple-row-press"
+      className="fixed left-2.5 right-2.5 z-40 h-[56px] rounded-xl px-2.5 flex items-center gap-2.5 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto"
       dir={dir}
       onClick={handleExpand}
     >
-      {/* 1. Artwork (40x40 rounded-xl) */}
+      {/* 1. Artwork (42x42 rounded-lg) */}
       <motion.div
         layoutId="aura-player-artwork"
-        className="relative w-[40px] h-[40px] min-w-[40px] min-h-[40px] rounded-xl overflow-hidden shrink-0 bg-black/60 border border-white/10 shadow-md aspect-square"
+        className="relative w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-lg overflow-hidden shrink-0 bg-black/60 border border-white/10 shadow-md aspect-square"
       >
         <AnimatePresence mode="wait">
           <motion.img
@@ -175,10 +179,20 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
 
       {/* 2. Track Title & Artist (Clean BiDi Truncation at end) */}
       <div className="flex-1 min-w-0">
-        <h4 dir="auto" className="text-[13px] font-bold text-white truncate block leading-tight">
+        <h4
+          dir={isArabicText(currentTrack.title) ? 'rtl' : 'ltr'}
+          className={`text-[13px] font-bold text-white truncate block leading-tight ${
+            isRTL ? 'text-right' : 'text-left'
+          }`}
+        >
           {currentTrack.title}
         </h4>
-        <p dir="auto" className="text-[11px] text-zinc-400 truncate block mt-0.5 font-normal leading-tight">
+        <p
+          dir={isArabicText(currentTrack.artist) ? 'rtl' : 'ltr'}
+          className={`text-[11px] text-[#B3B3B3] truncate block mt-0.5 font-normal leading-tight ${
+            isRTL ? 'text-right' : 'text-left'
+          }`}
+        >
           {currentTrack.artist}
         </p>
       </div>

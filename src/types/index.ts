@@ -55,4 +55,4 @@ export interface EqualizerPreset {
 
 export type PlaybackState = 'idle' | 'buffering' | 'playing' | 'paused' | 'error';
 export type RepeatMode = 'off' | 'all' | 'one';
-export type ViewTab = 'home' | 'search' | 'library' | 'favorites' | 'playlists' | 'settings';
+export type ViewTab = 'home' | 'search' | 'library' | 'favorites' | 'playlists' | 'settings' | 'artist' | 'album' | 'genre' | 'smart_mix';

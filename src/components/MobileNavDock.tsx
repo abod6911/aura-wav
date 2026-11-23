@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
-import { Radio, Search, Library, Heart } from 'lucide-react';
+import { Home, Search, Library, Heart } from 'lucide-react';
 import { triggerHaptic } from '../utils/haptics';
 
 interface MobileNavDockProps {
@@ -9,7 +9,7 @@ interface MobileNavDockProps {
 }
 
 export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
-  const { t, dir } = useTranslation();
+  const { isRTL, dir } = useTranslation();
   const activeTab = usePlayerStore((state) => state.activeTab);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
   const lastTapRef = useRef<{ tabId: string; time: number }>({ tabId: '', time: 0 });
@@ -37,10 +37,10 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
   }, [activeTab, setActiveTab]);
 
   const tabs = [
-    { id: 'home' as const, label: t.listenNow, icon: Radio },
-    { id: 'search' as const, label: t.search, icon: Search },
-    { id: 'library' as const, label: t.library, icon: Library },
-    { id: 'favorites' as const, label: t.favorites, icon: Heart },
+    { id: 'home' as const, label: isRTL ? 'الرئيسية' : 'Home', icon: Home },
+    { id: 'search' as const, label: isRTL ? 'بحث' : 'Search', icon: Search },
+    { id: 'library' as const, label: isRTL ? 'مكتبتك' : 'Library', icon: Library },
+    { id: 'favorites' as const, label: isRTL ? 'المفضلة' : 'Favorites', icon: Heart },
   ];
 
   return (
@@ -49,7 +49,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
-      className="w-full bg-[#121215]/95 backdrop-blur-2xl backdrop-saturate-180 border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(50px+env(safe-area-inset-bottom,0px))]"
+      className="fixed bottom-0 left-0 right-0 w-full bg-[#121212]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(50px+env(safe-area-inset-bottom,0px))]"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -68,21 +68,21 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 transition-colors flex-1 cursor-pointer h-[50px] touch-manipulation select-none apple-btn-tactile pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 transition-colors flex-1 cursor-pointer h-[50px] touch-manipulation select-none pointer-events-auto"
             aria-selected={isActive}
             role="tab"
           >
             <div className="relative">
               <Icon
                 className={`w-[21px] h-[21px] transition-colors duration-150 ${
-                  isActive ? 'text-[#FA2D48]' : 'text-[#8E8E93]'
+                  isActive ? 'text-[#1DB954]' : 'text-[#B3B3B3]'
                 }`}
-                strokeWidth={1.9}
+                strokeWidth={isActive ? 2.2 : 1.8}
               />
             </div>
             <span
               className={`text-[10px] tracking-tight transition-colors duration-150 leading-none ${
-                isActive ? 'text-[#FA2D48] font-semibold' : 'text-[#8E8E93] font-medium'
+                isActive ? 'text-[#1DB954] font-bold' : 'text-[#B3B3B3] font-medium'
               }`}
             >
               {tab.label}

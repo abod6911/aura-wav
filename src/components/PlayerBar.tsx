@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { TimelineSlider } from './player/TimelineSlider';
 import { getOptimizedCoverUrl } from '../utils/imageOptimizer';
+import { isArabicText } from '../utils/formatters';
+import { SmartSaveButton } from './common/SmartSaveButton';
 
 export const PlayerBar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -47,6 +49,8 @@ export const PlayerBar: React.FC = () => {
   const toggleRightSidebar = usePlayerStore((state) => state.toggleRightSidebar);
   const setEqualizerOpen = usePlayerStore((state) => state.setEqualizerOpen);
   const setMobilePlayerOpen = usePlayerStore((state) => state.setMobilePlayerOpen);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
 
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(volume);
@@ -64,13 +68,13 @@ export const PlayerBar: React.FC = () => {
     }
   };
 
-  const accentColor = '#FA2D48';
+  const accentColor = '#1DB954';
 
   return (
     <footer
       data-testid="player-bar"
       dir={dir}
-      className="hidden md:grid grid-cols-[30%_40%_30%] fixed bottom-0 inset-x-0 h-[84px] z-40 bg-[#121215]/90 backdrop-blur-2xl border-t border-white/[0.08] px-6 lg:px-8 items-center select-none"
+      className="hidden md:grid grid-cols-[30%_40%_30%] fixed bottom-0 inset-x-0 h-[84px] z-40 bg-[#121212]/98 backdrop-blur-2xl border-t border-white/[0.08] px-6 lg:px-8 items-center select-none"
     >
       {/* ── 1. Track Info (Right Column in RTL - 30%) ── */}
       <div className="flex items-center gap-3 min-w-0 pr-1">
@@ -91,26 +95,30 @@ export const PlayerBar: React.FC = () => {
             className="text-sm font-semibold text-white truncate hover:underline cursor-pointer tracking-tight leading-tight"
             title={currentTrack?.title}
           >
-            <bdi dir="auto">{currentTrack?.title || (isRTL ? 'اختر مساراً للتشغيل' : 'Select a track to play')}</bdi>
+            <span
+              dir={isArabicText(currentTrack?.title) ? 'rtl' : 'ltr'}
+              className={`block truncate ${isRTL ? 'text-right' : 'text-left'}`}
+            >
+              {currentTrack?.title || (isRTL ? 'اختر مساراً للتشغيل' : 'Select a track to play')}
+            </span>
           </h4>
-          <p className="text-xs text-[#8E8E93] truncate hover:underline cursor-pointer font-normal mt-0.5">
-            <bdi dir="auto">{currentTrack?.artist || 'AURA.WAV'}</bdi>
+          <p
+            onClick={() => {
+              if (currentTrack?.artist) openArtist(currentTrack.artist);
+            }}
+            className="text-xs text-[#B3B3B3] hover:text-white truncate hover:underline cursor-pointer font-normal mt-0.5 transition-colors"
+          >
+            <span
+              dir={isArabicText(currentTrack?.artist) ? 'rtl' : 'ltr'}
+              className={`block truncate ${isRTL ? 'text-right' : 'text-left'}`}
+            >
+              {currentTrack?.artist || 'AURA.WAV'}
+            </span>
           </p>
         </div>
 
         {currentTrack && (
-          <button
-            onClick={() => toggleFavorite(currentTrack.id)}
-            className="p-2 text-zinc-400 hover:text-[#FA2D48] transition-colors cursor-pointer shrink-0"
-            title={isFav ? t.favoriteRemoved : t.favoriteAdded}
-            aria-label="Toggle favorite"
-          >
-            <Heart
-              className={`w-4 h-4 transition-transform active:scale-125 ${
-                isFav ? 'text-[#FA2D48] fill-[#FA2D48]' : ''
-              }`}
-            />
-          </button>
+          <SmartSaveButton track={currentTrack} size="sm" />
         )}
       </div>
 
@@ -123,7 +131,7 @@ export const PlayerBar: React.FC = () => {
             onClick={toggleShuffle}
             title={t.shuffle}
             className={`p-1.5 cursor-pointer apple-btn-tactile ${
-              shuffle ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
+              shuffle ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Shuffle className="w-4 h-4" />
@@ -178,7 +186,7 @@ export const PlayerBar: React.FC = () => {
             onClick={cycleRepeat}
             title={repeatMode === 'one' ? t.repeatOne : t.repeatAll}
             className={`p-1.5 cursor-pointer apple-btn-tactile ${
-              repeatMode !== 'off' ? 'text-[#FA2D48]' : 'text-zinc-400 hover:text-white'
+              repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
             }`}
           >
             {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
@@ -221,13 +229,13 @@ export const PlayerBar: React.FC = () => {
           title={t.queue}
           className={`p-2 rounded-lg transition-colors cursor-pointer relative ${
             isRightSidebarOpen
-              ? 'text-[#FA2D48] bg-white/[0.06]'
+              ? 'text-[#1DB954] bg-white/[0.06]'
               : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
           <ListMusic className="w-4 h-4" />
           {userQueue.length > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#FA2D48] text-white text-[8px] font-mono font-bold flex items-center justify-center border border-black shadow">
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#1DB954] text-black text-[8px] font-mono font-bold flex items-center justify-center border border-black shadow">
               {userQueue.length}
             </span>
           )}
@@ -239,7 +247,7 @@ export const PlayerBar: React.FC = () => {
           title={t.equalizer}
           className={`p-2 rounded-lg transition-colors cursor-pointer ${
             isEqualizerOpen
-              ? 'text-[#FA2D48] bg-white/[0.06]'
+              ? 'text-[#1DB954] bg-white/[0.06]'
               : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
           }`}
         >
@@ -270,7 +278,7 @@ export const PlayerBar: React.FC = () => {
               setVolume(val);
               if (isMuted && val > 0) setIsMuted(false);
             }}
-            className="w-20 accent-[#FA2D48] cursor-pointer h-1 bg-white/15 rounded-full"
+            className="w-20 accent-[#1DB954] cursor-pointer h-1 bg-white/15 rounded-full"
             aria-label="Volume slider"
           />
         </div>

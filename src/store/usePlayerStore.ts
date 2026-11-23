@@ -15,7 +15,7 @@ import {
   StorageStats,
 } from '../services/storageManager';
 import { resolvePlayableStream, resolvePlayableStreamInfo, clearResolvedStreamCache } from '../services/streamingEngine';
-import { bulkSaveTracksToDexie, dexieDB, migrateAndCleanOldOfflineDB } from '../db/dexieDB';
+import { bulkSaveTracksToDexie, dexieDB, migrateAndCleanOldOfflineDB, getPlayStatsMapFromDexie, incrementPlayCountInDexie } from '../db/dexieDB';
 import { queryDirectoryPermission, requestDirectoryPermission } from '../services/fileScanner';
 import { wakeLockManager } from '../services/wakeLockManager';
 import { triggerHaptic } from '../utils/haptics';
@@ -23,6 +23,7 @@ import { fetchCloudTracks, insertCloudTrack, deleteCloudTrack } from '../service
 import { isCloudConfigured } from '../lib/supabase';
 import { handoffService } from '../services/handoffService';
 import { streamingPreloader } from '../services/streamingPreloader';
+import { buildSongRadioQueue, getSmartAutoplayTrack } from '../utils/mixEngine';
 import * as offlineStorage from '../utils/offlineStorage';
 import { userSyncService, SyncStatus } from '../services/userSyncService';
 
@@ -106,6 +107,15 @@ export interface ToastItem {
   type?: 'info' | 'success' | 'warning';
 }
 
+export interface NavEntry {
+  tab: ViewTab;
+  playlistId?: string;
+  artistName?: string;
+  albumName?: string;
+  genreName?: string;
+  mixId?: string;
+}
+
 export type SleepTimerSetting = number | 'end_of_track' | null;
 
 export const MAX_USER_QUEUE = 100;
@@ -178,6 +188,32 @@ interface PlayerState {
   sleepTimerRemaining: number | null; // seconds countdown
   sleepTimerSetting: SleepTimerSetting;
 
+  // Spotify Navigation Stack
+  navHistory: NavEntry[];
+  navIndex: number;
+  selectedPlaylistId: string | null;
+  selectedArtistName: string | null;
+  selectedAlbumName: string | null;
+  selectedGenreName: string | null;
+  selectedMixId: string | null;
+  setSelectedPlaylistId: (id: string | null) => void;
+  setSelectedArtistName: (name: string | null) => void;
+  setSelectedAlbumName: (name: string | null) => void;
+  setSelectedGenreName: (name: string | null) => void;
+  setSelectedMixId: (id: string | null) => void;
+  openArtist: (artistName: string) => void;
+  openAlbum: (albumName: string, artistHint?: string) => void;
+  openGenre: (genreName: string) => void;
+  openSmartMix: (mixId: string) => void;
+  startSongRadio: (track: Track) => void;
+  playStatsMap: Record<string, { playCount: number; lastPlayedAt: number }>;
+  recordTrackPlay: (trackId: string) => Promise<void>;
+  navigateTo: (entry: NavEntry | ViewTab) => void;
+  goBack: () => void;
+  goForward: () => void;
+  canGoBack: () => boolean;
+  canGoForward: () => boolean;
+
   // UI Modals, Drawers & Tabs
   activeTab: ViewTab;
   expandedPlayerTab: 'main' | 'up_next' | 'lyrics' | 'related';
@@ -188,6 +224,8 @@ interface PlayerState {
   isSleepTimerOpen: boolean;
   isShortcutsOpen: boolean;
   isWelcomeOpen: boolean;
+  isTrackEditOpen: boolean;
+  trackEditTarget: Track | null;
   isChangeArtworkOpen: boolean;
   artworkTargetTrack: Track | null;
   isMetadataEditorOpen: boolean;
@@ -280,6 +318,7 @@ interface PlayerState {
   setSleepTimerOpen: (open: boolean) => void;
   setShortcutsOpen: (open: boolean) => void;
   setWelcomeOpen: (open: boolean) => void;
+  setTrackEditOpen: (open: boolean, track?: Track | null) => void;
   setChangeArtworkModal: (open: boolean, track?: Track | null) => void;
   updateTrackArtwork: (trackId: string, artworkBlob: Blob, artworkUrl: string) => Promise<void>;
   setMetadataEditorModal: (open: boolean, track?: Track | null) => void;
@@ -305,7 +344,7 @@ interface PlayerState {
   refreshStorageStats: () => Promise<StorageStats>;
   clearLocalLibrary: () => Promise<void>;
   rescanLibrary: () => Promise<void>;
-  createPlaylist: (name: string) => Promise<void>;
+  createPlaylist: (name: string, trackIds?: string[]) => Promise<void>;
   renamePlaylist: (id: string, newName: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   addTrackToPlaylist: (playlistId: string, trackId: string) => Promise<void>;
@@ -440,10 +479,11 @@ export const resolveNextQueueTrack = async (state: {
 
   if (nextIndex < 0 || nextIndex >= effectiveQueue.length) {
     if (smartAutoplay && tracks.length > 0) {
-      const currentA = currentTrack.artist.toLowerCase();
-      const candidate =
-        tracks.find((t) => t.id !== currentTrack.id && t.artist.toLowerCase().includes(currentA)) ||
-        tracks[Math.floor(Math.random() * tracks.length)];
+      const candidate = getSmartAutoplayTrack(
+        currentTrack,
+        tracks,
+        (state as any).history ? (state as any).history.map((t: Track) => t.id) : []
+      );
       if (candidate) {
         nextIndex = effectiveQueue.findIndex((t) => t.id === candidate.id);
         if (nextIndex === -1) {
@@ -527,11 +567,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     set(newState);
   };
 
+  let currentSessionRecordedTrackId: string | null = null;
+
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
     onTimeUpdate: (cur, dur) => {
       // Synchronize lockscreen & MediaSession position even when in background
       updateMediaSessionPosition(dur, cur);
+
+      // Anti-Skip Listening Counting (30s or 40% duration, counted once per playback session)
+      const activeTrk = get().currentTrack;
+      if (activeTrk && currentSessionRecordedTrackId !== activeTrk.id) {
+        const threshold = Math.min(30, dur > 0 ? dur * 0.4 : 30);
+        if (cur >= threshold && threshold > 0) {
+          currentSessionRecordedTrackId = activeTrk.id;
+          get().recordTrackPlay(activeTrk.id);
+        }
+      }
 
       // Smart Buffer Pre-fetch & Lookahead Streaming Preloader (15s remaining or 75% progress)
       const nextId = get().nextUpTrackId;
@@ -727,6 +779,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     sleepTimerSetting: null,
 
     activeTab: 'home',
+    navHistory: [{ tab: 'home' }],
+    navIndex: 0,
+    selectedPlaylistId: null,
+    selectedArtistName: null,
+    selectedAlbumName: null,
+    selectedGenreName: null,
+    selectedMixId: null,
+    playStatsMap: {},
     isLyricsOpen: false,
     isEqualizerOpen: false,
     isQueueOpen: false,
@@ -734,6 +794,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isSleepTimerOpen: false,
     isShortcutsOpen: false,
     isWelcomeOpen: false,
+    isTrackEditOpen: false,
+    trackEditTarget: null,
     cloudTracks: [],
     isCloudSyncing: false,
     isCloudUploaderOpen: false,
@@ -905,11 +967,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         djAudioEngine.setAutoMix(automix.enabled, automix.duration);
         djAudioEngine.setAutoMixStyle(get().automixStyle);
 
+        const playStatsMap = await getPlayStatsMapFromDexie();
+
         set({
           volume: vol,
           automixEnabled: automix.enabled,
           automixDuration: automix.duration,
           favorites: favIds,
+          playStatsMap,
         });
 
         // Filter out and purge any demo tracks from previous sessions
@@ -2347,7 +2412,146 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       get().addToast('تمت إزالة الأغنية من مكتبتك', undefined, 'info');
     },
 
-    setActiveTab: (tab: ViewTab) => set({ activeTab: tab }),
+    setSelectedPlaylistId: (id: string | null) => set({ selectedPlaylistId: id }),
+    setSelectedArtistName: (name: string | null) => set({ selectedArtistName: name }),
+    setSelectedAlbumName: (name: string | null) => set({ selectedAlbumName: name }),
+    setSelectedGenreName: (name: string | null) => set({ selectedGenreName: name }),
+    setSelectedMixId: (id: string | null) => set({ selectedMixId: id }),
+
+    openArtist: (artistName: string) => {
+      if (!artistName) return;
+      get().navigateTo({ tab: 'artist', artistName: artistName.trim() });
+      set({ isMobilePlayerOpen: false, isSpotlightOpen: false });
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    openAlbum: (albumName: string, artistHint?: string) => {
+      if (!albumName) return;
+      get().navigateTo({ tab: 'album', albumName: albumName.trim(), artistName: artistHint?.trim() });
+      set({ isMobilePlayerOpen: false, isSpotlightOpen: false });
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    openGenre: (genreName: string) => {
+      if (!genreName) return;
+      get().navigateTo({ tab: 'genre', genreName: genreName.trim() });
+      set({ isMobilePlayerOpen: false, isSpotlightOpen: false });
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    openSmartMix: (mixId: string) => {
+      if (!mixId) return;
+      get().navigateTo({ tab: 'smart_mix', mixId: mixId.trim() });
+      set({ isMobilePlayerOpen: false, isSpotlightOpen: false });
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    recordTrackPlay: async (trackId: string) => {
+      try {
+        const res = await incrementPlayCountInDexie(trackId);
+        set((state) => ({
+          playStatsMap: {
+            ...state.playStatsMap,
+            [trackId]: res,
+          },
+        }));
+      } catch (err) {
+        console.warn('Failed to record track play:', err);
+      }
+    },
+
+    startSongRadio: (track: Track) => {
+      const { tracks, history, playTrack, addToast } = get();
+      const historyIds = history.map((t) => t.id);
+      const radioQueue = buildSongRadioQueue(track, tracks, historyIds);
+      playTrack(radioQueue[0], radioQueue);
+      addToast(`تم بدء راديو ${track.title} — ${radioQueue.length} مساراً متناغماً`, undefined, 'success');
+      const main = document.querySelector('main');
+      if (main) main.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    navigateTo: (entry: NavEntry | ViewTab) => {
+      const newEntry: NavEntry = typeof entry === 'string' ? { tab: entry } : entry;
+      const { navHistory, navIndex } = get();
+      const current = navHistory[navIndex];
+
+      if (
+        current &&
+        current.tab === newEntry.tab &&
+        current.playlistId === newEntry.playlistId &&
+        current.artistName === newEntry.artistName &&
+        current.albumName === newEntry.albumName &&
+        current.genreName === newEntry.genreName &&
+        current.mixId === newEntry.mixId
+      ) {
+        return;
+      }
+
+      const updatedHistory = navHistory.slice(0, navIndex + 1);
+      updatedHistory.push(newEntry);
+
+      set({
+        navHistory: updatedHistory,
+        navIndex: updatedHistory.length - 1,
+        activeTab: newEntry.tab,
+        selectedPlaylistId: newEntry.playlistId ?? null,
+        selectedArtistName: newEntry.artistName ?? null,
+        selectedAlbumName: newEntry.albumName ?? null,
+        selectedGenreName: newEntry.genreName ?? null,
+        selectedMixId: newEntry.mixId ?? null,
+      });
+    },
+
+    setActiveTab: (tab: ViewTab) => {
+      get().navigateTo(tab);
+    },
+
+    canGoBack: () => get().navIndex > 0,
+    canGoForward: () => get().navIndex < get().navHistory.length - 1,
+
+    goBack: () => {
+      const { navHistory, navIndex } = get();
+      if (navIndex > 0) {
+        const prevIndex = navIndex - 1;
+        const prevEntry = navHistory[prevIndex];
+        set({
+          navIndex: prevIndex,
+          activeTab: prevEntry.tab,
+          selectedPlaylistId: prevEntry.playlistId ?? null,
+          selectedArtistName: prevEntry.artistName ?? null,
+          selectedAlbumName: prevEntry.albumName ?? null,
+          selectedGenreName: prevEntry.genreName ?? null,
+          selectedMixId: prevEntry.mixId ?? null,
+        });
+      }
+    },
+
+    goForward: () => {
+      const { navHistory, navIndex } = get();
+      if (navIndex < navHistory.length - 1) {
+        const nextIndex = navIndex + 1;
+        const nextEntry = navHistory[nextIndex];
+        set({
+          navIndex: nextIndex,
+          activeTab: nextEntry.tab,
+          selectedPlaylistId: nextEntry.playlistId ?? null,
+          selectedArtistName: nextEntry.artistName ?? null,
+          selectedAlbumName: nextEntry.albumName ?? null,
+          selectedGenreName: nextEntry.genreName ?? null,
+          selectedMixId: nextEntry.mixId ?? null,
+        });
+      }
+    },
+
+    setTrackEditOpen: (open: boolean, track?: Track | null) =>
+      set({
+        isTrackEditOpen: open,
+        trackEditTarget: track !== undefined ? track : (open ? get().currentTrack : null),
+      }),
     setPlaybackState: (state: PlaybackState) => set({ playbackState: state }),
     toggleRightSidebar: () => set((state) => ({ isRightSidebarOpen: !state.isRightSidebarOpen })),
     setRightSidebarOpen: (open: boolean) => set({ isRightSidebarOpen: open }),
@@ -2457,11 +2661,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
       return success;
     },
-    setChangeArtworkModal: (open: boolean, track?: Track | null) =>
-      set({
-        isChangeArtworkOpen: open,
-        artworkTargetTrack: track !== undefined ? track : get().currentTrack,
-      }),
+    setChangeArtworkModal: (open: boolean, track?: Track | null) => get().setTrackEditOpen(open, track),
+    setMetadataEditorModal: (open: boolean, track?: Track | null) => get().setTrackEditOpen(open, track),
 
     updateTrackArtwork: async (trackId: string, artworkBlob: Blob, artworkUrl: string) => {
       const { tracks, currentTrack } = get();
@@ -2498,11 +2699,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       }
     },
 
-    setMetadataEditorModal: (open: boolean, track?: Track | null) =>
-      set({
-        isMetadataEditorOpen: open,
-        metadataTargetTrack: track !== undefined ? track : get().currentTrack,
-      }),
 
     updateTrackMetadata: async (trackId: string, metadata: Partial<Track>, newArtworkBlob?: Blob, newArtworkUrl?: string) => {
       const { tracks, currentTrack } = get();
@@ -2647,11 +2843,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       set({ activeMood: mood, filteredTracks: filtered.length > 0 ? filtered : tracks });
     },
 
-    createPlaylist: async (name: string) => {
+    createPlaylist: async (name: string, trackIds: string[] = []) => {
       const newPl: Playlist = {
         id: `pl_${Date.now()}`,
         name,
-        trackIds: [],
+        trackIds,
         createdAt: Date.now(),
       };
       const db = await getDB();

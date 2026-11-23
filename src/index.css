@@ -3,23 +3,29 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #09090B;
-  --obsidian-base: #09090B;
-  --smoked-glass: rgba(17, 17, 20, 0.72);
-  --accent-color: 250, 45, 72;
-  --apple-red: #FA2D48;
-  --apple-rose: #FA2D48;
-  --apple-violet: #FA2D48;
-  --aura-accent: #FA2D48;
-  --aura-accent-hover: #E5384F;
-  --aura-accent-glow: rgba(250, 45, 72, 0.12);
-  --ambient-primary: #FA2D48;
-  --ambient-accent: #FA2D48;
-  --ambient-primary-rgb: 250, 45, 72;
-  --ambient-accent-rgb: 250, 45, 72;
-  --mesh-color-1: rgba(250, 45, 72, 0.08);
-  --mesh-color-2: rgba(250, 45, 72, 0.05);
-  --mesh-color-3: rgba(250, 45, 72, 0.03);
+  --app-bg: #000000;
+  --panel-bg: #121212;
+  --surface-card: #181818;
+  --surface-hover: #242424;
+  --surface-hover-card: #282828;
+  --spotify-green: #1DB954;
+  --spotify-green-hover: #1ED760;
+  --aura-accent: #1DB954;
+  --aura-accent-hover: #1ED760;
+  --aura-accent-glow: rgba(29, 185, 84, 0.2);
+  --ambient-primary: #1DB954;
+  --ambient-accent: #1DB954;
+  --ambient-primary-rgb: 29, 185, 84;
+  --ambient-accent-rgb: 29, 185, 84;
+  --obsidian-base: #121212;
+  --smoked-glass: rgba(18, 18, 18, 0.85);
+  --accent-color: 29, 185, 84;
+  --apple-red: #1DB954;
+  --apple-rose: #1DB954;
+  --apple-violet: #1DB954;
+  --mesh-color-1: rgba(29, 185, 84, 0.08);
+  --mesh-color-2: rgba(29, 185, 84, 0.05);
+  --mesh-color-3: rgba(29, 185, 84, 0.02);
   --spring-entrance: cubic-bezier(0.22, 1, 0.36, 1);
   --spring-micro: cubic-bezier(0.34, 1.56, 0.64, 1);
   --apple-spring-primary: cubic-bezier(0.22, 1, 0.36, 1);
@@ -87,7 +93,7 @@ html, body {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
-  background-color: #09090B !important;
+  background-color: #000000 !important;
   color: #f4f4f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Readex Pro", "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.015em;
@@ -110,14 +116,14 @@ html, body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  background-color: #09090B !important;
+  background-color: #000000 !important;
 }
 
 /* Fullscreen API normalization */
 :fullscreen, :-webkit-full-screen {
   width: 100%;
   height: 100%;
-  background-color: #09090B;
+  background-color: #000000;
 }
 
 /* Fixed full-bleed background/ambient layer ensuring backdrop ALWAYS extends edge-to-edge */
@@ -127,7 +133,7 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: -1;
-  background-color: #09090B;
+  background-color: #000000;
   pointer-events: none;
 }
 
@@ -137,7 +143,7 @@ html, body {
     height: 100%;
     min-height: 100%;
     min-height: 100dvh;
-    background-color: #09090B !important;
+    background-color: #000000 !important;
   }
 }
 
@@ -439,7 +445,7 @@ input[type=range]::-webkit-slider-thumb:hover {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   }
   50% {
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(250, 36, 60, 0.2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(29, 185, 84, 0.2);
   }
 }
 .aura-glow-pulse {
@@ -535,7 +541,7 @@ input[type=range]::-webkit-slider-thumb:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.05);
   }
   50% {
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 10px rgba(250, 36, 60, 0.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 10px rgba(29, 185, 84, 0.2);
   }
 }
 
@@ -773,39 +779,39 @@ button:not(:disabled):active, [role="button"]:active, .interactive-press:active 
   transform: scale(0.95) translateZ(0);
 }
 .luxury-capsule-active {
-  background: linear-gradient(135deg, rgba(250, 36, 60, 0.20) 0%, rgba(255, 45, 85, 0.12) 100%);
-  border: 1px solid rgba(250, 36, 60, 0.4);
+  background: rgba(29, 185, 84, 0.18);
+  border: 1px solid rgba(29, 185, 84, 0.4);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.18);
 }
 
-/* Apple Signature Play Button */
+/* Spotify Signature Play Button */
 .spotify-play-btn {
-  background: linear-gradient(135deg, #FA243C 0%, #FF375F 100%);
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: #1DB954;
+  color: #000000;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.18s ease,
+              background-color 0.18s ease,
               box-shadow 0.18s ease;
 }
 .spotify-play-btn:hover {
-  background: linear-gradient(135deg, #FF375F 0%, #FA243C 100%);
-  transform: scale(1.04);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
+  background: #1ED760;
+  transform: scale(1.05);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
 }
 .spotify-play-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.96);
 }
 
-/* Apple Card Surface */
+/* Spotify Card Surface */
 .spotify-card {
-  background-color: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  transition: background-color 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  background-color: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 .spotify-card:hover {
   background-color: #282828;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* 60 to 120 FPS ProMotion Hardware Compositing */

@@ -40,6 +40,8 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const clearFavorites = usePlayerStore((state) => state.clearFavorites);
   const addToast = usePlayerStore((state) => state.addToast);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMenuTrackId, setActiveMenuTrackId] = useState<string | null>(null);
@@ -439,7 +441,13 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                         <bdi dir="auto">{track.title}</bdi>
                       </h4>
                       <div className="flex items-center gap-1.5 text-[11px] text-white/60 truncate mt-0.5">
-                        <span className="truncate font-medium">
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (track.artist) openArtist(track.artist);
+                          }}
+                          className="truncate font-medium hover:text-white hover:underline cursor-pointer transition-colors"
+                        >
                           <bdi dir="auto">{track.artist}</bdi>
                         </span>
                         <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
@@ -452,7 +460,15 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
                   {/* 3. Album */}
                   <div className="hidden md:block text-xs text-white/60 truncate leading-relaxed">
-                    <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (track.album) openAlbum(track.album, track.artist);
+                      }}
+                      className={track.album ? 'hover:text-white hover:underline cursor-pointer transition-colors' : ''}
+                    >
+                      <bdi dir="auto">{track.album || track.genre || 'Single'}</bdi>
+                    </span>
                   </div>
 
                   {/* 4. Clustered Actions: Add to Queue + Favorite Heart + Duration + More Menu */}

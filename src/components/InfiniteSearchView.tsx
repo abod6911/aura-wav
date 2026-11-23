@@ -47,6 +47,9 @@ export const InfiniteSearchView: React.FC = () => {
   const playbackState = usePlayerStore((state) => state.playbackState);
   const playTrack = usePlayerStore((state) => state.playTrack);
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
+  const openGenre = usePlayerStore((state) => state.openGenre);
 
   // Reset progressive count on query change
   useEffect(() => {
@@ -202,7 +205,7 @@ export const InfiniteSearchView: React.FC = () => {
             {genreStats.map((g) => (
               <div
                 key={g.name}
-                onClick={() => setQuery(g.query)}
+                onClick={() => openGenre(g.query)}
                 className={`h-32 sm:h-36 rounded-2xl p-3 sm:p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer aura-tap-btn shadow-lg relative overflow-hidden flex flex-col justify-between group select-none`}
               >
                 <div className="z-10 relative">
@@ -293,7 +296,29 @@ export const InfiniteSearchView: React.FC = () => {
                       {results.topResult.title}
                     </h2>
                     <p className="text-xs sm:text-sm text-zinc-300 font-medium truncate mt-0.5">
-                      {results.topResult.artist} {results.topResult.album ? `• ${results.topResult.album}` : ''}
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (results.topResult?.artist) openArtist(results.topResult.artist);
+                        }}
+                        className="hover:text-white hover:underline cursor-pointer"
+                      >
+                        {results.topResult.artist}
+                      </span>
+                      {results.topResult.album && (
+                        <>
+                          {' • '}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (results.topResult?.album) openAlbum(results.topResult.album, results.topResult.artist);
+                            }}
+                            className="hover:text-white hover:underline cursor-pointer"
+                          >
+                            {results.topResult.album}
+                          </span>
+                        </>
+                      )}
                     </p>
                     <span className="text-[10px] sm:text-xs text-zinc-400 font-mono mt-0.5 inline-block">
                       {formatDuration(results.topResult.duration)}
@@ -337,7 +362,7 @@ export const InfiniteSearchView: React.FC = () => {
                   return (
                     <div
                       key={art.id}
-                      onClick={() => setQuery(art.name)}
+                      onClick={() => openArtist(art.name)}
                       className="p-4 rounded-2xl apple-glass-card hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 flex flex-col items-center text-center cursor-pointer transition-[color,background-color,border-color,transform] hover:scale-[1.03] active:scale-[0.98] group apple-spring"
                     >
                       <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md mb-3">

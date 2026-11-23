@@ -4,8 +4,9 @@ import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
-import { Play, ListPlus, Check, MoreHorizontal, Cloud } from 'lucide-react';
-import { formatTime } from '../player/TimelineSlider';
+import { Play, ListPlus, Check, MoreHorizontal, Cloud, Heart, CheckCircle2 } from 'lucide-react';
+import { formatTime, isArabicText } from '../../utils/formatters';
+import { SmartSaveButton } from './SmartSaveButton';
 
 interface MobileTrackRowProps {
   track: Track;
@@ -33,17 +34,27 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   const addToast = usePlayerStore((state) => state.addToast);
   const isOnline = usePlayerStore((state) => state.isOnline);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const favorites = usePlayerStore((state) => state.favorites);
+  const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
 
   const [isAddedFeedback, setIsAddedFeedback] = useState(false);
 
   const isCur = currentTrack?.id === track.id;
+  const isFav = favorites.includes(track.id);
   const isAvailableOffline = downloadedTrackIds.includes(track.id) || !!track.file || !!track.blob;
   const isDimmed = !isOnline && !isAvailableOffline;
   const playList = trackList || contextList;
 
   const x = useMotionValue(0);
-  const bgOpacity = useTransform(x, isRTL ? [-80, -20, 0] : [0, 20, 80], [1, 0.4, 0]);
-  const iconScale = useTransform(x, isRTL ? [-70, -30, 0] : [0, 30, 70], [1.2, 0.9, 0.5]);
+
+  // Queue swipe (Revealed when dragging in direction A)
+  const queueOpacity = useTransform(x, isRTL ? [-80, -25, 0] : [0, 25, 80], [1, 0.4, 0]);
+  const queueScale = useTransform(x, isRTL ? [-70, -30, 0] : [0, 30, 70], [1.1, 0.9, 0.5]);
+
+  // Favorite swipe (Revealed when dragging in direction B)
+  const favOpacity = useTransform(x, isRTL ? [0, 25, 80] : [-80, -25, 0], [0, 0.4, 1]);
+  const favScale = useTransform(x, isRTL ? [0, 30, 70] : [-70, -30, 0], [0.5, 0.9, 1.1]);
 
   const handleRowClick = () => {
     triggerHaptic('light');
@@ -71,35 +82,65 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   };
 
   const handleDragEnd = (_: any, info: any) => {
-    const offset = info.offset.x;
-    const threshold = 45;
-    const triggered = isRTL ? offset < -threshold : offset > threshold;
+    const dx = info.offset.x;
+    const dy = info.offset.y;
 
-    if (triggered) {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(12); } catch {}
-      } else {
-        triggerHaptic('medium');
-      }
+    // Scroll Lock Guard: only trigger if horizontal displacement > 18px and > 1.5x vertical displacement
+    if (Math.abs(dx) <= 18 || Math.abs(dx) <= Math.abs(dy) * 1.5) {
+      return;
+    }
+
+    const threshold = 45;
+    const isQueueTriggered = isRTL ? dx < -threshold : dx > threshold;
+    const isFavTriggered = isRTL ? dx > threshold : dx < -threshold;
+
+    if (isQueueTriggered) {
+      triggerHaptic('medium');
       addToQueue(track);
       addToast(isRTL ? 'تمت الإضافة إلى قائمة الانتظار' : 'Added to queue', undefined, 'success');
       setIsAddedFeedback(true);
       setTimeout(() => setIsAddedFeedback(false), 1000);
+    } else if (isFavTriggered) {
+      triggerHaptic('medium');
+      toggleFavorite(track.id);
+      const willBeFav = !favorites.includes(track.id);
+      addToast(
+        willBeFav
+          ? (isRTL ? 'تمت الإضافة إلى أغانيك المفضلة' : 'Added to Liked Songs')
+          : (isRTL ? 'تمت الإزالة من المفضلة' : 'Removed from Favorites'),
+        undefined,
+        'success'
+      );
     }
   };
 
   return (
     <div className="relative w-full overflow-hidden select-none touch-pan-y">
-      {/* Swipe Reveal Action Background */}
+      {/* 1. Queue Action Reveal (Direction A) */}
       <motion.div
-        style={{ opacity: bgOpacity }}
+        style={{ opacity: queueOpacity }}
         className={`absolute inset-0 bg-gradient-to-r ${
-          isRTL ? 'from-transparent via-[#FA2D48]/60 to-[#FA2D48]/80' : 'from-[#FA2D48]/80 via-[#FA2D48]/60 to-transparent'
+          isRTL ? 'from-transparent via-zinc-800 to-zinc-900' : 'from-zinc-900 via-zinc-800 to-transparent'
         } flex items-center ${isRTL ? 'justify-end pe-4' : 'justify-start ps-4'} z-0`}
       >
-        <motion.div style={{ scale: iconScale }} className="flex items-center gap-1.5 text-white font-bold text-xs">
-          <ListPlus className="w-4 h-4 text-white stroke-[2.5]" />
+        <motion.div style={{ scale: queueScale }} className="flex items-center gap-1.5 text-white font-bold text-xs">
+          <ListPlus className="w-4 h-4 text-[#1DB954] stroke-[2.5]" />
           <span className="text-white text-xs font-bold">{isRTL ? 'إلى قائمة الانتظار' : 'To Queue'}</span>
+        </motion.div>
+      </motion.div>
+
+      {/* 2. Favorite Action Reveal (Direction B) */}
+      <motion.div
+        style={{ opacity: favOpacity }}
+        className={`absolute inset-0 bg-gradient-to-r ${
+          isRTL ? 'from-[#1DB954]/80 via-[#1DB954]/60 to-transparent' : 'from-transparent via-[#1DB954]/60 to-[#1DB954]/80'
+        } flex items-center ${isRTL ? 'justify-start ps-4' : 'justify-end pe-4'} z-0`}
+      >
+        <motion.div style={{ scale: favScale }} className="flex items-center gap-1.5 text-black font-bold text-xs">
+          <Heart className={`w-4 h-4 ${isFav ? 'text-black fill-black' : 'text-black'}`} />
+          <span className="text-black text-xs font-bold">
+            {isFav ? (isRTL ? 'إزالة من المفضلة' : 'Unfavorite') : (isRTL ? 'إلى المفضلة' : 'Favorite')}
+          </span>
         </motion.div>
       </motion.div>
 
@@ -108,25 +149,25 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         style={{ x }}
         drag="x"
         dragDirectionLock
-        dragConstraints={{ left: isRTL ? -80 : 0, right: isRTL ? 0 : 80 }}
+        dragConstraints={{ left: -100, right: 100 }}
         dragElastic={0.35}
         transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
-        className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none apple-row-press cursor-pointer transition-opacity duration-200 ${
-          isCur ? 'bg-[#181820]' : 'bg-transparent'
+        className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none cursor-pointer transition-colors duration-150 ${
+          isCur ? 'bg-[#242424]' : 'bg-transparent hover:bg-white/[0.04]'
         } ${isDimmed ? 'opacity-40' : 'opacity-100'}`}
       >
         {/* Left: Index + Artwork + Title/Artist */}
         <div className="flex items-center gap-2.5 min-w-0 flex-1 pe-1">
           {showIndex && index !== undefined && (
-            <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 tabular-nums ${isCur ? 'text-[#FA2D48]' : 'text-zinc-500'}`}>
+            <span className={`text-[11px] font-mono font-bold w-4 text-center shrink-0 tabular-nums ${isCur ? 'text-[#1DB954]' : 'text-zinc-500'}`}>
               {index + 1}
             </span>
           )}
 
           {/* 40px x 40px rounded-lg Artwork */}
-          <div className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg overflow-hidden bg-[#14141c] shrink-0 aspect-square shadow-sm border border-white/10">
+          <div className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg overflow-hidden bg-[#181818] shrink-0 aspect-square shadow-sm border border-white/10">
             <img
               src={track.artworkUrl || track.coverUrl || '/logo.svg'}
               alt={track.title}
@@ -138,9 +179,9 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                 {isPlaying ? (
                   <div className="flex items-center gap-[2px]">
-                    <span className="w-0.5 bg-[#FA2D48] rounded-full aura-soundbar-1 h-3" />
-                    <span className="w-0.5 bg-[#FA2D48] rounded-full aura-soundbar-2 h-2" />
-                    <span className="w-0.5 bg-[#FA2D48] rounded-full aura-soundbar-3 h-3.5" />
+                    <span className="w-0.5 bg-[#1DB954] rounded-full aura-soundbar-1 h-3" />
+                    <span className="w-0.5 bg-[#1DB954] rounded-full aura-soundbar-2 h-2" />
+                    <span className="w-0.5 bg-[#1DB954] rounded-full aura-soundbar-3 h-3.5" />
                   </div>
                 ) : (
                   <Play className="w-3.5 h-3.5 text-white fill-white" />
@@ -151,15 +192,24 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
 
           <div className="min-w-0 flex-1">
             <h4
-              dir="auto"
+              dir={isArabicText(track.title) ? 'rtl' : 'ltr'}
               className={`text-[13px] sm:text-[14px] font-bold truncate block leading-tight tracking-tight ${
-                isCur ? 'text-[#FA2D48]' : 'text-white'
-              }`}
+                isRTL ? 'text-right' : 'text-left'
+              } ${isCur ? 'text-[#1DB954]' : 'text-white'}`}
             >
               {track.title}
             </h4>
             <div className="flex items-center gap-1.5 mt-0.5 leading-tight">
-              <p dir="auto" className="text-[11px] text-zinc-400 truncate block font-normal">
+              <p
+                dir={isArabicText(track.artist) ? 'rtl' : 'ltr'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (track.artist) openArtist(track.artist);
+                }}
+                className={`text-[11px] text-[#B3B3B3] hover:text-white hover:underline truncate block font-normal cursor-pointer transition-colors ${
+                  isRTL ? 'text-right' : 'text-left'
+                }`}
+              >
                 {track.artist}
               </p>
               {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
@@ -183,7 +233,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           <button
             type="button"
             onClick={handleQuickQueue}
-            className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
             title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
             aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
           >
@@ -201,6 +251,9 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
               )}
             </div>
           </button>
+
+          {/* Quick Smart Save (+ / ✓) */}
+          <SmartSaveButton track={track} size="sm" />
 
           {/* 3-dots Menu Button (40px touch target) */}
           {onOpenActionSheet && (

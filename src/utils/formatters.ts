@@ -54,3 +54,19 @@ export function formatDurationArabic(totalSeconds: number): string {
   }
   return `${minutes} دقيقة`;
 }
+
+/**
+ * Detects if a text string contains Arabic characters.
+ */
+export function isArabicText(text?: string | null): boolean {
+  if (!text) return false;
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+}
+
+/**
+ * Returns direction ('rtl' | 'ltr') based on the content language,
+ * guaranteeing correct text-overflow ellipsis in WebKit / Safari when nested in RTL layouts.
+ */
+export function getTextDirection(text?: string | null): 'rtl' | 'ltr' {
+  return isArabicText(text) ? 'rtl' : 'ltr';
+}

@@ -25,6 +25,9 @@ import {
   Maximize,
   Minimize,
   Cloud,
+  Car,
+  Radio,
+  Moon,
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { AppleSwitch } from './common/AppleSwitch';
@@ -48,7 +51,7 @@ interface SettingsToggleProps {
 const SettingsToggle: React.FC<SettingsToggleProps> = ({
   checked,
   onChange,
-  activeColor = 'bg-[#FA2D48]',
+  activeColor = 'bg-[#1DB954]',
   label,
 }) => {
   return (
@@ -98,6 +101,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const syncStatus = usePlayerStore((state) => state.syncStatus);
   const lastSyncedAt = usePlayerStore((state) => state.lastSyncedAt);
   const triggerManualSync = usePlayerStore((state) => state.triggerManualSync);
+  const setCarModeOpen = usePlayerStore((state) => state.setCarModeOpen);
+  const setSyncPartyOpen = usePlayerStore((state) => state.setSyncPartyOpen);
+  const setSleepTimerOpen = usePlayerStore((state) => state.setSleepTimerOpen);
 
   // Audio settings from store
   const automixEnabled = usePlayerStore((state) => state.automixEnabled);
@@ -261,10 +267,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-lg shadow-[#FA243C]/20 flex items-center justify-center flex-shrink-0">
-                <div className="w-full h-full bg-[#0d0d14] rounded-[14px] flex items-center justify-center">
-                  <SlidersHorizontal className="w-5 h-5 text-[#FA243C]" />
-                </div>
+              <div className="w-10 h-10 rounded-2xl bg-white/[0.08] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
+                <SlidersHorizontal className="w-5 h-5 text-[#1DB954]" />
               </div>
               <div>
                 <h3 className="text-lg font-black text-white tracking-tight leading-none">
@@ -289,8 +293,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-md shadow-[#FA243C]/25 flex-shrink-0">
-                  <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center text-white text-sm font-black overflow-hidden">
+                <div className="w-12 h-12 rounded-2xl bg-white/[0.08] border border-white/[0.08] flex-shrink-0">
+                  <div className="w-full h-full bg-[#181818] rounded-2xl flex items-center justify-center text-white text-sm font-black overflow-hidden">
                     {currentUser?.avatarUrl ? (
                       <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
                     ) : (
@@ -324,7 +328,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     onClose();
                     setAuthScreenOpen(true);
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white text-xs font-bold flex items-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 shrink-0 shadow-md shadow-[#FA243C]/30"
+                  className="px-3.5 py-2 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95 shrink-0 shadow-md shadow-black/50"
                 >
                   <User className="w-3.5 h-3.5" />
                   <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
@@ -354,7 +358,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                           <span className="text-white font-medium truncate">{acc.name}</span>
                           <span className="text-zinc-500 font-mono text-[10px] truncate">({acc.email})</span>
                         </div>
-                        <span className="text-[10px] text-[#FA243C] font-bold shrink-0">{isRTL ? 'تبديل' : 'Switch'}</span>
+                        <span className="text-[10px] text-[#1DB954] font-bold shrink-0">{isRTL ? 'تبديل' : 'Switch'}</span>
                       </div>
                     ))}
                 </div>
@@ -416,7 +420,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
-                <Languages className="w-4 h-4 text-[#FA243C]" />
+                <Languages className="w-4 h-4 text-[#1DB954]" />
                 <span>{t.languageAndDisplay}</span>
               </span>
               <span className="text-[11px] text-zinc-400 font-medium">
@@ -424,7 +428,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </span>
             </div>
 
-            {/* Segmented iOS Style Language Switcher */}
+            {/* Segmented Spotify Style Language Switcher */}
             <div>
               <label className="text-[11px] text-zinc-400 font-semibold mb-2 block">
                 {t.languageLabel}
@@ -435,7 +439,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClick={() => handleLanguageChange('ar')}
                   className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-transform cursor-pointer active:scale-98 ${
                     language === 'ar'
-                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      ? 'bg-[#1DB954] text-black shadow-md shadow-black/50'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -447,7 +451,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onClick={() => handleLanguageChange('en')}
                   className={`flex-1 py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-transform cursor-pointer active:scale-98 ${
                     language === 'en'
-                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                      ? 'bg-[#1DB954] text-black shadow-md shadow-black/50'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -469,7 +473,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <SettingsToggle
                 checked={reactiveVisualsEnabled}
                 onChange={setReactiveVisualsEnabled}
-                activeColor="bg-[#FA243C]"
+                activeColor="bg-[#1DB954]"
                 label={t.ambientGlowLabel}
               />
             </div>
@@ -488,7 +492,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <SettingsToggle
                 checked={isFullscreen}
                 onChange={handleFullscreenToggle}
-                activeColor="bg-[#FA2D48]"
+                activeColor="bg-[#1DB954]"
                 label={isRTL ? 'وضع ملء الشاشة' : 'Fullscreen Mode'}
               />
             </div>
@@ -621,7 +625,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <AppleSwitch
                   checked={iosDspEnabled}
                   onChange={handleToggleIosDsp}
-                  activeColor="bg-[#FA2D48]"
+                  activeColor="bg-[#1DB954]"
                   label={isRTL ? 'معالجة الصوت المتقدمة' : 'Advanced DSP'}
                 />
               </div>
@@ -695,7 +699,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <AppleSwitch
                 checked={isAutoCacheEnabled}
                 onChange={setAutoCacheEnabled}
-                activeColor="bg-[#FA2D48]"
+                activeColor="bg-[#1DB954]"
                 label="التخزين التلقائي الذكي"
               />
             </div>
@@ -729,6 +733,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
           </div>
 
+          {/* Additional Modes: CarPlay, SyncParty, Sleep Timer */}
+          <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3">
+            <span className="text-xs font-bold text-zinc-200 block">
+              {isRTL ? 'أوضاع وتجارب إضافية' : 'Special Modes & Features'}
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setCarModeOpen(true);
+                }}
+                className="p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center gap-2.5 text-start transition-colors cursor-pointer"
+              >
+                <Car className="w-4 h-4 text-[#1DB954]" />
+                <div>
+                  <span className="text-xs font-bold text-white block">{isRTL ? 'وضع السيارة' : 'CarPlay'}</span>
+                  <span className="text-[10px] text-zinc-400 block">{isRTL ? 'واجهة القيادة' : 'Drive Mode'}</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setSyncPartyOpen(true);
+                }}
+                className="p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center gap-2.5 text-start transition-colors cursor-pointer"
+              >
+                <Radio className="w-4 h-4 text-[#1DB954]" />
+                <div>
+                  <span className="text-xs font-bold text-white block">{isRTL ? 'حفلة المزامنة' : 'SyncParty'}</span>
+                  <span className="text-[10px] text-zinc-400 block">{isRTL ? 'استماع متزامن' : 'Live Sync'}</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setSleepTimerOpen(true);
+                }}
+                className="p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center gap-2.5 text-start transition-colors cursor-pointer"
+              >
+                <Moon className="w-4 h-4 text-[#1DB954]" />
+                <div>
+                  <span className="text-xs font-bold text-white block">{isRTL ? 'مؤقت النوم' : 'Sleep Timer'}</span>
+                  <span className="text-[10px] text-zinc-400 block">{isRTL ? 'إيقاف بعد مدة' : 'Set Timer'}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* 4. Action Buttons */}
           <div className="space-y-2.5">
             {/* Add More Tracks */}
@@ -737,7 +794,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 onClose();
                 onOpenImport();
               }}
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer shadow-lg shadow-[#FA243C]/25"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer shadow-lg shadow-black/50"
             >
               <FolderPlus className="w-4 h-4" />
               <span>{t.importFolder}</span>

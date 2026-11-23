@@ -26,8 +26,11 @@ export const PlaylistsView: React.FC = () => {
   const addToQueue = usePlayerStore((state) => state.addToQueue);
   const playNextInQueue = usePlayerStore((state) => state.playNextInQueue);
   const addToast = usePlayerStore((state) => state.addToast);
+  const selectedPlaylistId = usePlayerStore((state) => state.selectedPlaylistId);
+  const setSelectedPlaylistId = usePlayerStore((state) => state.setSelectedPlaylistId);
+  const openArtist = usePlayerStore((state) => state.openArtist);
+  const openAlbum = usePlayerStore((state) => state.openAlbum);
 
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -120,7 +123,7 @@ export const PlaylistsView: React.FC = () => {
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     autoFocus
-                    className="h-9 px-3 rounded-xl bg-white/[0.08] border border-white/20 text-white font-bold text-sm focus:outline-none focus:border-[#FA243C]"
+                    className="h-9 px-3 rounded-xl bg-white/[0.08] border border-white/20 text-white font-bold text-sm focus:outline-none focus:border-[#1DB954]"
                     style={{ fontSize: '16px' }}
                   />
                   <button
@@ -168,9 +171,9 @@ export const PlaylistsView: React.FC = () => {
                     triggerHaptic('light');
                     handlePlayAll();
                   }}
-                  className="h-11 px-5 rounded-full bg-[#FA243C] text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-[0_4px_20px_rgba(250,36,60,0.4)] active:scale-[0.93] transition-transform duration-75 cursor-pointer"
+                  className="h-11 px-5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-black/40 active:scale-[0.96] transition-transform duration-75 cursor-pointer"
                 >
-                  <Play className="w-4 h-4 fill-white" />
+                  <Play className="w-4 h-4 fill-black text-black" />
                   <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
                 </button>
                 <button
@@ -233,7 +236,7 @@ export const PlaylistsView: React.FC = () => {
               return (
                 <div key={track.id} className="relative overflow-hidden rounded-2xl select-none group/swipe my-0.5">
                   {/* Underneath Swipe Action Panel */}
-                  <div className="absolute inset-y-0 end-0 w-32 sm:w-36 bg-gradient-to-r from-[#FA243C] to-[#FF375F] rounded-2xl flex items-center justify-center gap-2 text-white font-black text-xs px-3 shadow-inner pointer-events-none">
+                  <div className="absolute inset-y-0 end-0 w-32 sm:w-36 bg-gradient-to-r from-[#1DB954] to-[#1ED760] rounded-2xl flex items-center justify-center gap-2 text-white font-black text-xs px-3 shadow-inner pointer-events-none">
                     <ListPlus className="w-4 h-4 text-white stroke-[2.5]" />
                     <span>{isRTL ? 'الأغنية التالية' : 'Next Up'}</span>
                   </div>
@@ -254,21 +257,21 @@ export const PlaylistsView: React.FC = () => {
                     onClick={() => (isCur ? togglePlayPause() : playTrack(track, playlistTracks))}
                     className={`group grid grid-cols-[36px_48px_1fr_40px_55px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 rounded-2xl cursor-pointer transition-colors duration-150 select-none relative z-10 ${
                       isCur
-                        ? 'bg-white/[0.08] border border-[#FA243C]/40 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
+                        ? 'bg-white/[0.08] border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
                         : isNextUp
-                        ? 'bg-[#FA243C]/10 border border-[#FA243C]/50 shadow-md'
+                        ? 'bg-[#1DB954]/10 border border-[#1DB954]/50 shadow-md'
                         : 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06]'
                     }`}
                   >
                     <div className="text-center flex items-center justify-center">
                       {isCur && isPlaying ? (
                         <div className="flex items-end gap-[3px] h-3.5">
-                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
-                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-2/3" />
-                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-4/5" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-1 h-full" />
+                          <span className="w-1 bg-[#1ED760] rounded-full aura-soundbar-2 h-2/3" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-3 h-4/5" />
                         </div>
                       ) : (
-                        <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#FA243C] font-bold' : 'text-zinc-500'}`}>
+                        <span className={`text-xs font-mono group-hover:hidden ${isCur ? 'text-[#1DB954] font-bold' : 'text-zinc-500'}`}>
                           {idx + 1}
                         </span>
                       )}
@@ -281,23 +284,37 @@ export const PlaylistsView: React.FC = () => {
 
                     <div className="min-w-0 pe-2">
                       <div className="flex items-center gap-2">
-                        <h4 className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#FA243C]' : 'text-white'}`}>
+                        <h4 className={`text-sm md:text-[15px] font-bold truncate tracking-tight ${isCur ? 'text-[#1DB954]' : 'text-white'}`}>
                           <bdi dir="auto">{track.title}</bdi>
                         </h4>
                         {isNextUp && (
-                          <span className="inline-flex items-center gap-1 text-[9px] text-[#FA243C] bg-[#FA243C]/15 px-2 py-0.5 rounded-full border border-[#FA243C]/35 font-bold flex-shrink-0 animate-pulse">
+                          <span className="inline-flex items-center gap-1 text-[9px] text-[#1DB954] bg-[#1DB954]/15 px-2 py-0.5 rounded-full border border-[#1DB954]/35 font-bold flex-shrink-0 animate-pulse">
                             <ListPlus className="w-2.5 h-2.5" />
                             <span>{isRTL ? 'التالية' : 'Next'}</span>
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">
+                      <p
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (track.artist) openArtist(track.artist);
+                        }}
+                        className="text-xs text-zinc-400 hover:text-white hover:underline cursor-pointer truncate mt-0.5 font-medium transition-colors"
+                      >
                         <bdi dir="auto">{track.artist}</bdi>
                       </p>
                     </div>
 
                     <div className="hidden md:block text-xs text-zinc-400 truncate font-medium">
-                      <bdi dir="auto">{track.album || (isRTL ? 'أغنية منفردة' : 'Single')}</bdi>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (track.album) openAlbum(track.album, track.artist);
+                        }}
+                        className={track.album ? 'hover:text-white hover:underline cursor-pointer transition-colors' : ''}
+                      >
+                        <bdi dir="auto">{track.album || (isRTL ? 'أغنية منفردة' : 'Single')}</bdi>
+                      </span>
                     </div>
 
                     <div className="text-center">
@@ -305,7 +322,7 @@ export const PlaylistsView: React.FC = () => {
                         onClick={(e) => { e.stopPropagation(); toggleFavorite(track.id); }}
                         className="p-2 rounded-full hover:bg-white/10 cursor-pointer"
                       >
-                        <Heart className={`w-4 h-4 ${isFav ? 'text-[#FA243C] fill-[#FA243C]' : 'text-zinc-600'}`} />
+                        <Heart className={`w-4 h-4 ${isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-600'}`} />
                       </button>
                     </div>
 
@@ -341,11 +358,11 @@ export const PlaylistsView: React.FC = () => {
                       </button>
                       <div className="hidden group-hover/menu:block absolute end-0 top-8 z-30 w-44 bg-[#0d0d14]/95 border border-white/[0.12] backdrop-blur-2xl rounded-2xl p-1.5 shadow-2xl space-y-1">
                         <button onClick={(e) => { e.stopPropagation(); playNextInQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-start cursor-pointer">
-                          <ListPlus className="w-3.5 h-3.5 text-[#FA243C]" />
+                          <ListPlus className="w-3.5 h-3.5 text-[#1DB954]" />
                           <span>{isRTL ? 'تشغيل التالي مباشرة' : 'Play Next'}</span>
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); addToQueue(track); }} className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-white hover:bg-white/10 text-start cursor-pointer">
-                          <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
+                          <Radio className="w-3.5 h-3.5 text-[#1DB954]" />
                           <span>{isRTL ? 'إضافة للانتظار' : 'Add to Queue'}</span>
                         </button>
                         <button
@@ -369,7 +386,7 @@ export const PlaylistsView: React.FC = () => {
 
             {visibleTracks.length < playlistTracks.length && (
               <div ref={loadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
-                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#1DB954] animate-spin" />
               </div>
             )}
           </div>
@@ -404,9 +421,9 @@ export const PlaylistsView: React.FC = () => {
             triggerHaptic('light');
             setIsCreating(!isCreating);
           }}
-          className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#FA243C]/30 aura-tap-btn cursor-pointer"
+          className="px-4 py-2 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-black/40 cursor-pointer"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>قائمة جديدة</span>
         </button>
       </div>
@@ -415,7 +432,7 @@ export const PlaylistsView: React.FC = () => {
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="p-3.5 rounded-2xl bg-white/[0.04] border border-[#FA243C]/30 flex items-center gap-2.5 animate-fadeIn"
+          className="p-3.5 rounded-2xl bg-white/[0.04] border border-[#1DB954]/30 flex items-center gap-2.5 animate-fadeIn"
         >
           <input
             type="text"
@@ -423,10 +440,10 @@ export const PlaylistsView: React.FC = () => {
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
             style={{ fontSize: '16px' }}
-            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#FA243C] transition-colors"
+            className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3.5 py-2 text-base sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#1DB954] transition-colors"
             autoFocus
           />
-          <button type="submit" className="px-4 py-2 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-colors shadow-md aura-tap-btn cursor-pointer">
+          <button type="submit" className="px-4 py-2 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-bold transition-colors shadow-md shadow-black/40 cursor-pointer">
             إنشاء
           </button>
           <button type="button" onClick={() => setIsCreating(false)} className="px-3 py-2 rounded-full bg-white/5 text-zinc-400 text-xs hover:text-white cursor-pointer aura-tap-btn">
@@ -445,10 +462,10 @@ export const PlaylistsView: React.FC = () => {
                 triggerHaptic('light');
                 setSelectedPlaylistId(pl.id);
               }}
-              className="group p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] border border-white/[0.08] hover:border-[#FA243C]/40 transition-colors cursor-pointer space-y-2.5 aura-tap-btn"
+              className="group p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.12] border border-white/[0.08] hover:border-[#1DB954]/40 transition-colors cursor-pointer space-y-2.5 aura-tap-btn"
             >
-              <div className="w-full aspect-square rounded-xl bg-gradient-to-tr from-[#FA243C]/20 via-[#FF375F]/15 to-purple-500/10 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <ListMusic className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF375F]" />
+              <div className="w-full aspect-square rounded-xl bg-gradient-to-tr from-[#1DB954]/20 via-[#1ED760]/15 to-purple-500/10 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <ListMusic className="w-8 h-8 sm:w-10 sm:h-10 text-[#1ED760]" />
               </div>
               <div className="min-w-0">
                 <h4 className="font-bold text-white text-xs sm:text-sm truncate">{pl.name}</h4>
@@ -459,7 +476,7 @@ export const PlaylistsView: React.FC = () => {
         </div>
       ) : (
         <div className="text-center py-16 space-y-4 rounded-3xl bg-white/[0.03] border border-dashed border-white/10 p-6">
-          <ListMusic className="w-12 h-12 mx-auto text-[#FA243C]" />
+          <ListMusic className="w-12 h-12 mx-auto text-[#1DB954]" />
           <h4 className="text-sm sm:text-base font-bold text-white">{isRTL ? 'لا توجد قوائم تشغيل بعد' : 'No playlists yet'}</h4>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto">
             {isRTL
@@ -472,7 +489,7 @@ export const PlaylistsView: React.FC = () => {
                 triggerHaptic('light');
                 setIsCreating(true);
               }}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-[color,background-color,border-color,transform] shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-bold transition-[color,background-color,border-color,transform] shadow-md shadow-black/40 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{isRTL ? 'إنشاء قائمة جديدة' : 'Create New Playlist'}</span>

@@ -45,7 +45,6 @@ export const SpotlightCommandModal: React.FC = () => {
   const karaokeMode = usePlayerStore((state) => state.karaokeMode);
   const toggle8DSpatial = usePlayerStore((state) => state.toggle8DSpatial);
   const triggerVinylBrake = usePlayerStore((state) => state.triggerVinylBrake);
-  const setHarmonicJourneyOpen = usePlayerStore((state) => state.setHarmonicJourneyOpen);
   const setActiveTab = usePlayerStore((state) => state.setActiveTab);
 
   const [query, setQuery] = useState('');
@@ -95,16 +94,6 @@ export const SpotlightCommandModal: React.FC = () => {
         },
       },
       {
-        id: 'action-harmonic',
-        title: isRTL ? 'توليد رحلة توافقية ذكية (Harmonic Flow)' : 'Launch Harmonic Journey Generator',
-        subtitle: isRTL ? 'تسلسل 12 أغنية متوافقة نغمياً عبر عجلة كاميلوت' : '12-track Camelot Wheel harmonic path',
-        icon: Compass,
-        action: () => {
-          setHarmonicJourneyOpen(true);
-          setSpotlightOpen(false);
-        },
-      },
-      {
         id: 'action-karaoke',
         title: karaokeMode
           ? (isRTL ? 'إيقاف وضع عزل الصوت الغنائي (Apple Sing)' : 'Disable Vocal Attenuation')
@@ -137,7 +126,7 @@ export const SpotlightCommandModal: React.FC = () => {
         },
       },
     ];
-  }, [tracks, isRTL, karaokeMode, playTrack, setHarmonicJourneyOpen, setKaraokeMode, setSpotlightOpen, toggle8DSpatial, toggleShuffle, triggerVinylBrake]);
+  }, [tracks, isRTL, karaokeMode, playTrack, setKaraokeMode, setSpotlightOpen, toggle8DSpatial, toggleShuffle, triggerVinylBrake]);
 
   // Fast In-Memory Fuzzy Filter
   const { matchedTracks, matchedArtists, matchedAlbums, matchedActions } = useMemo(() => {

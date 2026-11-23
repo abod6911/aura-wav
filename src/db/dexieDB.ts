@@ -35,6 +35,12 @@ export interface FavoriteRecord {
   addedAt: number;
 }
 
+export interface PlayStatRecord {
+  trackId: string;
+  playCount: number;
+  lastPlayedAt: number;
+}
+
 export class SpotifyAuraDB extends Dexie {
   tracks!: Table<Track, string>;
   audioBlobs!: Table<AudioBlobRecord, string>;
@@ -43,6 +49,7 @@ export class SpotifyAuraDB extends Dexie {
   settings!: Table<SettingRecord, string>;
   lyrics!: Table<LyricsRecord, string>;
   favorites!: Table<FavoriteRecord, string>;
+  playStats!: Table<PlayStatRecord, string>;
 
   constructor() {
     super('SpotifyAuraDexieDB');
@@ -66,6 +73,10 @@ export class SpotifyAuraDB extends Dexie {
     this.version(4).stores({
       audioBlobs: 'id, savedAt, isManualDownload',
       artworkBlobs: 'id',
+    });
+
+    this.version(5).stores({
+      playStats: 'trackId, playCount, lastPlayedAt',
     });
   }
 }
@@ -230,6 +241,44 @@ export async function isFavoriteInDexie(trackId: string): Promise<boolean> {
     return !!rec;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Play statistics helpers (playCount & lastPlayedAt)
+ */
+export async function getPlayStatsMapFromDexie(): Promise<Record<string, { playCount: number; lastPlayedAt: number }>> {
+  try {
+    const list = await dexieDB.playStats.toArray();
+    const map: Record<string, { playCount: number; lastPlayedAt: number }> = {};
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i];
+      map[item.trackId] = {
+        playCount: item.playCount,
+        lastPlayedAt: item.lastPlayedAt,
+      };
+    }
+    return map;
+  } catch (err) {
+    console.warn('[DexieDB] Failed to load playStats:', err);
+    return {};
+  }
+}
+
+export async function incrementPlayCountInDexie(trackId: string): Promise<{ playCount: number; lastPlayedAt: number }> {
+  try {
+    const now = Date.now();
+    const existing = await dexieDB.playStats.get(trackId);
+    const newCount = (existing?.playCount || 0) + 1;
+    await dexieDB.playStats.put({
+      trackId,
+      playCount: newCount,
+      lastPlayedAt: now,
+    });
+    return { playCount: newCount, lastPlayedAt: now };
+  } catch (err) {
+    console.warn('[DexieDB] Failed to increment playCount:', trackId, err);
+    return { playCount: 1, lastPlayedAt: Date.now() };
   }
 }
 

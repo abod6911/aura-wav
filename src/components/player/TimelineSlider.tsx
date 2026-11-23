@@ -66,8 +66,12 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
   isDraggingRef.current = isDragging;
   showRemainingRef.current = showRemaining;
 
-  // Initial time resolution
-  const initialTime = propCurrentTime !== undefined ? propCurrentTime : usePlayerStore.getState().currentTime;
+  // Initial time resolution with safeguard against freeze at track end
+  const stateTime = usePlayerStore.getState().currentTime;
+  const stateDur = usePlayerStore.getState().duration;
+  const initialTime = propCurrentTime !== undefined
+    ? propCurrentTime
+    : (stateTime >= stateDur && stateDur > 0 ? 0 : stateTime);
   const safeDuration = duration > 0 ? duration : 1;
   const initialPercent = Math.min(100, Math.max(0, (initialTime / safeDuration) * 100));
   const bufferPercent = Math.min(100, Math.max(0, (bufferedTime / safeDuration) * 100));
@@ -77,8 +81,10 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
     return usePlayerStore.subscribe((state) => {
       if (isDraggingRef.current) return;
       const cur = state.currentTime;
-      const dur = state.duration > 0 ? state.duration : (duration > 0 ? duration : 1);
-      const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
+      const dur = state.duration > 0 ? state.duration : (duration > 0 ? duration : 0);
+      const isActuallyEnded = state.playbackState === 'idle' && cur >= dur && dur > 0;
+      const displayCur = dur === 0 ? 0 : (cur >= dur && !isActuallyEnded && !state.isPlaying ? 0 : cur);
+      const pct = dur > 0 ? Math.min(100, Math.max(0, (displayCur / dur) * 100)) : 0;
 
       if (fillBarRef.current) {
         fillBarRef.current.style.width = `${pct}%`;
@@ -87,11 +93,11 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         thumbRef.current.style.left = `${pct}%`;
       }
       if (elapsedTextRef.current) {
-        elapsedTextRef.current.textContent = formatDuration(cur);
+        elapsedTextRef.current.textContent = formatDuration(displayCur);
       }
       if (remainingTextRef.current) {
         remainingTextRef.current.textContent = showRemainingRef.current
-          ? `-${formatDuration(Math.max(0, dur - cur))}`
+          ? `-${formatDuration(Math.max(0, dur - displayCur))}`
           : formatDuration(dur);
       }
     });
@@ -223,53 +229,42 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           aria-valuenow={isDragging ? scrubSeconds : initialTime}
           aria-label="شريط تقدم الأغنية"
         >
-          {/* Groove Background */}
-          <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-200 rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] overflow-hidden relative backdrop-blur-md">
+          {/* Spotify Groove Background */}
+          <div className="w-full h-1 group-hover:h-1.5 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
             {/* Buffer Bar */}
             <div
-              className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
+              className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
               style={{ width: `${bufferPercent}%` }}
             />
             {/* Progress Fill */}
             <div
               ref={fillBarRef}
-              className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden"
-              style={{ 
-                width: `${initialPercent}%`,
-                backgroundColor: '#FA2D48',
-                backgroundImage: 'linear-gradient(90deg, #FA2D48 0%, #FF375F 60%, #FF758F 100%)',
-                boxShadow: isDragging
-                  ? '0 0 16px rgba(250, 45, 72, 0.85), inset 0 1px 1px rgba(255,255,255,0.5)'
-                  : '0 0 10px rgba(250, 45, 72, 0.7), inset 0 1px 1px rgba(255,255,255,0.4)',
-              }}
-            >
-              <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/95 rounded-full shadow-[0_0_6px_#ffffff]" />
-            </div>
+              className={`absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 transition-colors duration-150 ${
+                isDragging || isHovering ? 'bg-[#1DB954]' : 'bg-white group-hover:bg-[#1DB954]'
+              }`}
+              style={{ width: `${initialPercent}%` }}
+            />
           </div>
 
           {/* Time Preview Bubble */}
           {(isDragging || isHovering) && duration > 0 && (
             <div
               ref={previewBubbleRef}
-              className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-lg bg-zinc-900/95 border border-white/20 text-[11px] font-mono font-bold text-white shadow-xl pointer-events-none z-30 flex items-center gap-1 backdrop-blur-md"
+              className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#282828] border border-white/10 text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-30 flex items-center gap-1"
               style={{ left: `${isDragging ? (scrubSeconds / safeDuration) * 100 : 0}%` }}
             >
               <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
             </div>
           )}
 
-          {/* Tactile Thumb Knob */}
+          {/* Spotify Thumb Knob (Clean white dot, visible on hover/drag) */}
           <div
             ref={thumbRef}
-            className={`absolute -ml-2.5 w-5 h-5 rounded-full flex items-center justify-center pointer-events-none z-20 transition-transform duration-200 ease-out ${
-              isDragging ? 'scale-125' : 'scale-100 group-hover:scale-110'
+            className={`absolute -ml-1.5 w-3 h-3 rounded-full bg-white shadow-md pointer-events-none z-20 transition-opacity duration-150 ${
+              isDragging || isHovering ? 'opacity-100' : 'opacity-0'
             }`}
             style={{ left: `${initialPercent}%` }}
-          >
-            <div className="w-3.5 h-3.5 rounded-full bg-white border border-white/90 shadow-[0_0_10px_rgba(255,255,255,0.9),0_2px_6px_rgba(0,0,0,0.8)] flex items-center justify-center transition-shadow duration-200">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FA2D48]" />
-            </div>
-          </div>
+          />
         </div>
 
         {/* Total Duration / Remaining */}
@@ -316,58 +311,41 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         aria-label="شريط تقدم الأغنية"
       >
         {/* Track Groove Background */}
-        <div className={`w-full ${isDragging ? 'h-3' : 'h-1.5'} group-hover:h-3 transition-colors duration-200 ease-out rounded-full bg-white/[0.14] border border-white/[0.12] shadow-[inset_0_1px_3px_rgba(0,0,0,0.7)] overflow-hidden relative backdrop-blur-md`}>
+        <div className="w-full h-1 group-hover:h-1.5 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
           {/* Buffer Bar (Pre-loaded audio) */}
           <div
-            className="absolute left-0 top-0 h-full bg-white/20 rounded-full pointer-events-none transition-[width] duration-300"
+            className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
             style={{ width: `${bufferPercent}%` }}
           />
           {/* Active Playback Progress Fill */}
           <div
             ref={fillBarRef}
-            className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 overflow-hidden relative"
-            style={{ 
-              width: `${initialPercent}%`,
-              backgroundColor: '#FA2D48',
-              backgroundImage: 'linear-gradient(90deg, #FA2D48 0%, #FF375F 60%, #FF758F 100%)',
-              boxShadow: isDragging
-                ? '0 0 20px rgba(250, 45, 72, 0.9), inset 0 1px 1px rgba(255,255,255,0.6)'
-                : '0 0 14px rgba(250, 45, 72, 0.75), inset 0 1px 1px rgba(255,255,255,0.4)',
-            }}
-          >
-            {/* Luminous Leading Edge Sweep */}
-            <div className="absolute right-0 top-0 bottom-0 w-2.5 bg-white/95 rounded-full shadow-[0_0_8px_#ffffff]" />
-            {playbackState === 'buffering' && (
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer" />
-            )}
-          </div>
+            className={`absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 transition-colors duration-150 ${
+              isDragging || isHovering ? 'bg-[#1DB954]' : 'bg-white group-hover:bg-[#1DB954]'
+            }`}
+            style={{ width: `${initialPercent}%` }}
+          />
         </div>
 
         {/* Floating Time Preview Bubble */}
         {(isDragging || isHovering) && duration > 0 && (
           <div
             ref={previewBubbleRef}
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-lg bg-zinc-900/95 border border-white/20 text-[11px] font-mono font-bold text-white shadow-xl pointer-events-none z-30 flex items-center gap-1 backdrop-blur-md"
+            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#282828] border border-white/10 text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-30 flex items-center gap-1"
             style={{ left: `${isDragging ? (scrubSeconds / safeDuration) * 100 : 0}%` }}
           >
             <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
           </div>
         )}
 
-        {/* Glowing Playhead Thumb Knob */}
+        {/* Spotify Thumb Knob (Clean white dot, visible on hover/drag) */}
         <div
           ref={thumbRef}
-          className={`absolute -ml-3 w-6 h-6 rounded-full flex items-center justify-center pointer-events-none z-20 transition-transform duration-200 ease-out ${
-            isDragging ? 'scale-125' : 'scale-100 group-hover:scale-110'
+          className={`absolute -ml-1.5 w-3 h-3 rounded-full bg-white shadow-md pointer-events-none z-20 transition-opacity duration-150 ${
+            isDragging || isHovering ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ left: `${initialPercent}%` }}
-        >
-          <div 
-            className="w-4.5 h-4.5 rounded-full bg-white border border-white/90 shadow-[0_0_12px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center transition-shadow duration-200"
-          >
-            <div className="w-2 h-2 rounded-full bg-[#FA2D48]" />
-          </div>
-        </div>
+        />
       </div>
 
       {/* Timestamp Indicators */}
