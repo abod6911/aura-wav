@@ -280,12 +280,12 @@ export const SpotlightCommandModal: React.FC = () => {
                         onClick={action.action}
                         className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-gradient-to-r from-[#FA243C]/20 to-[#FF375F]/20 border border-[#FA243C]/40 text-white shadow-md'
+                            ? 'bg-white/[0.12] border border-[#1DB954]/50 text-white shadow-md shadow-black/40'
                             : 'hover:bg-white/[0.05] text-white/80'
                         }`}
                       >
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center text-white flex-shrink-0 shadow-md shadow-[#FA243C]/30">
-                          <Icon className="w-4 h-4" />
+                        <div className="w-9 h-9 rounded-xl bg-[#1DB954] flex items-center justify-center text-black flex-shrink-0 shadow-sm">
+                          <Icon className="w-4 h-4 stroke-[2.5]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <h5 className="text-xs font-bold text-white leading-relaxed truncate">
@@ -324,7 +324,7 @@ export const SpotlightCommandModal: React.FC = () => {
                         }}
                         className={`flex items-center gap-3 px-3.5 py-2 rounded-2xl cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-white/[0.12] border border-[#FA243C]/40 text-white shadow-md'
+                            ? 'bg-white/[0.12] border border-[#1DB954]/50 text-white shadow-md shadow-black/40'
                             : 'hover:bg-white/[0.05] text-white/80 border border-transparent'
                         }`}
                       >
@@ -369,7 +369,7 @@ export const SpotlightCommandModal: React.FC = () => {
                       }}
                       className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] cursor-pointer transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FA243C] to-[#FF375F] flex items-center justify-center font-bold text-white text-sm shadow-md">
+                      <div className="w-10 h-10 rounded-full bg-[#282828] border border-white/10 flex items-center justify-center font-bold text-[#1DB954] text-sm shadow-sm">
                         {t.artist.slice(0, 1).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -416,7 +416,7 @@ export const SpotlightCommandModal: React.FC = () => {
               <span>↵ {isRTL ? 'للتشغيل' : 'Select'}</span>
               <span>ESC {isRTL ? 'للإغلاق' : 'Close'}</span>
             </div>
-            <span className="text-[#FA243C] font-bold">1,940 Tracks In-Memory</span>
+            <span className="text-[#1DB954] font-bold">{tracks.length} Tracks In-Memory</span>
           </div>
         </motion.div>
       </div>

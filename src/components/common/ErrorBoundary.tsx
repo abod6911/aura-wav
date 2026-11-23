@@ -95,11 +95,11 @@ export class ErrorBoundary extends Component<Props, State> {
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#070709] text-white p-4 select-none overflow-y-auto"
         >
           {/* Subtle Ambient Glow */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#FA2D48]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative w-full max-w-md bg-zinc-900/90 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl text-center space-y-6">
             {/* Warning Icon Badge */}
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-[#FA2D48]/15 border border-[#FA2D48]/30 flex items-center justify-center text-[#FA2D48] shadow-inner">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shadow-inner">
               <AlertTriangle className="w-8 h-8" />
             </div>
 
@@ -120,7 +120,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <button
                 type="button"
                 onClick={this.handleReload}
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#FA2D48] hover:bg-[#E5384F] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[#FA2D48]/25 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#1DB954] hover:bg-[#1ED760] text-black text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-black/40 transition-[background-color,transform] active:scale-[0.98] cursor-pointer"
               >
                 <RotateCw className="w-4 h-4" />
                 <span>{isRTL ? 'إعادة تشغيل التطبيق' : 'Reload Application'}</span>
@@ -132,7 +132,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRepairAndReload}
                 className="w-full py-3 px-4 rounded-2xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 text-zinc-300 text-xs font-medium flex items-center justify-center gap-2 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer disabled:opacity-50"
               >
-                <Wrench className="w-3.5 h-3.5 text-[#FA2D48]" />
+                <Wrench className="w-3.5 h-3.5 text-zinc-400" />
                 <span>
                   {isRepairing
                     ? (isRTL ? 'جاري إصلاح الذاكرة...' : 'Repairing Cache...')

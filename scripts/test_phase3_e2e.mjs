@@ -91,8 +91,8 @@ server.listen(PORT, async () => {
         bpm: 105,
         key: '8B',
         genre: 'Synthwave',
-        dominantColor: '#FA243C',
-        accentColor: '#FF375F',
+        dominantColor: '#121212',
+        accentColor: '#1DB954',
         format: 'ALAC 24-bit 96kHz Lossless',
       };
 

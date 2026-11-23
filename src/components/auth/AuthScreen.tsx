@@ -128,7 +128,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
       dir={dir}
     >
       {/* Background Subtle Ambient Tone */}
-      <div className="absolute top-0 inset-x-0 h-48 pointer-events-none -z-10 bg-gradient-to-b from-[#FA243C]/06 to-transparent blur-xl" />
+      <div className="absolute top-0 inset-x-0 h-48 pointer-events-none -z-10 bg-gradient-to-b from-[#1DB954]/06 to-transparent blur-xl" />
 
       {/* Top Header / Brand */}
       <div className="pt-2 flex flex-col items-center text-center">
@@ -139,13 +139,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
           className="w-12 h-12 rounded-2xl bg-[#161622] border border-white/10 p-0.5 shadow-xl flex items-center justify-center mb-2"
         >
           <div className="w-full h-full bg-[#0c0c14] rounded-[14px] flex items-center justify-center">
-            <Disc3 className="w-6 h-6 text-[#FA243C]" />
+            <Disc3 className="w-6 h-6 text-[#1DB954]" />
           </div>
         </motion.div>
 
         <h1 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-1">
           <bdi dir="ltr">
-            AURA<span className="text-[#FA243C]">.WAV</span>
+            AURA<span className="text-[#1DB954]">.WAV</span>
           </bdi>
         </h1>
         <p className="text-xs text-zinc-400 font-medium mt-0.5">
@@ -178,7 +178,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                   className="w-full p-3 rounded-2xl bg-[#12121c] hover:bg-[#181826] border border-white/[0.08] hover:border-white/20 flex items-center justify-between gap-3 cursor-pointer transition-[color,background-color,border-color,transform] active:scale-[0.98] group"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#242424] border border-white/10 p-[1.5px] flex-shrink-0">
                       <div className="w-full h-full bg-[#101018] rounded-[10px] flex items-center justify-center text-white text-xs font-black overflow-hidden">
                         {acc.avatarUrl ? (
                           <img src={acc.avatarUrl} alt={acc.name} className="w-full h-full object-cover" />
@@ -221,7 +221,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
               }}
               className="w-full py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors active:scale-[0.98]"
             >
-              <Plus className="w-3.5 h-3.5 text-[#FA243C]" />
+              <Plus className="w-3.5 h-3.5 text-[#1DB954]" />
               <span>{isRTL ? 'تسجيل الدخول بحساب آخر' : 'Use another account'}</span>
             </button>
           </motion.div>
@@ -237,14 +237,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                   setErrorMessage(null);
                 }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors relative z-10 cursor-pointer ${
-                  mode === 'signin' ? 'text-white' : 'text-white/50 hover:text-white'
+                  mode === 'signin' ? 'text-black' : 'text-white/50 hover:text-white'
                 }`}
               >
                 {isRTL ? 'تسجيل الدخول' : 'Sign In'}
                 {mode === 'signin' && (
                   <motion.div
                     layoutId="authTabPill"
-                    className="absolute inset-0 bg-[#FA243C] rounded-xl -z-10 shadow-md shadow-[#FA243C]/30"
+                    className="absolute inset-0 bg-[#1DB954] rounded-xl -z-10 shadow-sm"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -258,14 +258,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                   setErrorMessage(null);
                 }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-colors relative z-10 cursor-pointer ${
-                  mode === 'signup' ? 'text-white' : 'text-white/50 hover:text-white'
+                  mode === 'signup' ? 'text-black' : 'text-white/50 hover:text-white'
                 }`}
               >
                 {isRTL ? 'حساب جديد' : 'Sign Up'}
                 {mode === 'signup' && (
                   <motion.div
                     layoutId="authTabPill"
-                    className="absolute inset-0 bg-[#FA243C] rounded-xl -z-10 shadow-md shadow-[#FA243C]/30"
+                    className="absolute inset-0 bg-[#1DB954] rounded-xl -z-10 shadow-sm"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -303,7 +303,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                       onChange={(e) => setName(e.target.value)}
                       placeholder={isRTL ? 'الاسم' : 'Name'}
                       style={{ fontSize: '16px' }}
-                      className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#FA243C] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
+                      className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#1DB954] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -325,7 +325,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                     onChange={(e) => setEmailOrUsername(e.target.value)}
                     placeholder={isRTL ? 'name@example.com' : 'name@example.com'}
                     style={{ fontSize: '16px' }}
-                    className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#FA243C] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
+                    className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#1DB954] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -345,7 +345,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     style={{ fontSize: '16px' }}
-                    className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#FA243C] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
+                    className="w-full h-11 bg-white/[0.05] hover:bg-white/[0.08] focus:bg-[#12121a] border border-white/[0.08] focus:border-[#1DB954] rounded-xl ps-10 pe-4 text-white placeholder-white/30 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -354,7 +354,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 mt-1 rounded-xl bg-[#FA243C] hover:bg-[#FF375F] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#FA243C]/30 active:scale-[0.98] transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
+                className="w-full h-11 mt-1 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-black/40 active:scale-[0.98] transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

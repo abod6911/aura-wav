@@ -15,6 +15,7 @@ import {
   Radio,
   Users,
   Disc3,
+  Pin,
 } from 'lucide-react';
 import { getAllArtists, getAllAlbums } from '../utils/catalogSelectors';
 
@@ -126,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
         </div>
 
         {/* Filter Pills */}
-        <div className="px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+        <div className="px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 scroll-smooth">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'all'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -139,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('playlists')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'playlists'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -149,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('artists')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'artists'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -159,33 +160,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('albums')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'albums'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
             }`}
           >
             {isRTL ? 'الألبومات' : 'Albums'}
-          </button>
-          <button
-            onClick={() => setFilter('favorites')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-              filter === 'favorites'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'المفضلة' : 'Favorites'}
-          </button>
-          <button
-            onClick={() => setFilter('tracks')}
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-              filter === 'tracks'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'كل الأغاني' : 'Tracks'}
           </button>
         </div>
 
@@ -207,7 +188,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
                   {isRTL ? 'أغانيك المفضلة' : 'Liked Songs'}
                 </div>
                 <div className="text-[11px] text-[#B3B3B3] truncate flex items-center gap-1.5">
-                  <span className="text-[#1DB954] text-[10px]">📌</span>
+                  <Pin className="w-3 h-3 text-[#1DB954] fill-[#1DB954] shrink-0" />
                   <span>{isRTL ? `قائمة • ${favorites.length} أغنية` : `Playlist • ${favorites.length} songs`}</span>
                 </div>
               </div>

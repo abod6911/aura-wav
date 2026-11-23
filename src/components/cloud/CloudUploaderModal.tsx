@@ -356,13 +356,13 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#7D12FF] flex items-center justify-center shadow-lg shadow-[#FA243C]/25">
-              <UploadCloud className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-[#1DB954] flex items-center justify-center shadow-md shadow-black/40 text-black">
+              <UploadCloud className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
                 <span>{isRTL ? 'الرفع السحابي للمكتبة' : 'Cloud Library Uploader'}</span>
-                <span className="apple-badge text-[8px] bg-gradient-to-r from-[#FA243C]/20 to-[#7D12FF]/20 border-white/10 text-white font-mono">
+                <span className="apple-badge text-[8px] bg-[#1DB954]/15 border border-[#1DB954]/30 text-[#1DB954] font-mono font-bold">
                   SUPABASE
                 </span>
               </h2>
@@ -402,10 +402,8 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
         {/* 1. If NOT authenticated as Owner: Render Owner Sign In Gate */}
         {!isOwner ? (
           <div className="py-6 px-2 sm:px-6 flex flex-col items-center max-w-md mx-auto text-center overflow-y-auto no-scrollbar">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#7D12FF] p-0.5 shadow-xl shadow-[#FA243C]/20 mb-3 flex items-center justify-center">
-              <div className="w-full h-full bg-[#101018] rounded-[14px] flex items-center justify-center">
-                <Lock className="w-7 h-7 text-[#FA243C]" />
-              </div>
+            <div className="w-14 h-14 rounded-2xl bg-[#1DB954] shadow-md shadow-black/40 mb-3 flex items-center justify-center text-black">
+              <Lock className="w-7 h-7 stroke-[2.5]" />
             </div>
             <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
               {isRTL ? 'تسجيل دخول مالك المنصة (Owner Sign In)' : 'Owner Authentication Required'}
@@ -422,7 +420,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                 type="button"
                 onClick={() => { setAuthMode('signin'); setAuthError(null); }}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                  authMode === 'signin' ? 'bg-[#FA243C] text-white shadow-md' : 'text-white/50 hover:text-white'
+                  authMode === 'signin' ? 'bg-white text-black shadow-sm' : 'text-white/50 hover:text-white'
                 }`}
               >
                 {isRTL ? 'تسجيل الدخول' : 'Sign In'}
@@ -431,7 +429,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                 type="button"
                 onClick={() => { setAuthMode('signup'); setAuthError(null); }}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                  authMode === 'signup' ? 'bg-[#FA243C] text-white shadow-md' : 'text-white/50 hover:text-white'
+                  authMode === 'signup' ? 'bg-white text-black shadow-sm' : 'text-white/50 hover:text-white'
                 }`}
               >
                 {isRTL ? 'إنشاء حساب مالك جديد' : 'New Owner Sign Up'}
@@ -457,7 +455,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                     onChange={(e) => setOwnerName(e.target.value)}
                     placeholder={isRTL ? 'مثال: عبدالمجيد' : 'e.g. Platform Owner'}
                     style={{ fontSize: '16px' }}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#1DB954] text-white text-base sm:text-xs outline-none transition-colors"
                   />
                 </div>
               )}
@@ -473,7 +471,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                   onChange={(e) => setOwnerEmail(e.target.value)}
                   placeholder="owner@example.com"
                   style={{ fontSize: '16px' }}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#1DB954] text-white text-base sm:text-xs outline-none transition-colors"
                 />
               </div>
 
@@ -488,14 +486,14 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                   onChange={(e) => setOwnerPassword(e.target.value)}
                   placeholder="••••••••"
                   style={{ fontSize: '16px' }}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#FA243C] text-white text-base sm:text-xs outline-none transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/10 focus:border-[#1DB954] text-white text-base sm:text-xs outline-none transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={authLoading}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] hover:from-[#e01e35] hover:to-[#eb2f56] text-white text-xs font-extrabold shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer transition-[color,background-color,border-color,transform] active:scale-[0.98] disabled:opacity-50 mt-4"
+                className="w-full py-3 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-black shadow-md shadow-black/40 flex items-center justify-center gap-2 cursor-pointer transition-colors active:scale-[0.98] disabled:opacity-50 mt-4"
               >
                 {authLoading ? (
                   <>
@@ -545,7 +543,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
           onClick={() => fileInputRef.current?.click()}
           className={`mt-4 p-5 sm:p-6 rounded-2xl border-2 border-dashed transition-colors cursor-pointer flex flex-col items-center justify-center text-center gap-2 select-none ${
             isDragging
-              ? 'border-[#FA243C] bg-[#FA243C]/10 scale-[0.99]'
+              ? 'border-[#1DB954] bg-[#1DB954]/10 scale-[0.99]'
               : 'border-white/[0.12] hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.04]'
           }`}
         >
@@ -562,7 +560,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
           />
 
           <div className="w-12 h-12 rounded-full bg-white/[0.06] flex items-center justify-center text-white/70 group-hover:text-white group-hover:scale-110 transition-transform">
-            <FileAudio className="w-6 h-6 text-[#FA243C]" />
+            <FileAudio className="w-6 h-6 text-[#1DB954]" />
           </div>
 
           <div>
@@ -641,7 +639,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                             </span>
                           )}
                           {item.status === 'uploading' && (
-                            <span className="text-[10px] text-[#FA243C] font-mono font-bold flex items-center gap-1">
+                            <span className="text-[10px] text-[#1DB954] font-mono font-bold flex items-center gap-1">
                               <Loader2 className="w-2.5 h-2.5 animate-spin" />
                               <span>{item.progress}%</span>
                             </span>
@@ -653,7 +651,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                             </span>
                           )}
                           {item.status === 'error' && (
-                            <span className="text-[10px] text-rose-400 flex items-center gap-1" title={item.error}>
+                            <span className="text-[10px] text-red-400 flex items-center gap-1" title={item.error}>
                               <AlertCircle className="w-3.5 h-3.5" />
                               <span>{isRTL ? 'فشل' : 'Failed'}</span>
                             </span>
@@ -665,7 +663,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
                       {item.status === 'uploading' && (
                         <div className="w-full h-1 bg-white/[0.08] rounded-full overflow-hidden mt-1.5">
                           <div
-                            className="h-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] transition-colors duration-150 rounded-full"
+                            className="h-full bg-[#1DB954] transition-colors duration-150 rounded-full"
                             style={{ width: `${item.progress}%` }}
                           />
                         </div>
@@ -713,7 +711,7 @@ export const CloudUploaderModal: React.FC<CloudUploaderModalProps> = ({ isOpen, 
             <button
               onClick={startUpload}
               disabled={isUploadingAll || readyCount === 0 || !cloudReady}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-40 disabled:scale-100 disabled:pointer-events-none"
+              className="px-5 py-2 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-bold flex items-center gap-2 shadow-md shadow-black/40 hover:scale-105 active:scale-95 transition-colors cursor-pointer disabled:opacity-40 disabled:scale-100 disabled:pointer-events-none"
             >
               {isUploadingAll ? (
                 <>

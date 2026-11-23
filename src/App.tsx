@@ -143,7 +143,7 @@ function DownloadProgressPill() {
         </div>
         <div className="h-1 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-[#FA2D48] transition-[width] duration-300"
+            className="h-full rounded-full bg-[#1DB954] transition-[width] duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -475,13 +475,13 @@ export function App() {
       className={
         isMobile
           ? 'relative w-full h-full min-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
-          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#FA2D48]/25'
+          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#1DB954]/30'
       }
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-[100] bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#FA2D48]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="p-6 rounded-[28px] bg-[#FA2D48]/15 text-[#FA2D48] mb-4 border border-[#FA2D48]/30 shadow-2xl">
+        <div className="fixed inset-0 z-[100] bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#1DB954]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
+          <div className="p-6 rounded-[28px] bg-[#1DB954]/15 text-[#1DB954] mb-4 border border-[#1DB954]/30 shadow-2xl shadow-black/50">
             <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
@@ -533,7 +533,7 @@ export function App() {
           {/* Dynamic Tab Views (Strict Conditional Rendering: ONLY activeTab in DOM) */}
           {isLoadingLibrary ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto py-20">
-              <div className="w-12 h-12 rounded-full border-4 border-[var(--apple-rose)]/20 border-t-[var(--apple-rose)] animate-spin" />
+              <div className="w-12 h-12 rounded-full border-4 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
               <p className="text-xs text-zinc-400 font-medium">جاري تحميل مكتبتك الصوتية...</p>
             </div>
           ) : (

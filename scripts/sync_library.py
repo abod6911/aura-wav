@@ -352,8 +352,8 @@ def apply_cleanup_and_sync(catalog, corrupt_files, catalog_duplicates, new_valid
             "fileName": fname,
             "source": "online",
             "dateAdded": 1700000000000 + idx,
-            "dominantColor": "#FA243C",
-            "accentColor": "#FF375F"
+            "dominantColor": "#121212",
+            "accentColor": "#1DB954"
         }
         newly_added_records.append(record)
 

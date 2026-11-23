@@ -287,9 +287,9 @@ export const EqualizerModal: React.FC = () => {
                 >
                   <defs>
                     <linearGradient id="studioEqFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FA2D48" stopOpacity="0.25" />
-                      <stop offset="50%" stopColor="#FA2D48" stopOpacity="0.08" />
-                      <stop offset="100%" stopColor="#FA2D48" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#1DB954" stopOpacity="0.25" />
+                      <stop offset="50%" stopColor="#1DB954" stopOpacity="0.08" />
+                      <stop offset="100%" stopColor="#1DB954" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
 
@@ -317,7 +317,7 @@ export const EqualizerModal: React.FC = () => {
                   <path
                     d={pathD}
                     fill="none"
-                    stroke="#FA2D48"
+                    stroke="#1DB954"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -344,7 +344,7 @@ export const EqualizerModal: React.FC = () => {
                           cx={pt.x}
                           cy={pt.y}
                           r={isHovered ? 14 : 9}
-                          fill="#FA2D48"
+                          fill="#1DB954"
                           fillOpacity={isHovered ? 0.35 : 0.15}
                           className="transition-colors duration-150"
                         />
@@ -354,7 +354,7 @@ export const EqualizerModal: React.FC = () => {
                           cy={pt.y}
                           r="4.5"
                           fill="#ffffff"
-                          stroke="#FA2D48"
+                          stroke="#1DB954"
                           strokeWidth="2"
                         />
                       </g>
@@ -392,9 +392,9 @@ export const EqualizerModal: React.FC = () => {
                       <span
                         className={`text-[11px] sm:text-xs font-mono font-semibold tabular-nums ${
                           isBoost
-                            ? 'text-[#FA2D48]'
+                            ? 'text-[#1DB954]'
                             : isCut
-                            ? 'text-pink-300'
+                            ? 'text-zinc-300'
                             : 'text-zinc-400'
                         }`}
                       >
@@ -424,13 +424,13 @@ export const EqualizerModal: React.FC = () => {
                           {/* Bi-directional Fill starting from Center (50%) */}
                           {gain > 0 && (
                             <div
-                              className="absolute bottom-1/2 w-full bg-[#FA2D48] transition-colors"
+                              className="absolute bottom-1/2 w-full bg-[#1DB954] transition-colors"
                               style={{ height: `${(gain / 12) * 50}%` }}
                             />
                           )}
                           {gain < 0 && (
                             <div
-                              className="absolute top-1/2 w-full bg-pink-400/80 transition-colors"
+                              className="absolute top-1/2 w-full bg-[#1DB954]/60 transition-colors"
                               style={{ height: `${(Math.abs(gain) / 12) * 50}%` }}
                             />
                           )}
@@ -511,7 +511,7 @@ export const EqualizerModal: React.FC = () => {
                     <AppleSwitch
                       checked={automixEnabled}
                       onChange={() => setAutoMix(!automixEnabled)}
-                      activeColor="bg-[#FA2D48]"
+                      activeColor="bg-[#1DB954]"
                       label="الدمج التلقائي (AutoMix)"
                     />
                   </div>
@@ -531,7 +531,7 @@ export const EqualizerModal: React.FC = () => {
                       step={0.5}
                       value={automixDuration}
                       onChange={(e) => setAutoMix(true, parseFloat(e.target.value))}
-                      className="w-full accent-[#FA2D48] cursor-pointer h-1 bg-white/15 rounded-full"
+                      className="w-full accent-[#1DB954] cursor-pointer h-1 bg-white/15 rounded-full"
                     />
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export const EqualizerModal: React.FC = () => {
                       <h4 className="text-sm font-bold text-white">تعزيز الترددات المنخفضة (Bass Boost)</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">تعزيز الترددات الأقل من 80Hz مع حماية ضد التشويه</p>
                     </div>
-                    <span dir="ltr" className="text-xs font-mono font-semibold text-[#FA2D48] tabular-nums">
+                    <span dir="ltr" className="text-xs font-mono font-semibold text-[#1DB954] tabular-nums">
                       {bassBoost > 0 ? `+${bassBoost} dB` : '0 dB'}
                     </span>
                   </div>
@@ -618,7 +618,7 @@ export const EqualizerModal: React.FC = () => {
               <div className="bg-[#16161A] border border-white/[0.06] rounded-2xl p-5 flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
                   <div className="p-2.5 rounded-xl bg-white/[0.06] text-zinc-300">
-                    {karaokeMode ? <MicOff className="w-5 h-5 text-[#FA2D48]" /> : <Mic className="w-5 h-5" />}
+                    {karaokeMode ? <MicOff className="w-5 h-5 text-[#1DB954]" /> : <Mic className="w-5 h-5" />}
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">عزل صوت المغني (Vocal Attenuator)</h4>
@@ -629,7 +629,7 @@ export const EqualizerModal: React.FC = () => {
                 <AppleSwitch
                   checked={karaokeMode}
                   onChange={() => setKaraokeMode(!karaokeMode)}
-                  activeColor="bg-[#FA2D48]"
+                  activeColor="bg-[#1DB954]"
                   label="عزل صوت المغني (Vocal Attenuator)"
                 />
               </div>
@@ -649,7 +649,7 @@ export const EqualizerModal: React.FC = () => {
                 <AppleSwitch
                   checked={loudnessNormalization}
                   onChange={() => setLoudnessNormalization(!loudnessNormalization)}
-                  activeColor="bg-[#FA2D48]"
+                  activeColor="bg-[#1DB954]"
                   label="تطبيع الصوت الذكي (Smart Loudness)"
                 />
               </div>
@@ -679,7 +679,7 @@ export const EqualizerModal: React.FC = () => {
                     step={1}
                     value={analogWarmth}
                     onChange={(e) => setAnalogWarmth(parseInt(e.target.value, 10))}
-                    className="w-full accent-[#FA2D48] cursor-pointer h-1 bg-white/15 rounded-full"
+                    className="w-full accent-[#1DB954] cursor-pointer h-1 bg-white/15 rounded-full"
                   />
                   <div className="flex justify-between text-[10px] font-mono text-zinc-500">
                     <span>صوت رقمي نقي</span>

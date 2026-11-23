@@ -43,9 +43,9 @@ export function generateSvgCover(title: string, artist: string): string {
   const initial = (cleanArtist !== 'Unknown' && cleanArtist !== 'Unknown Artist' ? cleanArtist : cleanTitle).charAt(0).toUpperCase() || 'A';
 
   const gradients = [
-    { start: '#FA243C', mid: '#FF375F', end: '#7D12FF' }, // Apple Crimson & Violet
+    { start: '#1DB954', mid: '#1ED760', end: '#0D7235' }, // Spotify Emerald & Pine
     { start: '#6366F1', mid: '#8B5CF6', end: '#4F46E5' }, // Neon Violet
-    { start: '#EC4899', mid: '#F43F5E', end: '#BE123C' }, // Crimson Rose
+    { start: '#450AF5', mid: '#5E3AE8', end: '#8E8EE5' }, // Spotify Indigo & Lavender
     { start: '#3B82F6', mid: '#06B6D4', end: '#0284C7' }, // Electric Blue
     { start: '#F59E0B', mid: '#EA580C', end: '#C2410C' }, // Solar Amber
     { start: '#8B5CF6', mid: '#D946EF', end: '#7C3AED' }, // Deep Purple

@@ -10,14 +10,14 @@ export { getDB };
 export function generateLuxuriousGeometricCover(title: string, artist: string): string {
   const initial = (artist || title || 'A').trim().charAt(0).toUpperCase();
 
-  // Color palettes based on luxury obsidian / neon styling
+  // Color palettes based on luxury obsidian / Spotify matte styling
   const palettes = [
-    { bg1: '#1a103c', bg2: '#0d0920', accent1: '#7928ca', accent2: '#ff0080', glow: '#a855f7' },
-    { bg1: '#07242b', bg2: '#041014', accent1: '#0070f3', accent2: '#00dfd8', glow: '#06b6d4' },
-    { bg1: '#260a1d', bg2: '#12040d', accent1: '#f81ce5', accent2: '#eb3678', glow: '#ec4899' },
-    { bg1: '#1c1b0a', bg2: '#0f0e04', accent1: '#f5a623', accent2: '#ff4949', glow: '#eab308' },
-    { bg1: '#0a1e17', bg2: '#040d0a', accent1: '#00df8f', accent2: '#0070f3', glow: '#10b981' },
-    { bg1: '#160d2e', bg2: '#0a0517', accent1: '#6366f1', accent2: '#d946ef', glow: '#818cf8' },
+    { bg1: '#121212', bg2: '#080808', accent1: '#1DB954', accent2: '#1ED760', glow: '#1DB954' },
+    { bg1: '#181824', bg2: '#0d0d18', accent1: '#450AF5', accent2: '#8E8EE5', glow: '#5E3AE8' },
+    { bg1: '#1e1610', bg2: '#100c08', accent1: '#F59E0B', accent2: '#D97706', glow: '#B45309' },
+    { bg1: '#101e18', bg2: '#08100c', accent1: '#10B981', accent2: '#059669', glow: '#047857' },
+    { bg1: '#1c101c', bg2: '#100810', accent1: '#8B5CF6', accent2: '#7C3AED', glow: '#6D28D9' },
+    { bg1: '#0e1820', bg2: '#060d12', accent1: '#06B6D4', accent2: '#0891B2', glow: '#0E7490' },
   ];
 
   let hash = 0;
@@ -123,12 +123,12 @@ export async function generateLuxuryCanvasArtwork(title: string, artist: string)
   const initial = (artist || title || 'A').trim().charAt(0).toUpperCase();
 
   const themes = [
-    { bg1: '#1a103c', bg2: '#080512', c1: '#8b5cf6', c2: '#ec4899', glow: '#a855f7' },
-    { bg1: '#07242b', bg2: '#020b0e', c1: '#06b6d4', c2: '#3b82f6', glow: '#00dfd8' },
-    { bg1: '#260a1d', bg2: '#0d020a', c1: '#f43f5e', c2: '#fb923c', glow: '#fb7185' },
-    { bg1: '#1c1b0a', bg2: '#0a0902', c1: '#eab308', c2: '#f97316', glow: '#fde047' },
-    { bg1: '#092318', bg2: '#020c08', c1: '#10b981', c2: '#06b6d4', glow: '#34d399' },
-    { bg1: '#13112c', bg2: '#060512', c1: '#6366f1', c2: '#a855f7', glow: '#818cf8' },
+    { bg1: '#121212', bg2: '#080808', c1: '#1DB954', c2: '#1ED760', glow: '#1DB954' },
+    { bg1: '#181824', bg2: '#0d0d18', c1: '#450AF5', c2: '#8E8EE5', glow: '#5E3AE8' },
+    { bg1: '#1e1610', bg2: '#100c08', c1: '#F59E0B', c2: '#D97706', glow: '#B45309' },
+    { bg1: '#101e18', bg2: '#08100c', c1: '#10B981', c2: '#059669', glow: '#047857' },
+    { bg1: '#1c101c', bg2: '#100810', c1: '#8B5CF6', c2: '#7C3AED', glow: '#6D28D9' },
+    { bg1: '#0e1820', bg2: '#060d12', c1: '#06B6D4', c2: '#0891B2', glow: '#0E7490' },
   ];
 
   let hash = 0;

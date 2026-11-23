@@ -82,9 +82,9 @@ export const HandoffBanner: React.FC = () => {
         className="fixed top-3 sm:top-5 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[100] max-w-lg w-full pointer-events-auto"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="relative flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#101018]/95 backdrop-blur-2xl border border-[#FA243C]/35 shadow-[0_12px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(250,36,60,0.2)] specular-highlight overflow-hidden">
+        <div className="relative flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl bg-[#121212]/95 backdrop-blur-2xl border border-[#1DB954]/30 shadow-2xl shadow-black/80 specular-highlight overflow-hidden">
           {/* Subtle Ambient Pulse */}
-          <div className="absolute -left-10 -top-10 w-24 h-24 bg-[#FA243C]/20 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -left-10 -top-10 w-24 h-24 bg-[#1DB954]/15 rounded-full blur-2xl pointer-events-none" />
 
           {/* Left: Device Icon + Artwork + Track Info */}
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -101,7 +101,7 @@ export const HandoffBanner: React.FC = () => {
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#FA243C] tracking-wide uppercase">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1DB954] tracking-wide uppercase">
                   <ArrowLeftRight className="w-2.5 h-2.5" />
                   Handoff
                 </span>
@@ -126,9 +126,9 @@ export const HandoffBanner: React.FC = () => {
             <button
               type="button"
               onClick={handleResume}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold shadow-lg shadow-[#FA243C]/30 hover:brightness-110 active:scale-95 transition-[color,background-color,border-color,transform] flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-extrabold shadow-lg shadow-black/40 active:scale-95 transition-[color,background-color,border-color,transform] flex items-center gap-1.5 cursor-pointer"
             >
-              <Play className="w-3.5 h-3.5 fill-white" />
+              <Play className="w-3.5 h-3.5 fill-black" />
               <span>{isRTL ? 'استئناف' : 'Resume'}</span>
             </button>
 

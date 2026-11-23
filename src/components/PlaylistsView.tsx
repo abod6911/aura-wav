@@ -257,7 +257,7 @@ export const PlaylistsView: React.FC = () => {
                     onClick={() => (isCur ? togglePlayPause() : playTrack(track, playlistTracks))}
                     className={`group grid grid-cols-[36px_48px_1fr_40px_55px] md:grid-cols-[44px_56px_minmax(220px,2fr)_minmax(140px,1.2fr)_48px_70px_44px] items-center gap-3 md:gap-4 px-3 md:px-4 py-2.5 rounded-2xl cursor-pointer transition-colors duration-150 select-none relative z-10 ${
                       isCur
-                        ? 'bg-white/[0.08] border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
+                        ? 'bg-white/[0.08] border border-[#1DB954]/40 shadow-lg shadow-black/40'
                         : isNextUp
                         ? 'bg-[#1DB954]/10 border border-[#1DB954]/50 shadow-md'
                         : 'bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06]'

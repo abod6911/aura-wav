@@ -484,7 +484,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
           {/* Subtle Ambient Glow */}
           <div
             className="absolute -top-20 -right-20 w-96 h-96 rounded-full pointer-events-none transform-gpu"
-            style={{ background: 'radial-gradient(circle, rgba(250,36,60,0.18) 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(29,185,84,0.12) 0%, transparent 70%)' }}
           />
           <div
             className="absolute -bottom-20 -left-20 w-96 h-96 rounded-full pointer-events-none transform-gpu"
@@ -1166,7 +1166,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         isUnavailable ? 'opacity-50 hover:opacity-80 ' : ''
       }${
         isCurrent
-          ? 'bg-[#181824]/90 border border-[#1DB954]/40 shadow-[0_4px_24px_rgba(250,36,60,0.16)]'
+          ? 'bg-[#181824]/90 border border-[#1DB954]/40 shadow-lg shadow-black/40'
           : isNextUp
           ? 'bg-purple-500/10 border border-purple-500/35'
           : 'bg-[#101016]/60 hover:bg-[#151520] border border-white/[0.05] hover:border-white/[0.1]'
@@ -1333,7 +1333,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         >
           <Heart
             className={`w-5 h-5 transition-colors ${
-              isFav ? 'text-[#1DB954] fill-[#1DB954] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]' : 'text-zinc-500 hover:text-zinc-200'
+              isFav ? 'text-[#1DB954] fill-[#1DB954]' : 'text-zinc-500 hover:text-zinc-200'
             }`}
           />
         </motion.button>

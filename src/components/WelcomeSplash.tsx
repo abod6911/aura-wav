@@ -76,8 +76,8 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
         greeting: 'مساء الخير',
         subtitle: 'موسيقاك جاهزة للاستماع',
         Icon: Moon,
-        color: 'text-[var(--apple-rose)]',
-        glow: 'rgba(250, 36, 60, 0.35)',
+        color: 'text-[#1DB954]',
+        glow: 'rgba(29, 185, 84, 0.2)',
       };
     }
   };
@@ -95,14 +95,13 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
           transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[100] w-full h-full min-h-full flex flex-col items-center justify-center p-6 bg-[#09090B]/98 backdrop-blur-3xl select-none overflow-hidden"
         >
-          {/* Ambient Neon Atmosphere */}
+          {/* Ambient Subtle Atmosphere */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[75vw] max-w-[600px] max-h-[600px] rounded-full filter blur-[60px] transition-colors duration-1000"
               style={{ backgroundColor: glow }}
             />
-            <div className="absolute top-[20%] right-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[var(--apple-red)]/15 rounded-full filter blur-[40px]" />
-            <div className="absolute bottom-[20%] left-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[var(--apple-violet)]/10 rounded-full filter blur-[50px]" />
+            <div className="absolute top-[20%] right-[15%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] bg-[#1DB954]/10 rounded-full filter blur-[40px]" />
           </div>
 
           {/* Center Animated Aperture & Vinyl Pulse */}
@@ -120,7 +119,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="absolute w-36 h-36 md:w-44 md:h-44 rounded-full border border-[var(--apple-rose)]/30 will-change-transform"
+                className="absolute w-36 h-36 md:w-44 md:h-44 rounded-full border border-[#1DB954]/20 will-change-transform"
                 style={{ willChange: 'transform, opacity' }}
               />
               <motion.div
@@ -134,21 +133,21 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                   delay: 0.5,
                   ease: 'easeInOut',
                 }}
-                className="absolute w-48 h-48 md:w-56 md:h-56 rounded-full border border-[var(--apple-violet)]/20 will-change-transform"
+                className="absolute w-48 h-48 md:w-56 md:h-56 rounded-full border border-white/10 will-change-transform"
                 style={{ willChange: 'transform, opacity' }}
               />
 
-              {/* Glowing Center Badge */}
+              {/* Center Badge */}
               <motion.div
                 initial={{ scale: 0.6, rotate: -20, opacity: 0 }}
                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
                 transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
-                className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-gradient-to-tr from-[var(--apple-red)] via-[var(--apple-rose)] to-[var(--apple-violet)] p-[2px] shadow-[0_0_50px_rgba(250,36,60,0.5)] will-change-transform"
+                className="relative w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-[#242424] border border-white/15 p-[2px] shadow-2xl shadow-black/50 will-change-transform"
                 style={{ willChange: 'transform, opacity' }}
               >
-                <div className="w-full h-full bg-[#09090e] rounded-[22px] flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--apple-rose)]/10 to-transparent" />
-                  <Disc className="w-12 h-12 md:w-14 md:h-14 text-[var(--apple-rose)] animate-spin-slow will-change-transform" />
+                <div className="w-full h-full bg-[#121212] rounded-[22px] flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-[#1DB954]/10 to-transparent" />
+                  <Disc className="w-12 h-12 md:w-14 md:h-14 text-[#1DB954] animate-spin-slow will-change-transform" />
                 </div>
               </motion.div>
             </div>
@@ -173,7 +172,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
             >
               <h1 dir="ltr" className="text-3xl md:text-4xl font-black text-white tracking-wider flex items-center justify-center gap-1.5 font-sans">
                 <span>AURA</span>
-                <span className="bg-gradient-to-r from-[var(--apple-red)] via-[var(--apple-rose)] to-[var(--apple-violet)] bg-clip-text text-transparent">
+                <span className="text-[#1DB954]">
                   .WAV
                 </span>
               </h1>
@@ -200,7 +199,7 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
                     repeat: Infinity,
                     ease: 'easeInOut',
                   }}
-                  className="w-1 h-6 rounded-full bg-gradient-to-t from-[var(--apple-red)] to-[var(--apple-rose)]"
+                  className="w-1 h-6 rounded-full bg-[#1DB954]"
                 />
               ))}
             </motion.div>
@@ -213,13 +212,13 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
               className="flex items-center justify-center gap-4 text-xs font-semibold text-zinc-400"
             >
               <span className="flex items-center gap-1.5 text-zinc-300">
-                <Music className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
-                <span>{tracks.length > 0 ? `${tracks.length} مساراً جاهزاً` : '261 مساراً جاهزاً'}</span>
+                <Music className="w-3.5 h-3.5 text-[#1DB954]" />
+                <span>{tracks.length > 0 ? `${tracks.length} مساراً جاهزاً` : '1975 مساراً جاهزاً'}</span>
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1.5 text-[var(--apple-rose)]">
-                <Disc className="w-3.5 h-3.5" />
-                <span>Apple Lossless Audio</span>
+              <span className="flex items-center gap-1.5 text-zinc-300">
+                <Disc className="w-3.5 h-3.5 text-[#1DB954]" />
+                <span>Lossless Audio Fidelity</span>
               </span>
             </motion.div>
 
@@ -231,10 +230,10 @@ export const WelcomeSplash: React.FC<WelcomeSplashProps> = ({ onComplete, forceS
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={handleDismiss}
-              className="w-full py-4 px-8 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-extrabold text-sm md:text-base flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(250,36,60,0.45)] hover:shadow-[0_0_50px_rgba(250,36,60,0.65)] transition-colors cursor-pointer"
+              className="w-full py-4 px-8 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-sm md:text-base flex items-center justify-center gap-3 shadow-xl shadow-black/50 transition-colors cursor-pointer"
             >
               <span>ابدأ الاستماع الآن</span>
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
             </motion.button>
           </div>
         </motion.div>

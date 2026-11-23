@@ -60,7 +60,7 @@ export const SleepTimerModal: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FA243C]/15 border border-[#FA243C]/30 flex items-center justify-center text-[#FA243C]">
+              <div className="w-10 h-10 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/30 flex items-center justify-center text-[#1DB954]">
                 <Moon className="w-5 h-5" />
               </div>
               <div>
@@ -79,12 +79,12 @@ export const SleepTimerModal: React.FC = () => {
 
           {/* Active Countdown Indicator */}
           {sleepTimerRemaining !== null && (
-            <div className="p-4 rounded-2xl bg-[#FA243C]/10 border border-[#FA243C]/30 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#1DB954]/10 border border-[#1DB954]/25 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Clock className="w-5 h-5 text-[#FA243C] animate-pulse" />
+                <Clock className="w-5 h-5 text-[#1DB954] animate-pulse" />
                 <div>
                   <span className="text-xs text-zinc-400 font-medium">الوقت المتبقي حتى الإيقاف:</span>
-                  <p className="text-lg font-mono font-bold text-[#FF375F]">
+                  <p className="text-lg font-mono font-bold text-[#1DB954]">
                     {formatRemaining(sleepTimerRemaining)}
                   </p>
                 </div>
@@ -92,7 +92,7 @@ export const SleepTimerModal: React.FC = () => {
 
               <button
                 onClick={() => setSleepTimer(null)}
-                className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold transition-colors cursor-pointer"
+                className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 text-xs font-bold transition-colors cursor-pointer"
               >
                 إلغاء المؤقت
               </button>
@@ -117,12 +117,12 @@ export const SleepTimerModal: React.FC = () => {
                     }}
                     className={`px-4 py-3.5 rounded-2xl text-xs font-bold flex items-center justify-between transition-colors border cursor-pointer apple-spring ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] border-[#FA243C]/50 text-white shadow-lg shadow-[#FA243C]/30'
+                        ? 'bg-[#1DB954] border-[#1DB954] text-black font-extrabold shadow-md shadow-black/40'
                         : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
                     }`}
                   >
                     <span>{p.label}</span>
-                    {isActive && <Check className="w-4 h-4" />}
+                    {isActive && <Check className="w-4 h-4 stroke-[3]" />}
                   </button>
                 );
               })}
@@ -136,12 +136,12 @@ export const SleepTimerModal: React.FC = () => {
               }}
               className={`w-full px-4 py-3.5 mt-2 rounded-2xl text-xs font-bold flex items-center justify-between transition-colors border cursor-pointer apple-spring ${
                 sleepTimerSetting === 'end_of_track'
-                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] border-[#FA243C]/50 text-white shadow-lg shadow-[#FA243C]/30'
+                  ? 'bg-[#1DB954] border-[#1DB954] text-black font-extrabold shadow-md shadow-black/40'
                   : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.06] text-zinc-300'
               }`}
             >
               <span>عند نهاية الأغنية الحالية (End of Current Track)</span>
-              {sleepTimerSetting === 'end_of_track' && <Check className="w-4 h-4" />}
+              {sleepTimerSetting === 'end_of_track' && <Check className="w-4 h-4 stroke-[3]" />}
             </button>
 
             {/* Turn Off Option */}
@@ -160,7 +160,7 @@ export const SleepTimerModal: React.FC = () => {
 
           {/* Fade Out Explanation Note */}
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center gap-2.5 text-[11px] text-zinc-400">
-            <Volume2 className="w-4 h-4 text-[#FA243C] flex-shrink-0" />
+            <Volume2 className="w-4 h-4 text-[#1DB954] flex-shrink-0" />
             <span>يتم خفض الصوت تدريجياً وبشكل ناعم في آخر 3 ثوانٍ حتى الإيقاف التام، مع استعادة مستوى الصوت الأصلي تلقائياً.</span>
           </div>
         </motion.div>

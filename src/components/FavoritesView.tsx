@@ -162,16 +162,16 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             type="button"
             onClick={handlePlayAll}
             disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#FA2D48] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
+            className="h-11 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-black/40 active:scale-95 transition-colors cursor-pointer disabled:opacity-50"
           >
-            <Play className="w-4 h-4 fill-white text-white" />
+            <Play className="w-4 h-4 fill-black text-black" />
             <span>{isRTL ? 'تشغيل' : 'Play'}</span>
           </button>
           <button
             type="button"
             onClick={handleShufflePlay}
             disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#1C1C21] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer disabled:opacity-50"
+            className="h-11 rounded-xl bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-colors cursor-pointer disabled:opacity-50"
           >
             <Shuffle className="w-4 h-4 text-zinc-300" />
             <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
@@ -180,21 +180,21 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
       </div>
 
       {/* Desktop Grand Hero Banner (sm:block hidden) */}
-      <div className="hidden sm:block relative overflow-hidden rounded-3xl apple-glass-card p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] transform-gpu">
+      <div className="hidden sm:block relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#2C1E5E]/50 via-[#181818] to-[#121212] border border-white/[0.06] p-6 sm:p-8 shadow-2xl shadow-black/50 transform-gpu">
         <div
           className="absolute top-0 right-0 -mt-12 -mr-12 w-80 h-80 rounded-full pointer-events-none transform-gpu"
-          style={{ background: 'radial-gradient(circle, rgba(250,36,60,0.18) 0%, transparent 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(69,10,245,0.12) 0%, transparent 70%)' }}
         />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-end gap-3.5 sm:gap-6 text-start">
           {/* Heart Art Tile */}
-          <div className="w-20 h-20 sm:w-40 sm:h-40 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#FA243C] via-[#FF375F] to-[#E00028] flex items-center justify-center flex-shrink-0 shadow-[0_12px_40px_rgba(250,36,60,0.4)] border border-white/20">
-            <Heart className="w-10 h-10 sm:w-20 sm:h-20 fill-white text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)] animate-pulse" />
+          <div className="w-20 h-20 sm:w-40 sm:h-40 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] flex items-center justify-center flex-shrink-0 shadow-2xl shadow-black/50 border border-white/20">
+            <Heart className="w-10 h-10 sm:w-20 sm:h-20 fill-white text-white drop-shadow-md" />
           </div>
 
           {/* Playlist Info */}
           <div className="flex-1 min-w-0">
-            <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[#FF375F] bg-[#FA243C]/15 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#FA243C]/30 inline-block mb-1.5 sm:mb-2">
+            <span className="text-xs font-medium text-[#B3B3B3] inline-block mb-1.5 sm:mb-2">
               {isRTL ? 'قائمة تشغيل خاصة' : 'Personal Playlist'}
             </span>
             <h1 className="text-xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
@@ -204,8 +204,6 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               <span>{favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'}</span>
               <span>•</span>
               <span className="text-zinc-400">{formattedTotalDuration}</span>
-              <span>•</span>
-              <span className="text-emerald-400 font-bold">Studio Master Hi-Fi</span>
             </p>
 
             {/* Quick Actions with 0ms Tactile Feedback */}
@@ -214,9 +212,9 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                 type="button"
                 onClick={handlePlayAll}
                 disabled={favoriteTracks.length === 0}
-                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-2.5 shadow-lg shadow-[#FA243C]/35 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-xs sm:text-sm flex items-center gap-2 sm:gap-2.5 shadow-lg shadow-black/40 active:scale-[0.93] transition-colors duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
-                <Play className="w-4 h-4 fill-white text-white" />
+                <Play className="w-4 h-4 fill-black text-black" />
                 <span>{isRTL ? 'تشغيل الكل' : 'Play All'}</span>
               </button>
 
@@ -224,7 +222,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                 type="button"
                 onClick={handleShufflePlay}
                 disabled={favoriteTracks.length === 0}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.12] text-white font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.1] text-white font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-colors duration-75 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
               >
                 <Shuffle className="w-4 h-4 text-zinc-300" />
                 <span>{isRTL ? 'خلط عشوائي' : 'Shuffle'}</span>
@@ -235,9 +233,9 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                 onClick={() => downloadFavoritesOffline()}
                 disabled={favoriteTracks.length === 0 || !!downloadAllProgress || allFavoritesSaved}
                 title={isRTL ? 'حفظ المفضلة للاستماع بدون إنترنت' : 'Save favorites for offline listening'}
-                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-transform duration-75 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
+                className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-[#242424] hover:bg-[#2E2E2E] text-white border border-white/10 font-bold text-xs sm:text-sm flex items-center gap-2 active:scale-[0.93] transition-colors duration-75 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
               >
-                {allFavoritesSaved ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                {allFavoritesSaved ? <CheckCircle2 className="w-4 h-4 text-[#1DB954]" /> : <Download className="w-4 h-4" />}
                 <span>
                   {allFavoritesSaved
                     ? isRTL ? 'محفوظة أوفلاين' : 'Saved offline'
@@ -262,7 +260,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isRTL ? 'ابحث داخل أغانيك المفضلة...' : 'Search within favorites...'}
               style={{ fontSize: '16px' }}
-              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-[#FA243C]/60 rounded-xl text-white placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#FA243C]/50 transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
+              className={`w-full h-9 sm:h-10 py-1.5 bg-white/[0.04] border border-white/[0.08] focus:border-white/20 rounded-xl text-white placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden ${
                 isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'
               }`}
             />
@@ -290,22 +288,22 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
       {/* 3. Empty State or Track Table */}
       {favoriteTracks.length === 0 ? (
-        <div className="text-center py-16 px-4 rounded-3xl bg-white/[0.02] border border-white/[0.06] backdrop-blur-md">
-          <div className="w-20 h-20 rounded-full bg-[#FA243C]/10 border border-[#FA243C]/20 flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-10 h-10 text-[#FA243C]" />
+        <div className="text-center py-16 px-4 rounded-3xl bg-[#181818] border border-white/[0.06] backdrop-blur-md">
+          <div className="w-20 h-20 rounded-full bg-[#242424] text-[#B3B3B3] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-10 h-10" />
           </div>
           <h3 className="text-lg sm:text-xl font-bold text-white">
             {isRTL ? 'لا توجد أغانٍ في المفضلة بعد' : 'No favorite songs yet'}
           </h3>
           <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto mt-2 leading-relaxed">
             {isRTL
-              ? 'اضغط على أيقونة القلب ❤️ بجانب أي أغنية في مكتبتك لإضافتها إلى قائمتك المفضلة والوصول إليها فوراً.'
-              : 'Tap the heart icon next to any track in your library to add it here for fast instant access.'}
+              ? 'اضغط على زر (+) بجانب أي أغنية في مكتبتك لإضافتها إلى أغانيك المفضلة والوصول إليها فوراً.'
+              : 'Tap the (+) button next to any track in your library to add it to your Liked Songs for instant access.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
             <button
               onClick={() => usePlayerStore.getState().setActiveTab('search')}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold transition-[color,background-color,border-color,transform] shadow-md shadow-[#FA243C]/30 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white text-black hover:bg-neutral-200 text-xs font-semibold shadow-md shadow-black/40 transition-colors cursor-pointer flex items-center justify-center gap-2"
             >
               <Search className="w-3.5 h-3.5" />
               <span>{isRTL ? 'استكشف الأغاني في البحث' : 'Explore & Search'}</span>
@@ -313,7 +311,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             {onOpenImport && (
               <button
                 onClick={onOpenImport}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white text-xs font-bold transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.1] text-white text-xs font-bold transition-colors cursor-pointer active:scale-95 flex items-center justify-center gap-2"
               >
                 <span>{isRTL ? 'استيراد أغانٍ من جهازي' : 'Import Local Songs'}</span>
               </button>
@@ -335,7 +333,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
             {/* Sentinel for progressive infinite loading on mobile */}
             {progressiveMobileTracks.length < displayedTracks.length && (
               <div ref={mobileLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
-                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+                <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#1DB954] animate-spin" />
               </div>
             )}
           </div>
@@ -373,7 +371,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '64px' }}
                   className={`group h-16 min-h-[64px] grid grid-cols-[28px_1fr_auto] md:grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-2 sm:gap-4 px-2.5 sm:px-4 rounded-2xl cursor-pointer transition-transform duration-150 select-none active:scale-[0.99] my-1 ${
                     isCurrent
-                      ? 'bg-white/[0.12] border border-[#FA243C]/45 shadow-[0_4px_24px_rgba(250,36,60,0.18)]'
+                      ? 'bg-white/[0.08] border border-white/10 shadow-lg shadow-black/30'
                       : 'bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08]'
                   }`}
                 >
@@ -402,15 +400,15 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     <div className="md:group-hover:hidden flex items-center justify-center">
                       {isRowPlaying ? (
                         <div className="flex items-end gap-[2px] h-3.5">
-                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-1 h-full" />
-                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-2 h-full" />
-                          <span className="w-1 bg-[#FA243C] rounded-full aura-soundbar-3 h-full" />
-                          <span className="w-1 bg-[#FF375F] rounded-full aura-soundbar-4 h-full" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-1 h-full" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-2 h-full" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-3 h-full" />
+                          <span className="w-1 bg-[#1DB954] rounded-full aura-soundbar-4 h-full" />
                         </div>
                       ) : (
                         <span
                           className={`text-xs font-mono font-bold ${
-                            isCurrent ? 'text-[#FA243C]' : 'text-zinc-500'
+                            isCurrent ? 'text-[#1DB954]' : 'text-zinc-500'
                           }`}
                         >
                           {idx + 1}
@@ -435,7 +433,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                     <div className="min-w-0 flex-1">
                       <h4
                         className={`text-xs sm:text-[14px] font-bold truncate tracking-tight leading-snug ${
-                          isCurrent ? 'text-[#FA243C]' : 'text-white'
+                          isCurrent ? 'text-[#1DB954]' : 'text-white'
                         }`}
                       >
                         <bdi dir="auto">{track.title}</bdi>
@@ -480,7 +478,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                         triggerHaptic();
                         addToQueue(track);
                       }}
-                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-[color,background-color,border-color,transform] cursor-pointer active:scale-90"
+                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-zinc-400 hover:text-white transition-colors cursor-pointer active:scale-90"
                       title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
                     >
                       <ListPlus className="w-4 h-4" />
@@ -493,10 +491,10 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                         triggerHaptic();
                         toggleFavorite(track.id);
                       }}
-                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#FA243C] transition-[color,background-color,border-color,transform] cursor-pointer active:scale-125"
+                      className="p-1.5 rounded-full hover:bg-white/[0.08] text-[#1DB954] transition-colors cursor-pointer active:scale-125"
                       title={isRTL ? 'إزالة من المفضلة' : 'Remove from favorites'}
                     >
-                      <Heart className="w-4 h-4 fill-[#FA243C] drop-shadow-[0_0_8px_rgba(250,36,60,0.5)]" />
+                      <Heart className="w-4 h-4 fill-[#1DB954]" />
                     </button>
 
                     <span className="hidden md:inline-block text-xs font-mono tabular-nums text-white/50 min-w-[34px] text-right">
@@ -560,7 +558,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
           {/* Sentinel for progressive infinite loading on desktop */}
           {progressiveMobileTracks.length < displayedTracks.length && (
             <div ref={desktopLoadMoreRef} className="h-10 w-full flex items-center justify-center py-2">
-              <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#FA243C] animate-spin" />
+              <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-[#1DB954] animate-spin" />
             </div>
           )}
         </div>

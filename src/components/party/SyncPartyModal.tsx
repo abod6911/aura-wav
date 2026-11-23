@@ -159,14 +159,14 @@ export const SyncPartyModal: React.FC = () => {
         className="w-full sm:max-w-lg bg-[#0a0a12]/95 border-t sm:border border-white/[0.14] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden backdrop-blur-2xl pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]"
       >
         {/* Ambient Radial Accent Illumination */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#FA243C]/20 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#FF375F]/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#1DB954]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.08] relative z-10">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FA243C] to-[#FF375F] p-[1.5px] shadow-lg shadow-[#FA243C]/25 flex-shrink-0 flex items-center justify-center">
-              <Radio className={`w-5 h-5 text-white ${isInRoom ? 'animate-pulse' : ''}`} />
+            <div className="w-10 h-10 rounded-2xl bg-[#1DB954] text-black shadow-md shadow-black/40 flex-shrink-0 flex items-center justify-center">
+              <Radio className={`w-5 h-5 text-black stroke-[2.5] ${isInRoom ? 'animate-pulse' : ''}`} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -174,8 +174,8 @@ export const SyncPartyModal: React.FC = () => {
                   {t.syncParty}
                 </h3>
                 {isInRoom && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-[#FA243C]/20 text-[#FF375F] border border-[#FA243C]/40 animate-pulse">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#FA243C]" />
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-[#1DB954]/20 text-[#1DB954] border border-[#1DB954]/40 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
                     {t.liveSynced}
                   </span>
                 )}
@@ -238,7 +238,7 @@ export const SyncPartyModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleShare}
-                      className="p-2.5 rounded-xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25 text-xs font-bold flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                      className="p-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/10 text-xs font-bold flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
                       title={t.shareInvite}
                     >
                       <Share2 className="w-4 h-4" />
@@ -285,8 +285,8 @@ export const SyncPartyModal: React.FC = () => {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <Headphones className="w-3 h-3 text-[#FA243C]" />
-                      <span className="text-[10px] text-[#FF375F] font-bold uppercase tracking-wider">
+                      <Headphones className="w-3 h-3 text-[#1DB954]" />
+                      <span className="text-[10px] text-[#1DB954] font-bold uppercase tracking-wider">
                         {isRTL ? 'المسار المتزامن' : 'Synced Track'}
                       </span>
                     </div>
@@ -318,11 +318,11 @@ export const SyncPartyModal: React.FC = () => {
                   onClick={() => setActiveTab('host')}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'host'
-                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md'
+                      ? 'bg-[#1DB954] text-black font-extrabold shadow-sm'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <Radio className="w-3.5 h-3.5" />
+                  <Radio className="w-3.5 h-3.5 stroke-[2.5]" />
                   <span>{t.hostParty}</span>
                 </button>
                 <button
@@ -330,11 +330,11 @@ export const SyncPartyModal: React.FC = () => {
                   onClick={() => setActiveTab('join')}
                   className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
                     activeTab === 'join'
-                      ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md'
+                      ? 'bg-[#1DB954] text-black font-extrabold shadow-sm'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <Users className="w-3.5 h-3.5" />
+                  <Users className="w-3.5 h-3.5 stroke-[2.5]" />
                   <span>{t.joinParty}</span>
                 </button>
               </div>
@@ -343,7 +343,7 @@ export const SyncPartyModal: React.FC = () => {
                 <div className="space-y-3.5">
                   <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
                     <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Radio className="w-3.5 h-3.5 text-[#FA243C]" />
+                      <Radio className="w-3.5 h-3.5 text-[#1DB954]" />
                       <span>{isRTL ? 'استضافة جلسة جديدة' : 'Host a New Room'}</span>
                     </h4>
                     <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -355,9 +355,9 @@ export const SyncPartyModal: React.FC = () => {
                     type="button"
                     onClick={handleHostRoom}
                     disabled={isSubmitting}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] via-[#FF375F] to-[#FA243C] text-white font-black text-sm shadow-lg shadow-[#FA243C]/30 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-[color,background-color,border-color,transform] disabled:opacity-50"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-black text-sm shadow-md shadow-black/40 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-colors disabled:opacity-50"
                   >
-                    <Radio className="w-4 h-4 animate-pulse" />
+                    <Radio className="w-4 h-4 animate-pulse stroke-[2.5]" />
                     <span>{isSubmitting ? t.connectingParty : t.hostParty}</span>
                   </button>
                 </div>
@@ -375,7 +375,7 @@ export const SyncPartyModal: React.FC = () => {
                       autoCapitalize="characters"
                       autoCorrect="off"
                       spellCheck="false"
-                      className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/14 text-white placeholder-zinc-500 font-mono text-base focus:outline-none focus:border-[#FA243C] transition-colors"
+                      className="w-full px-4 py-3 rounded-2xl bg-white/[0.06] border border-white/14 text-white placeholder-zinc-500 font-mono text-base focus:outline-none focus:border-[#1DB954] transition-colors"
                       style={{ fontSize: '16px' }} // Strict 16px to prevent iOS Safari auto-zoom
                     />
                   </div>
@@ -383,9 +383,9 @@ export const SyncPartyModal: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || !joinCodeInput.trim()}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white font-black text-sm shadow-lg shadow-[#FA243C]/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-[color,background-color,border-color,transform] disabled:opacity-40"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-black text-sm shadow-md shadow-black/40 flex items-center justify-center gap-2 cursor-pointer active:scale-98 transition-colors disabled:opacity-40"
                   >
-                    <Users className="w-4 h-4" />
+                    <Users className="w-4 h-4 stroke-[2.5]" />
                     <span>{isSubmitting ? t.connectingParty : t.joinParty}</span>
                   </button>
                 </form>

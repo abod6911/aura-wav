@@ -6,13 +6,13 @@ export interface ExtractedColors {
 }
 
 const DEFAULT_COLORS: ExtractedColors = {
-  primary: '#6366f1',
-  secondary: '#ec4899',
-  tertiary: '#10b981',
+  primary: '#121212',
+  secondary: '#181818',
+  tertiary: '#1DB954',
   cssMesh: `
-    radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.18) 0%, transparent 60%)
+    radial-gradient(circle at 20% 20%, rgba(29, 185, 84, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(18, 18, 18, 0.4) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.6) 0%, transparent 60%)
   `,
 };
 

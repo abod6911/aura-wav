@@ -158,7 +158,7 @@ const SyncedLyricsModal: React.FC = () => {
     }
   };
 
-  const accentColor = currentTrack.accentColor || currentTrack.dominantColor || '#FA243C';
+  const accentColor = currentTrack.accentColor && !currentTrack.accentColor.includes('FA24') ? currentTrack.accentColor : '#1DB954';
 
   return (
     <motion.div
@@ -180,7 +180,7 @@ const SyncedLyricsModal: React.FC = () => {
       <div className="w-full px-4 sm:px-6 md:px-10 pt-[calc(env(safe-area-inset-top,0px)+12px)] pb-2.5 sm:pb-3.5 flex items-center justify-between border-b border-white/[0.08] z-20 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/10 text-[11px] font-bold text-white">
-            <Music2 className="w-3.5 h-3.5 text-[#FA2D48]" />
+            <Music2 className="w-3.5 h-3.5 text-[#1DB954]" />
             <span>{isRTL ? 'كلمات متزامنة' : 'LIVE LYRICS'}</span>
           </div>
 
@@ -192,7 +192,7 @@ const SyncedLyricsModal: React.FC = () => {
             }}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
               karaokeMode
-                ? 'bg-[#FA2D48] text-white shadow-lg shadow-[#FA2D48]/35 ring-1 ring-white/20'
+                ? 'bg-[#1DB954] text-black font-bold shadow-md shadow-black/40 ring-1 ring-white/20'
                 : 'bg-white/[0.08] text-zinc-300 hover:text-white border border-white/10'
             }`}
           >
@@ -242,14 +242,14 @@ const SyncedLyricsModal: React.FC = () => {
             ))
           ) : currentTrack.lyrics ? (
             <div className="text-center py-20 px-4 text-zinc-300 space-y-4 whitespace-pre-line text-base sm:text-lg leading-loose max-w-lg mx-auto">
-              <Music2 className="w-10 h-10 mx-auto text-[#FA243C] opacity-70" />
+              <Music2 className="w-10 h-10 mx-auto text-[#1DB954] opacity-70" />
               <p className="text-white text-xl font-bold">{isRTL ? 'كلمات الأغنية' : 'Lyrics'}</p>
               <div className="text-zinc-300">{currentTrack.lyrics}</div>
             </div>
           ) : (
             <div className="text-center py-28 px-6 space-y-4 max-w-md mx-auto">
               <div className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center mx-auto shadow-inner">
-                <Music2 className="w-8 h-8 text-[#FA243C]" />
+                <Music2 className="w-8 h-8 text-[#1DB954]" />
               </div>
               <h4 className="text-white text-xl font-bold">
                 {isRTL ? 'لا توجد كلمات متزامنة متاحة' : 'No Synced Lyrics Available'}
@@ -263,7 +263,7 @@ const SyncedLyricsModal: React.FC = () => {
                 type="button"
                 onClick={handleSearchLyrics}
                 disabled={isSearchingLyrics}
-                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white text-xs font-bold shadow-lg shadow-[#FA243C]/30 active:scale-95 transition-transform flex items-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black text-xs font-bold shadow-md shadow-black/40 active:scale-95 transition-colors flex items-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>{isSearchingLyrics ? (isRTL ? 'جاري البحث...' : 'Searching...') : (isRTL ? 'البحث عن الكلمات الآن' : 'Search Lyrics Online')}</span>
@@ -305,7 +305,7 @@ const SyncedLyricsModal: React.FC = () => {
                 triggerHaptic('light');
                 toggleShuffle();
               }}
-              className={`p-2 rounded-full cursor-pointer transition-colors ${shuffle ? 'text-[#FA243C]' : 'text-zinc-500'}`}
+              className={`p-2 rounded-full cursor-pointer transition-colors ${shuffle ? 'text-[#1DB954]' : 'text-zinc-500'}`}
               title="Shuffle"
             >
               <Shuffle className="w-4 h-4" />
@@ -349,7 +349,7 @@ const SyncedLyricsModal: React.FC = () => {
                 triggerHaptic('light');
                 cycleRepeat();
               }}
-              className={`p-2 rounded-full cursor-pointer transition-colors ${repeatMode !== 'off' ? 'text-[#FA243C]' : 'text-zinc-500'}`}
+              className={`p-2 rounded-full cursor-pointer transition-colors ${repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-zinc-500'}`}
               title="Repeat"
             >
               {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}

@@ -18,7 +18,7 @@ export interface AppleSwitchProps {
 export const AppleSwitch: React.FC<AppleSwitchProps> = ({
   checked,
   onChange,
-  activeColor = 'bg-[#FA2D48]',
+  activeColor = 'bg-[#1DB954]',
   inactiveColor = 'bg-white/15',
   label,
   id,

@@ -16,11 +16,11 @@ interface GenreDef {
 }
 
 const GENRE_DEFS: GenreDef[] = [
-  { arName: 'موسيقى عربية', enName: 'Arabic Hits', query: 'عمرو دياب', gradient: 'from-[#FA243C] to-[#b00d1e]' },
+  { arName: 'موسيقى عربية', enName: 'Arabic Hits', query: 'عمرو دياب', gradient: 'from-[#450AF5] to-[#8E8EE5]' },
   { arName: 'بوب عالمي (Pop)', enName: 'Global Pop', query: 'Pop', gradient: 'from-[#8d67ab] to-[#5a3a78]' },
   { arName: 'هيب هوب وراب', enName: 'Hip-Hop & Rap', query: 'Rap', gradient: 'from-[#ba5d07] to-[#803d00]' },
   { arName: 'موسيقى هادئة', enName: 'Chill & Relax', query: 'Chill', gradient: 'from-[#1e3264] to-[#111c38]' },
-  { arName: 'روك وبديل', enName: 'Rock & Alternative', query: 'Rock', gradient: 'from-[#e61e32] to-[#990d1b]' },
+  { arName: 'روك وبديل', enName: 'Rock & Alternative', query: 'Rock', gradient: 'from-[#603080] to-[#381850]' },
   { arName: 'إلكترونيك وEDM', enName: 'EDM & Dance', query: 'EDM', gradient: 'from-[#006450] to-[#003d31]' },
   { arName: 'طرب وجلسات', enName: 'Classic Tarab', query: 'طرب', gradient: 'from-[#af2896] to-[#6d135c]' },
   { arName: 'موسيقى عالمية', enName: 'World Music', query: 'Hits', gradient: 'from-[#503750] to-[#2c1d2c]' },
@@ -150,7 +150,7 @@ export const InfiniteSearchView: React.FC = () => {
     <div className="w-full text-white pb-6 md:pb-24 pt-2 select-none overflow-x-hidden" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
       <div className="relative max-w-xl mx-auto mb-4">
-        <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#FA2D48]/60 rounded-xl transition-colors shadow-md border border-white/[0.08] px-3.5 h-11">
+        <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#1DB954]/50 rounded-xl transition-colors shadow-md border border-white/[0.08] px-3.5 h-11">
           <Search className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           <input
             type="search"
@@ -183,7 +183,7 @@ export const InfiniteSearchView: React.FC = () => {
               onClick={() => setActiveCategory(cat.id)}
               className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer aura-tap-btn shrink-0 ${
                 activeCategory === cat.id
-                  ? 'bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white shadow-md shadow-[#FA243C]/25'
+                  ? 'bg-white text-black font-semibold shadow-sm'
                   : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
               }`}
             >
@@ -244,7 +244,7 @@ export const InfiniteSearchView: React.FC = () => {
       {/* State 2: Loading State */}
       {isLoading && (
         <div className="py-20 flex flex-col items-center justify-center space-y-4">
-          <div className="w-10 h-10 rounded-full border-3 border-[#FA243C]/20 border-t-[#FA243C] animate-spin" />
+          <div className="w-10 h-10 rounded-full border-3 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
           <p className="text-xs text-zinc-400 font-medium">
             {isRTL ? 'جاري استخراج المسارات الكاملة...' : 'Resolving full tracks...'}
           </p>
@@ -285,14 +285,14 @@ export const InfiniteSearchView: React.FC = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#FA243C]/20 text-[#FA243C] border border-[#FA243C]/30 flex items-center gap-1 shrink-0">
+                      <span className="text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#1DB954]/15 text-[#1DB954] border border-[#1DB954]/30 flex items-center gap-1 shrink-0">
                         <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         {results.topResult.source === 'local'
                           ? (isRTL ? 'استوديو • HQ' : 'Studio Master • HQ')
                           : (isRTL ? 'مسار كامل • HD' : 'Full Track • HD')}
                       </span>
                     </div>
-                    <h2 className="text-sm sm:text-xl font-black text-white truncate group-hover:text-[#FA243C] transition-colors leading-tight">
+                    <h2 className="text-sm sm:text-xl font-black text-white truncate group-hover:text-[#1DB954] transition-colors leading-tight">
                       {results.topResult.title}
                     </h2>
                     <p className="text-xs sm:text-sm text-zinc-300 font-medium truncate mt-0.5">
@@ -331,13 +331,13 @@ export const InfiniteSearchView: React.FC = () => {
                     e.stopPropagation();
                     handlePlaySong(results.topResult!);
                   }}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#FA243C] to-[#FF375F] text-white flex items-center justify-center shadow-lg shadow-[#FA243C]/30 hover:scale-105 active:scale-95 transition-[color,background-color,border-color,transform] cursor-pointer shrink-0"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black flex items-center justify-center shadow-lg shadow-black/40 hover:scale-105 active:scale-95 transition-colors cursor-pointer shrink-0"
                   aria-label="Play song"
                 >
                   {currentTrack?.id === results.topResult.id && isPlaying ? (
                     <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                   ) : currentTrack?.id === results.topResult.id && playbackState === 'buffering' ? (
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-black" />
                   ) : (
                     <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current translate-x-0.5" />
                   )}
@@ -365,7 +365,7 @@ export const InfiniteSearchView: React.FC = () => {
                       onClick={() => openArtist(art.name)}
                       className="p-4 rounded-2xl apple-glass-card hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 flex flex-col items-center text-center cursor-pointer transition-[color,background-color,border-color,transform] hover:scale-[1.03] active:scale-[0.98] group apple-spring"
                     >
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-gradient-to-tr from-[#FA243C] to-[#FF375F] group-hover:scale-105 transition-transform duration-300 shadow-md mb-3">
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-[2px] bg-[#242424] border border-white/10 group-hover:border-[#1DB954] group-hover:scale-105 transition-transform duration-300 shadow-md mb-3">
                         <div className="w-full h-full rounded-full overflow-hidden bg-black/60">
                           <OptimizedImage
                             src={art.avatarUrl}
@@ -376,7 +376,7 @@ export const InfiniteSearchView: React.FC = () => {
                           />
                         </div>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-white w-full px-1 break-words line-clamp-2 leading-snug group-hover:text-[#FA243C] transition-colors" dir="auto">
+                      <h4 className="text-xs sm:text-sm font-bold text-white w-full px-1 break-words line-clamp-2 leading-snug group-hover:text-[#1DB954] transition-colors" dir="auto">
                         {art.name}
                       </h4>
                       <span className="text-[11px] font-medium text-zinc-400 mt-1 line-clamp-1">

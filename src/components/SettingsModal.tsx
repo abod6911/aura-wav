@@ -502,10 +502,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-[var(--apple-rose)]" />
+                <Sliders className="w-4 h-4 text-[#1DB954]" />
                 <span>{t.proAudioTitle}</span>
               </span>
-              <span className="text-[10px] font-mono text-[var(--apple-rose)] bg-[var(--apple-rose)]/15 px-2 py-0.5 rounded-full border border-[var(--apple-rose)]/30 font-bold">
+              <span className="text-[10px] font-mono text-[#1DB954] bg-[#1DB954]/15 px-2 py-0.5 rounded-full border border-[#1DB954]/30 font-bold">
                 DSP 32-bit Float
               </span>
             </div>
@@ -514,7 +514,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <div className="flex items-center justify-between gap-3 pt-1">
               <div className="min-w-0 pr-2">
                 <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-[var(--apple-rose)] flex-shrink-0" />
+                  <Zap className="w-3.5 h-3.5 text-[#1DB954] flex-shrink-0" />
                   <span>{t.autoMixTransition}</span>
                 </h5>
                 <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">{t.autoMixSub}</p>
@@ -522,7 +522,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <SettingsToggle
                 checked={automixEnabled}
                 onChange={setAutoMix}
-                activeColor="bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)]"
+                activeColor="bg-[#1DB954]"
                 label={t.autoMixTransition}
               />
             </div>
@@ -551,7 +551,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               <div className="flex items-center justify-between">
                 <div className="min-w-0 pr-2">
                   <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Volume2 className="w-3.5 h-3.5 text-[var(--apple-rose)] flex-shrink-0" />
+                    <Volume2 className="w-3.5 h-3.5 text-[#1DB954] flex-shrink-0" />
                     <span>{isRTL ? 'مضخم البيس الخارق (Mega Bass Boost)' : 'Mega Bass Boost'}</span>
                   </h5>
                   <p className="text-[11px] text-zinc-400 mt-0.5 leading-snug">
@@ -561,7 +561,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span
                   className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border transition-colors ${
                     bassBoost > 0
-                      ? 'bg-[var(--apple-rose)]/20 border-[var(--apple-rose)]/40 text-[var(--apple-rose)]'
+                      ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1DB954]'
                       : 'bg-white/[0.04] border-white/[0.08] text-zinc-500'
                   }`}
                 >
@@ -588,7 +588,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     }}
                     className={`py-1.5 rounded-xl text-[11px] font-bold transition-colors cursor-pointer ${
                       bassBoost === p.val
-                        ? 'bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white shadow-md shadow-[var(--apple-red)]/30'
+                        ? 'bg-[#1DB954] text-black shadow-sm font-black'
                         : 'bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
                     }`}
                   >
@@ -606,7 +606,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   step={0.5}
                   value={bassBoost}
                   onChange={(e) => setBassBoost(parseFloat(e.target.value))}
-                  className="w-full accent-[var(--apple-rose)] cursor-pointer h-1.5 bg-white/10 rounded-lg appearance-none"
+                  className="w-full accent-[#1DB954] cursor-pointer h-1.5 bg-white/10 rounded-lg appearance-none"
                 />
               </div>
             </div>
@@ -642,7 +642,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 className="w-full py-2.5 px-3.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-xs font-bold text-zinc-200 flex items-center justify-between transition-[color,background-color,border-color,transform] cursor-pointer active:scale-98"
               >
                 <span className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-[var(--apple-rose)]" />
+                  <Sliders className="w-4 h-4 text-[#1DB954]" />
                   <span>{isRTL ? 'فتح المعادل الصوتي (5-Band EQ)' : 'Open 5-Band Equalizer'}</span>
                 </span>
                 <span className="text-[11px] text-zinc-400 font-mono">5-Band EQ →</span>
@@ -654,7 +654,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           <div className="p-4 rounded-2xl bg-[#16161A] border border-white/[0.06] space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-                <Database className="w-3.5 h-3.5 text-[var(--apple-rose)]" />
+                <Database className="w-3.5 h-3.5 text-[#1DB954]" />
                 <span>التخزين والاستماع بدون إنترنت</span>
               </span>
               <span className="text-xs font-mono font-bold text-white bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15">
@@ -670,7 +670,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   ) : (
                     <span>
                       {downloadedTrackIds.length} مسار محمّل •{' '}
-                      <span className="text-[var(--apple-rose)] font-mono">{storageStats?.formattedSize || '0 MB'}</span>
+                      <span className="text-[#1DB954] font-mono">{storageStats?.formattedSize || '0 MB'}</span>
                     </span>
                   )}
                 </h4>
@@ -684,7 +684,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               {/* Progress bar */}
               <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] rounded-full transition-colors duration-500 shadow-[0_0_10px_rgba(250,36,60,0.5)]"
+                  className="h-full bg-[#1DB954] rounded-full transition-colors duration-500"
                   style={{ width: `${Math.max(5, storageStats?.usagePercentage || 12)}%` }}
                 />
               </div>

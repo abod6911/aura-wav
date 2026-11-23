@@ -88,9 +88,9 @@ export const AtmosphereBackground: React.FC = () => {
   }, []);
 
   const [rawColors, setRawColors] = useState({
-    p: '#FA243C',
-    s: '#FF375F',
-    a: '#7D12FF',
+    p: '#121212',
+    s: '#181818',
+    a: '#1DB954',
   });
 
   // Extract track palette asynchronously outside render loop (Desktop only)

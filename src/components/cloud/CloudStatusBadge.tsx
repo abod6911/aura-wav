@@ -33,10 +33,10 @@ export const CloudStatusBadge: React.FC = () => {
     <button
       onClick={handleSync}
       disabled={isCloudSyncing}
-      className="apple-badge text-[8px] bg-[#FA243C]/12 hover:bg-[#FA243C]/20 border-[#FA243C]/25 text-[#FF375F] cursor-pointer active:scale-95 transition-[color,background-color,border-color,transform] flex items-center gap-1"
+      className="apple-badge text-[8px] bg-[#1DB954]/15 hover:bg-[#1DB954]/25 border-[#1DB954]/30 text-[#1DB954] cursor-pointer active:scale-95 transition-colors flex items-center gap-1"
       title={isRTL ? 'المزامنة مع السحابة' : 'Sync with Cloud'}
     >
-      <Cloud className="w-2.5 h-2.5 text-[#FA243C]" />
+      <Cloud className="w-2.5 h-2.5 text-[#1DB954]" />
       <span>{cloudTracks.length > 0 ? `${cloudTracks.length} CLOUD` : 'CLOUD'}</span>
       {isCloudSyncing && <RefreshCw className="w-2 h-2 animate-spin ms-0.5" />}
     </button>

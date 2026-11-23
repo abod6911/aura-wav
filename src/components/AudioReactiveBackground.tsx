@@ -16,9 +16,9 @@ export const AudioReactiveBackground: React.FC<{
   secondaryColor?: string;
   accentColor?: string;
 }> = ({
-  primaryColor = '#FA243C',
-  secondaryColor = '#FF375F',
-  accentColor = '#7D12FF',
+  primaryColor = '#121212',
+  secondaryColor = '#181818',
+  accentColor = '#1DB954',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isPlaying = usePlayerStore((state) => state.isPlaying);

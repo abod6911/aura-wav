@@ -190,7 +190,7 @@ export async function processAudioFiles(
 
           const palette = artworkUrl && !artworkUrl.startsWith('data:image/svg')
             ? await extractPaletteFromImage(artworkUrl)
-            : { primary: '#FA243C', secondary: '#FF375F' };
+            : { primary: '#121212', secondary: '#1DB954' };
 
           // 1. Permanently store raw audio into storage engine (OPFS / IndexedDB)
           const pureAudioBlob = file.slice(0, file.size, file.type || 'audio/mpeg');

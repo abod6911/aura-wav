@@ -87,7 +87,7 @@ async function diagnose() {
         album: 'ألبوم الأبعاد المتناسقة الموسيقي',
         duration: 215,
         artworkUrl: '/logo.svg',
-        dominantColor: '#FA243C',
+        dominantColor: '#121212',
       };
       store.playTrack(demoTrack, [demoTrack]);
     });

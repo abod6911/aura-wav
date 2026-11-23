@@ -3,7 +3,7 @@ import { djAudioEngine } from '../../lib/audioEngine';
 
 export interface AtmosphereBackgroundProps {
   primaryColor?: string; // Hex, e.g. '#6366f1'
-  secondaryColor?: string; // Hex, e.g. '#ec4899'
+  secondaryColor?: string; // Hex, e.g. '#1DB954'
   opacity?: number;
 }
 

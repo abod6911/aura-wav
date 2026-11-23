@@ -157,7 +157,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/15 border border-[var(--apple-rose)]/30 text-[var(--apple-rose)]">
+            <div className="p-2.5 rounded-2xl bg-[#1DB954]/15 border border-[#1DB954]/30 text-[#1DB954]">
               <FolderOpen className="w-6 h-6" />
             </div>
             <div>
@@ -181,9 +181,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
             {/* Primary Action Card */}
             <div
               onClick={handlePrimaryClick}
-              className="p-6 sm:p-8 rounded-[24px] border-2 border-dashed border-[var(--apple-rose)]/35 hover:border-[var(--apple-rose)]/70 bg-[var(--apple-rose)]/[0.04] hover:bg-[var(--apple-rose)]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-colors group"
+              className="p-6 sm:p-8 rounded-[24px] border-2 border-dashed border-[#1DB954]/35 hover:border-[#1DB954]/70 bg-[#1DB954]/[0.04] hover:bg-[#1DB954]/[0.08] flex flex-col items-center justify-center text-center cursor-pointer transition-colors group"
             >
-              <div className="p-4 rounded-full bg-[var(--apple-rose)]/20 text-[var(--apple-rose)] group-hover:scale-110 transition-transform mb-3">
+              <div className="p-4 rounded-full bg-[#1DB954]/20 text-[#1DB954] group-hover:scale-110 transition-transform mb-3">
                 <UploadCloud className="w-8 h-8" />
               </div>
               <h4 className="text-base font-extrabold text-white mb-1">
@@ -201,7 +201,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
                 onClick={() => filesInputRef.current?.click()}
                 className="p-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <FileAudio className="w-4 h-4 text-[var(--apple-rose)]" />
+                <FileAudio className="w-4 h-4 text-[#1DB954]" />
                 <span>اختيار ملفات متعددة (هاتف / آيفون)</span>
               </button>
               <button
@@ -249,7 +249,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
 
             {/* iPhone Pro-Tip */}
             <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs leading-relaxed text-right flex items-start gap-2.5">
-              <FileAudio className="w-4 h-4 text-[#FA2D48] flex-shrink-0 mt-0.5" />
+              <FileAudio className="w-4 h-4 text-[#1DB954] flex-shrink-0 mt-0.5" />
               <div>
                 <strong className="text-white block mb-0.5">نصيحة لمستخدمي الآيفون:</strong>
                 عند فتح شاشة الملفات، ادخل إلى مجلد الأغاني ثم اضغط على النقاط الثلاث <strong>(•••)</strong> بالأعلى، ثم اختر <strong>"تحديد الكل" (Select All)</strong> ثم اضغط <strong>"فتح" (Open)</strong> ليتم حفظ جميع الأغاني فوراً!
@@ -269,8 +269,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {isScanning && (
           <div className="py-8 space-y-5 text-center">
             <div className="relative w-16 h-16 mx-auto">
-              <div className="absolute inset-0 rounded-full border-4 border-[var(--apple-rose)]/20 border-t-[var(--apple-rose)] animate-spin" />
-              <FolderOpen className="w-7 h-7 text-[var(--apple-rose)] absolute inset-0 m-auto" />
+              <div className="absolute inset-0 rounded-full border-4 border-[#1DB954]/20 border-t-[#1DB954] animate-spin" />
+              <FolderOpen className="w-7 h-7 text-[#1DB954] absolute inset-0 m-auto" />
             </div>
 
             <div className="space-y-1">
@@ -284,7 +284,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
               <div className="space-y-2 max-w-xs mx-auto">
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] h-full rounded-full transition-colors duration-150"
+                    className="bg-[#1DB954] h-full rounded-full transition-colors duration-150"
                     style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
                   />
                 </div>
@@ -300,19 +300,19 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose }) => 
         {/* Success State */}
         {importedCount !== null && (
           <div className="py-6 text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-[var(--apple-red)]/20 to-[var(--apple-rose)]/20 text-[var(--apple-rose)] flex items-center justify-center mx-auto border border-[var(--apple-rose)]/30">
+            <div className="w-14 h-14 rounded-full bg-[#1DB954]/20 text-[#1DB954] flex items-center justify-center mx-auto border border-[#1DB954]/30">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
               <h4 className="text-lg font-bold text-white">تم حفظ مجلد [{importedFolderName}] بنجاح!</h4>
               <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
-                تم ربط <span className="text-[var(--apple-rose)] font-bold">{importedCount}</span> مسار في نفس أماكنها وترتيبها الأصلي، وتخزينها في ذاكرة المتصفح. يمكنك تشغيلها الآن وفي أي وقت بدون إنترنت 100%.
+                تم ربط <span className="text-[#1DB954] font-bold">{importedCount}</span> مسار في نفس أماكنها وترتيبها الأصلي، وتخزينها في ذاكرة المتصفح. يمكنك تشغيلها الآن وفي أي وقت بدون إنترنت 100%.
               </p>
             </div>
 
             <button
               onClick={onClose}
-              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[var(--apple-red)] to-[var(--apple-rose)] text-white font-bold transition-[color,background-color,border-color,transform] shadow-[0_4px_24px_rgba(250,36,60,0.4)] hover:shadow-[0_6px_28px_rgba(250,36,60,0.6)] cursor-pointer active:scale-98"
+              className="w-full py-3.5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold transition-[background-color,transform] shadow-md shadow-black/40 hover:shadow-lg hover:shadow-black/50 cursor-pointer active:scale-98"
             >
               بدء الاستماع الآن
             </button>

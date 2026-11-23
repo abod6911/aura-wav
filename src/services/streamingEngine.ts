@@ -62,8 +62,8 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
         audioUrl: item.audioUrl, // Direct local studio master
         fileName: item.fileName,
         source: 'local',
-        dominantColor: '#FA243C',
-        accentColor: '#FF375F',
+        dominantColor: '#121212',
+        accentColor: '#1DB954',
         dateAdded: Date.now(),
       };
       localMatchingSongs.push(track);
@@ -138,8 +138,8 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
             audioUrl: streamAudioUrl, // Full audio stream
             previewUrl: item.previewUrl, // Direct high-fidelity stream fallback
             source: matchedLocal ? 'local' : 'online',
-            dominantColor: '#FA243C',
-            accentColor: '#FA243C',
+            dominantColor: '#121212',
+            accentColor: '#1DB954',
             dateAdded: Date.now(),
           });
 

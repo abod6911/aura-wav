@@ -61,7 +61,7 @@ export const WaveformTimeline: React.FC<WaveformTimelineProps> = memo(({
   currentTime,
   duration,
   onSeek,
-  accentColor = '#FA243C',
+  accentColor = '#1DB954',
   disabled = false,
   className = '',
   barCount = 60,

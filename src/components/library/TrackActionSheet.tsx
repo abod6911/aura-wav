@@ -174,7 +174,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   <span className="text-xs font-bold text-white/80">اختر قائمة التشغيل:</span>
                   <button
                     onClick={() => setShowPlaylistSelector(false)}
-                    className="text-xs text-[var(--apple-rose)] font-bold cursor-pointer"
+                    className="text-xs text-[#1DB954] font-bold cursor-pointer hover:underline"
                   >
                     رجوع
                   </button>
@@ -209,7 +209,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   onClick={() => handleAction(() => playNextInQueue(track))}
                   className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-[#FA243C]/15 text-[#FA243C] flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0">
                     <ListEnd className="w-4 h-4" />
                   </div>
                   <div className="flex-1 text-start">
@@ -268,8 +268,8 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   onClick={() => handleAction(() => toggleFavorite(track.id))}
                   className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center shrink-0">
-                    <Heart className={`w-4 h-4 ${isFav ? 'fill-[#FA243C] text-[#FA243C]' : ''}`} />
+                  <div className="w-8 h-8 rounded-xl bg-[#1DB954]/15 text-[#1DB954] flex items-center justify-center shrink-0">
+                    <Heart className={`w-4 h-4 ${isFav ? 'fill-[#1DB954] text-[#1DB954]' : ''}`} />
                   </div>
                   <span className="flex-1 text-start">
                     {isFav ? (isRTL ? 'إزالة من المفضلة' : 'Remove from Favorites') : (isRTL ? 'إضافة إلى المفضلة' : 'Add to Favorites')}

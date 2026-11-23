@@ -67,7 +67,7 @@ const CarPlayScrubber: React.FC = () => {
       >
         <div
           ref={progressBarRef}
-          className="h-full bg-gradient-to-r from-[#FA243C] to-rose-400 rounded-full"
+          className="h-full bg-[#1DB954] rounded-full"
           style={{
             width: '0%',
           }}
@@ -271,7 +271,7 @@ export const CarPlayMode: React.FC = () => {
   if (!isCarModeOpen) return null;
 
   const activeFav = currentTrack ? favorites.includes(currentTrack.id) : false;
-  const accentColor = currentTrack?.accentColor || currentTrack?.dominantColor || '#FA243C';
+  const accentColor = currentTrack?.accentColor && !currentTrack.accentColor.includes('FA24') ? currentTrack.accentColor : '#1DB954';
 
   return (
     <AnimatePresence>
@@ -307,7 +307,7 @@ export const CarPlayMode: React.FC = () => {
                 <span>{currentTimeFormatted}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-[11px] sm:text-xs font-black tracking-wider uppercase">
+              <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-[#1DB954]/15 border border-[#1DB954]/30 text-[#1DB954] text-[11px] sm:text-xs font-black tracking-wider uppercase">
                 <Radio className="w-3 h-3" />
                 <span>Apple CarPlay</span>
               </div>
@@ -377,7 +377,7 @@ export const CarPlayMode: React.FC = () => {
               onClick={() => setPortraitTab('now_playing')}
               className={`flex-1 py-1.5 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                 portraitTab === 'now_playing'
-                  ? 'bg-[#FA243C] text-white shadow-md shadow-[#FA243C]/30'
+                  ? 'bg-[#1DB954] text-black shadow-md font-bold'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -532,7 +532,7 @@ export const CarPlayMode: React.FC = () => {
                 onClick={toggleShuffle}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   shuffle
-                    ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-lg shadow-[#FA243C]/30'
+                    ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-md shadow-black/40'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
                 }`}
                 title="خلط الأغاني"
@@ -545,7 +545,7 @@ export const CarPlayMode: React.FC = () => {
                 onClick={() => currentTrack && toggleFavorite(currentTrack.id)}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   activeFav
-                    ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
+                    ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-md shadow-black/40'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
                 }`}
                 title={activeFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'}
@@ -558,7 +558,7 @@ export const CarPlayMode: React.FC = () => {
                 onClick={cycleRepeat}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-colors cursor-pointer ${
                   repeatMode !== 'off'
-                    ? 'bg-[#FA243C] text-white border-[#FA243C] shadow-lg shadow-[#FA243C]/30'
+                    ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-md shadow-black/40'
                     : 'bg-white/[0.08] text-zinc-400 border-white/10 hover:text-white'
                 }`}
                 title={`وضع التكرار: ${repeatMode}`}
@@ -580,7 +580,7 @@ export const CarPlayMode: React.FC = () => {
             <div className="flex flex-col gap-3 pb-3 border-b border-white/[0.08]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <ListMusic className="w-5 h-5 text-[#FA243C]" />
+                  <ListMusic className="w-5 h-5 text-[#1DB954]" />
                   <h2 className="text-base sm:text-lg font-black text-white">قائمة القيادة السريعة</h2>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-white/[0.08] text-zinc-300 text-xs font-mono font-black">
@@ -617,7 +617,7 @@ export const CarPlayMode: React.FC = () => {
                   onClick={() => setFilterMode('favorites')}
                   className={`h-[52px] sm:h-14 px-3 sm:px-4 rounded-2xl flex items-center justify-between border font-black text-xs sm:text-sm transition-colors cursor-pointer shadow-md select-none ${
                     filterMode === 'favorites'
-                      ? 'bg-rose-600 text-white border-rose-500 shadow-rose-600/30'
+                      ? 'bg-[#1DB954] text-black border-[#1DB954] shadow-md shadow-black/40'
                       : 'bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 border-white/10'
                   }`}
                 >
@@ -626,7 +626,7 @@ export const CarPlayMode: React.FC = () => {
                     <span>المفضلة</span>
                   </div>
                   <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                    filterMode === 'favorites' ? 'bg-white/20 text-white' : 'bg-white/10 text-zinc-400'
+                    filterMode === 'favorites' ? 'bg-black/20 text-black' : 'bg-white/10 text-zinc-400'
                   }`}>
                     {favoriteTracks.length}
                   </span>
@@ -700,7 +700,7 @@ export const CarPlayMode: React.FC = () => {
                       }}
                       className={`min-h-[74px] h-[74px] flex items-center justify-between px-4 py-2.5 rounded-2xl border cursor-pointer transition-colors select-none ${
                         isCurrent
-                          ? 'bg-white/[0.16] border-[#FA243C] text-white shadow-lg ring-1 ring-[#FA243C]/40'
+                          ? 'bg-white/[0.16] border-[#1DB954]/50 text-white shadow-lg ring-1 ring-[#1DB954]/30'
                           : highContrastMode === 'day'
                           ? 'bg-black/[0.03] hover:bg-black/[0.07] border-black/10 text-zinc-800'
                           : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/5 text-zinc-300'
@@ -724,14 +724,14 @@ export const CarPlayMode: React.FC = () => {
 
                           {isCurrent && isPlaying && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <span className="w-2.5 h-2.5 rounded-full bg-[#FA243C] animate-ping" />
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#1DB954] animate-ping" />
                             </div>
                           )}
                         </div>
 
                         <div className="truncate flex-1 pr-1">
                           <div className={`font-black text-base sm:text-lg truncate tracking-tight ${
-                            isCurrent ? 'text-[#FA243C]' : highContrastMode === 'day' ? 'text-black' : 'text-white'
+                            isCurrent ? 'text-[#1DB954]' : highContrastMode === 'day' ? 'text-black' : 'text-white'
                           }`}>
                             <bdi dir="auto">{tr.title}</bdi>
                           </div>
@@ -752,7 +752,7 @@ export const CarPlayMode: React.FC = () => {
                         ) : null}
 
                         {isCurrent && isPlaying ? (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#FA243C]/20 border border-[#FA243C]/40 text-[#FA243C] text-xs font-black font-mono">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#1DB954]/15 border border-[#1DB954]/30 text-[#1DB954] text-xs font-black font-mono">
                             <Radio className="w-3.5 h-3.5 animate-pulse" />
                             <span className="hidden xs:inline">يعمل الآن</span>
                           </div>
