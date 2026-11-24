@@ -142,10 +142,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
             type="button"
             onClick={goBack}
             disabled={!canGoBack}
-            className={`w-8 h-8 rounded-full bg-[#000000]/70 flex items-center justify-center transition-all border border-white/[0.06] ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,border-color,color,opacity,transform] ${
               !canGoBack
-                ? 'opacity-30 pointer-events-none text-zinc-500'
-                : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95 cursor-pointer'
+                ? 'bg-white/[0.03] border border-white/[0.05] opacity-30 pointer-events-none text-zinc-500'
+                : 'satin-metal-button text-zinc-200 cursor-pointer'
             }`}
             title="رجوع"
             aria-label="Go Back"
@@ -156,10 +156,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
             type="button"
             onClick={goForward}
             disabled={!canGoForward}
-            className={`w-8 h-8 rounded-full bg-[#000000]/70 flex items-center justify-center transition-all border border-white/[0.06] ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,border-color,color,opacity,transform] ${
               !canGoForward
-                ? 'opacity-30 pointer-events-none text-zinc-500'
-                : 'text-zinc-300 hover:text-white hover:bg-white/10 active:scale-95 cursor-pointer'
+                ? 'bg-white/[0.03] border border-white/[0.05] opacity-30 pointer-events-none text-zinc-500'
+                : 'satin-metal-button text-zinc-200 cursor-pointer'
             }`}
             title="تقدم"
             aria-label="Go Forward"
@@ -172,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
         <div className="flex-1 max-w-md mx-6">
           <button
             onClick={() => setSpotlightOpen(true)}
-            className="w-full flex items-center justify-between px-3.5 py-2 rounded-full bg-[#242424] hover:bg-[#2a2a2a] text-zinc-400 hover:text-zinc-200 text-xs font-normal border border-white/[0.05] transition-colors cursor-pointer group shadow-sm"
+            className="w-full flex items-center justify-between px-3.5 py-2 rounded-full bg-[#1d1d22]/90 hover:bg-[#27272e] text-zinc-400 hover:text-zinc-100 text-xs font-normal border border-white/[0.09] hover:border-white/[0.16] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_rgba(0,0,0,0.3)] transition-[background-color,border-color,color] cursor-pointer group"
             title={t.quickSearch}
             aria-label="Spotlight search"
           >
@@ -180,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
               <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
               <span className="text-zinc-300 group-hover:text-white">{isRTL ? 'ماذا تريد أن تستمع إليه؟' : t.quickSearch}</span>
             </div>
-            <kbd className="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] text-zinc-400 font-mono">⌘K</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.08] text-[10px] text-zinc-300 font-mono">⌘K</kbd>
           </button>
         </div>
 
@@ -189,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
           <button
             type="button"
             onClick={handleFullscreenToggle}
-            className="w-8 h-8 rounded-full bg-[#181818] hover:bg-[#242424] text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/[0.04]"
+            className="w-8 h-8 rounded-full satin-metal-button text-zinc-300 flex items-center justify-center cursor-pointer"
             title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
             aria-label="Fullscreen"
           >

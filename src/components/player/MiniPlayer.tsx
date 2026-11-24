@@ -202,7 +202,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
         className="flex items-center gap-0.5 shrink-0 pointer-events-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Play / Pause Button with Pulsing Buffering Ring */}
+        {/* Play / Pause Button (0ms instant icon swap, never disappears) */}
         <button
           type="button"
           data-testid="mini-play-pause-btn"
@@ -211,29 +211,18 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
             triggerHaptic('medium');
             togglePlayPause();
           }}
-          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-white cursor-pointer apple-play-btn touch-manipulation overflow-hidden ${
-            playbackState === 'buffering' ? 'ring-2 ring-white/40' : ''
+          className={`w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer apple-play-btn touch-manipulation overflow-hidden transition-colors ${
+            playbackState === 'buffering' ? 'ring-2 ring-white/30' : ''
           }`}
           aria-label={isPlaying ? t.pause : t.play}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={isPlaying ? 'pause' : playbackState === 'buffering' ? 'buffering' : 'play'}
-              initial={{ opacity: 0, scale: 0.72 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.72 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-              className="flex items-center justify-center"
-            >
-              {playbackState === 'buffering' ? (
-                <div className="w-4.5 h-4.5 rounded-full border-2 border-white/25 border-t-white animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-4.5 h-4.5 fill-white text-white" />
-              ) : (
-                <Play className="w-4.5 h-4.5 fill-white text-white translate-x-0.5" />
-              )}
-            </motion.div>
-          </AnimatePresence>
+          {isPlaying ? (
+            <Pause className="w-4.5 h-4.5 fill-white text-white" />
+          ) : playbackState === 'buffering' ? (
+            <div className="w-4.5 h-4.5 rounded-full border-2 border-white/25 border-t-white animate-spin" />
+          ) : (
+            <Play className="w-4.5 h-4.5 fill-white text-white translate-x-0.5" />
+          )}
         </button>
 
         {/* Skip Forward Button */}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, memo } from 'react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
@@ -9,11 +9,11 @@ import { getActiveLyricIndex } from '../../services/lyricsParser';
 import { Track } from '../../types';
 import { getOfflineArtworkUrl } from '../../utils/offlineStorage';
 import { useTrackTheme } from '../../utils/colorExtractor';
+import { isArabicText } from '../../utils/formatters';
 import { SmartSaveButton } from '../common/SmartSaveButton';
 import {
   ChevronDown,
   MoreHorizontal,
-  Heart,
   Shuffle,
   SkipBack,
   Play,
@@ -31,6 +31,7 @@ import {
   Music2,
   CheckCircle2,
   ArrowDownToLine,
+  Disc3,
 } from 'lucide-react';
 
 interface ExpandedPlayerProps {
@@ -51,14 +52,25 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({ isOpen, onClose 
 };
 
 // =========================================================================
-// EMBEDDED APPLE MUSIC-STYLE SYNCED LYRICS VIEW
+// EMBEDDED SYNCED LYRICS VIEW (DESKTOP STAGE & MOBILE SHEET)
 // =========================================================================
 interface EmbeddedLyricsViewProps {
   track: Track;
   onSeek: (time: number) => void;
+  desktopMode?: boolean;
+  onSwitchToQueue?: () => void;
+  onOpenAlbum?: () => void;
+  onOpenEqualizer?: () => void;
 }
 
-const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onSeek }) => {
+const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({
+  track,
+  onSeek,
+  desktopMode = false,
+  onSwitchToQueue,
+  onOpenAlbum,
+  onOpenEqualizer,
+}) => {
   const { isRTL } = useTranslation();
   const [activeIdx, setActiveIdx] = useState(-1);
   const activeLineRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +80,12 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
   const plain = track.lyrics || null;
 
   useEffect(() => {
-    if (!synced) return;
+    if (!synced) {
+      setActiveIdx(-1);
+      return;
+    }
+    const initIdx = getActiveLyricIndex(synced, usePlayerStore.getState().currentTime);
+    setActiveIdx(initIdx);
     return usePlayerStore.subscribe((state) => {
       const idx = getActiveLyricIndex(synced, state.currentTime);
       setActiveIdx((prev) => (prev !== idx ? idx : prev));
@@ -87,7 +104,9 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
   return (
     <div
       ref={containerRef}
-      className="w-full h-full max-h-full overflow-y-auto px-4 py-6 space-y-4 no-scrollbar select-none"
+      className={`w-full h-full max-h-full overflow-y-auto no-scrollbar select-none ${
+        desktopMode ? 'px-5 py-6 space-y-3' : 'px-4 py-6 space-y-4'
+      }`}
       style={{ touchAction: 'pan-y' }}
     >
       {synced ? (
@@ -96,24 +115,30 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
           const isArabic = /[\u0600-\u06FF]/.test(line.text);
           return (
             <div
-              key={idx + '-' + line.time}
+              key={`${idx}-${line.time}`}
               ref={isActive ? activeLineRef : null}
               onClick={() => {
                 triggerHaptic('light');
                 onSeek(line.time);
               }}
-              className={`py-2.5 px-3 rounded-2xl transition-colors duration-300 cursor-pointer ${
+              className={`rounded-2xl transition-[background-color,border-color,transform] duration-200 cursor-pointer border ${
+                desktopMode ? 'py-3 px-4' : 'py-2.5 px-3'
+              } ${
                 isActive
-                  ? 'bg-white/[0.08] backdrop-blur-md'
-                  : 'hover:bg-white/[0.03]'
+                  ? 'bg-white/[0.09] border-white/[0.14] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                  : 'border-transparent hover:bg-white/[0.04]'
               }`}
               dir={isArabic ? 'rtl' : 'ltr'}
             >
               <p
-                className={`font-sans tracking-tight transition-colors duration-300 leading-relaxed ${
+                className={`font-sans tracking-tight transition-[color,opacity,transform] duration-200 leading-relaxed ${
                   isActive
-                    ? 'text-[21px] sm:text-[23px] font-black text-white scale-100 opacity-100 drop-shadow-md'
-                    : 'text-[17px] sm:text-[18px] font-semibold text-white/35 scale-[0.98] blur-[0.4px] hover:blur-0 hover:text-white/70'
+                    ? desktopMode
+                      ? 'text-[23px] lg:text-[26px] font-black text-white'
+                      : 'text-[21px] sm:text-[23px] font-black text-white'
+                    : desktopMode
+                    ? 'text-[17px] lg:text-[19px] font-semibold text-white/55 hover:text-white/85'
+                    : 'text-[17px] sm:text-[18px] font-semibold text-white/45 hover:text-white/80'
                 }`}
               >
                 <bdi dir="auto">{line.text}</bdi>
@@ -122,20 +147,62 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
           );
         })
       ) : plain ? (
-        <div className="py-4 px-3 text-center sm:text-start leading-loose text-white/70 font-medium text-base whitespace-pre-line">
+        <div
+          className={`py-4 px-4 leading-loose text-white/80 font-medium whitespace-pre-line ${
+            desktopMode ? 'text-lg text-start' : 'text-base text-center sm:text-start'
+          }`}
+        >
           <bdi dir="auto">{plain}</bdi>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-full min-h-[220px] text-center px-6 space-y-3">
-          <div className="w-14 h-14 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-zinc-400">
+        <div className="flex flex-col items-center justify-center h-full min-h-[260px] text-center px-6 space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/[0.1] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] flex items-center justify-center text-zinc-300">
             <Music2 className="w-7 h-7" />
           </div>
-          <p className="text-sm font-semibold text-white/80">
-            {isRTL ? 'كلمات الأغنية غير متوفرة لهذا المسار' : "Lyrics aren't available for this track"}
-          </p>
-          <p className="text-xs text-white/40 max-w-xs">
-            {isRTL ? 'استمتع بالاستماع مع توهج الغلاف المحيطي المباشر' : 'Enjoy the audio with dynamic live ambient backdrop'}
-          </p>
+          <div className="space-y-1.5">
+            <p className="text-base font-bold text-white/90">
+              {isRTL ? 'كلمات الأغنية غير متوفرة لهذا المسار' : "Lyrics aren't available for this track"}
+            </p>
+            <p className="text-xs text-zinc-400 max-w-sm leading-relaxed">
+              {isRTL
+                ? 'استمتع بجودة الصوت المحيطي أو انتقل إلى قائمة التشغيل التالية لضبط ترتيب أغانيك.'
+                : 'Enjoy studio audio fidelity or switch to Up Next to arrange your upcoming queue.'}
+            </p>
+          </div>
+          {desktopMode && (
+            <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+              {onSwitchToQueue && (
+                <button
+                  type="button"
+                  onClick={onSwitchToQueue}
+                  className="satin-metal-button px-4 py-2 rounded-full text-xs font-semibold text-white flex items-center gap-2 cursor-pointer"
+                >
+                  <ListMusic className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <span>{isRTL ? 'عرض قائمة الانتظار' : 'View Up Next'}</span>
+                </button>
+              )}
+              {onOpenEqualizer && (
+                <button
+                  type="button"
+                  onClick={onOpenEqualizer}
+                  className="satin-metal-button px-4 py-2 rounded-full text-xs font-semibold text-zinc-200 flex items-center gap-2 cursor-pointer"
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'المعادل الصوتي' : 'Equalizer'}</span>
+                </button>
+              )}
+              {track.album && onOpenAlbum && (
+                <button
+                  type="button"
+                  onClick={onOpenAlbum}
+                  className="satin-metal-button px-4 py-2 rounded-full text-xs font-semibold text-zinc-200 flex items-center gap-2 cursor-pointer"
+                >
+                  <Disc3 className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'عرض الألبوم' : 'View Album'}</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -144,7 +211,7 @@ const EmbeddedLyricsView: React.FC<EmbeddedLyricsViewProps> = memo(({ track, onS
 EmbeddedLyricsView.displayName = 'EmbeddedLyricsView';
 
 // =========================================================================
-// EMBEDDED APPLE MUSIC-STYLE UP NEXT QUEUE VIEW
+// EMBEDDED UP NEXT QUEUE VIEW
 // =========================================================================
 interface EmbeddedQueueViewProps {
   currentTrack: Track;
@@ -173,12 +240,12 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
 
   return (
     <div
-      className="w-full h-full max-h-full overflow-y-auto px-2 py-3 space-y-4 no-scrollbar select-none"
+      className="w-full h-full max-h-full overflow-y-auto px-3 py-3 space-y-4 no-scrollbar select-none"
       style={{ touchAction: 'pan-y' }}
     >
       {/* Header bar */}
-      <div className="flex items-center justify-between px-2 pt-1">
-        <span className="text-xs font-bold uppercase tracking-wider text-white/70">
+      <div className="flex items-center justify-between px-1 pt-1">
+        <span className="text-xs font-bold uppercase tracking-wider text-white/75">
           {isRTL ? 'قائمة التشغيل التالية (Up Next)' : 'Up Next Queue'}
         </span>
         {userQueue.length > 0 && (
@@ -188,7 +255,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
               triggerHaptic('medium');
               clearUserQueue();
             }}
-            className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-300 cursor-pointer px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
+            className="flex items-center gap-1.5 text-[11px] font-bold text-red-400 hover:text-red-300 cursor-pointer px-2.5 py-1 rounded-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{isRTL ? 'تفريغ القائمة' : 'Clear'}</span>
@@ -198,33 +265,33 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
 
       {/* 1. NOW PLAYING */}
       <div className="space-y-1.5">
-        <span className="text-[10px] font-mono font-semibold uppercase text-zinc-400 px-2">
+        <span className="text-[10px] font-mono font-semibold uppercase text-zinc-400 px-1">
           {isRTL ? 'يتم التشغيل الآن' : 'Now Playing'}
         </span>
-        <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.08] border border-white/10 shadow-sm">
-          <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/10 relative">
+        <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.07] border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+          <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/15 relative">
             <img
               src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
               alt={currentTrack.title}
               className="w-full h-full object-cover"
             />
             {isPlaying && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-0.5">
-                <span className="w-0.5 h-3 bg-[#1DB954] animate-pulse rounded-full" />
-                <span className="w-0.5 h-4 bg-[#1DB954] animate-pulse rounded-full delay-75" />
-                <span className="w-0.5 h-2.5 bg-[#1DB954] animate-pulse rounded-full delay-150" />
+              <div className="absolute inset-0 bg-black/45 flex items-center justify-center gap-0.5">
+                <span className="w-0.5 h-3 bg-[#1DB954] aura-soundbar-1 rounded-full" />
+                <span className="w-0.5 h-4 bg-[#1DB954] aura-soundbar-2 rounded-full" />
+                <span className="w-0.5 h-2.5 bg-[#1DB954] aura-soundbar-3 rounded-full" />
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h5 dir="auto" className="text-xs sm:text-sm font-bold text-white truncate leading-snug">
+            <h5 dir="auto" className="text-xs sm:text-sm font-bold text-[#1DB954] truncate leading-snug">
               {currentTrack.title}
             </h5>
-            <p dir="auto" className="text-[11px] text-zinc-400 truncate mt-0.5">
+            <p dir="auto" className="text-[11px] text-zinc-300 truncate mt-0.5">
               {currentTrack.artist}
             </p>
           </div>
-          <span className="text-[10px] font-mono text-zinc-400 shrink-0 px-2">
+          <span className="text-[10px] font-mono text-zinc-400 shrink-0 px-2 tabular-nums">
             {currentTrack.duration ? `${Math.floor(currentTrack.duration / 60)}:${String(Math.floor(currentTrack.duration % 60)).padStart(2, '0')}` : '3:00'}
           </span>
         </div>
@@ -233,17 +300,17 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
       {/* 2. PLAYING NEXT (PRIORITY QUEUE) */}
       {userQueue.length > 0 && (
         <div className="space-y-1.5">
-          <span className="text-[10px] font-mono font-semibold uppercase text-[#1DB954] px-2 flex items-center gap-1.5">
+          <span className="text-[10px] font-mono font-semibold uppercase text-[#1DB954] px-1 flex items-center gap-1.5">
             <span>{isRTL ? 'التشغيل التالي مباشرة (Priority)' : 'Playing Next'}</span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#1DB954]/20 text-[#1DB954]">
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#1DB954]/20 border border-[#1DB954]/30 text-[#1DB954]">
               {userQueue.length}
             </span>
           </span>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {userQueue.map((track, idx) => (
               <div
-                key={track.id + '-uq-' + idx}
-                className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] transition-colors group"
+                key={`${track.id}-uq-${idx}`}
+                className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] transition-colors group"
               >
                 <div
                   onClick={() => {
@@ -272,7 +339,6 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                     {track.artist}
                   </p>
                 </div>
-                {/* Reorder / Remove Controls */}
                 <div className="flex items-center gap-1 shrink-0">
                   {idx > 0 && (
                     <button
@@ -281,7 +347,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                         triggerHaptic('light');
                         reorderUserQueue(idx, idx - 1);
                       }}
-                      className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title={isRTL ? 'تحريك للأعلى' : 'Move up'}
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
@@ -294,7 +360,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                         triggerHaptic('light');
                         reorderUserQueue(idx, idx + 1);
                       }}
-                      className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                       title={isRTL ? 'تحريك للأسفل' : 'Move down'}
                     >
                       <ArrowDown className="w-3.5 h-3.5" />
@@ -306,7 +372,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                       triggerHaptic('light');
                       removeFromUserQueue(idx);
                     }}
-                    className="p-1 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-white/10 transition-colors cursor-pointer"
                     title={isRTL ? 'حذف من القائمة' : 'Remove'}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -321,18 +387,18 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
       {/* 3. UPCOMING FROM LIBRARY / PLAYLIST */}
       {upcomingLibraryTracks.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          <span className="text-[10px] font-mono font-semibold uppercase text-zinc-400 px-2">
+          <span className="text-[10px] font-mono font-semibold uppercase text-zinc-400 px-1">
             {isRTL ? 'قادم من المكتبة / القائمة' : 'Upcoming from Library'}
           </span>
           <div className="space-y-1">
             {upcomingLibraryTracks.map((track) => (
               <div
-                key={track.id + '-upc'}
+                key={`${track.id}-upc`}
                 onClick={() => {
                   triggerHaptic('light');
                   playTrack(track);
                 }}
-                className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.05] transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.06] transition-colors cursor-pointer group"
               >
                 <div className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg overflow-hidden bg-black/60 shrink-0 border border-white/10">
                   <img
@@ -349,7 +415,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                     {track.artist}
                   </p>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-500 shrink-0">
+                <span className="text-[10px] font-mono text-zinc-500 shrink-0 tabular-nums">
                   {track.duration ? `${Math.floor(track.duration / 60)}:${String(Math.floor(track.duration % 60)).padStart(2, '0')}` : ''}
                 </span>
               </div>
@@ -363,7 +429,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
 EmbeddedQueueView.displayName = 'EmbeddedQueueView';
 
 // =========================================================================
-// SPOTIFY-STYLE LYRICS PREVIEW CARD (MOUNTED BELOW CONTROLS ON SCROLL)
+// MOBILE LYRICS PREVIEW CARD (MOUNTED BELOW CONTROLS ON MOBILE SCROLL)
 // =========================================================================
 interface LyricsPreviewCardProps {
   track: Track;
@@ -406,7 +472,7 @@ const LyricsPreviewCard: React.FC<LyricsPreviewCardProps> = memo(({ track, cardT
     <div
       onClick={onExpand}
       style={{ backgroundColor: cardTint }}
-      className="w-full max-w-md mx-auto rounded-2xl p-5 shadow-2xl border border-white/10 cursor-pointer transition-colors duration-500 select-none group"
+      className="w-full max-w-md mx-auto rounded-2xl p-5 shadow-2xl border border-white/15 cursor-pointer transition-colors duration-500 select-none group"
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-bold text-white uppercase tracking-wider">
@@ -418,7 +484,7 @@ const LyricsPreviewCard: React.FC<LyricsPreviewCardProps> = memo(({ track, cardT
             e.stopPropagation();
             onExpand();
           }}
-          className="px-3 py-1 rounded-full bg-black/40 hover:bg-black/60 text-white text-xs font-semibold backdrop-blur-md transition-colors cursor-pointer"
+          className="px-3.5 py-1 rounded-full bg-black/45 hover:bg-black/65 border border-white/15 text-white text-xs font-semibold backdrop-blur-md transition-colors cursor-pointer"
         >
           {isRTL ? 'توسيع' : 'Expand'}
         </button>
@@ -431,7 +497,7 @@ const LyricsPreviewCard: React.FC<LyricsPreviewCardProps> = memo(({ track, cardT
               key={i}
               dir="auto"
               className={`text-base sm:text-lg font-bold leading-relaxed transition-opacity duration-200 ${
-                line.isActive ? 'text-white' : 'text-white/60'
+                line.isActive ? 'text-white' : 'text-white/65'
               }`}
             >
               {line.text}
@@ -443,7 +509,7 @@ const LyricsPreviewCard: React.FC<LyricsPreviewCardProps> = memo(({ track, cardT
           <p className="text-sm font-semibold text-white/90">
             {isRTL ? 'استمتع باللحن والموسيقى' : 'Enjoying the music'}
           </p>
-          <span className="text-xs text-white/50 mt-1 block">
+          <span className="text-xs text-white/60 mt-1 block">
             {isRTL ? 'لا تتوفر كلمات مكتوبة لهذا المسار' : 'No lyrics available for this track'}
           </span>
         </div>
@@ -466,8 +532,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const repeatMode = usePlayerStore((state) => state.repeatMode);
   const userQueue = usePlayerStore((state) => state.userQueue);
   const queue = usePlayerStore((state) => state.queue);
-  const favorites = usePlayerStore((state) => state.favorites);
-  const trackTransitionDirection = usePlayerStore((state) => state.trackTransitionDirection);
   const sleepTimerRemaining = usePlayerStore((state) => state.sleepTimerRemaining);
 
   const togglePlayPause = usePlayerStore((state) => state.togglePlayPause);
@@ -477,7 +541,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const seek = usePlayerStore((state) => state.seek);
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
-  const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
   const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
   const reorderUserQueue = usePlayerStore((state) => state.reorderUserQueue);
@@ -490,7 +553,21 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const openArtist = usePlayerStore((state) => state.openArtist);
   const openAlbum = usePlayerStore((state) => state.openAlbum);
 
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = () => setIsDesktop(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Mobile switches center slot between artwork/lyrics/queue; Desktop shows Artwork + Context Pane side-by-side
   const [activeCenterView, setActiveCenterView] = useState<'artwork' | 'lyrics' | 'queue'>('artwork');
+  const [desktopContextTab, setDesktopContextTab] = useState<'lyrics' | 'queue'>('lyrics');
   const [isActionSheetOpen, setActionSheetOpen] = useState(false);
   const theme = useTrackTheme(currentTrack);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -501,6 +578,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const isDownloaded = downloadedTrackIds.includes(currentTrack.id);
+  const artworkSrc = currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg';
 
   const handleClose = () => {
     triggerHaptic('light');
@@ -516,198 +594,192 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  const renderPlayPauseIcon = (sizeClass: string, spinnerSizeClass: string) => {
+    if (isPlaying) {
+      return <Pause className={`${sizeClass} fill-black text-black`} />;
+    }
+    if (playbackState === 'buffering') {
+      return <div className={`${spinnerSizeClass} rounded-full border-2 border-black/25 border-t-black animate-spin`} />;
+    }
+    return <Play className={`${sizeClass} fill-black text-black translate-x-0.5`} />;
+  };
+
   return (
     <motion.div
       key="expanded-player-sheet"
       data-testid="expanded-player-sheet"
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      exit={{ y: '100%' }}
-      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-      drag={activeCenterView === 'artwork' && isAtTop ? 'y' : false}
+      initial={isDesktop ? { opacity: 0, scale: 0.985 } : { y: '100%' }}
+      animate={isDesktop ? { opacity: 1, scale: 1 } : { y: 0 }}
+      exit={isDesktop ? { opacity: 0, scale: 0.985 } : { y: '100%' }}
+      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+      drag={!isDesktop && activeCenterView === 'artwork' && isAtTop ? 'y' : false}
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0.1, bottom: 0.7 }}
       onDragEnd={(_, info) => {
-        // 120fps Drag-to-Dismiss physics:
-        // Dismiss if dragged down > 110px or fast downward velocity > 300px/s
-        if (info.offset.y > 110 || info.velocity.y > 300) {
+        if (!isDesktop && (info.offset.y > 110 || info.velocity.y > 300)) {
           handleClose();
         }
       }}
-      style={{ background: theme.headerGradientRgb }}
-      className="fixed inset-0 z-50 w-full h-full min-h-full flex flex-col justify-between px-4 sm:px-6 pt-[calc(env(safe-area-inset-top,0px)+6px)] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] transition-colors duration-500 overflow-hidden select-none"
+      style={{ backgroundColor: '#09090C' }}
+      className="fixed inset-0 z-50 w-full h-full min-h-full bg-[#09090C] flex flex-col justify-between overflow-hidden select-none"
       dir={dir}
     >
-      {/* Dual-Layer Blurred Ambient Backdrop Crossfade */}
-      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden select-none">
-        <AnimatePresence mode="sync">
-          <motion.div
-            key={currentTrack.id + '-ambient'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.35 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 transform-gpu"
-            style={{
-              backgroundImage: `radial-gradient(circle at 50% 28%, rgba(${theme.primaryRgb[0]}, ${theme.primaryRgb[1]}, ${theme.primaryRgb[2]}, 0.28) 0%, transparent 65%), radial-gradient(circle at 75% 80%, rgba(${theme.primaryRgb[0]}, ${theme.primaryRgb[1]}, ${theme.primaryRgb[2]}, 0.15) 0%, transparent 60%)`,
-            }}
-          />
-        </AnimatePresence>
+      {/* 100% Opaque Obsidian Cinema Stage Backdrop + Album Tint (Zero bleed-through) */}
+      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden select-none bg-[#09090C]">
+        <img
+          src={artworkSrc}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.22] blur-[90px] saturate-125 scale-125 transform-gpu transition-opacity duration-700"
+        />
+        <div
+          className="absolute inset-0 transition-colors duration-500"
+          style={{
+            backgroundImage: `radial-gradient(circle at 30% 25%, rgba(${theme.primaryRgb[0]}, ${theme.primaryRgb[1]}, ${theme.primaryRgb[2]}, 0.24) 0%, transparent 60%), radial-gradient(circle at 80% 75%, rgba(${theme.primaryRgb[0]}, ${theme.primaryRgb[1]}, ${theme.primaryRgb[2]}, 0.14) 0%, transparent 55%)`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-[#08080B]/95" />
       </div>
 
-      {/* ========================================================================= */}
-      {/* LAYER 1: DRAG HANDLE & COMPACT HEADER BAR */}
-      {/* ========================================================================= */}
-      <div className="w-full flex flex-col items-center flex-shrink-0">
-        {/* Centered Drag Handle Pill */}
-        <div
-          onClick={handleClose}
-          className="w-9 h-1 rounded-full bg-white/25 hover:bg-white/40 mx-auto mb-1.5 cursor-pointer transition-colors"
-        />
-
-        <div className="w-full flex items-center justify-between">
-          {/* Collapse Button */}
-          <button
-            type="button"
-            data-testid="minimize-player-btn"
-            onClick={handleClose}
-            className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
-            aria-label="Collapse player"
-          >
-            <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
-          </button>
-
-          {/* Center Title or Live Sleep Timer Countdown Pill */}
-          <div className="text-center min-w-0 px-2 flex-1 flex flex-col items-center">
-            {sleepTimerRemaining !== null ? (
+      {/* ===================================================================== */}
+      {/* DESKTOP / LAPTOP STUDIO STAGE (md and above)                          */}
+      {/* ===================================================================== */}
+      {isDesktop ? (
+        <div className="w-full h-full flex flex-col min-h-0">
+          {/* Desktop Top Cinema Header */}
+          <header className="w-full max-w-6xl xl:max-w-7xl mx-auto px-6 lg:px-10 pt-5 pb-3 flex items-center justify-between gap-4 shrink-0">
+            {/* Start: Minimize + Album Context */}
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
-                onClick={() => setSleepTimerOpen(true)}
-                className="px-2.5 py-0.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 text-white flex items-center gap-1.5 cursor-pointer apple-btn-tactile transition-colors"
+                data-testid="minimize-player-btn"
+                onClick={handleClose}
+                className="satin-metal-button h-9 px-3.5 rounded-full text-zinc-100 flex items-center gap-2 text-xs font-semibold cursor-pointer shrink-0"
+                aria-label="Minimize player"
               >
-                <Clock className="w-3.5 h-3.5 text-[#1DB954] animate-pulse" />
-                <span className="text-[11px] font-mono font-bold text-white/95">
-                  {formatRemaining(sleepTimerRemaining)}
-                </span>
+                <ChevronDown className="w-4 h-4" strokeWidth={2.2} />
+                <span>{isRTL ? 'تصغير' : 'Minimize'}</span>
               </button>
-            ) : (
-              <>
-                <span className="text-[9px] sm:text-[10px] tracking-wider text-zinc-400 uppercase font-semibold block font-mono">
-                  {activeCenterView === 'lyrics'
-                    ? isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'
-                    : activeCenterView === 'queue'
-                    ? isRTL ? 'قائمة الانتظار' : 'Up Next'
-                    : userQueue.length > 0
-                    ? isRTL ? 'يتم التشغيل من قائمة الانتظار' : 'Playing from Queue'
-                    : isRTL ? 'يتم التشغيل من المكتبة' : 'Playing from Library'}
+
+              <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.045] border border-white/[0.08] backdrop-blur-md min-w-0 max-w-sm">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 shrink-0">
+                  {userQueue.length > 0
+                    ? isRTL ? 'من الانتظار' : 'From Queue'
+                    : isRTL ? 'من المكتبة' : 'Playing from'}
                 </span>
-                <h5
-                  dir="auto"
+                <span className="text-white/25">•</span>
+                <button
+                  type="button"
                   onClick={() => {
                     if (currentTrack.album) {
                       handleClose();
                       openAlbum(currentTrack.album, currentTrack.artist);
                     }
                   }}
-                  className={`text-[11.5px] sm:text-xs text-white/80 font-medium truncate max-w-[200px] mx-auto text-center block ${
+                  dir={isArabicText(currentTrack.album || currentTrack.title) ? 'rtl' : 'ltr'}
+                  className={`text-xs font-semibold text-white/90 truncate ${
                     currentTrack.album ? 'hover:text-white hover:underline cursor-pointer' : ''
                   }`}
                 >
                   {currentTrack.album || currentTrack.title}
-                </h5>
-              </>
-            )}
-          </div>
+                </button>
+              </div>
+            </div>
 
-          {/* More Options (...) Button */}
-          <button
-            type="button"
-            data-testid="more-options-btn"
-            onClick={() => {
-              triggerHaptic('light');
-              setActionSheetOpen(true);
-            }}
-            className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/90 flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
-            aria-label="More options"
-          >
-            <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
-          </button>
-        </div>
-      </div>
+            {/* End: Machined Studio Tool Pill Cluster */}
+            <div className="flex items-center gap-1 p-1 rounded-full bg-black/45 border border-white/[0.09] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setEqualizerOpen(true);
+                }}
+                className="h-8 px-3 rounded-full flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.09] transition-colors cursor-pointer"
+                title={isRTL ? 'المعادل والمؤثرات الصوتية' : 'EQ & Studio Effects'}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>{isRTL ? 'المعادل' : 'EQ'}</span>
+              </button>
 
-      {/* ========================================================================= */}
-      {/* SCROLLABLE PLAYER BODY (Allows smooth vertical scroll to Lyrics Preview Card) */}
-      {/* ========================================================================= */}
-      <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 w-full min-h-0 overflow-y-auto no-scrollbar flex flex-col justify-between"
-      >
-        {/* ========================================================================= */}
-        {/* LAYER 2: CENTER STAGE (ARTWORK / SYNCED LYRICS / UP NEXT QUEUE) */}
-        {/* ========================================================================= */}
-        <div className="flex-1 min-h-[260px] sm:min-h-[300px] flex items-center justify-center py-1 sm:py-2.5 overflow-hidden">
-          {activeCenterView === 'artwork' ? (
-            /* Large Spring-Scaled Album Artwork with Horizontal Swipe Gesture */
-            <motion.div
-              layoutId="aura-player-artwork"
-              data-testid="expanded-artwork-container"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.45}
-              onDragEnd={(_, info) => {
-                // Horizontal swipe to skip tracks on artwork
-                if (info.offset.x < -65 || info.velocity.x < -250) {
+              <button
+                type="button"
+                onClick={() => {
                   triggerHaptic('light');
-                  nextTrack({ forceImmediate: true });
-                } else if (info.offset.x > 65 || info.velocity.x > 250) {
+                  setSleepTimerOpen(true);
+                }}
+                className={`h-8 px-3 rounded-full flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                  sleepTimerRemaining !== null
+                    ? 'bg-[#1DB954]/16 text-[#1DB954] border border-[#1DB954]/30'
+                    : 'text-zinc-300 hover:text-white hover:bg-white/[0.09]'
+                }`}
+                title={isRTL ? 'مؤقت النوم' : 'Sleep Timer'}
+              >
+                <Clock className={`w-3.5 h-3.5 ${sleepTimerRemaining !== null ? 'animate-pulse' : ''}`} />
+                <span className={sleepTimerRemaining !== null ? 'font-mono tabular-nums' : ''}>
+                  {sleepTimerRemaining !== null
+                    ? formatRemaining(sleepTimerRemaining)
+                    : isRTL ? 'المؤقت' : 'Timer'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                data-testid="expanded-download-btn"
+                onClick={() => {
                   triggerHaptic('light');
-                  previousTrack();
-                }
-              }}
-              animate={{
-                scale: isPlaying ? 1 : 0.86,
-              }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
-              style={{
-                boxShadow: isPlaying
-                  ? `0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px -8px rgba(${theme.primaryRgb[0]}, ${theme.primaryRgb[1]}, ${theme.primaryRgb[2]}, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)`
-                  : '0 8px 20px rgba(0, 0, 0, 0.3)',
-                touchAction: 'pan-y',
-              }}
-              className="relative w-[min(68vw,30vh,260px)] h-[min(68vw,30vh,260px)] sm:w-[min(75vw,36vh,320px)] sm:h-[min(75vw,36vh,320px)] max-h-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden border border-white/[0.14] select-none flex-shrink-0 shadow-2xl specular-highlight transition-[box-shadow] duration-450 cursor-grab active:cursor-grabbing"
-            >
-              <AnimatePresence mode="popLayout" custom={trackTransitionDirection} initial={false}>
+                  downloadTrackForOffline(currentTrack.id);
+                }}
+                disabled={isDownloaded}
+                className={`h-8 px-3 rounded-full flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                  isDownloaded
+                    ? 'text-[#1DB954] bg-[#1DB954]/12 cursor-default'
+                    : 'text-zinc-300 hover:text-white hover:bg-white/[0.09] cursor-pointer'
+                }`}
+                aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
+              >
+                {isDownloaded ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1DB954]" />
+                ) : (
+                  <ArrowDownToLine className="w-3.5 h-3.5" />
+                )}
+                <span>{isDownloaded ? (isRTL ? 'محفوظة' : 'Saved') : (isRTL ? 'حفظ' : 'Offline')}</span>
+              </button>
+
+              <button
+                type="button"
+                data-testid="more-options-btn"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActionSheetOpen(true);
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/[0.1] transition-colors cursor-pointer"
+                aria-label="More options"
+                title={isRTL ? 'المزيد من الخيارات' : 'More options'}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+
+          {/* Desktop 2-Column Main Stage */}
+          <div className="flex-1 w-full max-w-6xl xl:max-w-7xl mx-auto px-6 lg:px-10 pb-7 pt-2 min-h-0 grid grid-cols-12 gap-7 lg:gap-12 items-center">
+            {/* Column 1: Artwork + Track Meta + Scrubber + Transport Deck */}
+            <div className="col-span-5 flex flex-col items-center justify-center min-h-0">
+              {/* Elevated Artwork Frame */}
+              <motion.div
+                data-testid="expanded-artwork-container"
+                animate={{ scale: isPlaying ? 1 : 0.94 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                className="relative w-[min(31vw,37vh,360px)] h-[min(31vw,37vh,360px)] xl:w-[min(29vw,42vh,410px)] xl:h-[min(29vw,42vh,410px)] rounded-[22px] overflow-hidden border border-white/[0.16] shadow-[0_32px_80px_rgba(0,0,0,0.8)] bg-black/50 select-none shrink-0"
+              >
                 <motion.img
                   key={currentTrack.id}
-                  src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                  src={artworkSrc}
                   alt={currentTrack.title}
-                  custom={trackTransitionDirection}
-                  variants={{
-                    enter: (direction: string) => ({
-                      x: direction === 'next' ? 28 : direction === 'prev' ? -28 : 0,
-                      scale: direction === 'fade' ? 0.96 : 0.94,
-                      opacity: 0,
-                      filter: 'blur(4px)',
-                    }),
-                    center: {
-                      x: 0,
-                      scale: 1,
-                      opacity: 1,
-                      filter: 'blur(0px)',
-                    },
-                    exit: (direction: string) => ({
-                      x: direction === 'next' ? -24 : direction === 'prev' ? 24 : 0,
-                      scale: 0.92,
-                      opacity: 0,
-                      filter: 'blur(3px)',
-                    }),
-                  }}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.85 }}
-                  className="w-full h-full object-cover select-none pointer-events-none absolute inset-0"
+                  initial={{ opacity: 0.35, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.24, ease: 'easeOut' }}
+                  className="w-full h-full object-cover select-none pointer-events-none"
                   draggable={false}
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
@@ -722,297 +794,594 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     });
                   }}
                 />
-              </AnimatePresence>
-              <div className="absolute inset-0 vinyl-sheen pointer-events-none z-10" />
-            </motion.div>
-          ) : activeCenterView === 'lyrics' ? (
-            <EmbeddedLyricsView track={currentTrack} onSeek={seek} />
-          ) : (
-            <EmbeddedQueueView
-              currentTrack={currentTrack}
-              isPlaying={isPlaying}
-              userQueue={userQueue}
-              queue={queue}
-              playTrack={playTrack}
-              reorderUserQueue={reorderUserQueue}
-              removeFromUserQueue={removeFromUserQueue}
-              clearUserQueue={clearUserQueue}
-            />
-          )}
-        </div>
+                <div className="absolute inset-0 vinyl-sheen pointer-events-none" />
+              </motion.div>
 
-        {/* ========================================================================= */}
-        {/* LOWER CONTROLS CLUSTER: Unified Proportional Spacing */}
-        {/* ========================================================================= */}
-        <div className="w-full max-w-md mx-auto flex-shrink-0 space-y-1 sm:space-y-2.5">
-          {/* LAYER 3: TRACK META & FAVORITE ACTION */}
-          <div className="w-full flex items-center justify-between gap-3 flex-shrink-0">
-            <div className="flex-1 min-w-0 text-start overflow-hidden">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.h2
-                  key={currentTrack.id + '-title'}
-                  dir="auto"
-                  initial={{
-                    opacity: 0,
-                    x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
-                  }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{
-                    opacity: 0,
-                    x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28 }}
-                  className="text-[16px] sm:text-[19px] font-bold text-white truncate tracking-tight leading-snug block"
-                >
-                  {currentTrack.title}
-                </motion.h2>
-              </AnimatePresence>
+              {/* Track Title, Artist & Save Action */}
+              <div className="w-full max-w-[410px] mt-5 flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0 text-start">
+                  <h2
+                    dir="auto"
+                    className="text-xl lg:text-[23px] font-black text-white truncate tracking-tight leading-snug"
+                  >
+                    {currentTrack.title}
+                  </h2>
+                  <p
+                    dir="auto"
+                    onClick={() => {
+                      if (currentTrack.artist) {
+                        handleClose();
+                        openArtist(currentTrack.artist);
+                      }
+                    }}
+                    className="text-sm text-zinc-300 hover:text-white hover:underline truncate mt-0.5 font-medium leading-snug cursor-pointer transition-colors"
+                  >
+                    {currentTrack.artist}
+                  </p>
+                </div>
 
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.p
-                  key={currentTrack.id + '-artist'}
-                  dir="auto"
-                  initial={{
-                    opacity: 0,
-                    x: trackTransitionDirection === 'next' ? 8 : trackTransitionDirection === 'prev' ? -8 : 0,
-                  }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{
-                    opacity: 0,
-                    x: trackTransitionDirection === 'next' ? -8 : trackTransitionDirection === 'prev' ? 8 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 28, duration: 0.28, delay: 0.04 }}
-                  onClick={() => {
-                    if (currentTrack.artist) {
-                      handleClose();
-                      openArtist(currentTrack.artist);
-                    }
-                  }}
-                  className="text-[12px] sm:text-[14px] text-white/60 hover:text-white hover:underline truncate mt-0.5 font-medium leading-snug block cursor-pointer transition-colors"
-                >
-                  {currentTrack.artist}
-                </motion.p>
-              </AnimatePresence>
-            </div>
+                <SmartSaveButton
+                  track={currentTrack}
+                  size="md"
+                  className="hover:bg-white/[0.08] shrink-0"
+                />
+              </div>
 
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {/* Offline Download Button */}
-              <button
-                type="button"
-                data-testid="expanded-download-btn"
-                onClick={() => {
-                  triggerHaptic('light');
-                  downloadTrackForOffline(currentTrack.id);
-                }}
-                disabled={isDownloaded}
-                className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center apple-btn-tactile cursor-pointer rounded-full flex-shrink-0 transition-colors ${
-                  isDownloaded ? 'text-emerald-400' : 'text-zinc-400 hover:text-white'
-                }`}
-                aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
-                title={isDownloaded ? 'محفوظة للاستماع دون إنترنت' : 'تنزيل للاستماع دون إنترنت'}
+              {/* Scrubber */}
+              <div className="w-full max-w-[410px] mt-2">
+                <TimelineSlider
+                  duration={duration}
+                  onSeek={seek}
+                  showTimestamps={true}
+                  accentColor={accentColor}
+                />
+              </div>
+
+              {/* Hardware Transport Controls */}
+              <div
+                className="flex items-center justify-between w-full max-w-[410px] mt-1 px-1 select-none"
+                dir="ltr"
               >
-                {isDownloaded ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                ) : (
-                  <ArrowDownToLine className="w-5 h-5" />
-                )}
-              </button>
-
-              {/* Spotify Smart Save Button */}
-              <SmartSaveButton track={currentTrack} size="md" />
-            </div>
-          </div>
-
-          {/* LAYER 4: ISOLATED ZERO-RERENDER TIMELINE SLIDER */}
-          <div className="w-full flex-shrink-0">
-            <TimelineSlider
-              duration={duration}
-              onSeek={seek}
-              showTimestamps={true}
-              accentColor={accentColor}
-            />
-          </div>
-
-          {/* LAYER 5: FIVE CORE PLAYBACK CONTROLS (0ms TACTILE RESPONSE) */}
-          <div
-            onPointerDown={(e) => e.stopPropagation()}
-            className="flex items-center justify-between w-full px-1 select-none flex-shrink-0"
-            dir="ltr"
-            style={{ touchAction: 'manipulation' }}
-          >
-            {/* Shuffle Button */}
-            <button
-              type="button"
-              data-testid="expanded-shuffle-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                toggleShuffle();
-              }}
-              className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
-                shuffle ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
-              }`}
-              title={isRTL ? 'تشغيل عشوائي' : 'Shuffle'}
-              aria-label="Shuffle"
-            >
-              <Shuffle className="w-4.5 h-4.5" />
-              {shuffle && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1DB954]" />}
-            </button>
-
-            {/* Previous Track */}
-            <button
-              type="button"
-              data-testid="expanded-prev-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                previousTrack();
-              }}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none apple-btn-tactile apple-prev-btn"
-              title={isRTL ? 'السابق' : 'Previous'}
-              aria-label="Previous track"
-            >
-              <SkipBack className="w-5.5 h-5.5 fill-white text-white" />
-            </button>
-
-            {/* Center Master Play/Pause Statement Button with Buffering State */}
-            <button
-              type="button"
-              data-testid="expanded-play-pause-btn"
-              onClick={() => {
-                triggerHaptic('medium');
-                togglePlayPause();
-              }}
-              className={`w-15 h-15 min-w-[60px] min-h-[60px] rounded-full bg-white text-black flex items-center justify-center shadow-xl apple-play-btn cursor-pointer select-none flex-shrink-0 overflow-hidden ${
-                playbackState === 'buffering' ? 'ring-4 ring-white/40 animate-pulse' : ''
-              }`}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={isPlaying ? 'pause' : playbackState === 'buffering' ? 'buffering' : 'play'}
-                  initial={{ opacity: 0, scale: 0.72 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.72 }}
-                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                  className="flex items-center justify-center"
+                {/* Shuffle */}
+                <button
+                  type="button"
+                  data-testid="expanded-shuffle-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    toggleShuffle();
+                  }}
+                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+                    shuffle
+                      ? 'bg-[#1DB954]/14 border-[#1DB954]/35 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.09] hover:border-white/[0.16]'
+                  }`}
+                  title={isRTL ? 'تشغيل عشوائي' : 'Shuffle'}
+                  aria-label="Shuffle"
                 >
-                  {playbackState === 'buffering' ? (
-                    <div className="w-6 h-6 rounded-full border-2 border-black/25 border-t-black animate-spin" />
-                  ) : isPlaying ? (
-                    <Pause className="w-6 h-6 fill-black text-black" />
-                  ) : (
-                    <Play className="w-6 h-6 fill-black text-black translate-x-0.5" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </button>
+                  <Shuffle className="w-4 h-4" />
+                  {shuffle && <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-[#1DB954]" />}
+                </button>
 
-            {/* Next Track */}
-            <button
-              type="button"
-              data-testid="expanded-next-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                nextTrack({ forceImmediate: true });
-              }}
-              className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white cursor-pointer select-none apple-btn-tactile apple-next-btn"
-              title={isRTL ? 'التالي' : 'Next'}
-              aria-label="Next track"
-            >
-              <SkipForward className="w-5.5 h-5.5 fill-white text-white" />
-            </button>
+                {/* Previous Track */}
+                <button
+                  type="button"
+                  data-testid="expanded-prev-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    previousTrack();
+                  }}
+                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer apple-prev-btn"
+                  title={isRTL ? 'السابق' : 'Previous'}
+                  aria-label="Previous track"
+                >
+                  <SkipBack className="w-5 h-5 fill-white text-white" />
+                </button>
 
-            {/* Repeat Button */}
-            <button
-              type="button"
-              data-testid="expanded-repeat-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                cycleRepeat();
-              }}
-              className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer select-none apple-btn-tactile ${
-                repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
-              }`}
-              title={isRTL ? 'تكرار' : 'Repeat'}
-              aria-label="Repeat"
-            >
-              {repeatMode === 'one' ? <Repeat1 className="w-4.5 h-4.5" /> : <Repeat className="w-4.5 h-4.5" />}
-              {repeatMode !== 'off' && <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#1DB954]" />}
-            </button>
-          </div>
+                {/* Master Play / Pause Porcelain Disc (0ms Instant Swap — Never Disappears!) */}
+                <button
+                  type="button"
+                  data-testid="expanded-play-pause-btn"
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    togglePlayPause();
+                  }}
+                  className={`w-[64px] h-[64px] rounded-full hi-fi-play-button text-black flex items-center justify-center apple-play-btn cursor-pointer select-none shrink-0 ${
+                    playbackState === 'buffering' && !isPlaying ? 'ring-4 ring-white/25' : ''
+                  }`}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {renderPlayPauseIcon('w-6 h-6', 'w-6 h-6')}
+                </button>
 
-          {/* LAYER 6: BOTTOM STUDIO DOCK (SPOTIFY-STYLE 3 TOOLS: LYRICS, EQ, UP NEXT QUEUE) */}
-          <div className="flex items-center justify-around w-full pt-1 sm:pt-2 border-t border-white/[0.06] flex-shrink-0 select-none">
-            {/* 1. Synced Lyrics Toggle */}
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setActiveCenterView((prev) => (prev === 'lyrics' ? 'artwork' : 'lyrics'));
-              }}
-              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer transition-colors ${
-                activeCenterView === 'lyrics'
-                  ? 'text-[#1DB954]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-              title={isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'}
-            >
-              <Mic2 className="w-4.5 h-4.5" />
-              <span className="text-[10px] font-medium">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
-            </button>
+                {/* Next Track */}
+                <button
+                  type="button"
+                  data-testid="expanded-next-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    nextTrack({ forceImmediate: true });
+                  }}
+                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer apple-next-btn"
+                  title={isRTL ? 'التالي' : 'Next'}
+                  aria-label="Next track"
+                >
+                  <SkipForward className="w-5 h-5 fill-white text-white" />
+                </button>
 
-            {/* 2. EQ & Studio Effects */}
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic('light');
-                setEqualizerOpen(true);
-              }}
-              className="flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer transition-colors"
-              title={isRTL ? 'المعادل والمؤثرات' : 'EQ & Effects'}
-            >
-              <Sliders className="w-4.5 h-4.5" />
-              <span className="text-[10px] font-medium">{isRTL ? 'المعادل' : 'EQ'}</span>
-            </button>
+                {/* Repeat */}
+                <button
+                  type="button"
+                  data-testid="expanded-repeat-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    cycleRepeat();
+                  }}
+                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+                    repeatMode !== 'off'
+                      ? 'bg-[#1DB954]/14 border-[#1DB954]/35 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                      : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.09] hover:border-white/[0.16]'
+                  }`}
+                  title={isRTL ? 'تكرار' : 'Repeat'}
+                  aria-label="Repeat"
+                >
+                  {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
+                  {repeatMode !== 'off' && <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-[#1DB954]" />}
+                </button>
+              </div>
+            </div>
 
-            {/* 3. Up Next Queue Toggle */}
-            <button
-              type="button"
-              data-testid="expanded-queue-btn"
-              onClick={() => {
-                triggerHaptic('light');
-                setActiveCenterView((prev) => (prev === 'queue' ? 'artwork' : 'queue'));
-              }}
-              className={`flex flex-col items-center justify-center min-w-[48px] min-h-[40px] gap-0.5 p-1 rounded-xl apple-btn-tactile cursor-pointer relative transition-colors ${
-                activeCenterView === 'queue'
-                  ? 'text-[#1DB954]'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-              title={isRTL ? 'قائمة الانتظار' : 'Queue'}
-            >
-              <div className="relative">
-                <ListMusic className="w-4.5 h-4.5" />
-                {userQueue.length > 0 && (
-                  <span className="absolute -top-1 -right-2 px-1 min-w-[15px] h-3.5 rounded-full bg-[#1DB954] text-black text-[8.5px] font-mono font-bold flex items-center justify-center border border-black shadow">
-                    {userQueue.length}
+            {/* Column 2: Interactive Studio Glass Context Panel (Lyrics & Up Next Queue) */}
+            <div className="col-span-7 h-full max-h-[min(76vh,640px)] min-h-0 flex flex-col studio-glass-surface rounded-[28px] overflow-hidden">
+              {/* Pane Header with Machined Segmented Switcher */}
+              <div className="px-5 py-3.5 border-b border-white/[0.08] bg-black/25 flex items-center justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-1 p-1 rounded-full bg-black/45 border border-white/[0.09]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDesktopContextTab('lyrics');
+                    }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-[background-color,border-color,color] cursor-pointer border ${
+                      desktopContextTab === 'lyrics'
+                        ? 'bg-white/[0.13] border-white/[0.16] text-white shadow-sm'
+                        : 'border-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Mic2 className={`w-3.5 h-3.5 ${desktopContextTab === 'lyrics' ? 'text-[#1DB954]' : ''}`} />
+                    <span>{isRTL ? 'كلمات الأغنية' : 'Lyrics'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    data-testid="expanded-queue-btn"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDesktopContextTab('queue');
+                    }}
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-[background-color,border-color,color] cursor-pointer border ${
+                      desktopContextTab === 'queue'
+                        ? 'bg-white/[0.13] border-white/[0.16] text-white shadow-sm'
+                        : 'border-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <ListMusic className={`w-3.5 h-3.5 ${desktopContextTab === 'queue' ? 'text-[#1DB954]' : ''}`} />
+                    <span>{isRTL ? 'قائمة الانتظار' : 'Up Next'}</span>
+                    {userQueue.length > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-[#1DB954] text-black text-[10px] font-mono font-extrabold">
+                        {userQueue.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Audio Quality / Offline Status Badge */}
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.045] border border-white/[0.08] text-[11px] font-medium text-zinc-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
+                  <span>
+                    {isDownloaded
+                      ? (isRTL ? 'محفوظة للاستماع أوفلاين' : 'Saved Offline')
+                      : (isRTL ? 'بث صوتي عالي الدقة' : 'Hi-Fi Audio Stream')}
                   </span>
+                </div>
+              </div>
+
+              {/* Pane Content */}
+              <div className="flex-1 min-h-0 overflow-hidden p-2 lg:p-3">
+                {desktopContextTab === 'lyrics' ? (
+                  <EmbeddedLyricsView
+                    track={currentTrack}
+                    onSeek={seek}
+                    desktopMode
+                    onSwitchToQueue={() => setDesktopContextTab('queue')}
+                    onOpenEqualizer={() => setEqualizerOpen(true)}
+                    onOpenAlbum={
+                      currentTrack.album
+                        ? () => {
+                            handleClose();
+                            openAlbum(currentTrack.album!, currentTrack.artist);
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <EmbeddedQueueView
+                    currentTrack={currentTrack}
+                    isPlaying={isPlaying}
+                    userQueue={userQueue}
+                    queue={queue}
+                    playTrack={playTrack}
+                    reorderUserQueue={reorderUserQueue}
+                    removeFromUserQueue={removeFromUserQueue}
+                    clearUserQueue={clearUserQueue}
+                  />
                 )}
               </div>
-              <span className="text-[10px] font-medium">{isRTL ? 'القائمة' : 'Queue'}</span>
-            </button>
+            </div>
           </div>
         </div>
-
-        {/* SPOTIFY-STYLE LYRICS PREVIEW CARD (Visible when viewing artwork, revealed on scroll down) */}
-        {activeCenterView === 'artwork' && (
-          <div className="pt-4 pb-8 w-full flex-shrink-0">
-            <LyricsPreviewCard
-              track={currentTrack}
-              cardTint={theme.cardTint}
-              onExpand={() => setActiveCenterView('lyrics')}
+      ) : (
+        /* ===================================================================== */
+        /* MOBILE NATIVE SHEET LAYOUT (< 768px)                                  */
+        /* ===================================================================== */
+        <div className="w-full h-full flex flex-col justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+6px)] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] overflow-hidden">
+          {/* Top Drag Handle & Header */}
+          <div className="w-full flex flex-col items-center shrink-0">
+            <div
+              onClick={handleClose}
+              className="w-9 h-1 rounded-full bg-white/30 hover:bg-white/45 mx-auto mb-1.5 cursor-pointer transition-colors"
             />
+
+            <div className="w-full flex items-center justify-between">
+              <button
+                type="button"
+                data-testid="minimize-player-btn"
+                onClick={handleClose}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full satin-metal-button text-white/95 flex items-center justify-center cursor-pointer"
+                aria-label="Collapse player"
+              >
+                <ChevronDown className="w-5 h-5" strokeWidth={2} />
+              </button>
+
+              <div className="text-center min-w-0 px-2 flex-1 flex flex-col items-center">
+                {sleepTimerRemaining !== null ? (
+                  <button
+                    type="button"
+                    onClick={() => setSleepTimerOpen(true)}
+                    className="px-3 py-1 rounded-full satin-metal-button text-white flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-[#1DB954] animate-pulse" />
+                    <span className="text-[11px] font-mono font-bold text-white/95 tabular-nums">
+                      {formatRemaining(sleepTimerRemaining)}
+                    </span>
+                  </button>
+                ) : (
+                  <>
+                    <span className="text-[9.5px] tracking-wider text-zinc-400 uppercase font-semibold block font-mono">
+                      {activeCenterView === 'lyrics'
+                        ? isRTL ? 'الكلمات المتزامنة' : 'Synced Lyrics'
+                        : activeCenterView === 'queue'
+                        ? isRTL ? 'قائمة الانتظار' : 'Up Next'
+                        : userQueue.length > 0
+                        ? isRTL ? 'يتم التشغيل من قائمة الانتظار' : 'Playing from Queue'
+                        : isRTL ? 'يتم التشغيل من المكتبة' : 'Playing from Library'}
+                    </span>
+                    <h5
+                      dir="auto"
+                      onClick={() => {
+                        if (currentTrack.album) {
+                          handleClose();
+                          openAlbum(currentTrack.album, currentTrack.artist);
+                        }
+                      }}
+                      className={`text-[12px] text-white/85 font-semibold truncate max-w-[210px] mx-auto text-center block ${
+                        currentTrack.album ? 'hover:text-white hover:underline cursor-pointer' : ''
+                      }`}
+                    >
+                      {currentTrack.album || currentTrack.title}
+                    </h5>
+                  </>
+                )}
+              </div>
+
+              <button
+                type="button"
+                data-testid="more-options-btn"
+                onClick={() => {
+                  triggerHaptic('light');
+                  setActionSheetOpen(true);
+                }}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full satin-metal-button text-white/95 flex items-center justify-center cursor-pointer"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="w-4.5 h-4.5" strokeWidth={2} />
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Mobile Scrollable Body */}
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex-1 w-full min-h-0 overflow-y-auto no-scrollbar flex flex-col justify-between"
+          >
+            {/* Mobile Center Stage */}
+            <div className="flex-1 min-h-[250px] flex items-center justify-center py-2 overflow-hidden">
+              {activeCenterView === 'artwork' ? (
+                <motion.div
+                  layoutId="aura-player-artwork"
+                  data-testid="expanded-artwork-container"
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.45}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -65 || info.velocity.x < -250) {
+                      triggerHaptic('light');
+                      nextTrack({ forceImmediate: true });
+                    } else if (info.offset.x > 65 || info.velocity.x > 250) {
+                      triggerHaptic('light');
+                      previousTrack();
+                    }
+                  }}
+                  animate={{ scale: isPlaying ? 1 : 0.88 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
+                  style={{
+                    boxShadow: isPlaying
+                      ? '0 22px 54px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.22)'
+                      : '0 10px 24px rgba(0, 0, 0, 0.45)',
+                    touchAction: 'pan-y',
+                  }}
+                  className="relative w-[min(70vw,31vh,280px)] h-[min(70vw,31vh,280px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
+                >
+                  <motion.img
+                    key={currentTrack.id}
+                    src={artworkSrc}
+                    alt={currentTrack.title}
+                    initial={{ opacity: 0.35, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    draggable={false}
+                    onError={(e) => {
+                      const img = e.currentTarget as HTMLImageElement;
+                      getOfflineArtworkUrl(currentTrack.id).then((blobUrl) => {
+                        if (blobUrl && img.src !== blobUrl) {
+                          img.src = blobUrl;
+                        } else {
+                          img.src = '/logo.svg';
+                        }
+                      }).catch(() => {
+                        img.src = '/logo.svg';
+                      });
+                    }}
+                  />
+                  <div className="absolute inset-0 vinyl-sheen pointer-events-none z-10" />
+                </motion.div>
+              ) : activeCenterView === 'lyrics' ? (
+                <EmbeddedLyricsView track={currentTrack} onSeek={seek} />
+              ) : (
+                <EmbeddedQueueView
+                  currentTrack={currentTrack}
+                  isPlaying={isPlaying}
+                  userQueue={userQueue}
+                  queue={queue}
+                  playTrack={playTrack}
+                  reorderUserQueue={reorderUserQueue}
+                  removeFromUserQueue={removeFromUserQueue}
+                  clearUserQueue={clearUserQueue}
+                />
+              )}
+            </div>
+
+            {/* Mobile Lower Controls Cluster */}
+            <div className="w-full max-w-md mx-auto shrink-0 space-y-2">
+              <div className="w-full flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0 text-start overflow-hidden">
+                  <h2
+                    dir="auto"
+                    className="text-[17px] font-bold text-white truncate tracking-tight leading-snug block"
+                  >
+                    {currentTrack.title}
+                  </h2>
+                  <p
+                    dir="auto"
+                    onClick={() => {
+                      if (currentTrack.artist) {
+                        handleClose();
+                        openArtist(currentTrack.artist);
+                      }
+                    }}
+                    className="text-[13px] text-white/65 hover:text-white hover:underline truncate mt-0.5 font-medium leading-snug block cursor-pointer transition-colors"
+                  >
+                    {currentTrack.artist}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    data-testid="expanded-download-btn"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      downloadTrackForOffline(currentTrack.id);
+                    }}
+                    disabled={isDownloaded}
+                    className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full satin-metal-button cursor-pointer shrink-0 ${
+                      isDownloaded ? 'text-[#1DB954]' : 'text-zinc-300'
+                    }`}
+                    aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
+                  >
+                    {isDownloaded ? (
+                      <CheckCircle2 className="w-4.5 h-4.5 text-[#1DB954]" />
+                    ) : (
+                      <ArrowDownToLine className="w-4.5 h-4.5" />
+                    )}
+                  </button>
+
+                  <SmartSaveButton track={currentTrack} size="md" className="hover:bg-white/[0.08]" />
+                </div>
+              </div>
+
+              <TimelineSlider
+                duration={duration}
+                onSeek={seek}
+                showTimestamps={true}
+                accentColor={accentColor}
+              />
+
+              {/* Mobile 5 Core Playback Controls */}
+              <div
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center justify-between w-full px-1 select-none shrink-0"
+                dir="ltr"
+                style={{ touchAction: 'manipulation' }}
+              >
+                <button
+                  type="button"
+                  data-testid="expanded-shuffle-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    toggleShuffle();
+                  }}
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-[background-color,border-color,color,transform] active:scale-90 ${
+                    shuffle
+                      ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954]'
+                      : 'border-transparent text-zinc-400 hover:text-white'
+                  }`}
+                  aria-label="Shuffle"
+                >
+                  <Shuffle className="w-4.5 h-4.5" />
+                  {shuffle && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#1DB954]" />}
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="expanded-prev-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    previousTrack();
+                  }}
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer apple-prev-btn transition-[background-color,transform] active:scale-90"
+                  aria-label="Previous track"
+                >
+                  <SkipBack className="w-5.5 h-5.5 fill-white text-white" />
+                </button>
+
+                {/* Mobile Master Play / Pause Porcelain Disc (0ms Instant Swap — Never Disappears!) */}
+                <button
+                  type="button"
+                  data-testid="expanded-play-pause-btn"
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    togglePlayPause();
+                  }}
+                  className={`w-[62px] h-[62px] min-w-[62px] min-h-[62px] rounded-full hi-fi-play-button text-black flex items-center justify-center apple-play-btn cursor-pointer select-none shrink-0 ${
+                    playbackState === 'buffering' && !isPlaying ? 'ring-4 ring-white/25' : ''
+                  }`}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {renderPlayPauseIcon('w-6 h-6', 'w-6 h-6')}
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="expanded-next-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    nextTrack({ forceImmediate: true });
+                  }}
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer apple-next-btn transition-[background-color,transform] active:scale-90"
+                  aria-label="Next track"
+                >
+                  <SkipForward className="w-5.5 h-5.5 fill-white text-white" />
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="expanded-repeat-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    cycleRepeat();
+                  }}
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-[background-color,border-color,color,transform] active:scale-90 ${
+                    repeatMode !== 'off'
+                      ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954]'
+                      : 'border-transparent text-zinc-400 hover:text-white'
+                  }`}
+                  aria-label="Repeat"
+                >
+                  {repeatMode === 'one' ? <Repeat1 className="w-4.5 h-4.5" /> : <Repeat className="w-4.5 h-4.5" />}
+                  {repeatMode !== 'off' && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#1DB954]" />}
+                </button>
+              </div>
+
+              {/* Mobile Machined Smoked Glass Studio Dock */}
+              <div className="flex items-center justify-around w-full p-1 rounded-2xl bg-black/35 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shrink-0 select-none">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setActiveCenterView((prev) => (prev === 'lyrics' ? 'artwork' : 'lyrics'));
+                  }}
+                  className={`flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer transition-colors ${
+                    activeCenterView === 'lyrics'
+                      ? 'bg-[#1DB954]/15 text-[#1DB954]'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Mic2 className="w-4.5 h-4.5" />
+                  <span className="text-[10px] font-semibold">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setEqualizerOpen(true);
+                  }}
+                  className="flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl text-zinc-400 hover:text-white cursor-pointer transition-colors"
+                >
+                  <Sliders className="w-4.5 h-4.5" />
+                  <span className="text-[10px] font-semibold">{isRTL ? 'المعادل' : 'EQ'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-testid="expanded-queue-btn"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setActiveCenterView((prev) => (prev === 'queue' ? 'artwork' : 'queue'));
+                  }}
+                  className={`flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer relative transition-colors ${
+                    activeCenterView === 'queue'
+                      ? 'bg-[#1DB954]/15 text-[#1DB954]'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <div className="relative">
+                    <ListMusic className="w-4.5 h-4.5" />
+                    {userQueue.length > 0 && (
+                      <span className="absolute -top-1 -right-2 px-1 min-w-[15px] h-3.5 rounded-full bg-[#1DB954] text-black text-[8.5px] font-mono font-bold flex items-center justify-center border border-black shadow">
+                        {userQueue.length}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-semibold">{isRTL ? 'القائمة' : 'Queue'}</span>
+                </button>
+              </div>
+            </div>
+
+            {activeCenterView === 'artwork' && (
+              <div className="pt-4 pb-8 w-full shrink-0">
+                <LyricsPreviewCard
+                  track={currentTrack}
+                  cardTint={theme.cardTint}
+                  onExpand={() => setActiveCenterView('lyrics')}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Track Action Sheet */}
       <TrackActionSheet

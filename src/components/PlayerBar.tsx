@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import {
@@ -125,13 +124,16 @@ export const PlayerBar: React.FC = () => {
       {/* ── 2. Playback Controls & Scrubber (Center Column - 40%) ── */}
       <div className="flex flex-col items-center justify-center w-full max-w-lg mx-auto px-2 gap-1.5 min-w-0">
         {/* Buttons Row */}
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-3">
           {/* Shuffle */}
           <button
+            type="button"
             onClick={toggleShuffle}
             title={t.shuffle}
-            className={`p-1.5 cursor-pointer apple-btn-tactile ${
-              shuffle ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+            className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+              shuffle
+                ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.1]'
             }`}
           >
             <Shuffle className="w-4 h-4" />
@@ -139,54 +141,51 @@ export const PlayerBar: React.FC = () => {
 
           {/* Previous Track */}
           <button
+            type="button"
             onClick={previousTrack}
             title={t.previous}
-            className="p-1.5 text-zinc-300 hover:text-white cursor-pointer apple-btn-tactile apple-prev-btn"
+            className="w-8.5 h-8.5 rounded-full flex items-center justify-center text-zinc-200 hover:text-white hover:bg-white/[0.08] border border-transparent hover:border-white/[0.1] cursor-pointer apple-prev-btn transition-[background-color,border-color,color,transform] active:scale-90"
           >
             <SkipBack className="w-4.5 h-4.5 fill-current" />
           </button>
 
-          {/* Clean White Circular Play/Pause Button with Apple Spring Morph */}
+          {/* Clean Porcelain Circular Play/Pause Button (Instant 0ms swap, zero disappear glitch) */}
           <button
+            type="button"
+            data-testid="playerbar-play-pause-btn"
             onClick={togglePlayPause}
             title={isPlaying ? t.pause : t.play}
-            className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-md apple-play-btn cursor-pointer shrink-0 overflow-hidden"
+            aria-label={isPlaying ? t.pause : t.play}
+            className="w-10 h-10 rounded-full hi-fi-play-button text-black flex items-center justify-center apple-play-btn cursor-pointer shrink-0 overflow-hidden"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={isPlaying ? 'pause' : 'play'}
-                initial={{ opacity: 0, scale: 0.75, rotate: isPlaying ? -15 : 15 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.75, rotate: isPlaying ? 15 : -15 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-                className="flex items-center justify-center"
-              >
-                {isPlaying ? (
-                  <Pause className="w-4 h-4 fill-black text-black" />
-                ) : playbackState === 'buffering' ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-black" />
-                ) : (
-                  <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
-                )}
-              </motion.div>
-            </AnimatePresence>
+            {isPlaying ? (
+              <Pause className="w-4 h-4 fill-black text-black" />
+            ) : playbackState === 'buffering' ? (
+              <Loader2 className="w-4 h-4 animate-spin text-black" />
+            ) : (
+              <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+            )}
           </button>
 
           {/* Next Track */}
           <button
+            type="button"
             onClick={() => nextTrack({ forceImmediate: true })}
             title={t.next}
-            className="p-1.5 text-zinc-300 hover:text-white cursor-pointer apple-btn-tactile apple-next-btn"
+            className="w-8.5 h-8.5 rounded-full flex items-center justify-center text-zinc-200 hover:text-white hover:bg-white/[0.08] border border-transparent hover:border-white/[0.1] cursor-pointer apple-next-btn transition-[background-color,border-color,color,transform] active:scale-90"
           >
             <SkipForward className="w-4.5 h-4.5 fill-current" />
           </button>
 
           {/* Repeat */}
           <button
+            type="button"
             onClick={cycleRepeat}
             title={repeatMode === 'one' ? t.repeatOne : t.repeatAll}
-            className={`p-1.5 cursor-pointer apple-btn-tactile ${
-              repeatMode !== 'off' ? 'text-[#1DB954]' : 'text-zinc-400 hover:text-white'
+            className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+              repeatMode !== 'off'
+                ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.08] hover:border-white/[0.1]'
             }`}
           >
             {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
@@ -208,16 +207,17 @@ export const PlayerBar: React.FC = () => {
       </div>
 
       {/* ── 3. Four Clean Tools & Volume (Left Column in RTL - 30%) ── */}
-      <div className="flex items-center justify-end gap-2.5 w-full shrink-0 pl-1">
+      <div className="flex items-center justify-end gap-2 w-full shrink-0 pl-1">
         {/* Tool 1: Synced Lyrics */}
         <button
+          type="button"
           data-testid="lyrics-toggle-btn"
           onClick={() => setLyricsOpen(!isLyricsOpen)}
           title={t.syncedLyrics}
-          className={`px-2 py-1 rounded-lg cursor-pointer text-[11px] font-bold transition-colors border ${
+          className={`px-2.5 py-1 rounded-full cursor-pointer text-[11px] font-bold transition-[background-color,border-color,color,transform] active:scale-95 border ${
             isLyricsOpen
-              ? 'bg-white/[0.12] text-white border-white/20'
-              : 'text-zinc-400 hover:text-white border-transparent hover:bg-white/[0.04]'
+              ? 'bg-[#1DB954]/15 text-[#1DB954] border-[#1DB954]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+              : 'bg-white/[0.04] text-zinc-400 hover:text-white border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.09]'
           }`}
         >
           <span>LRC</span>
@@ -225,12 +225,13 @@ export const PlayerBar: React.FC = () => {
 
         {/* Tool 2: Queue Drawer / Sidebar */}
         <button
+          type="button"
           onClick={toggleRightSidebar}
           title={t.queue}
-          className={`p-2 rounded-lg transition-colors cursor-pointer relative ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,border-color,color,transform] active:scale-95 cursor-pointer relative border ${
             isRightSidebarOpen
-              ? 'text-[#1DB954] bg-white/[0.06]'
-              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+              ? 'text-[#1DB954] bg-[#1DB954]/14 border-[#1DB954]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+              : 'bg-white/[0.04] text-zinc-400 hover:text-white border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.09]'
           }`}
         >
           <ListMusic className="w-4 h-4" />
@@ -243,12 +244,13 @@ export const PlayerBar: React.FC = () => {
 
         {/* Tool 3: Equalizer Shortcut (EQ) */}
         <button
+          type="button"
           onClick={() => setEqualizerOpen(true)}
           title={t.equalizer}
-          className={`p-2 rounded-lg transition-colors cursor-pointer ${
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-[background-color,border-color,color,transform] active:scale-95 cursor-pointer border ${
             isEqualizerOpen
-              ? 'text-[#1DB954] bg-white/[0.06]'
-              : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+              ? 'text-[#1DB954] bg-[#1DB954]/14 border-[#1DB954]/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+              : 'bg-white/[0.04] text-zinc-400 hover:text-white border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.09]'
           }`}
         >
           <Sliders className="w-4 h-4" />

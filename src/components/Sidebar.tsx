@@ -127,10 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
         </div>
 
         {/* Filter Pills */}
-        <div className="px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 scroll-smooth">
+        <div className="px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0 scroll-smooth">
           <button
             onClick={() => setFilter('all')}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'all'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('playlists')}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'playlists'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -150,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('artists')}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'artists'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
@@ -160,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
           </button>
           <button
             onClick={() => setFilter('albums')}
-            className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
               filter === 'albums'
                 ? 'bg-white text-black'
                 : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
