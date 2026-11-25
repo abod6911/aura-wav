@@ -33,6 +33,22 @@ interface StoredVaultUser {
 const VAULT_USERS_KEY = 'aura_auth_users_vault_v1';
 const VAULT_SESSION_KEY = 'aura_auth_active_session_v1';
 const SAVED_ACCOUNTS_KEY = 'aura_saved_accounts_v2';
+const USER_PROFILE_SNAPSHOT_PREFIX = 'aura_user_snapshot_v1_';
+
+export interface UserAccountDataSnapshot {
+  favorites?: string[];
+  eqGains?: [number, number, number, number, number];
+  activeEqPreset?: string;
+  bassBoost?: number;
+  automixEnabled?: boolean;
+  automixDuration?: number;
+  shuffle?: boolean;
+  repeatMode?: string;
+  language?: 'ar' | 'en';
+  lastTrackId?: string;
+  lastTrackPosition?: number;
+  updatedAt: string;
+}
 
 const supabaseClient = sharedSupabaseClient;
 
@@ -60,6 +76,7 @@ class AuthService {
   private static instance: AuthService;
   private currentUser: AuthUser | null = null;
   private listeners: Set<(user: AuthUser | null) => void> = new Set();
+  private savedAccountListeners: Set<(accounts: SavedAccount[]) => void> = new Set();
   private initialized = false;
 
   private constructor() {
@@ -155,16 +172,22 @@ class AuthService {
       }
     } catch {}
 
-    // Synchronize saved device accounts
+    // Synchronize saved device accounts between LocalStorage and IndexedDB
     try {
       const savedAccounts = this.getSavedAccounts();
-      if (savedAccounts.length === 0) {
-        const idbSaved = await dexieDB.settings.get(SAVED_ACCOUNTS_KEY);
-        if (idbSaved && idbSaved.value && Array.isArray(idbSaved.value)) {
-          localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(idbSaved.value));
-        }
+      const idbSaved = await dexieDB.settings.get(SAVED_ACCOUNTS_KEY);
+      if (savedAccounts.length === 0 && idbSaved?.value && Array.isArray(idbSaved.value)) {
+        localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(idbSaved.value));
+        this.notifySavedAccountListeners();
+      } else if (savedAccounts.length > 0) {
+        dexieDB.settings.put({ key: SAVED_ACCOUNTS_KEY, value: savedAccounts }).catch(() => {});
       }
     } catch {}
+
+    // Ensure current user is also persisted in saved accounts list
+    if (this.currentUser) {
+      this.saveAccountToHistory(this.currentUser);
+    }
 
     return this.currentUser;
   }
@@ -195,6 +218,14 @@ class AuthService {
 
         if (!error && data.user) {
           const user = this.mapSupabaseUser(data.user);
+          await this.upsertVaultCredential({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            password,
+            avatarUrl: user.avatarUrl,
+            createdAt: user.createdAt,
+          });
           this.setCurrentUser(user);
           userSyncService.triggerFullSync(user.id).catch(() => {});
           return { user, error: null };
@@ -298,6 +329,19 @@ class AuthService {
 
         if (!error && data.user) {
           const user = this.mapSupabaseUser(data.user, cleanName);
+          await this.upsertVaultCredential({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            password,
+            avatarUrl: user.avatarUrl,
+            createdAt: user.createdAt,
+          });
+          if (!data.session) {
+            // Email confirmation may be required on Supabase; still persist account locally so user isn't blocked
+            this.setCurrentUser(user);
+            return { user, error: null };
+          }
           this.setCurrentUser(user);
           userSyncService.triggerFullSync(user.id).catch(() => {});
           return { user, error: null };
@@ -409,6 +453,7 @@ class AuthService {
       ].slice(0, 10);
       localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(updated));
       dexieDB.settings.put({ key: SAVED_ACCOUNTS_KEY, value: updated }).catch(() => {});
+      this.notifySavedAccountListeners();
     } catch {}
   }
 
@@ -418,6 +463,121 @@ class AuthService {
       const updated = this.getSavedAccounts().filter((a) => a.id !== accountId);
       localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(updated));
       dexieDB.settings.put({ key: SAVED_ACCOUNTS_KEY, value: updated }).catch(() => {});
+      this.notifySavedAccountListeners();
+    } catch {}
+  }
+
+  public onSavedAccountsChange(callback: (accounts: SavedAccount[]) => void): () => void {
+    this.savedAccountListeners.add(callback);
+    callback(this.getSavedAccounts());
+    return () => {
+      this.savedAccountListeners.delete(callback);
+    };
+  }
+
+  private notifySavedAccountListeners(): void {
+    const accounts = this.getSavedAccounts();
+    for (const listener of this.savedAccountListeners) {
+      try {
+        listener(accounts);
+      } catch {}
+    }
+  }
+
+  /**
+   * Update active user's profile info (e.g. display name) and persist across all stores + Supabase
+   */
+  public async updateProfile(updates: { name?: string; avatarUrl?: string }): Promise<AuthUser | null> {
+    const cur = this.getCurrentUser();
+    if (!cur) return null;
+
+    const cleanName = updates.name?.trim() || cur.name;
+    const updatedUser: AuthUser = {
+      ...cur,
+      name: cleanName,
+      avatarUrl: updates.avatarUrl !== undefined ? updates.avatarUrl : cur.avatarUrl,
+    };
+
+    if (supabaseClient && isSupabaseConfigured() && !cur.isGuest) {
+      try {
+        await supabaseClient.auth.updateUser({
+          data: { name: cleanName, full_name: cleanName, avatar_url: updatedUser.avatarUrl },
+        });
+      } catch {}
+    }
+
+    // Update local vault user record
+    const users = this.getVaultUsers();
+    const idx = users.findIndex((u) => u.id === cur.id || u.email.toLowerCase() === cur.email.toLowerCase());
+    if (idx !== -1) {
+      users[idx] = { ...users[idx], name: cleanName, avatarUrl: updatedUser.avatarUrl };
+      this.saveVaultUsers(users);
+    }
+
+    this.setCurrentUser(updatedUser);
+    return updatedUser;
+  }
+
+  /**
+   * Persist per-user preferences & playback snapshot so switching accounts restores each user's personal state
+   */
+  public saveUserSnapshot(userId: string, snapshot: Omit<UserAccountDataSnapshot, 'updatedAt'>): void {
+    if (typeof window === 'undefined' || !userId) return;
+    const key = `${USER_PROFILE_SNAPSHOT_PREFIX}${userId}`;
+    const payload: UserAccountDataSnapshot = {
+      ...snapshot,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem(key, JSON.stringify(payload));
+    } catch {}
+    try {
+      dexieDB.settings.put({ key, value: payload }).catch(() => {});
+    } catch {}
+  }
+
+  public async loadUserSnapshot(userId: string): Promise<UserAccountDataSnapshot | null> {
+    if (typeof window === 'undefined' || !userId) return null;
+    const key = `${USER_PROFILE_SNAPSHOT_PREFIX}${userId}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) return JSON.parse(raw) as UserAccountDataSnapshot;
+    } catch {}
+    try {
+      const idb = await dexieDB.settings.get(key);
+      if (idb?.value) return idb.value as UserAccountDataSnapshot;
+    } catch {}
+    return null;
+  }
+
+  private async upsertVaultCredential(params: {
+    id: string;
+    email: string;
+    name: string;
+    password: string;
+    avatarUrl?: string;
+    createdAt: string;
+  }): Promise<void> {
+    try {
+      const pwdHash = await hashPassword(params.password);
+      const users = this.getVaultUsers();
+      const idx = users.findIndex(
+        (u) => u.id === params.id || u.email.toLowerCase() === params.email.toLowerCase()
+      );
+      const record: StoredVaultUser = {
+        id: params.id,
+        email: params.email.toLowerCase(),
+        name: params.name,
+        passwordHash: pwdHash,
+        avatarUrl: params.avatarUrl,
+        createdAt: params.createdAt,
+      };
+      if (idx !== -1) {
+        users[idx] = record;
+      } else {
+        users.push(record);
+      }
+      this.saveVaultUsers(users);
     } catch {}
   }
 

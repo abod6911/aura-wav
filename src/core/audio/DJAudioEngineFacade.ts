@@ -253,6 +253,19 @@ export class DJAudioEngineFacade {
     });
   }
 
+  public beginTrackSwitch(): void {
+    this.isSwitchingTrack = true;
+    // Bridge background audio session on iOS while next track URL is resolved asynchronously
+    this.startIosKeepAlive();
+  }
+
+  public endTrackSwitch(): void {
+    this.isSwitchingTrack = false;
+    if (isDirectNativeAudioMode()) {
+      this.pauseIosKeepAlive();
+    }
+  }
+
   /**
    * User Gesture Audio Priming: Unlocks both deck channels in iOS WebKit
    */
@@ -265,9 +278,28 @@ export class DJAudioEngineFacade {
       }
 
       this.ensureChannelsAttached();
+      this.initIosKeepAliveBridge();
+
+      // Unlock keep-alive audio element on first user gesture so it can bridge background track switches
+      if (!this.isUnlocked && this.keepAliveAudio) {
+        try {
+          this.keepAliveAudio.volume = 0.001;
+          const p = this.keepAliveAudio.play();
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              if (isDirectNativeAudioMode()) {
+                this.keepAliveAudio?.pause();
+              }
+            }).catch(() => {});
+          }
+        } catch {}
+      }
 
       if (isDirectNativeAudioMode()) {
-        this.pauseIosKeepAlive();
+        if (!this.isSwitchingTrack) {
+          this.pauseIosKeepAlive();
+        }
+        this.isUnlocked = true;
         return;
       }
 
@@ -310,6 +342,9 @@ export class DJAudioEngineFacade {
 
   public async playTrack(track: Track): Promise<boolean> {
     this.isSwitchingTrack = true;
+    if (isDirectNativeAudioMode()) {
+      this.startIosKeepAlive();
+    }
     await this.initContext();
     this.primeDecks();
 
@@ -318,15 +353,15 @@ export class DJAudioEngineFacade {
     this.autoMixTriggered = false;
     this.preloadTriggered = false;
 
-      if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing';
-      }
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing';
+    }
 
     const active = this.getActiveDeck();
     const inactive = this.getInactiveDeck();
 
-    // Check if track is already preloaded and ready in inactive deck
-    if (inactive.track?.id === track.id && inactive.audio.src) {
+    // Check if track is already preloaded and ready in inactive deck (Desktop / DSP mode only)
+    if (!isDirectNativeAudioMode() && inactive.track?.id === track.id && inactive.audio.src) {
       active.stop();
       active.setVolume(0);
 
@@ -342,14 +377,20 @@ export class DJAudioEngineFacade {
         this.purgeUnusedObjectUrls();
         this.isSwitchingTrack = false;
         return true;
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.name === 'AbortError') {
+          this.isSwitchingTrack = false;
+          return true;
+        }
         console.warn('[DJAudioEngine] Hot-swap play error, falling back:', err);
       }
     }
 
-    // Direct playback path on current active deck
-    inactive.stop();
-    inactive.setVolume(0);
+    // Direct playback path on current active deck (keep active channel continuous on iOS)
+    if (!isDirectNativeAudioMode()) {
+      inactive.stop();
+      inactive.setVolume(0);
+    }
 
     const targetGain = this.normalizer.computeLinearGain(track);
     active.setPreampGain(targetGain);
@@ -362,10 +403,20 @@ export class DJAudioEngineFacade {
       await active.play();
       this.notifyPlaybackState(true);
       this.timerWorker.start(20);
+      if (isDirectNativeAudioMode()) {
+        this.pauseIosKeepAlive();
+      }
       this.isSwitchingTrack = false;
       return true;
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        this.isSwitchingTrack = false;
+        return true;
+      }
       console.warn('[DJAudioEngine] Playback error:', err);
+      if (isDirectNativeAudioMode()) {
+        this.pauseIosKeepAlive();
+      }
       this.notifyPlaybackState(false);
       this.isSwitchingTrack = false;
       return false;
@@ -949,6 +1000,7 @@ export class DJAudioEngineFacade {
     channel.audio.addEventListener('ended', () => {
       clearStallTimer();
       if (this.activeChannelName === channel.name && !this.isAutoMixing) {
+        this.beginTrackSwitch();
         if (this.callbacks.onTrackEnded) {
           this.callbacks.onTrackEnded();
         }
@@ -1010,6 +1062,30 @@ export class DJAudioEngineFacade {
       }
     });
 
+    // Native timeupdate & loadedmetadata ensure background progress, MediaSession position,
+    // and next-track preloading keep firing even when JS timers are throttled by the OS.
+    channel.audio.addEventListener('timeupdate', () => {
+      if (this.activeChannelName !== channel.name) return;
+      const cur = channel.getCurrentTime();
+      const dur = channel.getDuration();
+      if (!isFinite(cur) || !isFinite(dur) || dur <= 0) return;
+
+      const now = performance.now();
+      if (now - this.lastTimeUpdate >= 250) {
+        this.lastTimeUpdate = now;
+        this.callbacks.onTimeUpdate?.(cur, dur);
+      }
+    });
+
+    channel.audio.addEventListener('loadedmetadata', () => {
+      if (this.activeChannelName !== channel.name) return;
+      const cur = channel.getCurrentTime();
+      const dur = channel.getDuration();
+      if (isFinite(dur) && dur > 0) {
+        this.callbacks.onTimeUpdate?.(cur, dur);
+      }
+    });
+
     channel.audio.addEventListener('error', (e) => {
       clearStallTimer();
       const audioErr = channel.audio.error;
@@ -1030,7 +1106,12 @@ export class DJAudioEngineFacade {
       this.channelA.audio.removeAttribute('crossOrigin');
       this.channelB.audio.removeAttribute('crossOrigin');
     } else {
-      this.initContext().catch(() => {});
+      this.initContext().then(() => {
+        if (this.ctx && this.auraDspNode) {
+          this.channelA.bindAudioGraph(this.ctx, this.auraDspNode.input);
+          this.channelB.bindAudioGraph(this.ctx, this.auraDspNode.input);
+        }
+      }).catch(() => {});
     }
   }
 

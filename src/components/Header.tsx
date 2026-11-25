@@ -209,43 +209,60 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
               )}
             </button>
 
-            {/* Clean Spotify-Style Dropdown Menu */}
+            {/* Clean Spotify-Style Dropdown Menu (Anchored to end-0 so it expands inward in both RTL & LTR) */}
             {isProfileMenuOpen && (
               <div
-                className="absolute top-10 start-0 min-w-[210px] bg-[#282828] border border-white/[0.08] rounded-xl p-1.5 shadow-2xl backdrop-blur-2xl z-80 text-xs text-zinc-200 animate-fadeIn"
+                className="absolute top-11 end-0 w-64 max-w-[calc(100vw-24px)] bg-[#1c1c22]/[0.98] border border-white/[0.12] rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl z-[90] text-xs text-zinc-200 animate-fadeIn"
               >
-                <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
-                  <span className="font-bold text-white block truncate">{currentUser?.name || 'مستخدم AuraWave'}</span>
-                  <span className="text-[10px] text-zinc-400 block truncate">{currentUser?.email || 'جلسة محلية'}</span>
+                <div className="px-3 py-2.5 border-b border-white/[0.08] mb-1.5 flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-[#24242b] border border-white/15 flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden">
+                    {currentUser?.avatarUrl ? (
+                      <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                      currentUser?.name?.[0]?.toUpperCase() || 'A'
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-bold text-white block truncate">{currentUser?.name || 'مستخدم AuraWave'}</span>
+                    <span className="text-[11px] text-zinc-400 block truncate font-mono">{currentUser?.email || 'جلسة محلية'}</span>
+                  </div>
                 </div>
 
                 <button
                   onClick={() => { setIsProfileMenuOpen(false); setSettingsOpen(true); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
                 >
-                  <Settings className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>{isRTL ? 'الإعدادات والمزامنة' : t.settings}</span>
+                  <Settings className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <span>{isRTL ? 'الإعدادات والحسابات' : t.settings}</span>
+                </button>
+
+                <button
+                  onClick={() => { setIsProfileMenuOpen(false); setAuthScreenOpen(true); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-[#1DB954] shrink-0" />
+                  <span>{isRTL ? 'تبديل / إضافة حساب' : 'Switch / Add Account'}</span>
                 </button>
 
                 <button
                   onClick={() => { setIsProfileMenuOpen(false); setShortcutsOpen(true); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
                 >
-                  <Keyboard className="w-3.5 h-3.5 text-zinc-400" />
+                  <Keyboard className="w-4 h-4 text-zinc-400 shrink-0" />
                   <span>{isRTL ? 'اختصارات لوحة المفاتيح' : 'Keyboard Shortcuts'}</span>
                 </button>
 
                 {isCloudConfigured() && (
                   <button
                     onClick={() => { setIsProfileMenuOpen(false); setCloudUploaderOpen(true); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/[0.08] text-start transition-colors cursor-pointer"
                   >
-                    <UploadCloud className="w-3.5 h-3.5 text-zinc-400" />
+                    <UploadCloud className="w-4 h-4 text-zinc-400 shrink-0" />
                     <span>{isRTL ? 'رفع ملفات للسحابة' : 'Upload to Cloud'}</span>
                   </button>
                 )}
 
-                <div className="my-1 border-t border-white/[0.06]" />
+                <div className="my-1.5 border-t border-white/[0.08]" />
 
                 {currentUser && !currentUser.isGuest ? (
                   <button
@@ -255,9 +272,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
                       setCurrentUser(null);
                       setAuthScreenOpen(true);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 text-start transition-colors cursor-pointer"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-red-400 text-start transition-colors cursor-pointer font-semibold"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
+                    <LogOut className="w-4 h-4 shrink-0" />
                     <span>{isRTL ? 'تسجيل الخروج' : 'Log out'}</span>
                   </button>
                 ) : (
@@ -266,9 +283,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
                       setIsProfileMenuOpen(false);
                       setAuthScreenOpen(true);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-[#1DB954]/15 text-[#1DB954] text-start transition-colors cursor-pointer font-bold"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[#1DB954]/15 text-[#1DB954] text-start transition-colors cursor-pointer font-bold"
                   >
-                    <User className="w-3.5 h-3.5" />
+                    <User className="w-4 h-4 shrink-0" />
                     <span>{isRTL ? 'تسجيل الدخول / إنشاء حساب' : 'Log in'}</span>
                   </button>
                 )}

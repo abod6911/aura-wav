@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { Play, Pause, SkipForward } from 'lucide-react';
@@ -8,26 +8,40 @@ import { triggerHaptic } from '../../utils/haptics';
 import { getOfflineArtworkUrl } from '../../utils/offlineStorage';
 import { isArabicText } from '../../utils/formatters';
 import { useTrackTheme } from '../../utils/colorExtractor';
+import { formatDuration } from './TimelineSlider';
 
 interface MiniPlayerProps {
   onExpand: () => void;
 }
 
 /**
- * Isolated hairline 2px progress bar subscribing directly to usePlayerStore.
+ * Interactive bottom progress scrubber with always-visible progress dot
+ * allowing instant seek forward/backward directly from the MiniPlayer.
  * Zero re-renders of the parent MiniPlayer on every 100ms tick.
  */
 const MiniPlayerProgressBar: React.FC = () => {
+  const trackRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const bubbleTextRef = useRef<HTMLSpanElement>(null);
+  const isDraggingRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   const playbackState = usePlayerStore((state) => state.playbackState);
+  const duration = usePlayerStore((state) => state.duration);
+  const seek = usePlayerStore((state) => state.seek);
+
+  isDraggingRef.current = isDragging;
 
   useEffect(() => {
     return usePlayerStore.subscribe((state) => {
-      if (!barRef.current) return;
+      if (isDraggingRef.current) return;
       const cur = state.currentTime;
       const dur = state.duration > 0 ? state.duration : 1;
       const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
-      barRef.current.style.width = `${pct}%`;
+      if (barRef.current) barRef.current.style.width = `${pct}%`;
+      if (thumbRef.current) thumbRef.current.style.left = `${pct}%`;
     });
   }, []);
 
@@ -37,18 +51,105 @@ const MiniPlayerProgressBar: React.FC = () => {
     return Math.min(100, Math.max(0, (s.currentTime / dur) * 100));
   };
 
+  const calcFromPointer = useCallback((clientX: number) => {
+    const dur = usePlayerStore.getState().duration || duration || 0;
+    if (!trackRef.current || dur <= 0) return { seconds: 0, pct: 0, dur };
+    const rect = trackRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width)));
+    return { seconds: ratio * dur, pct: ratio * 100, dur };
+  }, [duration]);
+
+  const updateVisual = (seconds: number, pct: number, dur: number) => {
+    if (barRef.current) barRef.current.style.width = `${pct}%`;
+    if (thumbRef.current) thumbRef.current.style.left = `${pct}%`;
+    if (bubbleRef.current && bubbleTextRef.current) {
+      bubbleRef.current.style.left = `${Math.min(92, Math.max(8, pct))}%`;
+      bubbleTextRef.current.textContent = `${formatDuration(seconds)} / ${formatDuration(dur)}`;
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const dur = usePlayerStore.getState().duration || duration;
+    if (dur <= 0) return;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+    setIsDragging(true);
+    const { seconds, pct } = calcFromPointer(e.clientX);
+    updateVisual(seconds, pct, dur);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    const { seconds, pct, dur } = calcFromPointer(e.clientX);
+    updateVisual(seconds, pct, dur);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+    const { seconds } = calcFromPointer(e.clientX);
+    setIsDragging(false);
+    triggerHaptic('light');
+    seek(seconds);
+  };
+
+  const startPct = initialPct();
+
   return (
-    <div className="absolute bottom-0 inset-x-0 h-[2px] bg-white/[0.08] overflow-hidden pointer-events-none">
-      <div
-        ref={barRef}
-        className="h-full relative transition-colors duration-150 bg-[#1DB954]"
-        style={{
-          width: `${initialPct()}%`,
-        }}
-      >
-        {playbackState === 'buffering' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer" />
-        )}
+    <div
+      ref={trackRef}
+      dir="ltr"
+      role="slider"
+      aria-label="شريط تقدم الأغنية"
+      aria-valuemin={0}
+      aria-valuemax={duration || 100}
+      onClick={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => setIsDragging(false)}
+      className="absolute -bottom-1 inset-x-0 h-5 flex items-end cursor-pointer touch-none z-30 select-none"
+    >
+      {/* Live Scrubbing Time Bubble */}
+      {isDragging && (
+        <div
+          ref={bubbleRef}
+          className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#18181D]/95 border border-white/15 text-[10px] font-mono font-bold text-white shadow-xl pointer-events-none whitespace-nowrap"
+          style={{ left: `${Math.min(92, Math.max(8, startPct))}%` }}
+        >
+          <span ref={bubbleTextRef}>{formatDuration(usePlayerStore.getState().currentTime)}</span>
+        </div>
+      )}
+
+      {/* Track Groove */}
+      <div className="w-full h-[3px] bg-white/[0.12] relative mb-1">
+        <div
+          ref={barRef}
+          className="h-full relative bg-[#1DB954] rounded-full"
+          style={{ width: `${startPct}%` }}
+        >
+          {playbackState === 'buffering' && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent animate-shimmer" />
+          )}
+        </div>
+
+        {/* Always-Visible Progress Dot */}
+        <div
+          ref={thumbRef}
+          className={`absolute top-1/2 -translate-y-1/2 -ml-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(29,185,84,0.9)] ring-2 ring-[#1DB954] pointer-events-none transition-transform duration-100 ${
+            isDragging ? 'w-3.5 h-3.5 -ml-[7px] scale-110' : 'w-2.5 h-2.5'
+          }`}
+          style={{ left: `${startPct}%` }}
+        />
       </div>
     </div>
   );
@@ -136,13 +237,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       onTouchEnd={handleTouchEnd}
       data-testid="mini-player"
       style={{
-        bottom: 'calc(50px + env(safe-area-inset-bottom, 0px) + 8px)',
+        bottom: 'calc(var(--nav-height, 54px) + env(safe-area-inset-bottom, 0px) + 8px)',
         transform: `translate3d(${dragX}px, 0, 0)`,
         transition: dragX === 0 ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.5s ease' : 'none',
         backgroundColor: theme.miniPlayerBg,
         touchAction: 'pan-y',
       }}
-      className="fixed left-2.5 right-2.5 z-40 h-[56px] rounded-xl px-2.5 flex items-center gap-2.5 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-hidden select-none cursor-pointer pointer-events-auto"
+      className="fixed left-2.5 right-2.5 z-40 h-[58px] rounded-xl px-2.5 flex items-center gap-2.5 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-visible select-none cursor-pointer pointer-events-auto"
       dir={dir}
       onClick={handleExpand}
     >

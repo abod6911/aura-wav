@@ -426,6 +426,9 @@ export class DeckChannel {
     try {
       await this.audio.play();
     } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        throw err;
+      }
       if (err.name === 'NotAllowedError') {
         console.warn(`[DeckChannel ${this.name}] Autoplay blocked: user gesture required`);
         throw err;

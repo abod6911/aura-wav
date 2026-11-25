@@ -120,6 +120,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [isClearing, setIsClearing] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => authService.getSavedAccounts());
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive());
   const [iosDspEnabled, setIosDspEnabledState] = useState<boolean>(() => isIOSDspEnabled());
 
@@ -292,7 +294,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           {/* 0. Account & Profile Group */}
           <div className="rounded-2xl bg-[#16161A] border border-white/[0.06] p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-12 h-12 rounded-2xl bg-white/[0.08] border border-white/[0.08] flex-shrink-0">
                   <div className="w-full h-full bg-[#181818] rounded-2xl flex items-center justify-center text-white text-sm font-black overflow-hidden">
                     {currentUser?.avatarUrl ? (
@@ -302,10 +304,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     )}
                   </div>
                 </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-bold text-white truncate">
-                    {currentUser ? currentUser.name : (isRTL ? 'زائر AURA' : 'AURA Guest')}
-                  </h4>
+                <div className="min-w-0 flex-1">
+                  {isEditingName ? (
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        if (!editNameValue.trim()) return;
+                        const updated = await authService.updateProfile({ name: editNameValue.trim() });
+                        if (updated) {
+                          setCurrentUser(updated);
+                          setSavedAccounts(authService.getSavedAccounts());
+                          addToast(isRTL ? 'تم حفظ اسم الحساب' : 'Profile name saved', undefined, 'success');
+                        }
+                        setIsEditingName(false);
+                      }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <input
+                        type="text"
+                        value={editNameValue}
+                        onChange={(e) => setEditNameValue(e.target.value)}
+                        autoFocus
+                        style={{ fontSize: '16px' }}
+                        className="w-full h-8 px-2.5 rounded-lg bg-white/[0.08] border border-white/20 text-white text-xs font-bold focus:outline-none focus:border-[#1DB954]"
+                      />
+                      <button
+                        type="submit"
+                        className="px-2.5 h-8 rounded-lg bg-[#1DB954] text-black text-xs font-bold cursor-pointer shrink-0"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <h4
+                        onClick={() => {
+                          if (currentUser) {
+                            setEditNameValue(currentUser.name);
+                            setIsEditingName(true);
+                          }
+                        }}
+                        className="text-sm font-bold text-white truncate cursor-pointer hover:text-[#1DB954] transition-colors"
+                        title={isRTL ? 'انقر لتعديل الاسم' : 'Click to edit name'}
+                      >
+                        {currentUser ? currentUser.name : (isRTL ? 'زائر AURA' : 'AURA Guest')}
+                      </h4>
+                    </div>
+                  )}
                   <p className="text-[11px] text-zinc-400 truncate mt-0.5 font-mono">
                     {currentUser?.email || (isRTL ? 'حساب محلي' : 'Local Account')}
                   </p>
@@ -316,10 +361,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 shrink-0"
+                  className="px-3 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 hover:text-red-200 text-xs font-bold flex items-center gap-1.5 transition-[color,background-color,border-color,transform] cursor-pointer active:scale-95 shrink-0"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out'}</span>
+                  <span>{isRTL ? 'خروج' : 'Sign Out'}</span>
                 </button>
               ) : (
                 <button
@@ -334,6 +379,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   <span>{isRTL ? 'تسجيل الدخول' : 'Sign In'}</span>
                 </button>
               )}
+            </div>
+
+            {/* Add / Switch Account Button */}
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  setAuthScreenOpen(true);
+                }}
+                className="flex-1 py-2 px-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-bold text-zinc-200 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#1DB954]" />
+                <span>{isRTL ? 'إضافة أو تبديل حساب' : 'Add or Switch Account'}</span>
+              </button>
             </div>
 
             {/* Saved Accounts Switcher */}

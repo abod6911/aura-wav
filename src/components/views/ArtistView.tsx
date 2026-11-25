@@ -89,7 +89,7 @@ export const ArtistView: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col min-h-0 pb-24">
+    <div className="w-full flex-1 flex flex-col min-h-0 pb-4 md:pb-16">
       {/* Editorial Header */}
       <div
         style={{ background: theme.headerGradientRgb }}

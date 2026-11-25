@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
-import { Play, ListPlus, Check, MoreHorizontal, Cloud, Heart, CheckCircle2 } from 'lucide-react';
+import { Play, ListPlus, MoreHorizontal, Cloud, Heart } from 'lucide-react';
 import { formatTime, isArabicText } from '../../utils/formatters';
 import { SmartSaveButton } from './SmartSaveButton';
 
@@ -38,8 +38,6 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
 
-  const [isAddedFeedback, setIsAddedFeedback] = useState(false);
-
   const isCur = currentTrack?.id === track.id;
   const isFav = favorites.includes(track.id);
   const isAvailableOffline = downloadedTrackIds.includes(track.id) || !!track.file || !!track.blob;
@@ -69,18 +67,6 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
     }
   };
 
-  const handleQuickQueue = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      try { navigator.vibrate(12); } catch {}
-    } else {
-      triggerHaptic('success');
-    }
-    addToQueue(track);
-    setIsAddedFeedback(true);
-    setTimeout(() => setIsAddedFeedback(false), 1000);
-  };
-
   const handleDragEnd = (_: any, info: any) => {
     const dx = info.offset.x;
     const dy = info.offset.y;
@@ -98,8 +84,6 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
       triggerHaptic('medium');
       addToQueue(track);
       addToast(isRTL ? 'تمت الإضافة إلى قائمة الانتظار' : 'Added to queue', undefined, 'success');
-      setIsAddedFeedback(true);
-      setTimeout(() => setIsAddedFeedback(false), 1000);
     } else if (isFavTriggered) {
       triggerHaptic('medium');
       toggleFavorite(track.id);
@@ -221,36 +205,13 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
         </div>
 
-        {/* Right: Duration + Quick Queue + 3-Dots */}
-        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right: Duration + Smart Save + 3-Dots (Balanced mobile ergonomics) */}
+        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           {track.duration > 0 && (
-            <span className="text-[11px] font-mono text-zinc-500 tabular-nums select-none pe-1">
+            <span className="text-[11px] font-mono text-zinc-500 tabular-nums select-none pe-0.5">
               {formatTime(track.duration)}
             </span>
           )}
-
-          {/* Quick 1-tap Add to Queue (40px touch area) */}
-          <button
-            type="button"
-            onClick={handleQuickQueue}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer touch-manipulation apple-btn-tactile"
-            title={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
-            aria-label={isRTL ? 'إضافة إلى قائمة الانتظار' : 'Add to Queue'}
-          >
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
-                isAddedFeedback
-                  ? 'bg-emerald-500 text-white scale-105 shadow-md shadow-emerald-500/40'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {isAddedFeedback ? (
-                <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
-              ) : (
-                <ListPlus className="w-3.5 h-3.5" />
-              )}
-            </div>
-          </button>
 
           {/* Quick Smart Save (+ / ✓) */}
           <SmartSaveButton track={track} size="sm" />
@@ -264,7 +225,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
                 triggerHaptic('light');
                 onOpenActionSheet(track);
               }}
-              className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer touch-manipulation"
+              className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center text-zinc-400 hover:text-white apple-btn-tactile cursor-pointer touch-manipulation"
               title={isRTL ? 'المزيد من الخيارات' : 'More options'}
               aria-label={isRTL ? 'المزيد من الخيارات' : 'More options'}
             >

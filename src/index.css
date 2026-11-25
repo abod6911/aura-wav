@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --app-bg: #000000;
+  --app-bg: #09090B;
   --panel-bg: #121212;
   --surface-card: #181818;
   --surface-hover: #242424;
@@ -33,14 +33,14 @@
   --apple-spring-press: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Unified Mobile Bottom Dock & Viewport Geometry Variables */
-  --nav-height: 50px;
-  --miniplayer-height: 54px;
-  --miniplayer-gap: 8px;
+  --nav-height: 54px;
+  --miniplayer-height: 58px;
+  --miniplayer-gap: 6px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
-  --scroll-bottom-clearance: calc(50px + 54px + 12px + env(safe-area-inset-bottom, 0px) + 28px);
-  --scroll-bottom-no-player: calc(50px + env(safe-area-inset-bottom, 0px) + 28px);
-  --bottom-nav-height: 50px;
+  --scroll-bottom-clearance: calc(54px + 58px + 14px + env(safe-area-inset-bottom, 0px) + 18px);
+  --scroll-bottom-no-player: calc(54px + env(safe-area-inset-bottom, 0px) + 18px);
+  --bottom-nav-height: 54px;
 }
 
 /* Tactile Ultra-Subtle Procedural Grain/Noise (Hardware-accelerated zero-cost SVG texture) */
@@ -85,15 +85,28 @@
 }
 
 /* Strict Native App Root Enclosure */
-html, body {
+html {
   width: 100%;
   height: 100%;
-  min-height: 100%;
-  min-height: 100dvh;
-  overflow-x: hidden;
+  height: -webkit-fill-available;
+  overflow: hidden;
   margin: 0;
   padding: 0;
-  background-color: #121212 !important;
+  background-color: #09090B !important;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  background-color: #09090B !important;
   color: #f4f4f7;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "SF Pro", "Readex Pro", "Plus Jakarta Sans", sans-serif;
   letter-spacing: -0.015em;
@@ -102,28 +115,27 @@ html, body {
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: 100%;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
-  background-color: #121212 !important;
+  background-color: #09090B !important;
 }
 
 /* Fullscreen API normalization */
 :fullscreen, :-webkit-full-screen {
   width: 100%;
   height: 100%;
-  background-color: #000000;
+  background-color: #09090B;
 }
 
 /* Fixed full-bleed background/ambient layer ensuring backdrop ALWAYS extends edge-to-edge */
@@ -133,17 +145,23 @@ html, body {
   width: 100%;
   height: 100%;
   z-index: -1;
-  background-color: #000000;
+  background-color: #09090B;
   pointer-events: none;
 }
 
 /* iOS Safari & WebKit Full-Bleed Viewport Normalization (Eliminates bottom voids on iPhone) */
 @supports (-webkit-touch-callout: none) {
-  html, body, #root {
+  html, body {
     height: 100%;
-    min-height: 100%;
-    min-height: 100dvh;
-    background-color: #121212 !important;
+    min-height: -webkit-fill-available;
+    background-color: #09090B !important;
+  }
+  #root {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #09090B !important;
   }
 }
 

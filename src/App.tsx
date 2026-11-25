@@ -313,7 +313,7 @@ export function App() {
 
       let refreshing = false;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
+        if (!refreshing && !usePlayerStore.getState().isPlaying) {
           refreshing = true;
           window.location.reload();
         }
@@ -474,8 +474,8 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full min-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
-          : 'relative w-full h-full min-h-[100dvh] flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#1DB954]/30'
+          ? 'relative w-full h-full flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
+          : 'relative w-full h-full flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#1DB954]/30'
       }
     >
       {/* Drag & Drop Visual Overlay */}
@@ -513,8 +513,8 @@ export function App() {
         }}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-3.5 sm:px-4 pt-1 overscroll-contain relative z-10'
-            : 'flex-1 w-full min-w-0 h-[100dvh] overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
+            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-1 overscroll-contain relative z-10'
+            : 'flex-1 w-full min-w-0 h-full overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
         }
       >
         <HandoffBanner />
@@ -524,7 +524,7 @@ export function App() {
 
         {/* Desktop Header docked sticky at top of main area */}
         {!isMobile && (
-          <div className="sticky top-0 z-30 w-full bg-[#09090B]/90 backdrop-blur-xl">
+          <div className="sticky top-0 z-40 w-full bg-[#09090B]/90 backdrop-blur-xl">
             <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
           </div>
         )}
@@ -603,9 +603,7 @@ export function App() {
           {/* Floating MiniPlayer right above Tab Bar */}
           {currentTrack && <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />}
           {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
-          <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-auto">
-            <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
-          </div>
+          <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </>
       )}
 

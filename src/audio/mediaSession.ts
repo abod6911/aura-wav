@@ -48,6 +48,10 @@ export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks): void
   }
   isHandlersBound = true;
 
+  // NOTE: On iOS Safari / WebKit, registering 'seekbackward' or 'seekforward' causes the
+  // lock screen, Control Center, and headphone transport slots to show +/-10s skip buttons
+  // instead of Previous/Next track controls. Keeping only track transport + seekto guarantees
+  // headphones (AirPods/Bluetooth AVRCP) and lockscreen always control Next/Previous track.
   const actions: [MediaSessionAction, (details: MediaSessionActionDetails) => void][] = [
     ['play', () => activeCallbacks?.onPlay()],
     ['pause', () => activeCallbacks?.onPause()],
@@ -61,20 +65,6 @@ export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks): void
         }
       },
     ],
-    [
-      'seekbackward',
-      (details: MediaSessionActionDetails) => {
-        const offset = details.seekOffset || 10;
-        activeCallbacks?.onSeek(Math.max(0, lastReportedTime - offset));
-      },
-    ],
-    [
-      'seekforward',
-      (details: MediaSessionActionDetails) => {
-        const offset = details.seekOffset || 10;
-        activeCallbacks?.onSeek(lastReportedTime + offset);
-      },
-    ],
     ['stop', () => activeCallbacks?.onPause()],
   ];
 
@@ -84,6 +74,13 @@ export function initMediaSessionHandlers(callbacks: MediaSessionCallbacks): void
     } catch {
       // Ignore unsupported platform actions
     }
+  });
+
+  // Explicitly clear seekbackward/seekforward so previous/next track always take priority on iOS
+  (['seekbackward', 'seekforward'] as MediaSessionAction[]).forEach((action) => {
+    try {
+      navigator.mediaSession.setActionHandler(action, null);
+    } catch {}
   });
 }
 
@@ -152,11 +149,18 @@ export function updateMediaSession(
   }
 
   // Check for stored offline artwork in Dexie to guarantee lock screen display in airplane mode
+  // Assign a fresh MediaMetadata instance so WebKit/Chrome actually refreshes the lock screen artwork
   if (!syncOfflineArt && track.id) {
-    getOfflineArtworkUrl(track.id).then((localUrl) => {
-      if (localUrl && navigator.mediaSession.metadata) {
+    const capturedTrackId = track.id;
+    getOfflineArtworkUrl(capturedTrackId).then((localUrl) => {
+      if (localUrl && navigator.mediaSession.metadata?.title === track.title) {
         try {
-          navigator.mediaSession.metadata.artwork = buildArtworkObjects(localUrl);
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title,
+            artist: track.artist,
+            album: track.album || 'AuraWave',
+            artwork: buildArtworkObjects(localUrl),
+          });
         } catch {}
       }
     }).catch(() => {});
@@ -175,7 +179,12 @@ export function updateMediaSession(
 /**
  * Synchronize Lock-Screen & Dynamic Island Position State
  */
-export function updateMediaSessionPosition(duration: number, currentTime: number, playbackRate = 1): void {
+export function updateMediaSessionPosition(
+  duration: number,
+  currentTime: number,
+  playbackRate = 1,
+  force = false
+): void {
   if (
     typeof navigator === 'undefined' ||
     !('mediaSession' in navigator) ||
@@ -187,8 +196,8 @@ export function updateMediaSessionPosition(duration: number, currentTime: number
   const now = Date.now();
   const timeJump = Math.abs(currentTime - lastReportedTime) > 2;
 
-  // Throttle to avoid flooding WebKit/mediaremoted IPC on iOS
-  if (!timeJump && now - lastPositionUpdate < 1000) {
+  // Throttle to avoid flooding WebKit/mediaremoted IPC on iOS unless forced (seek / track switch / pause)
+  if (!force && !timeJump && now - lastPositionUpdate < 1000) {
     return;
   }
   lastPositionUpdate = now;
@@ -198,7 +207,7 @@ export function updateMediaSessionPosition(duration: number, currentTime: number
     try {
       navigator.mediaSession.setPositionState({
         duration: Math.max(duration, 0.1),
-        playbackRate: playbackRate > 0 ? playbackRate : 1,
+        playbackRate: playbackRate >= 0 ? playbackRate : 1,
         position: Math.max(0, Math.min(currentTime, duration)),
       });
     } catch {}

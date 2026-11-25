@@ -573,7 +573,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   djAudioEngine.setCallbacks({
     onTimeUpdate: (cur, dur) => {
       // Synchronize lockscreen & MediaSession position even when in background
-      updateMediaSessionPosition(dur, cur);
+      updateMediaSessionPosition(dur, cur, get().isPlaying ? (get().playbackRate || 1) : 0);
 
       // Anti-Skip Listening Counting (30s or 40% duration, counted once per playback session)
       const activeTrk = get().currentTrack;
@@ -628,6 +628,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       const current = get().currentTrack;
       if (current) {
         updateMediaSession(current, isPlaying, getMediaSessionCallbacks(get));
+        updateMediaSessionPosition(
+          djAudioEngine.getDuration() || current.duration || 0,
+          djAudioEngine.getCurrentTime() || 0,
+          isPlaying ? (get().playbackRate || 1) : 0,
+          true
+        );
       }
     },
     onTrackError: (failedTrack, error) => {
@@ -1229,6 +1235,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             : {}),
         });
 
+        if (initialTrack && !get().currentTrack) {
+          updateMediaSession(initialTrack, false, getMediaSessionCallbacks(get));
+        }
+
         // Subscribe to offlineStorage changes
         offlineStorage.onOfflineStorageChange(async () => {
           try {
@@ -1390,6 +1400,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     playTrack: async (track: Track, newQueue?: Track[]) => {
       cancelNetworkAutoResume();
       const currentRequestId = ++activePlayRequestId;
+      djAudioEngine.beginTrackSwitch();
 
       // 0ms INSTANT OPTIMISTIC UI UPDATE: Immediately switch currentTrack, artwork, and status
       set({
@@ -1420,6 +1431,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         if (!isDownloaded) {
           const hasOffline = await offlineStorage.hasTrack(playableTrack.id);
           if (!hasOffline) {
+            djAudioEngine.endTrackSwitch();
             get().addToast('هذه الأغنية غير محمّلة للاستماع بدون إنترنت', undefined, 'warning');
             return;
           }
@@ -1548,6 +1560,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       // If still completely unplayable, inform the user with an actionable toast
       if (!playableTrack.file && !playableTrack.blob && !playableTrack.audioUrl) {
+        djAudioEngine.endTrackSwitch();
         get().addToast(`تعذر تشغيل "${track.title}" - يرجى استيراد ملف الأغنية أو التأكد من توفر الملف`, undefined, 'warning');
         return;
       }
@@ -1823,6 +1836,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     nextTrack: async (options?: { forceImmediate?: boolean; isAutoMixTrigger?: boolean } | boolean) => {
       cancelNetworkAutoResume();
       triggerHaptic('light');
+      djAudioEngine.beginTrackSwitch();
       djAudioEngine.primeDecks();
       const state = get();
       const { currentTrack, automixEnabled, isPlaying, automixStyle } = state;
@@ -1839,6 +1853,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
       const resolution = await resolveNextQueueTrack(state);
       if (!resolution) {
+        djAudioEngine.endTrackSwitch();
         djAudioEngine.pause();
         set({ isPlaying: false });
         return;
@@ -1895,12 +1910,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     previousTrack: async () => {
       cancelNetworkAutoResume();
       triggerHaptic('light');
+      djAudioEngine.beginTrackSwitch();
       djAudioEngine.primeDecks();
       djAudioEngine.cancelActiveTransitions(true);
       const { queue, currentTrack, currentTime } = get();
-      if (!currentTrack) return;
+      if (!currentTrack) {
+        djAudioEngine.endTrackSwitch();
+        return;
+      }
 
       if (currentTime > 3) {
+        djAudioEngine.endTrackSwitch();
         djAudioEngine.seek(0);
         return;
       }
@@ -1931,6 +1951,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
         await get().playTrack(prevTrack);
       } else {
+        djAudioEngine.endTrackSwitch();
         djAudioEngine.seek(0);
       }
     },
@@ -1943,8 +1964,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
           localStorage.setItem('aura_last_track_position', String(Math.floor(time)));
         }
       } catch {}
-      const { duration } = get();
-      updateMediaSessionPosition(duration, time);
+      const { duration, isPlaying, playbackRate } = get();
+      updateMediaSessionPosition(duration, time, isPlaying ? (playbackRate || 1) : 0, true);
     },
 
     setVolume: (vol: number) => {
@@ -2378,7 +2399,52 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       get().addToast('تم تفريغ قائمة الانتظار', undefined, 'info');
     },
 
-    setCurrentUser: (user: AuthUser | null) => set({ currentUser: user }),
+    setCurrentUser: (user: AuthUser | null) => {
+      const prev = get().currentUser;
+      if (prev && prev.id && prev.id !== user?.id) {
+        const s = get();
+        authService.saveUserSnapshot(prev.id, {
+          favorites: s.favorites,
+          eqGains: s.eqGains,
+          activeEqPreset: s.activeEqPreset,
+          bassBoost: s.bassBoost,
+          automixEnabled: s.automixEnabled,
+          automixDuration: s.automixDuration,
+          shuffle: s.shuffle,
+          repeatMode: s.repeatMode,
+          language: s.language,
+          lastTrackId: s.currentTrack?.id,
+          lastTrackPosition: s.currentTime,
+        });
+      }
+      set({ currentUser: user });
+      if (user && user.id && user.id !== prev?.id) {
+        authService.loadUserSnapshot(user.id).then((snap) => {
+          if (!snap) return;
+          const updates: Partial<PlayerState> = {};
+          if (snap.eqGains && Array.isArray(snap.eqGains) && snap.eqGains.length === 5) {
+            updates.eqGains = snap.eqGains;
+            djAudioEngine.setEqGains(snap.eqGains);
+          }
+          if (snap.activeEqPreset) updates.activeEqPreset = snap.activeEqPreset;
+          if (typeof snap.bassBoost === 'number') {
+            updates.bassBoost = snap.bassBoost;
+            djAudioEngine.setBassBoost(snap.bassBoost);
+          }
+          if (typeof snap.automixEnabled === 'boolean') {
+            updates.automixEnabled = snap.automixEnabled;
+            updates.automixDuration = snap.automixDuration ?? get().automixDuration;
+            djAudioEngine.setAutoMix(snap.automixEnabled, updates.automixDuration);
+          }
+          if (typeof snap.shuffle === 'boolean') updates.shuffle = snap.shuffle;
+          if (snap.repeatMode) updates.repeatMode = snap.repeatMode as RepeatMode;
+          if (snap.language) updates.language = snap.language;
+          if (Object.keys(updates).length > 0) {
+            set(updates);
+          }
+        }).catch(() => {});
+      }
+    },
     setIsAuthLoading: (loading: boolean) => set({ isAuthLoading: loading }),
     setAuthScreenOpen: (open: boolean) => set({ isAuthScreenOpen: open }),
     addTrackToLibrary: async (track: Track) => {
@@ -3278,11 +3344,65 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
 function getMediaSessionCallbacks(get: () => PlayerState) {
   return {
-    onPlay: () => get().togglePlayPause(),
-    onPause: () => get().togglePlayPause(),
-    onNext: () => get().nextTrack({ forceImmediate: true }),
-    onPrevious: () => get().previousTrack(),
-    onSeek: (t: number) => get().seek(t),
+    onPlay: async () => {
+      const state = get();
+      djAudioEngine.primeDecks();
+      if (!state.currentTrack) {
+        if (state.tracks.length > 0) {
+          await state.playTrack(state.tracks[0]);
+        }
+        return;
+      }
+      const activeAudio = djAudioEngine.getActiveAudio();
+      const needsReload =
+        state.playbackState === 'error' ||
+        !activeAudio?.src ||
+        activeAudio.error !== null ||
+        (activeAudio.readyState === 0 && activeAudio.currentTime === 0);
+
+      if (needsReload) {
+        await state.playTrack(state.currentTrack);
+        return;
+      }
+
+      const ok = await djAudioEngine.play();
+      if (!ok) {
+        await state.playTrack(state.currentTrack);
+      } else {
+        usePlayerStore.setState({ isPlaying: true, playbackState: 'playing' });
+        updateMediaSession(state.currentTrack, true, getMediaSessionCallbacks(get));
+        updateMediaSessionPosition(
+          djAudioEngine.getDuration() || state.duration,
+          djAudioEngine.getCurrentTime(),
+          state.playbackRate || 1,
+          true
+        );
+      }
+    },
+    onPause: () => {
+      const state = get();
+      cancelNetworkAutoResume();
+      djAudioEngine.pause();
+      usePlayerStore.setState({ isPlaying: false, playbackState: 'paused' });
+      if (state.currentTrack) {
+        updateMediaSession(state.currentTrack, false, getMediaSessionCallbacks(get));
+        updateMediaSessionPosition(
+          djAudioEngine.getDuration() || state.duration,
+          djAudioEngine.getCurrentTime(),
+          0,
+          true
+        );
+      }
+    },
+    onNext: () => {
+      get().nextTrack({ forceImmediate: true });
+    },
+    onPrevious: () => {
+      get().previousTrack();
+    },
+    onSeek: (t: number) => {
+      get().seek(t);
+    },
   };
 }
 

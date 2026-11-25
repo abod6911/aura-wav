@@ -73,7 +73,7 @@ export const PlayerBar: React.FC = () => {
     <footer
       data-testid="player-bar"
       dir={dir}
-      className="hidden md:grid grid-cols-[30%_40%_30%] fixed bottom-0 inset-x-0 h-[84px] z-40 bg-[#121212]/98 backdrop-blur-2xl border-t border-white/[0.08] px-6 lg:px-8 items-center select-none"
+      className="hidden md:grid grid-cols-[30%_40%_30%] fixed bottom-0 inset-x-0 h-[84px] z-40 bg-[#121212]/[0.98] backdrop-blur-2xl border-t border-white/[0.08] px-6 lg:px-8 items-center select-none"
     >
       {/* ── 1. Track Info (Right Column in RTL - 30%) ── */}
       <div className="flex items-center gap-3 min-w-0 pr-1">

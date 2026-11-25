@@ -1102,36 +1102,38 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex-1 w-full min-h-0 overflow-y-auto no-scrollbar flex flex-col justify-between"
+            className="flex-1 w-full min-h-0 overflow-y-auto no-scrollbar"
           >
-            {/* Mobile Center Stage */}
-            <div className="flex-1 min-h-[250px] flex items-center justify-center py-2 overflow-hidden">
-              {activeCenterView === 'artwork' ? (
-                <motion.div
-                  layoutId="aura-player-artwork"
-                  data-testid="expanded-artwork-container"
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.45}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -65 || info.velocity.x < -250) {
-                      triggerHaptic('light');
-                      nextTrack({ forceImmediate: true });
-                    } else if (info.offset.x > 65 || info.velocity.x > 250) {
-                      triggerHaptic('light');
-                      previousTrack();
-                    }
-                  }}
-                  animate={{ scale: isPlaying ? 1 : 0.88 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
-                  style={{
-                    boxShadow: isPlaying
-                      ? '0 22px 54px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.22)'
-                      : '0 10px 24px rgba(0, 0, 0, 0.45)',
-                    touchAction: 'pan-y',
-                  }}
-                  className="relative w-[min(70vw,31vh,280px)] h-[min(70vw,31vh,280px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
-                >
+            {/* First Viewport: Artwork + Controls Fit 100% Cleanly on Any Phone */}
+            <div className="min-h-full flex flex-col justify-between gap-2 pb-2">
+              {/* Mobile Center Stage */}
+              <div className="flex-1 min-h-[150px] flex items-center justify-center py-1 overflow-hidden">
+                {activeCenterView === 'artwork' ? (
+                  <motion.div
+                    layoutId="aura-player-artwork"
+                    data-testid="expanded-artwork-container"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.45}
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x < -65 || info.velocity.x < -250) {
+                        triggerHaptic('light');
+                        nextTrack({ forceImmediate: true });
+                      } else if (info.offset.x > 65 || info.velocity.x > 250) {
+                        triggerHaptic('light');
+                        previousTrack();
+                      }
+                    }}
+                    animate={{ scale: isPlaying ? 1 : 0.9 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
+                    style={{
+                      boxShadow: isPlaying
+                        ? '0 22px 54px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.22)'
+                        : '0 10px 24px rgba(0, 0, 0, 0.45)',
+                      touchAction: 'pan-y',
+                    }}
+                    className="relative w-[min(68vw,30dvh,276px)] h-[min(68vw,30dvh,276px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
+                  >
                   <motion.img
                     key={currentTrack.id}
                     src={artworkSrc}
@@ -1369,9 +1371,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </button>
               </div>
             </div>
+            </div>
 
             {activeCenterView === 'artwork' && (
-              <div className="pt-4 pb-8 w-full shrink-0">
+              <div className="pt-4 pb-6 w-full shrink-0">
                 <LyricsPreviewCard
                   track={currentTrack}
                   cardTint={theme.cardTint}

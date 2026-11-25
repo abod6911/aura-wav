@@ -59,24 +59,17 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
   const favorites = usePlayerStore((state) => state.favorites);
   const playTrack = usePlayerStore((state) => state.playTrack);
-  const activeMood = usePlayerStore((state) => state.activeMood);
-  const setActiveMood = usePlayerStore((state) => state.setActiveMood);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
-  const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
-  const cacheAllAvailableTracksOffline = usePlayerStore((state) => state.cacheAllAvailableTracksOffline);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
   const playlists = usePlayerStore((state) => state.playlists);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);
   const addToast = usePlayerStore((state) => state.addToast);
   const openArtist = usePlayerStore((state) => state.openArtist);
   const openAlbum = usePlayerStore((state) => state.openAlbum);
-  const playStatsMap = usePlayerStore((state) => state.playStatsMap);
 
   const [mobileSubTab, setMobileSubTab] = useState<'tracks' | 'playlists' | 'artists' | 'albums' | 'downloaded'>('tracks');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'lyrics' | 'offline' | 'cloud'>('all');
-  const [activeRange, setActiveRange] = useState<RangeOption>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('number');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'offline'>('all');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; track: Track } | null>(null);
   const [actionSheetTrack, setActionSheetTrack] = useState<Track | null>(null);
@@ -135,14 +128,6 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
 
 
-  const readyOfflineCount = useMemo(() => {
-    return tracks.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id))).length;
-  }, [tracks, downloadedTrackIds]);
-
-  const cloudCount = useMemo(() => {
-    return tracks.filter((t) => t.source === 'online' || (t.audioUrl && t.audioUrl.startsWith('http'))).length;
-  }, [tracks]);
-
   // Filter tracks
   const filtered = useMemo(() => {
     let list = [...tracks];
@@ -159,52 +144,20 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
       );
     }
 
-    // Category filter
-    if (activeFilter === 'favorites') {
-      list = list.filter((t) => favorites.includes(t.id));
-    } else if (activeFilter === 'lyrics') {
-      list = list.filter((t) => t.syncedLyrics && t.syncedLyrics.length > 0);
-    } else if (activeFilter === 'offline') {
+    // Mobile Downloaded sub-tab filter
+    if (activeFilter === 'offline') {
       list = list.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id)));
-    } else if (activeFilter === 'cloud') {
-      list = list.filter((t) => t.source === 'online' || (t.audioUrl && t.audioUrl.startsWith('http')));
     }
 
-    // Range filter (active when not searching)
-    if (!searchQuery.trim() && activeRange !== 'all') {
-      const [start, end] = activeRange.split('-').map(Number);
-      list = list.filter((t) => {
-        const num = t.trackNumber ?? 99999;
-        return num >= start && num <= end;
-      });
-    }
-
-    // Sort
+    // Default canonical order by trackNumber
     list.sort((a, b) => {
-      if (sortBy === 'number') {
-        const numA = a.trackNumber || 9999;
-        const numB = b.trackNumber || 9999;
-        return numA - numB;
-      }
-      if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
-      }
-      if (sortBy === 'artist') {
-        return a.artist.localeCompare(b.artist);
-      }
-      if (sortBy === 'duration') {
-        return b.duration - a.duration;
-      }
-      if (sortBy === 'most_played') {
-        const countA = playStatsMap[a.id]?.playCount || 0;
-        const countB = playStatsMap[b.id]?.playCount || 0;
-        return countB - countA;
-      }
-      return 0;
+      const numA = a.trackNumber || 9999;
+      const numB = b.trackNumber || 9999;
+      return numA - numB;
     });
 
     return list;
-  }, [tracks, searchQuery, activeFilter, activeRange, sortBy, favorites, downloadedTrackIds, playStatsMap]);
+  }, [tracks, searchQuery, activeFilter, downloadedTrackIds]);
 
   // 120fps Viewport Virtualization
   const ROW_HEIGHT = 72;
@@ -258,7 +211,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
   useEffect(() => {
     setMobileDisplayLimit(35);
-  }, [searchQuery, activeFilter, activeRange, sortBy, activeMood]);
+  }, [searchQuery, activeFilter]);
 
   useEffect(() => {
     const el = mobileLoadMoreRef.current;
@@ -305,7 +258,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   }, [tracks, favorites]);
 
   return (
-    <div className="space-y-2.5 sm:space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
+    <div className="space-y-2.5 sm:space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
       {/* Mobile Library Hub: Spotify Filter Pills */}
       <div className="sm:hidden flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
         <button
@@ -643,216 +596,51 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </div>
       )}
 
-      {/* 2. Controls, Search & Filter Bar (Only when library has tracks) */}
+      {/* 2. Clean Minimal Search Bar (Only when library has tracks) */}
       {tracks.length > 0 && (
         <>
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-3">
             {/* Search Box */}
             <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-zinc-500 absolute right-3.5 top-3.5" />
-          <input
-            id="library-search-input"
-            type="search"
-            inputMode="search"
-            enterKeyHint="search"
-            placeholder={isRTL ? 'ابحث في مكتبتك (مسار، فنان، ألبوم)...' : 'Search tracks, artists, albums...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ fontSize: '16px' }}
-            className="w-full bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#1DB954]/60 rounded-2xl py-2.5 pr-10 pl-10 text-white placeholder-zinc-500 focus:outline-none transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute left-3.5 top-3 text-zinc-500 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+              <Search className="w-4 h-4 text-zinc-500 absolute right-3.5 top-3" />
+              <input
+                id="library-search-input"
+                type="search"
+                inputMode="search"
+                enterKeyHint="search"
+                placeholder={isRTL ? 'ابحث في مكتبتك...' : 'Search your library...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ fontSize: '16px' }}
+                className="w-full h-10 bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] border border-white/[0.08] focus:border-[#1DB954]/60 rounded-xl py-2 pr-10 pl-10 text-white placeholder-zinc-500 focus:outline-none transition-colors [-webkit-appearance:none] [appearance:none] [&::-webkit-search-cancel-button]:hidden"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute left-3.5 top-3 text-zinc-500 hover:text-white cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
 
-        {/* Filter Pills & Sort Selector */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
-          <button
-            onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
-              activeFilter === 'all'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-          >
-            <Music className="w-3.5 h-3.5" />
-            <span>الكل ({tracks.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveFilter('favorites')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
-              activeFilter === 'favorites'
-                ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-extrabold shadow-md shadow-[#1DB954]/25'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-          >
-            <Heart className="w-3.5 h-3.5 fill-current" />
-            <span>المفضلة ({favorites.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveFilter('lyrics')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
-              activeFilter === 'lyrics'
-                ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white font-extrabold shadow-md shadow-[#1DB954]/25'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-          >
-            <Mic2 className="w-3.5 h-3.5" />
-            <span>بكلمات متزامنة</span>
-          </button>
-
-          <button
-            onClick={() => setActiveFilter('offline')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
-              activeFilter === 'offline'
-                ? 'bg-emerald-500 text-black font-extrabold shadow-md shadow-emerald-500/25'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>أوفلاين ({downloadedTrackIds.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveFilter('cloud')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
-              activeFilter === 'cloud'
-                ? 'bg-sky-500 text-white font-extrabold shadow-md shadow-sky-500/25'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400'
-            }`}
-          >
-            <Cloud className="w-3.5 h-3.5" />
-            <span>السحابية ({cloudCount})</span>
-          </button>
-
-          {isCloudConfigured() && (
-            <button
-              onClick={() => setCloudUploaderOpen(true)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-300 border border-sky-500/30 transition-colors cursor-pointer shrink-0 shadow-sm"
-              title="رفع ملفات موسيقية إلى السحابة"
-            >
-              <UploadCloud className="w-3.5 h-3.5" />
-              <span>رفع للسحابة</span>
-            </button>
-          )}
-
-          {/* Sort Dropdown */}
-          <div className="relative flex items-center shrink-0">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              style={{ fontSize: '16px' }}
-              className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-base sm:text-xs font-bold py-1.5 px-2.5 rounded-xl focus:outline-none cursor-pointer"
-            >
-              <option value="number" className="bg-[#121218] text-white">الترتيب: الرقم #</option>
-              <option value="most_played" className="bg-[#121218] text-white">الترتيب: الأكثر استماعاً</option>
-              <option value="title" className="bg-[#121218] text-white">الترتيب: العنوان (A-Z)</option>
-              <option value="artist" className="bg-[#121218] text-white">الترتيب: اسم الفنان</option>
-              <option value="duration" className="bg-[#121218] text-white">الترتيب: الأطول مدة</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Numeric Range Jump Bar (Desktop only) */}
-      <div className="hidden sm:flex items-center gap-2 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-x-auto select-none scrollbar-none">
-        <span className="text-[11px] sm:text-xs font-bold text-zinc-400 flex-shrink-0 pl-1">
-          تصفح سريع:
-        </span>
-        {[
-          { id: 'all', label: `الكل (${tracks.length})` },
-          { id: '1-100', label: '#1 - 100' },
-          { id: '101-250', label: '#101 - 250' },
-          { id: '251-500', label: '#251 - 500' },
-          { id: '501-1000', label: '#501 - 1000' },
-          { id: '1001-1750', label: '#1001 - 1750' },
-        ].map((r) => {
-          const isSel = activeRange === r.id;
-          return (
-            <button
-              key={r.id}
-              onClick={() => {
-                setActiveRange(r.id as RangeOption);
-                if (searchQuery) setSearchQuery('');
-              }}
-              className={`px-2.5 py-1 rounded-xl text-[11px] sm:text-xs font-mono font-bold whitespace-nowrap transition-colors border cursor-pointer ${
-                isSel
-                  ? 'bg-[#1DB954]/20 border-[#1DB954]/40 text-[#1ED760] shadow-sm'
-                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.06]'
-              }`}
-            >
-              {r.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 2.5 Mood & Vibe Bar (Apple Music Curated Moods - Desktop only) */}
-      <div className="hidden sm:block space-y-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 select-none scrollbar-none">
-          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider pl-1 flex-shrink-0">
-            أجواء ومزاج:
-          </span>
-          {[
-            { id: 'energize', label: 'حماسي وطاقة' },
-            { id: 'relax', label: 'استرخاء وهدوء' },
-            { id: 'focus', label: 'تركيز ومذاكرة' },
-            { id: 'commute', label: 'طريق وسفر' },
-            { id: 'party', label: 'حفلة ورقص' },
-          ].map((m) => {
-            const isSelected = activeMood === m.id;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setActiveMood(isSelected ? null : m.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 border cursor-pointer apple-spring ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white border-[#1DB954]/50 shadow-lg shadow-[#1DB954]/30 scale-105 font-extrabold'
-                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.06]'
-                }`}
-              >
-                <span>{m.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active Mood Radio Banner */}
-        {activeMood && (
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#1DB954]/20 via-[#1DB954]/10 to-[#08080c] border border-[#1DB954]/30 animate-fadeIn">
-            <div className="flex items-center gap-2.5">
-              <Radio className="w-4 h-4 text-[#1DB954] animate-pulse" />
-              <span className="text-xs font-bold text-white">
-                تم تفعيل وضع المزاج: {filtered.length} مسار متوافق
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-mono text-zinc-400 tabular-nums hidden sm:inline">
+                {filtered.length} {isRTL ? 'مسار' : 'tracks'}
               </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePlayAll}
-                className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#1DB954] to-[#1ED760] text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-[#1DB954]/25 transition-[color,background-color,border-color,transform] cursor-pointer hover:scale-105 active:scale-95"
-              >
-                <Play className="w-3.5 h-3.5 fill-white text-white" />
-                <span>تشغيل راديو هذا المزاج</span>
-              </button>
-              <button
-                onClick={() => setActiveMood(null)}
-                className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
-              >
-                إلغاء
-              </button>
+              {isCloudConfigured() && (
+                <button
+                  onClick={() => setCloudUploaderOpen(true)}
+                  className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 border border-white/[0.08] transition-colors cursor-pointer shrink-0"
+                  title="رفع ملفات موسيقية إلى السحابة"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-[#1DB954]" />
+                  <span className="hidden sm:inline">رفع للسحابة</span>
+                </button>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
       {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
       <div ref={containerRef} className="md:apple-glass-card md:rounded-[28px] p-0 md:p-5 md:shadow-[0_24px_64px_rgba(0,0,0,0.85)] md:transform-gpu md:backdrop-blur-3xl md:border md:border-white/[0.1] bg-transparent border-0 rounded-none shadow-none">
@@ -1260,18 +1048,9 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
               <bdi dir="auto">{track.artist}</bdi>
             </span>
             <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
-            <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/[0.06] border border-white/10 text-zinc-400 tracking-wider">
-              Lossless
-            </span>
             {track.syncedLyrics && track.syncedLyrics.length > 0 && (
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#1DB954]/20 text-[#1DB954] font-bold tracking-wider uppercase flex-shrink-0 border border-[#1DB954]/30">
                 LYRICS
-              </span>
-            )}
-            {(track.source === 'online' || (track.audioUrl && track.audioUrl.startsWith('http'))) && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-400 font-bold tracking-wider flex items-center gap-1 border border-sky-500/30">
-                <Cloud className="w-2.5 h-2.5" />
-                <span>CLOUD</span>
               </span>
             )}
           </div>

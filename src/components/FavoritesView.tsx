@@ -138,7 +138,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto py-1 sm:py-2 pb-6 md:pb-24 space-y-2.5 sm:space-y-4 select-none overflow-x-hidden" dir={dir}>
+    <div className="w-full max-w-7xl mx-auto py-1 sm:py-2 pb-4 md:pb-16 space-y-2.5 sm:space-y-4 select-none overflow-x-hidden" dir={dir}>
       {/* 1. Mobile Clean Header & Actions (Apple Music 44px Dual Button Layout) */}
       <div className="sm:hidden space-y-3 pt-1 pb-2">
         <div className="flex items-center justify-between px-0.5">
@@ -449,9 +449,6 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                           <bdi dir="auto">{track.artist}</bdi>
                         </span>
                         <span className="md:hidden text-white/40 font-mono tabular-nums">• {formatTime(track.duration)}</span>
-                        <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/[0.06] border border-white/10 text-zinc-400 tracking-wider">
-                          Lossless
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -520,7 +517,7 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                       {isMenuOpen && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className={`absolute z-30 top-8 w-44 bg-[#0e0e16]/98 border border-white/[0.15] rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl ${
+                          className={`absolute z-30 top-8 w-44 bg-[#0e0e16]/[0.98] border border-white/[0.15] rounded-2xl p-1.5 shadow-2xl backdrop-blur-2xl ${
                             isRTL ? 'left-0' : 'right-0'
                           }`}
                         >

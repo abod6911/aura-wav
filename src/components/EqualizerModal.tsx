@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { EQ_BANDS, ReverbSpace } from '../lib/audioEngine';
+import { EQ_BANDS, ReverbSpace, djAudioEngine } from '../lib/audioEngine';
+import { isIOSDevice, isIOSDspEnabled, isDirectNativeAudioMode } from '../core/audio/deviceAudioPolicy';
 import {
   X,
   RotateCcw,
@@ -17,6 +18,117 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppleSwitch } from './common/AppleSwitch';
+
+interface PrecisionSliderProps {
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+  label: string;
+  accentColor?: string;
+}
+
+/**
+ * Touch & Mouse reliable horizontal slider with 36px hit target and visible thumb dot.
+ */
+const PrecisionHorizontalSlider: React.FC<PrecisionSliderProps> = ({
+  value,
+  min,
+  max,
+  step = 0.5,
+  onChange,
+  disabled = false,
+  label,
+  accentColor = '#1DB954',
+}) => {
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const computeValue = useCallback(
+    (clientX: number) => {
+      if (!trackRef.current) return value;
+      const rect = trackRef.current.getBoundingClientRect();
+      if (rect.width <= 0) return value;
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const raw = min + ratio * (max - min);
+      const stepped = Math.round(raw / step) * step;
+      return Math.max(min, Math.min(max, Number(stepped.toFixed(2))));
+    },
+    [min, max, step, value]
+  );
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+    setIsDragging(true);
+    onChange(computeValue(e.clientX));
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || disabled) return;
+    e.stopPropagation();
+    onChange(computeValue(e.clientX));
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    e.stopPropagation();
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+    setIsDragging(false);
+  };
+
+  const pct = max > min ? Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100)) : 0;
+
+  return (
+    <div
+      ref={trackRef}
+      dir="ltr"
+      role="slider"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => setIsDragging(false)}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          onChange(Math.min(max, Number((value + step).toFixed(2))));
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          onChange(Math.max(min, Number((value - step).toFixed(2))));
+        }
+      }}
+      className={`relative w-full h-9 flex items-center touch-none select-none ${
+        disabled ? 'opacity-40 pointer-events-none' : 'cursor-pointer'
+      }`}
+    >
+      <div className="w-full h-1.5 rounded-full bg-white/15 overflow-hidden relative">
+        <div
+          className="h-full rounded-full transition-[background-color]"
+          style={{ width: `${pct}%`, backgroundColor: accentColor }}
+        />
+      </div>
+      <div
+        className={`absolute -ml-2.5 w-5 h-5 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.7)] border-2 transition-transform pointer-events-none ${
+          isDragging ? 'scale-125' : 'scale-100'
+        }`}
+        style={{ left: `${pct}%`, borderColor: accentColor }}
+      />
+    </div>
+  );
+};
 
 interface PresetItem {
   name: string;
@@ -98,10 +210,30 @@ export const EqualizerModal: React.FC = () => {
   const setKaraokeMode = usePlayerStore((state) => state.setKaraokeMode);
   const reverbSpace = usePlayerStore((state) => state.reverbSpace);
   const setReverbSpace = usePlayerStore((state) => state.setReverbSpace);
+  const addToast = usePlayerStore((state) => state.addToast);
 
-  // Dragging node on interactive curve
+  const [iosDspActive, setIosDspActive] = useState(() => isIOSDspEnabled());
+
+  // Dragging node on interactive curve or vertical fader
   const [draggingNode, setDraggingNode] = useState<number | null>(null);
+  const [draggingFader, setDraggingFader] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const faderRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const handleToggleIosDsp = (enabled: boolean) => {
+    setIosDspActive(enabled);
+    djAudioEngine.updateIosDspMode(enabled);
+    if (enabled) {
+      djAudioEngine.setEqGains(eqGains);
+      djAudioEngine.setBassBoost(bassBoost);
+      djAudioEngine.setAnalogWarmth(analogWarmth);
+      djAudioEngine.setKaraokeMode(karaokeMode);
+      djAudioEngine.setReverbSpace(reverbSpace);
+      addToast('تم تفعيل المعالج الصوتي المتقدم (DSP) — أعد تشغيل المسار لتطبيق الفلاتر فوراً', undefined, 'success');
+    } else {
+      addToast('تم تفعيل وضع الخلفية المستقر على الآيفون', undefined, 'info');
+    }
+  };
 
   // Compute smooth cubic bezier curve
   // Graph viewBox is 0 0 500 160.
@@ -141,34 +273,56 @@ export const EqualizerModal: React.FC = () => {
     return { pathD: d, fillD: fD };
   }, [nodeCoords]);
 
-  // Pointer move handler for interactive node dragging on SVG curve
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    if (draggingNode === null || !svgRef.current) return;
+  // Compute gain from vertical pointer Y inside SVG graph
+  const updateGainFromSvgPointer = useCallback((bandIdx: number, clientY: number) => {
+    if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
-    const offsetY = e.clientY - rect.top;
-    const normalizedY = Math.max(0, Math.min(rect.height, offsetY));
-    // map normalizedY (0 -> 15, rect.height -> 145) to dB (+12 -> -12)
-    const ratio = normalizedY / rect.height; // 0 (top) to 1 (bottom)
-    // ratio = 0.5 is 0dB, ratio = 0.09 is +12dB, ratio = 0.91 is -12dB
+    if (rect.height <= 0) return;
+    const ratio = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    // y=15/160 (+12dB) -> ratio ~0.09375; y=80/160 (0dB) -> ratio 0.5; y=145/160 (-12dB) -> ratio ~0.90625
     const gain = Math.round(((0.5 - ratio) / 0.40625) * 12 * 2) / 2;
     const clamped = Math.max(-12, Math.min(12, gain));
-    setEqGain(draggingNode, clamped);
-  }, [draggingNode, setEqGain]);
+    setEqGain(bandIdx, clamped);
+  }, [setEqGain]);
+
+  // Compute gain from vertical pointer Y inside individual fader track
+  const updateGainFromFaderPointer = useCallback((bandIdx: number, clientY: number) => {
+    const el = faderRefs.current[bandIdx];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    const ratioFromBottom = Math.max(0, Math.min(1, (rect.bottom - clientY) / rect.height));
+    const gain = Math.round((ratioFromBottom * 24 - 12) * 2) / 2;
+    const clamped = Math.max(-12, Math.min(12, gain));
+    setEqGain(bandIdx, clamped);
+  }, [setEqGain]);
+
+  // Pointer move handler for interactive node dragging on SVG curve
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    if (draggingNode !== null) {
+      updateGainFromSvgPointer(draggingNode, e.clientY);
+    } else if (draggingFader !== null) {
+      updateGainFromFaderPointer(draggingFader, e.clientY);
+    }
+  }, [draggingNode, draggingFader, updateGainFromSvgPointer, updateGainFromFaderPointer]);
 
   const handlePointerUp = useCallback(() => {
     setDraggingNode(null);
+    setDraggingFader(null);
   }, []);
 
   useEffect(() => {
-    if (draggingNode !== null) {
+    if (draggingNode !== null || draggingFader !== null) {
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
+      window.addEventListener('pointercancel', handlePointerUp);
       return () => {
         window.removeEventListener('pointermove', handlePointerMove);
         window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('pointercancel', handlePointerUp);
       };
     }
-  }, [draggingNode, handlePointerMove, handlePointerUp]);
+  }, [draggingNode, draggingFader, handlePointerMove, handlePointerUp]);
 
   if (!isEqualizerOpen) return null;
 
@@ -190,7 +344,7 @@ export const EqualizerModal: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 40 }}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-          className="relative w-full max-w-4xl max-h-[88dvh] md:max-h-[90vh] bg-[#101013]/98 border-t md:border border-white/[0.08] rounded-t-3xl md:rounded-2xl shadow-2xl backdrop-blur-3xl p-4 sm:p-7 flex flex-col gap-4 sm:gap-5 overflow-y-auto z-10 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] md:pb-7"
+          className="relative w-full max-w-4xl max-h-[88dvh] md:max-h-[90vh] bg-[#101013]/[0.98] border-t md:border border-white/[0.08] rounded-t-3xl md:rounded-2xl shadow-2xl backdrop-blur-3xl p-4 sm:p-7 flex flex-col gap-4 sm:gap-5 overflow-y-auto z-10 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] md:pb-7"
         >
           {/* Mobile Grabber Handle */}
           <div className="md:hidden w-10 h-1 rounded-full bg-white/20 mx-auto -mt-1 mb-1 shrink-0" />
@@ -273,17 +427,56 @@ export const EqualizerModal: React.FC = () => {
             </div>
           </div>
 
+          {/* iOS DSP Notice Banner (only on iPhone/iPad when Direct Native Audio is active) */}
+          {isIOSDevice() && isDirectNativeAudioMode() && !iosDspActive && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/25 px-3.5 py-2.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 text-start">
+                <p className="text-xs font-bold text-amber-200">تفعيل المعادل الصوتي والبيز على الآيفون</p>
+                <p className="text-[11px] text-amber-200/75 mt-0.5 leading-snug">
+                  لتطبيق تعديلات الصوت مباشرة فعّل المعالج (إطفاؤه يُحسّن ثبات الخلفية)
+                </p>
+              </div>
+              <AppleSwitch
+                checked={iosDspActive}
+                onChange={handleToggleIosDsp}
+                activeColor="bg-[#1DB954]"
+                label="تفعيل المعالج الصوتي على الآيفون"
+              />
+            </div>
+          )}
+
           {/* ── TAB 1: PARAMETRIC EQUALIZER & CONSOLE ── */}
           {modalTab === 'eq' && (
-            <div className="flex flex-col gap-3.5 sm:gap-6">
+            <div className="flex flex-col gap-3.5 sm:gap-5">
               {/* Top Half: Studio SVG Interactive Frequency Graph */}
-              <div className="relative w-full h-[115px] sm:h-[160px] bg-[#09090B] rounded-xl border border-white/[0.05] overflow-hidden select-none">
+              <div className="relative w-full h-[120px] sm:h-[160px] bg-[#09090B] rounded-xl border border-white/[0.05] overflow-hidden select-none touch-none">
                 {/* Calibration Grid Lines */}
                 <svg
                   ref={svgRef}
-                  className="w-full h-full cursor-crosshair"
+                  className="w-full h-full cursor-crosshair touch-none"
                   viewBox="0 0 500 160"
                   preserveAspectRatio="none"
+                  onPointerDown={(e) => {
+                    if (!svgRef.current) return;
+                    e.stopPropagation();
+                    try {
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                    } catch {}
+                    const rect = svgRef.current.getBoundingClientRect();
+                    const relX = ((e.clientX - rect.left) / Math.max(1, rect.width)) * 500;
+                    const xPositions = [55, 150, 250, 350, 445];
+                    let nearestIdx = 0;
+                    let bestDist = Infinity;
+                    xPositions.forEach((xp, i) => {
+                      const d = Math.abs(relX - xp);
+                      if (d < bestDist) {
+                        bestDist = d;
+                        nearestIdx = i;
+                      }
+                    });
+                    setDraggingNode(nearestIdx);
+                    updateGainFromSvgPointer(nearestIdx, e.clientY);
+                  }}
                 >
                   <defs>
                     <linearGradient id="studioEqFill" x1="0" y1="0" x2="0" y2="1">
@@ -401,14 +594,40 @@ export const EqualizerModal: React.FC = () => {
                         {gain > 0 ? `+${gain.toFixed(1)}` : gain.toFixed(1)} dB
                       </span>
 
-                      {/* Custom Hardware-Grade Vertical Fader */}
+                      {/* Custom Hardware-Grade Vertical Fader (Direct Touch & Mouse Drag) */}
                       <div
+                        ref={(el) => {
+                          faderRefs.current[idx] = el;
+                        }}
+                        role="slider"
+                        tabIndex={0}
+                        aria-label={`${band.label} Gain`}
+                        aria-valuemin={-12}
+                        aria-valuemax={12}
+                        aria-valuenow={gain}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          try {
+                            e.currentTarget.setPointerCapture(e.pointerId);
+                          } catch {}
+                          setDraggingFader(idx);
+                          updateGainFromFaderPointer(idx, e.clientY);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            setEqGain(idx, Math.min(12, gain + 0.5));
+                          } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            setEqGain(idx, Math.max(-12, gain - 0.5));
+                          }
+                        }}
                         onDoubleClick={() => setEqGain(idx, 0)}
-                        title="انقر مرتين لإعادة الضبط إلى 0dB"
-                        className="relative w-8 h-20 sm:h-28 flex items-center justify-center cursor-pointer touch-none"
+                        title="اسحب للأعلى أو الأسفل للتعديل، وانقر مرتين لإعادة الضبط"
+                        className="relative w-11 h-24 sm:h-28 flex items-center justify-center cursor-ns-resize touch-none select-none"
                       >
                         {/* Faint Tick Marks beside channel */}
-                        <div className="absolute inset-y-0 -start-2 flex flex-col justify-between py-1 text-[7px] text-zinc-600 font-mono pointer-events-none">
+                        <div className="absolute inset-y-0 -start-1.5 flex flex-col justify-between py-1 text-[7px] text-zinc-600 font-mono pointer-events-none">
                           <span>+12</span>
                           <span>+6</span>
                           <span className="text-zinc-400">- 0</span>
@@ -416,8 +635,8 @@ export const EqualizerModal: React.FC = () => {
                           <span>-12</span>
                         </div>
 
-                        {/* Recessed Dark Channel Track (4px) */}
-                        <div className="relative w-1 h-full bg-white/10 rounded-full overflow-hidden">
+                        {/* Recessed Dark Channel Track (6px) */}
+                        <div className="relative w-1.5 h-full bg-white/10 rounded-full overflow-hidden pointer-events-none">
                           {/* Center Detent Tick */}
                           <div className="absolute top-1/2 -translate-y-1/2 inset-x-0 h-0.5 bg-white/30" />
 
@@ -436,28 +655,18 @@ export const EqualizerModal: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Machined Aluminum / Anodized Fader Cap (24px x 12px) */}
+                        {/* Machined Aluminum / Anodized Fader Cap (28px x 14px) */}
                         <div
-                          className="absolute w-6 h-3 rounded-[3px] bg-gradient-to-b from-[#f4f4f7] to-[#d4d4d8] shadow-[0_2px_6px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.8)] border border-black/30 flex items-center justify-center pointer-events-none transition-[top] duration-75"
+                          className={`absolute w-7 h-3.5 rounded-[4px] bg-gradient-to-b from-[#f4f4f7] to-[#d4d4d8] shadow-[0_2px_8px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.9)] border border-black/30 flex items-center justify-center pointer-events-none transition-transform ${
+                            draggingFader === idx ? 'scale-110 ring-2 ring-[#1DB954]/60' : ''
+                          }`}
                           style={{
-                            top: `calc(${100 - heightPercent}% - 6px)`,
+                            top: `calc(${100 - heightPercent}% - 7px)`,
                           }}
                         >
                           {/* Notch center guideline */}
-                          <div className="w-3.5 h-[1px] bg-zinc-600" />
+                          <div className="w-4 h-[1.5px] bg-zinc-700 rounded-full" />
                         </div>
-
-                        {/* Hidden Native Range Input for direct dragging and full accessibility */}
-                        <input
-                          type="range"
-                          min={-12}
-                          max={12}
-                          step={0.5}
-                          value={gain}
-                          onChange={(e) => setEqGain(idx, parseFloat(e.target.value))}
-                          className="absolute inset-0 opacity-0 cursor-ns-resize w-full h-full"
-                          aria-label={`${band.label} Gain`}
-                        />
                       </div>
 
                       {/* Frequency Label Below */}
@@ -517,52 +726,63 @@ export const EqualizerModal: React.FC = () => {
                   </div>
 
                   {/* Duration Slider */}
-                  <div className={`space-y-1.5 transition-opacity ${automixEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                  <div className={`space-y-1 transition-opacity ${automixEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-zinc-400">مدة التداخل (Crossfade)</span>
                       <span className="text-white font-mono font-semibold tabular-nums">
                         {automixDuration.toFixed(1)} ثانية
                       </span>
                     </div>
-                    <input
-                      type="range"
+                    <PrecisionHorizontalSlider
                       min={2}
                       max={12}
                       step={0.5}
                       value={automixDuration}
-                      onChange={(e) => setAutoMix(true, parseFloat(e.target.value))}
-                      className="w-full accent-[#1DB954] cursor-pointer h-1 bg-white/15 rounded-full"
+                      disabled={!automixEnabled}
+                      onChange={(val) => setAutoMix(true, val)}
+                      label="مدة التداخل"
                     />
                   </div>
                 </div>
 
                 {/* Bass Engine Unit */}
-                <div className="bg-[#16161A] border border-white/[0.06] rounded-2xl p-5 flex flex-col justify-between gap-4">
+                <div className="bg-[#16161A] border border-white/[0.06] rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="text-sm font-bold text-white">تعزيز الترددات المنخفضة (Bass Boost)</h4>
                       <p className="text-xs text-zinc-400 mt-0.5">تعزيز الترددات الأقل من 80Hz مع حماية ضد التشويه</p>
                     </div>
-                    <span dir="ltr" className="text-xs font-mono font-semibold text-[#1DB954] tabular-nums">
+                    <span dir="ltr" className="text-xs font-mono font-semibold text-[#1DB954] tabular-nums shrink-0">
                       {bassBoost > 0 ? `+${bassBoost} dB` : '0 dB'}
                     </span>
                   </div>
 
-                  {/* Single Clean Segmented Row (0dB | +3dB | +6dB | +9dB | +12dB) */}
-                  <div dir="ltr" className="grid grid-cols-5 gap-1.5 p-1 bg-white/[0.04] rounded-xl border border-white/[0.05]">
-                    {[0, 3, 6, 9, 12].map((val) => {
-                      const isSel = bassBoost === val;
+                  {/* Interactive Bass Boost Slider */}
+                  <PrecisionHorizontalSlider
+                    min={0}
+                    max={18}
+                    step={0.5}
+                    value={bassBoost}
+                    onChange={(val) => setBassBoost(val)}
+                    label="تعزيز البيز"
+                  />
+
+                  {/* Clean Segmented Quick Presets */}
+                  <div dir="ltr" className="grid grid-cols-6 gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.05]">
+                    {[0, 3, 6, 9, 12, 18].map((val) => {
+                      const isSel = Math.abs(bassBoost - val) < 0.25;
                       return (
                         <button
                           key={val}
+                          type="button"
                           onClick={() => setBassBoost(val)}
-                          className={`py-1.5 rounded-lg text-xs font-semibold tabular-nums transition-colors cursor-pointer ${
+                          className={`py-1.5 rounded-lg text-[11px] font-semibold tabular-nums transition-colors cursor-pointer ${
                             isSel
                               ? 'bg-white text-black shadow-sm'
                               : 'text-zinc-400 hover:text-white'
                           }`}
                         >
-                          {val === 0 ? '0dB' : `+${val}dB`}
+                          {val === 0 ? '0dB' : `+${val}`}
                         </button>
                       );
                     })}
@@ -672,14 +892,13 @@ export const EqualizerModal: React.FC = () => {
                 </div>
 
                 <div className="space-y-1 pt-1">
-                  <input
-                    type="range"
+                  <PrecisionHorizontalSlider
                     min={0}
                     max={100}
                     step={1}
                     value={analogWarmth}
-                    onChange={(e) => setAnalogWarmth(parseInt(e.target.value, 10))}
-                    className="w-full accent-[#1DB954] cursor-pointer h-1 bg-white/15 rounded-full"
+                    onChange={(val) => setAnalogWarmth(Math.round(val))}
+                    label="الدفء التناظري"
                   />
                   <div className="flex justify-between text-[10px] font-mono text-zinc-500">
                     <span>صوت رقمي نقي</span>

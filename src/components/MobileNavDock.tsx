@@ -49,7 +49,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
-      className="fixed bottom-0 left-0 right-0 w-full bg-[#121212]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(50px+env(safe-area-inset-bottom,0px))]"
+      className="fixed bottom-0 inset-x-0 w-full bg-[#101014]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(54px+env(safe-area-inset-bottom,0px))] after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12 after:bg-[#101014] after:pointer-events-none"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -63,26 +63,21 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleTabClick(tab.id);
-            }}
-            className="relative flex flex-col items-center justify-center gap-1 py-1 px-1 transition-colors flex-1 cursor-pointer h-[50px] touch-manipulation select-none pointer-events-auto"
+            className="relative flex flex-col items-center justify-center gap-1 py-1.5 px-1 transition-colors flex-1 cursor-pointer h-[54px] touch-manipulation select-none pointer-events-auto active:scale-95"
             aria-selected={isActive}
             role="tab"
           >
             <div className="relative">
               <Icon
                 className={`w-[21px] h-[21px] transition-colors duration-150 ${
-                  isActive ? 'text-[#1DB954]' : 'text-[#B3B3B3]'
+                  isActive ? 'text-[#1DB954]' : 'text-[#A1A1AA]'
                 }`}
-                strokeWidth={isActive ? 2.2 : 1.8}
+                strokeWidth={isActive ? 2.3 : 1.8}
               />
             </div>
             <span
-              className={`text-[10px] tracking-tight transition-colors duration-150 leading-none ${
-                isActive ? 'text-[#1DB954] font-bold' : 'text-[#B3B3B3] font-medium'
+              className={`text-[10.5px] tracking-tight transition-colors duration-150 leading-none ${
+                isActive ? 'text-[#1DB954] font-bold' : 'text-[#A1A1AA] font-medium'
               }`}
             >
               {tab.label}

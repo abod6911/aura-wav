@@ -96,7 +96,7 @@ export const PlaylistsView: React.FC = () => {
 
   if (selectedPlaylist) {
     return (
-      <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2">
+      <div className="space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-2">
         {/* Back Button & Playlist Info */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
@@ -408,7 +408,7 @@ export const PlaylistsView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 pb-6 md:pb-24 w-full select-none overflow-x-hidden pt-2" dir={dir}>
+    <div className="space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-2" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

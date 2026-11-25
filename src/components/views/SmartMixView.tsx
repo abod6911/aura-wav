@@ -133,7 +133,7 @@ export const SmartMixView: React.FC = () => {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col min-h-0 pb-24">
+    <div className="w-full flex-1 flex flex-col min-h-0 pb-4 md:pb-16">
       {/* Editorial Spotify Header with 2x2 Collage */}
       <div className={`relative w-full overflow-hidden bg-gradient-to-b ${mix.accentGradient} via-[#141414] to-[#121212] pt-6 pb-8 px-4 sm:px-6 md:px-8 border-b border-white/5`}>
         {/* Mobile Back Button */}

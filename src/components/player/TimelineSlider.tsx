@@ -222,7 +222,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           onPointerCancel={() => setIsDragging(false)}
           onPointerEnter={handlePointerEnter}
           onPointerLeave={handlePointerLeave}
-          className="relative flex-1 h-6 flex items-center cursor-pointer group py-1"
+          className="relative flex-1 h-8 flex items-center cursor-pointer group py-1"
           role="slider"
           aria-valuemin={0}
           aria-valuemax={duration}
@@ -230,7 +230,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           aria-label="شريط تقدم الأغنية"
         >
           {/* Spotify Groove Background */}
-          <div className="w-full h-1 group-hover:h-1.5 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
+          <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
             {/* Buffer Bar */}
             <div
               className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
@@ -239,9 +239,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
             {/* Progress Fill */}
             <div
               ref={fillBarRef}
-              className={`absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 transition-colors duration-150 ${
-                isDragging || isHovering ? 'bg-[#1DB954]' : 'bg-white group-hover:bg-[#1DB954]'
-              }`}
+              className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 bg-[#1DB954] transition-colors duration-150"
               style={{ width: `${initialPercent}%` }}
             />
           </div>
@@ -257,11 +255,11 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
             </div>
           )}
 
-          {/* Spotify Thumb Knob (Clean white dot, visible on hover/drag) */}
+          {/* Always-Visible Progress Dot Thumb (Scales on hover/drag for precision seeking) */}
           <div
             ref={thumbRef}
-            className={`absolute -ml-1.5 w-3 h-3 rounded-full bg-white shadow-md pointer-events-none z-20 transition-opacity duration-150 ${
-              isDragging || isHovering ? 'opacity-100' : 'opacity-0'
+            className={`absolute -ml-[7px] w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)] ring-2 ring-[#1DB954]/80 pointer-events-none z-20 transition-transform duration-150 ${
+              isDragging || isHovering ? 'scale-125' : 'scale-100'
             }`}
             style={{ left: `${initialPercent}%` }}
           />
@@ -311,7 +309,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
         aria-label="شريط تقدم الأغنية"
       >
         {/* Track Groove Background */}
-        <div className="w-full h-1 group-hover:h-1.5 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
+        <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
           {/* Buffer Bar (Pre-loaded audio) */}
           <div
             className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
@@ -320,9 +318,7 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           {/* Active Playback Progress Fill */}
           <div
             ref={fillBarRef}
-            className={`absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 transition-colors duration-150 ${
-              isDragging || isHovering ? 'bg-[#1DB954]' : 'bg-white group-hover:bg-[#1DB954]'
-            }`}
+            className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 bg-[#1DB954] transition-colors duration-150"
             style={{ width: `${initialPercent}%` }}
           />
         </div>
@@ -338,11 +334,11 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
           </div>
         )}
 
-        {/* Spotify Thumb Knob (Clean white dot, visible on hover/drag) */}
+        {/* Always-Visible Progress Dot Thumb (Visible on touch & desktop for immediate scrubbing) */}
         <div
           ref={thumbRef}
-          className={`absolute -ml-1.5 w-3 h-3 rounded-full bg-white shadow-md pointer-events-none z-20 transition-opacity duration-150 ${
-            isDragging || isHovering ? 'opacity-100' : 'opacity-0'
+          className={`absolute -ml-2 w-4 h-4 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)] ring-2 ring-[#1DB954]/80 pointer-events-none z-20 transition-transform duration-150 ${
+            isDragging || isHovering ? 'scale-125' : 'scale-100'
           }`}
           style={{ left: `${initialPercent}%` }}
         />

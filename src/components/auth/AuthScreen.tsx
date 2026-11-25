@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { authService, AuthUser, SavedAccount } from '../../services/authService';
 import { triggerHaptic } from '../../utils/haptics';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -20,6 +20,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onSuccess, onContinueAsG
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsub = authService.onSavedAccountsChange((accounts) => {
+      setSavedAccounts(accounts);
+      if (accounts.length > 0) {
+        setShowForm((prev) => (prev ? prev : false));
+      }
+    });
+    return unsub;
+  }, []);
 
   const handleSelectSaved = (acc: SavedAccount) => {
     triggerHaptic('success');
