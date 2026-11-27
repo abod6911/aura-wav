@@ -49,7 +49,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
-      className="fixed bottom-0 inset-x-0 w-full bg-[#101014]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(54px+env(safe-area-inset-bottom,0px))] after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12 after:bg-[#101014] after:pointer-events-none"
+      className="fixed bottom-0 inset-x-0 w-full bg-[#101014]/[0.96] backdrop-blur-md border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(54px+env(safe-area-inset-bottom,0px))] after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12 after:bg-[#101014] after:pointer-events-none"
       dir={dir}
     >
       {tabs.map((tab) => {

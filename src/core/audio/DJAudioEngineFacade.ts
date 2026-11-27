@@ -372,7 +372,7 @@ export class DJAudioEngineFacade {
       try {
         await newActive.play();
         this.notifyPlaybackState(true);
-        this.timerWorker.start(20);
+        this.timerWorker.start(100);
         this.startIosKeepAlive();
         this.purgeUnusedObjectUrls();
         this.isSwitchingTrack = false;
@@ -402,7 +402,7 @@ export class DJAudioEngineFacade {
 
       await active.play();
       this.notifyPlaybackState(true);
-      this.timerWorker.start(20);
+      this.timerWorker.start(100);
       if (isDirectNativeAudioMode()) {
         this.pauseIosKeepAlive();
       }
@@ -434,7 +434,7 @@ export class DJAudioEngineFacade {
       }
       await active.play();
       this.notifyPlaybackState(true);
-      this.timerWorker.start(20);
+      this.timerWorker.start(100);
       return true;
     } catch (err) {
       console.warn('[DJAudioEngine] Resume error:', err);
@@ -1124,7 +1124,7 @@ export class DJAudioEngineFacade {
       if (!isFinite(cur) || !isFinite(dur) || dur <= 0) return;
 
       const now = performance.now();
-      if (now - this.lastTimeUpdate >= 100) {
+      if (now - this.lastTimeUpdate >= 250) {
         this.lastTimeUpdate = now;
         if (this.callbacks.onTimeUpdate) {
           this.callbacks.onTimeUpdate(cur, dur);

@@ -286,7 +286,7 @@ export function App() {
     // Register Service Worker for PWA with automatic instant updates
     if ('serviceWorker' in navigator && import.meta.env.PROD) {
       navigator.serviceWorker
-        .register('/sw.js', { updateViaCache: 'none' })
+        .register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' })
         .then((reg) => {
           console.log('AURA.WAV PWA Service Worker Registered');
           // Check for update immediately on load
@@ -524,7 +524,7 @@ export function App() {
 
         {/* Desktop Header docked sticky at top of main area */}
         {!isMobile && (
-          <div className="sticky top-0 z-40 w-full bg-[#09090B]/90 backdrop-blur-xl">
+          <div className="sticky top-0 z-40 w-full bg-[#09090B]/95 backdrop-blur-md">
             <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
           </div>
         )}

@@ -46,11 +46,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const [filter, setFilter] = useState<LibraryFilter>('all');
 
   const allArtists = useMemo(() => {
-    return filter === 'all' || filter === 'artists' ? getAllArtists(tracks) : [];
+    return filter === 'artists' ? getAllArtists(tracks) : [];
   }, [tracks, filter]);
 
   const allAlbums = useMemo(() => {
-    return filter === 'all' || filter === 'albums' ? getAllAlbums(tracks) : [];
+    return filter === 'albums' ? getAllAlbums(tracks) : [];
   }, [tracks, filter]);
 
   const handleCreatePlaylist = async () => {

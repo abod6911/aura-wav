@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
       }}
       className={`select-none w-full min-w-0 px-4 sm:px-8 pb-2 sm:pb-3 shrink-0 z-30 transition-colors pointer-events-auto ${
         isScrolled
-          ? 'bg-[#121212]/95 backdrop-blur-2xl border-b border-white/[0.06]'
+          ? 'bg-[#121212]/95 backdrop-blur-md border-b border-white/[0.06]'
           : 'border-b border-white/[0.02]'
       }`}
       dir={dir}

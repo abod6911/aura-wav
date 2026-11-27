@@ -55,15 +55,8 @@ export const AudioReactiveBackground: React.FC<{
     const c2 = hexToRgb(secondaryColor);
     const c3 = hexToRgb(accentColor);
 
-    let width = (canvas.width = Math.floor(window.innerWidth / 2));
-    let height = (canvas.height = Math.floor(window.innerHeight / 2));
-
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = Math.floor(window.innerWidth / 2);
-      height = canvas.height = Math.floor(window.innerHeight / 2);
-    };
-    window.addEventListener('resize', handleResize);
+    let width = (canvas.width = 192);
+    let height = (canvas.height = 108);
 
     const blobs: BlobNode[] = [
       {
@@ -96,9 +89,18 @@ export const AudioReactiveBackground: React.FC<{
     let smoothMid = 0;
     let phase = 0;
     let isRunning = typeof document === 'undefined' ? true : !document.hidden;
+    let lastRenderTime = 0;
 
-    const render = () => {
+    const render = (now: number) => {
       if (!isRunning || !canvas || !ctx) return;
+
+      if (now - lastRenderTime < 50) {
+        if (isPlaying) {
+          animId = requestAnimationFrame(render);
+        }
+        return;
+      }
+      lastRenderTime = now;
 
       if (isPlaying) {
         djAudioEngine.getVisualizerData(freqData);
@@ -184,7 +186,6 @@ export const AudioReactiveBackground: React.FC<{
       if (typeof document !== 'undefined') {
         document.removeEventListener('visibilitychange', handleVisibility);
       }
-      window.removeEventListener('resize', handleResize);
     };
   }, [isPlaying, reactiveVisualsEnabled, primaryColor, secondaryColor, accentColor]);
 
@@ -193,7 +194,7 @@ export const AudioReactiveBackground: React.FC<{
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none filter blur-2xl opacity-80 mix-blend-screen transition-opacity duration-700 transform-gpu"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-80 mix-blend-screen transition-opacity duration-700"
       style={{
         width: '100%',
         height: '100%',

@@ -12,7 +12,7 @@ interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElem
   showIconPlaceholder?: boolean;
 }
 
-export const OptimizedImage: React.FC<OptimizedImageProps> = ({
+export const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
   src,
   alt,
   size = 'card',
@@ -35,9 +35,9 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   return (
     <div className={`relative overflow-hidden bg-white/[0.03] ${containerClassName}`}>
-      {/* Skeleton Shimmer Placeholder */}
+      {/* Static Lightweight Placeholder (avoids dozens of simultaneous animate-pulse GPU layers) */}
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-transparent animate-pulse pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/[0.03] pointer-events-none">
           {showIconPlaceholder && (
             <Music2 className="w-1/3 h-1/3 text-white/10" />
           )}
@@ -66,4 +66,4 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
       />
     </div>
   );
-};
+});

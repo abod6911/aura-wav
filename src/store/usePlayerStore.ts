@@ -568,6 +568,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
   };
 
   let currentSessionRecordedTrackId: string | null = null;
+  let lastHandoffBroadcastSec = -1;
 
   // Wire up audio engine callbacks
   djAudioEngine.setCallbacks({
@@ -585,13 +586,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         }
       }
 
-      // Smart Buffer Pre-fetch & Lookahead Streaming Preloader (15s remaining or 75% progress)
-      const nextId = get().nextUpTrackId;
-      if (nextId) {
-        const nextTrk = get().tracks.find((t) => t.id === nextId) || null;
-        if (nextTrk) {
-          audioBufferPool.checkAndPrefetchNextTrack(cur, dur, nextTrk, fetchTrackBlob);
-          streamingPreloader.checkAndPreload(cur, dur, nextTrk);
+      // Smart Buffer Pre-fetch & Lookahead Streaming Preloader (only scan when near preload window: <= 20s left or >= 72% progress)
+      const remaining = dur > 0 ? dur - cur : Infinity;
+      const progressRatio = dur > 0 ? cur / dur : 0;
+      if (remaining <= 20 || progressRatio >= 0.72) {
+        const nextId = get().nextUpTrackId;
+        if (nextId) {
+          const nextTrk = get().tracks.find((t) => t.id === nextId) || null;
+          if (nextTrk) {
+            audioBufferPool.checkAndPrefetchNextTrack(cur, dur, nextTrk, fetchTrackBlob);
+            streamingPreloader.checkAndPreload(cur, dur, nextTrk);
+          }
         }
       }
 
@@ -600,10 +605,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
       set({ currentTime: cur, duration: dur });
-      if (typeof localStorage !== 'undefined' && Math.floor(cur) % 4 === 0) {
-        try {
-          localStorage.setItem('aura_last_track_position', String(Math.floor(cur)));
-        } catch {}
+      const flooredCur = Math.floor(cur);
+      if (flooredCur !== lastHandoffBroadcastSec && flooredCur % 5 === 0) {
+        lastHandoffBroadcastSec = flooredCur;
+        if (typeof localStorage !== 'undefined') {
+          try {
+            localStorage.setItem('aura_last_track_position', String(flooredCur));
+          } catch {}
+        }
         handoffService.broadcastPlaybackState(get().currentTrack, cur, dur, get().isPlaying);
       }
     },

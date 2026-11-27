@@ -424,11 +424,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         <div className="hidden md:grid grid-cols-1 lg:grid-cols-12 gap-4 w-full">
           {/* Main Featured Track Card */}
           <div className="lg:col-span-8 min-h-[190px] rounded-2xl p-5 flex items-center justify-between relative overflow-hidden bg-[#181818] border border-white/[0.06] select-none">
-            {/* Cinematic subtle blur */}
+            {/* Lightweight ambient tint (zero 50px blur overhead) */}
             <div
-              className="absolute inset-0 -z-10 bg-cover bg-center opacity-20 blur-[50px] pointer-events-none"
+              className="absolute inset-0 -z-10 opacity-30 pointer-events-none"
               style={{
-                backgroundImage: `url(${spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/cover.jpg'})`,
+                background: 'radial-gradient(circle at 20% 50%, rgba(var(--ambient-primary-rgb, 29, 185, 84), 0.35), transparent 70%)',
               }}
             />
             <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#121212] via-[#121212]/70 to-transparent pointer-events-none" />

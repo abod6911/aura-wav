@@ -17,7 +17,7 @@ let assetFiles = [];
 if (fs.existsSync(assetsDir)) {
   assetFiles = fs.readdirSync(assetsDir)
     .filter((f) => f.endsWith('.js') || f.endsWith('.css'))
-    .map((f) => '/assets/' + f);
+    .map((f) => './assets/' + f);
 }
 
 console.log('[buildSw] Found bundle assets to cache:', assetFiles);

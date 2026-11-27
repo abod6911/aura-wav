@@ -1,15 +1,15 @@
 const CACHE_NAME = 'aura-wav-v30';
 const ARTWORK_CACHE_NAME = 'aurawave-artwork-v1';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/data/cloudCatalog.json',
-  '/logo.svg',
-  '/favicon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/fonts/fonts.css',
+  './',
+  './index.html',
+  './manifest.json',
+  './data/cloudCatalog.json',
+  './logo.svg',
+  './favicon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './fonts/fonts.css',
   /* __BUILD_ASSETS__ */
 ];
 

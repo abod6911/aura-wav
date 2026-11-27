@@ -162,24 +162,39 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   // 120fps Viewport Virtualization
   const ROW_HEIGHT = 72;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const tableTopRef = useRef(450);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(800);
 
   useEffect(() => {
+    if (containerRef.current) {
+      tableTopRef.current = containerRef.current.offsetTop || 450;
+    }
+  }, [filtered.length]);
+
+  useEffect(() => {
+    let rafId: number | null = null;
     const handleScroll = (e: Event) => {
       const target = e.target as HTMLElement | Document;
       const st = target instanceof HTMLElement ? target.scrollTop : (window.scrollY || 0);
       const vh = target instanceof HTMLElement ? target.clientHeight : window.innerHeight;
-      setScrollTop(st);
-      if (vh > 0) setViewportHeight(vh);
-      setShowScrollTop(st > 350);
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        setScrollTop(st);
+        if (vh > 0) setViewportHeight(vh);
+        setShowScrollTop(st > 350);
+      });
     };
     window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
-    return () => window.removeEventListener('scroll', handleScroll, { capture: true } as any);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true } as any);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const totalCount = filtered.length;
-  const tableTop = containerRef.current?.offsetTop || 450;
+  const tableTop = tableTopRef.current;
   const relativeScroll = Math.max(0, scrollTop - tableTop);
   const startIndex = Math.max(0, Math.floor(relativeScroll / ROW_HEIGHT) - 5);
   const endIndex = Math.min(totalCount, Math.ceil((relativeScroll + viewportHeight) / ROW_HEIGHT) + 8);
@@ -642,8 +657,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </div>
           </div>
 
-      {/* 3. Balanced Track Table Inside Luxury Glass Card Container */}
-      <div ref={containerRef} className="md:apple-glass-card md:rounded-[28px] p-0 md:p-5 md:shadow-[0_24px_64px_rgba(0,0,0,0.85)] md:transform-gpu md:backdrop-blur-3xl md:border md:border-white/[0.1] bg-transparent border-0 rounded-none shadow-none">
+      {/* 3. Balanced Track Table Inside Matte Obsidian Container (Zero 64px blur GPU drain) */}
+      <div ref={containerRef} className="md:bg-[#121216]/90 md:rounded-[28px] p-0 md:p-5 md:shadow-[0_24px_64px_rgba(0,0,0,0.65)] md:border md:border-white/[0.08] bg-transparent border-0 rounded-none shadow-none">
         <div dir={dir} className="w-full max-w-full">
           {/* Table Column Headers (Desktop Proportional Unified Grid) */}
           <div className="hidden md:grid grid-cols-[44px_minmax(240px,3fr)_minmax(140px,1.5fr)_auto] items-center gap-4 px-4 py-3 text-xs font-extrabold text-white/55 border-b border-white/[0.08] select-none uppercase tracking-wider">

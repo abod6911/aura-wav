@@ -39,7 +39,7 @@ export async function fetchCatalogTracks(): Promise<Track[]> {
 
   catalogFetchPromise = (async () => {
     try {
-      const res = await fetch('/data/cloudCatalog.json');
+      const res = await fetch(`${import.meta.env.BASE_URL}data/cloudCatalog.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: Track[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
