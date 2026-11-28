@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useTransition, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { LUXURY_SPRING, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/motion';
 import { useTranslation } from '../i18n/useTranslation';
 import { searchWorldwideMusic, SearchResultsCategorized } from '../services/streamingEngine';
 import { Search, Play, Pause, X, CheckCircle2, Loader2 } from 'lucide-react';
@@ -149,7 +151,7 @@ export const InfiniteSearchView: React.FC = () => {
   }, [tracks, isRTL]);
 
   return (
-    <div className="w-full text-white pb-4 md:pb-16 pt-2 select-none overflow-x-hidden" dir={dir}>
+    <div className="w-full text-white pb-4 md:pb-16 pt-2 select-none overflow-x-clip" dir={dir}>
       {/* Search Input Bar - Ergonomic iOS 18 Design */}
       <div className="relative max-w-xl mx-auto mb-4">
         <div className="relative flex items-center bg-[#1C1C22] hover:bg-[#202026] focus-within:bg-[#24242C] focus-within:ring-1 focus-within:ring-[#1DB954]/50 rounded-xl transition-colors shadow-md border border-white/[0.08] px-3.5 h-11">
@@ -179,19 +181,31 @@ export const InfiniteSearchView: React.FC = () => {
       {/* Filter Category Pills */}
       {query.trim() && (
         <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar pb-1">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer aura-tap-btn shrink-0 ${
-                activeCategory === cat.id
-                  ? 'bg-white text-black font-semibold shadow-sm'
-                  : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <motion.button
+                key={cat.id}
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`relative px-4 py-1.5 rounded-full text-xs font-bold transition-colors cursor-pointer shrink-0 ${
+                  isActive
+                    ? 'text-black font-semibold'
+                    : 'bg-white/[0.06] text-zinc-300 hover:bg-white/[0.12]'
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="search-category-pill"
+                    transition={LUXURY_SPRING}
+                    className="absolute inset-0 rounded-full bg-white shadow-sm"
+                  />
+                )}
+                <span className="relative z-10">{cat.label}</span>
+              </motion.button>
+            );
+          })}
         </div>
       )}
 
@@ -203,12 +217,21 @@ export const InfiniteSearchView: React.FC = () => {
               {isRTL ? 'استكشف الأنواع والموسيقى' : 'Browse Categories & Genres'}
             </h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+          <motion.div
+            variants={STAGGER_CONTAINER}
+            initial="initial"
+            animate="animate"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5"
+          >
             {genreStats.map((g) => (
-              <div
+              <motion.div
                 key={g.name}
+                variants={STAGGER_ITEM}
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ y: -2, scale: 1.015 }}
+                transition={LUXURY_SPRING}
                 onClick={() => openGenre(g.query)}
-                className={`h-32 sm:h-36 rounded-2xl p-3 sm:p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer aura-tap-btn shadow-lg relative overflow-hidden flex flex-col justify-between group select-none`}
+                className={`h-32 sm:h-36 rounded-2xl p-3 sm:p-4 bg-gradient-to-br ${g.gradient} border border-white/20 cursor-pointer shadow-lg relative overflow-hidden flex flex-col justify-between group select-none`}
               >
                 <div className="z-10 relative">
                   <span className="text-sm font-black text-white leading-tight drop-shadow-md block">
@@ -237,9 +260,9 @@ export const InfiniteSearchView: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -264,11 +287,19 @@ export const InfiniteSearchView: React.FC = () => {
 
           {/* Top Result Banner */}
           {results.topResult && activeCategory === 'all' && (
-            <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={LUXURY_SPRING}
+              className="space-y-3"
+            >
               <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
                 {isRTL ? 'أفضل نتيجة' : 'Top Result'}
               </h3>
-              <div
+              <motion.div
+                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.005 }}
+                transition={LUXURY_SPRING}
                 onClick={() => handlePlaySong(results.topResult!)}
                 className="p-3.5 sm:p-5 rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/[0.1] hover:bg-white/[0.1] transition-colors cursor-pointer flex items-center justify-between gap-3 sm:gap-4 group min-w-0"
               >
@@ -344,8 +375,8 @@ export const InfiniteSearchView: React.FC = () => {
                     <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current translate-x-0.5" />
                   )}
                 </button>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* Artists Row */}

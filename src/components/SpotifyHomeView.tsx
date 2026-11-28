@@ -1,6 +1,8 @@
 import React, { useMemo, useCallback, useState } from 'react';
+import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
+import { LUXURY_SPRING, STAGGER_CONTAINER, STAGGER_ITEM } from '../utils/motion';
 import { Play, Pause, Heart, Sparkles, User, Disc3, Clock, ChevronRight } from 'lucide-react';
 import { Track } from '../types';
 import { triggerHaptic } from '../utils/haptics';
@@ -229,7 +231,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
   }, [currentTrack?.id, togglePlayPause, playTrack]);
 
   return (
-    <div className="w-full flex flex-col gap-5 sm:gap-8 pt-1 sm:pt-3 pb-4 md:pb-16 overflow-x-hidden select-none" dir={dir}>
+    <motion.div
+      variants={STAGGER_CONTAINER}
+      initial="initial"
+      animate="animate"
+      className="w-full flex flex-col gap-5 sm:gap-8 pt-1 sm:pt-3 pb-4 md:pb-16 overflow-x-clip select-none"
+      dir={dir}
+    >
       {/* ── Top Header & Filter Pills ── */}
       <div className="flex flex-col gap-3">
         <div className="hidden sm:flex items-center justify-between">
@@ -238,7 +246,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           </h1>
         </div>
 
-        {/* Filter Pills (Spotify Style) */}
+        {/* Filter Pills (Spotify Style with Spring Pill Morph) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {[
             { id: 'all', label: isRTL ? 'الكل' : 'All' },
@@ -248,21 +256,29 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
           ].map((pill) => {
             const isActive = homeFilter === pill.id;
             return (
-              <button
+              <motion.button
                 key={pill.id}
                 type="button"
+                whileTap={{ scale: 0.94 }}
                 onClick={() => {
                   triggerHaptic('light');
                   setHomeFilter(pill.id as HomeFilter);
                 }}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer ${
+                className={`relative px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-white text-black'
+                    ? 'text-black'
                     : 'bg-[#242424] text-white hover:bg-[#323232] border border-white/5'
                 }`}
               >
-                {pill.label}
-              </button>
+                {isActive && (
+                  <motion.span
+                    layoutId="home-filter-pill"
+                    transition={LUXURY_SPRING}
+                    className="absolute inset-0 rounded-full bg-white shadow-md"
+                  />
+                )}
+                <span className="relative z-10">{pill.label}</span>
+              </motion.button>
             );
           })}
         </div>
@@ -270,12 +286,18 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
       {/* ── 1. Quick Access Grid (Displayed on 'all' filter) ── */}
       {homeFilter === 'all' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 w-full">
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 w-full"
+        >
           {quickCards.map((card, idx) => {
             if (card.type === 'favorites') {
               return (
-                <div
+                <motion.div
                   key="quick-favorites"
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -1 }}
+                  transition={LUXURY_SPRING}
                   onClick={() => {
                     triggerHaptic('light');
                     setActiveTab('favorites');
@@ -294,14 +316,17 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                       {favorites.length} {t.songs}
                     </span>
                   </div>
-                </div>
+                </motion.div>
               );
             }
 
             if (card.type === 'mix') {
               return (
-                <div
+                <motion.div
                   key={`quick-mix-${card.mixId}`}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -1 }}
+                  transition={LUXURY_SPRING}
                   onClick={() => {
                     triggerHaptic('light');
                     openSmartMix(card.mixId);
@@ -323,14 +348,17 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                       {isRTL ? 'ميكس خاص' : 'Made for you'}
                     </span>
                   </div>
-                </div>
+                </motion.div>
               );
             }
 
             if (card.type === 'playlist') {
               return (
-                <div
+                <motion.div
                   key={`quick-pl-${card.playlistId}`}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -1 }}
+                  transition={LUXURY_SPRING}
                   onClick={() => {
                     triggerHaptic('light');
                     navigateTo({ tab: 'playlists', playlistId: card.playlistId });
@@ -350,7 +378,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                       {card.trackCount} مسار
                     </span>
                   </div>
-                </div>
+                </motion.div>
               );
             }
 
@@ -359,8 +387,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             const isCur = currentTrack?.id === trk.id;
 
             return (
-              <div
+              <motion.div
                 key={`quick-trk-${trk.id}`}
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ y: -1 }}
+                transition={LUXURY_SPRING}
                 onClick={() => handleTrackClick(trk, sourcePool)}
                 className={`group relative flex items-center h-12 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-md ${
                   idx >= 6 ? 'hidden xl:flex' : 'flex'
@@ -414,10 +445,85 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
                   )}
                 </button>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
+      )}
+
+      {/* ── 2A. Compact Mobile Spotlight Hero Card ── */}
+      {homeFilter === 'all' && spotlightTrack && (
+        <motion.div
+          variants={STAGGER_ITEM}
+          whileTap={{ scale: 0.985 }}
+          transition={LUXURY_SPRING}
+          onClick={() => handleTrackClick(spotlightTrack)}
+          className="md:hidden relative overflow-hidden rounded-2xl p-3.5 bg-[#16161C] border border-white/[0.08] shadow-xl flex items-center gap-3.5 cursor-pointer select-none"
+        >
+          <div
+            className="absolute inset-0 pointer-events-none opacity-45"
+            style={{
+              background: 'radial-gradient(circle at 15% 50%, rgba(var(--ambient-primary-rgb, 29, 185, 84), 0.36), transparent 72%)',
+            }}
+          />
+          <img
+            src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || './logo.svg'}
+            alt={spotlightTrack.title}
+            loading="eager"
+            className="relative z-10 w-16 h-16 rounded-xl object-cover shadow-lg ring-1 ring-white/15 shrink-0 bg-black/50"
+          />
+          <div className="relative z-10 min-w-0 flex-1 text-start">
+            <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase block">
+              {currentTrack?.id === spotlightTrack.id
+                ? (isRTL ? 'قيد التشغيل الآن' : 'Now Playing')
+                : (isRTL ? 'مختارات لك' : 'Picked For You')}
+            </span>
+            <h2 dir="auto" className="text-sm font-black text-white truncate leading-snug mt-0.5">
+              {spotlightTrack.title}
+            </h2>
+            <p
+              dir="auto"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (spotlightTrack.artist) openArtist(spotlightTrack.artist);
+              }}
+              className="text-xs text-zinc-300 truncate mt-0.5"
+            >
+              {spotlightTrack.artist}
+            </p>
+          </div>
+          <div className="relative z-10 flex items-center gap-1.5 shrink-0">
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                toggleFavorite(spotlightTrack.id);
+              }}
+              className="w-9 h-9 rounded-full bg-white/[0.07] border border-white/[0.08] flex items-center justify-center text-zinc-300 cursor-pointer"
+              aria-label={isSpotlightFav ? t.favoriteRemoved : t.favoriteAdded}
+            >
+              <Heart className={`w-4 h-4 ${isSpotlightFav ? 'text-[#1DB954] fill-[#1DB954]' : ''}`} />
+            </motion.button>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.88 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTrackClick(spotlightTrack);
+              }}
+              className="w-10 h-10 rounded-full bg-[#1DB954] text-black flex items-center justify-center shadow-lg cursor-pointer"
+              aria-label={currentTrack?.id === spotlightTrack.id && isPlaying ? t.pause : t.play}
+            >
+              {currentTrack?.id === spotlightTrack.id && isPlaying ? (
+                <Pause className="w-4 h-4 fill-black text-black" />
+              ) : (
+                <Play className="w-4 h-4 fill-black text-black translate-x-0.5" />
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
       )}
 
       {/* ── 2. Editorial Matte Hero Card (Desktop only, displayed on 'all') ── */}
@@ -561,7 +667,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
 
       {/* ── 3. Section: ميكساتك اليومية (Daily Mixes + On Repeat + Rediscover) ── */}
       {(homeFilter === 'all' || homeFilter === 'mixes') && allSmartMixes.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <motion.section variants={STAGGER_ITEM} className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -572,10 +678,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             </span>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:gap-4 md:overflow-visible">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 md:gap-4 md:overflow-visible">
             {allSmartMixes.map((mix) => (
-              <div
+              <motion.div
                 key={mix.id}
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ y: -2 }}
+                transition={LUXURY_SPRING}
                 onClick={() => {
                   triggerHaptic('light');
                   openSmartMix(mix.id);
@@ -628,15 +737,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 >
                   {mix.subtitle}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* ── 4. Section: استمعت مؤخراً (Deduplicated Recently Played) ── */}
       {(homeFilter === 'all' || homeFilter === 'recent') && recentTracks.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <motion.section variants={STAGGER_ITEM} className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-zinc-400" />
@@ -644,12 +753,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             </h2>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
             {recentTracks.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
-                <div
+                <motion.div
                   key={`recent-${trk.id}`}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -2 }}
+                  transition={LUXURY_SPRING}
                   onClick={() => handleTrackClick(trk, recentTracks)}
                   className="group relative flex flex-col p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[135px] xs:w-[150px] shrink-0 snap-start md:w-auto"
                 >
@@ -697,16 +809,16 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   >
                     {trk.artist}
                   </span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* ── 5. Section: فنانون في مكتبتك (Top Artists with Circular Avatars) ── */}
       {(homeFilter === 'all' || homeFilter === 'artists') && topArtists.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <motion.section variants={STAGGER_ITEM} className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
               <User className="w-5 h-5 text-zinc-400" />
@@ -721,10 +833,13 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             </button>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 md:gap-4 md:overflow-visible">
             {topArtists.map((artist) => (
-              <div
+              <motion.div
                 key={`artist-${artist.name}`}
+                whileTap={{ scale: 0.96 }}
+                whileHover={{ y: -2 }}
+                transition={LUXURY_SPRING}
                 onClick={() => {
                   triggerHaptic('light');
                   openArtist(artist.name);
@@ -748,15 +863,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 <span className="text-[11px] text-[#B3B3B3] mt-0.5">
                   فنان • {artist.trackCount} مسار
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* ── 6. Section: اكتشف من مكتبتك (Deduplicated Rediscover Tracks) ── */}
       {(homeFilter === 'all' || homeFilter === 'mixes') && rediscoverTracks.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <motion.section variants={STAGGER_ITEM} className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -774,12 +889,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             </button>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
+          <div className="flex overflow-x-auto snap-x snap-mandatory gap-3 pb-2 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar md:grid md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4 md:overflow-visible">
             {rediscoverTracks.map((trk) => {
               const isCur = currentTrack?.id === trk.id;
               return (
-                <div
+                <motion.div
                   key={`rediscover-${trk.id}`}
+                  whileTap={{ scale: 0.96 }}
+                  whileHover={{ y: -2 }}
+                  transition={LUXURY_SPRING}
                   onClick={() => handleTrackClick(trk, rediscoverTracks)}
                   className="group relative flex flex-col p-3 rounded-xl bg-[#181818] hover:bg-[#282828] transition-colors cursor-pointer select-none w-[135px] xs:w-[150px] shrink-0 snap-start md:w-auto"
                 >
@@ -827,22 +945,23 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   >
                     {trk.artist}
                   </span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* ── 7. All Library Navigation Pill ── */}
-      <div className="pt-2">
-        <button
+      <motion.div variants={STAGGER_ITEM} className="pt-2">
+        <motion.button
           type="button"
+          whileTap={{ scale: 0.985 }}
           onClick={() => {
             triggerHaptic('medium');
             setActiveTab('library');
           }}
-          className="w-full py-3.5 rounded-xl bg-[#181818] hover:bg-[#242424] active:scale-[0.99] transition-colors border border-white/5 text-center text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-3.5 rounded-xl bg-[#181818] hover:bg-[#242424] transition-colors border border-white/5 text-center text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>
             {isRTL
@@ -850,8 +969,8 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               : `Browse Complete Library (${tracks.length || catalogTracks.length} tracks)`}
           </span>
           <ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Track Action Sheet for Mobile and Desktop options */}
       <TrackActionSheet
@@ -859,6 +978,6 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
         isOpen={!!actionSheetTrack}
         onClose={() => setActionSheetTrack(null)}
       />
-    </div>
+    </motion.div>
   );
 };

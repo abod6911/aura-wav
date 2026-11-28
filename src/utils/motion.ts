@@ -91,3 +91,39 @@ export const ARTWORK_SCALE_TRANSITION: Transition = {
   duration: 0.38,
   ease: APPLE_EASE_ARTWORK,
 };
+
+// ── Staggered Luxury Container & Item Variants (GPU transform + opacity only) ──
+export const STAGGER_CONTAINER: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.045,
+      delayChildren: 0.02,
+    },
+  },
+};
+
+export const STAGGER_ITEM: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.28,
+      ease: APPLE_EASE_MICRO,
+    },
+  },
+};
+
+export const LUXURY_SPRING: Transition = {
+  type: 'spring',
+  stiffness: 420,
+  damping: 30,
+  mass: 0.85,
+};
+
+export const CARD_TAP_ANIMATION = {
+  whileHover: { y: -2, transition: { duration: 0.18, ease: APPLE_EASE_MICRO } },
+  whileTap: { scale: 0.965, transition: { duration: 0.1 } },
+};

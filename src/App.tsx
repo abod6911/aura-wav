@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState, useRef, lazy, Suspense } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { TAB_TRANSITION_VARIANTS } from './utils/motion';
 import { usePlayerStore } from './store/usePlayerStore';
 import { AtmosphereBackground } from './components/AtmosphereBackground';
 import { Sidebar } from './components/Sidebar';
@@ -220,14 +221,31 @@ export function App() {
     }
   };
 
+  // Track window scroll on mobile natural document flow so Header transitions cleanly & URL bar collapses
+  useEffect(() => {
+    if (!isMobile) return;
+    const onWinScroll = () => {
+      const st = window.scrollY || document.documentElement.scrollTop || 0;
+      tabScrollMap.current[activeTab] = st;
+      setIsHeaderScrolled(st > 16);
+    };
+    window.addEventListener('scroll', onWinScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onWinScroll);
+  }, [isMobile, activeTab]);
+
   // Restore scroll position synchronously when activeTab mounts without keeping inactive tabs in DOM
   useLayoutEffect(() => {
+    const targetScroll = tabScrollMap.current[activeTab] || 0;
+    if (isMobile) {
+      window.scrollTo(0, targetScroll);
+      setIsHeaderScrolled(targetScroll > 16);
+      return;
+    }
     const mainEl = mainScrollRef.current;
     if (!mainEl) return;
-    const targetScroll = tabScrollMap.current[activeTab] || 0;
     mainEl.scrollTop = targetScroll;
     setIsHeaderScrolled(targetScroll > 20);
-  }, [activeTab]);
+  }, [activeTab, isMobile]);
 
   // Synchronize dynamic Acoustic Obsidian & Vinyl-Glass ambient engine with real artwork color
   useEffect(() => {
@@ -474,7 +492,7 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
+          ? 'relative w-full min-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-x-clip select-none'
           : 'relative w-full h-full flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#1DB954]/30'
       }
     >
@@ -497,15 +515,17 @@ export function App() {
       {/* 2. Desktop Right Sidebar (Docked continuously on right in RTL) */}
       {!isMobile && <Sidebar onOpenImport={() => setIsImportModalOpen(true)} />}
 
-      {/* 3. Header on Mobile (Stays fixed at top with safe-area support) */}
+      {/* 3. Header on Mobile (Sticky at top with safe-area support, lets body scroll collapse URL bar) */}
       {isMobile && (
-        <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
+        <div className="sticky top-0 z-40 w-full bg-[#09090B]/90 backdrop-blur-md">
+          <Header onOpenImport={() => setIsImportModalOpen(true)} isScrolled={isHeaderScrolled} />
+        </div>
       )}
 
       {/* 4. Main View Area (Strictly one active tab in DOM) */}
       <main
         ref={mainScrollRef}
-        onScroll={handleMainScroll}
+        onScroll={!isMobile ? handleMainScroll : undefined}
         style={{
           paddingBottom: isMobile
             ? (currentTrack ? 'var(--scroll-bottom-clearance)' : 'var(--scroll-bottom-no-player)')
@@ -513,7 +533,7 @@ export function App() {
         }}
         className={
           isMobile
-            ? 'flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden px-4 pt-1 overscroll-contain relative z-10'
+            ? 'flex-1 w-full px-4 pt-1 relative z-10'
             : 'flex-1 w-full min-w-0 h-full overflow-y-auto overscroll-contain touch-pan-y relative z-10 scrollbar-thin scrollbar-thumb-white/10 bg-[#09090B]'
         }
       >
@@ -538,54 +558,31 @@ export function App() {
             </div>
           ) : (
             <div className="flex-1 w-full min-w-0">
-              {activeTab === 'home' && (
-                <div key="tab-home" className="animate-tab-enter">
-                  <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />
-                </div>
-              )}
-              {activeTab === 'search' && (
-                <div key="tab-search" className="animate-tab-enter">
-                  <InfiniteSearchView />
-                </div>
-              )}
-              {activeTab === 'library' && (
-                <div key="tab-library" className="animate-tab-enter">
-                  <TrackList onOpenImport={() => setIsImportModalOpen(true)} />
-                </div>
-              )}
-              {activeTab === 'favorites' && (
-                <div key="tab-favorites" className="animate-tab-enter">
-                  <FavoritesView
-                    onOpenImport={() => setIsImportModalOpen(true)}
-                    onExplore={() => usePlayerStore.getState().setActiveTab('search')}
-                  />
-                </div>
-              )}
-              {activeTab === 'playlists' && (
-                <div key="tab-playlists" className="animate-tab-enter">
-                  <PlaylistsView />
-                </div>
-              )}
-              {activeTab === 'artist' && (
-                <div key="tab-artist" className="animate-tab-enter">
-                  <ArtistView />
-                </div>
-              )}
-              {activeTab === 'album' && (
-                <div key="tab-album" className="animate-tab-enter">
-                  <AlbumView />
-                </div>
-              )}
-              {activeTab === 'genre' && (
-                <div key="tab-genre" className="animate-tab-enter">
-                  <GenreView />
-                </div>
-              )}
-              {activeTab === 'smart_mix' && (
-                <div key="tab-smart-mix" className="animate-tab-enter">
-                  <SmartMixView />
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  variants={TAB_TRANSITION_VARIANTS}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="w-full"
+                >
+                  {activeTab === 'home' && <SpotifyHomeView onOpenImport={() => setIsImportModalOpen(true)} />}
+                  {activeTab === 'search' && <InfiniteSearchView />}
+                  {activeTab === 'library' && <TrackList onOpenImport={() => setIsImportModalOpen(true)} />}
+                  {activeTab === 'favorites' && (
+                    <FavoritesView
+                      onOpenImport={() => setIsImportModalOpen(true)}
+                      onExplore={() => usePlayerStore.getState().setActiveTab('search')}
+                    />
+                  )}
+                  {activeTab === 'playlists' && <PlaylistsView />}
+                  {activeTab === 'artist' && <ArtistView />}
+                  {activeTab === 'album' && <AlbumView />}
+                  {activeTab === 'genre' && <GenreView />}
+                  {activeTab === 'smart_mix' && <SmartMixView />}
+                </motion.div>
+              </AnimatePresence>
             </div>
           )}
         </div>

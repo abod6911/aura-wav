@@ -285,52 +285,63 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
-        <button
-          onClick={() => {
-            setMobileSubTab('tracks');
-            if (activeFilter === 'offline') setActiveFilter('all');
-          }}
-          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
-            mobileSubTab === 'tracks' && activeFilter !== 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
-          }`}
-        >
-          {isRTL ? 'الأغاني' : 'Tracks'}
-        </button>
-        <button
-          onClick={() => setMobileSubTab('playlists')}
-          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
-            mobileSubTab === 'playlists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
-          }`}
-        >
-          {isRTL ? 'القوائم' : 'Playlists'}
-        </button>
-        <button
-          onClick={() => setMobileSubTab('artists')}
-          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
-            mobileSubTab === 'artists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
-          }`}
-        >
-          {isRTL ? 'الفنانون' : 'Artists'}
-        </button>
-        <button
-          onClick={() => setMobileSubTab('albums')}
-          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
-            mobileSubTab === 'albums' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
-          }`}
-        >
-          {isRTL ? 'الألبومات' : 'Albums'}
-        </button>
-        <button
-          onClick={() => {
-            setMobileSubTab('downloaded');
-            setActiveFilter('offline');
-          }}
-          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
-            mobileSubTab === 'downloaded' || activeFilter === 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
-          }`}
-        >
-          {isRTL ? 'المحمّلة' : 'Downloaded'}
-        </button>
+        {[
+          {
+            id: 'tracks' as const,
+            label: isRTL ? 'الأغاني' : 'Tracks',
+            active: mobileSubTab === 'tracks' && activeFilter !== 'offline',
+            onSelect: () => {
+              setMobileSubTab('tracks');
+              if (activeFilter === 'offline') setActiveFilter('all');
+            },
+          },
+          {
+            id: 'playlists' as const,
+            label: isRTL ? 'القوائم' : 'Playlists',
+            active: mobileSubTab === 'playlists',
+            onSelect: () => setMobileSubTab('playlists'),
+          },
+          {
+            id: 'artists' as const,
+            label: isRTL ? 'الفنانون' : 'Artists',
+            active: mobileSubTab === 'artists',
+            onSelect: () => setMobileSubTab('artists'),
+          },
+          {
+            id: 'albums' as const,
+            label: isRTL ? 'الألبومات' : 'Albums',
+            active: mobileSubTab === 'albums',
+            onSelect: () => setMobileSubTab('albums'),
+          },
+          {
+            id: 'downloaded' as const,
+            label: isRTL ? 'المحمّلة' : 'Downloaded',
+            active: mobileSubTab === 'downloaded' || activeFilter === 'offline',
+            onSelect: () => {
+              setMobileSubTab('downloaded');
+              setActiveFilter('offline');
+            },
+          },
+        ].map((tab) => (
+          <motion.button
+            key={tab.id}
+            type="button"
+            whileTap={{ scale: 0.94 }}
+            onClick={tab.onSelect}
+            className={`relative px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+              tab.active ? 'text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
+            }`}
+          >
+            {tab.active && (
+              <motion.span
+                layoutId="library-mobile-subtab"
+                transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.8 }}
+                className="absolute inset-0 rounded-full bg-white shadow-sm"
+              />
+            )}
+            <span className="relative z-10">{tab.label}</span>
+          </motion.button>
+        ))}
       </div>
 
       {mobileSubTab === 'playlists' ? (

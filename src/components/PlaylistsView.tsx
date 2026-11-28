@@ -12,7 +12,9 @@ import { Track } from '../types';
 export const PlaylistsView: React.FC = () => {
   const { isRTL, dir } = useTranslation();
   const playlists = usePlayerStore((state) => state.playlists);
-  const tracks = usePlayerStore((state) => state.tracks);
+  const rawTracks = usePlayerStore((state) => state.tracks);
+  const catalogTracks = usePlayerStore((state) => state.catalogTracks);
+  const tracks = useMemo(() => (rawTracks.length > 0 ? rawTracks : catalogTracks), [rawTracks, catalogTracks]);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);
   const renamePlaylist = usePlayerStore((state) => state.renamePlaylist);
   const deletePlaylist = usePlayerStore((state) => state.deletePlaylist);

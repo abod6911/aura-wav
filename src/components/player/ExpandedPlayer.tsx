@@ -595,13 +595,27 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const renderPlayPauseIcon = (sizeClass: string, spinnerSizeClass: string) => {
-    if (isPlaying) {
-      return <Pause className={`${sizeClass} fill-black text-black`} />;
-    }
-    if (playbackState === 'buffering') {
-      return <div className={`${spinnerSizeClass} rounded-full border-2 border-black/25 border-t-black animate-spin`} />;
-    }
-    return <Play className={`${sizeClass} fill-black text-black translate-x-0.5`} />;
+    const stateKey = isPlaying ? 'pause' : playbackState === 'buffering' ? 'buf' : 'play';
+    return (
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={stateKey}
+          initial={{ scale: 0.65, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.65, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 520, damping: 30 }}
+          className="flex items-center justify-center"
+        >
+          {isPlaying ? (
+            <Pause className={`${sizeClass} fill-black text-black`} />
+          ) : playbackState === 'buffering' ? (
+            <div className={`${spinnerSizeClass} rounded-full border-2 border-black/25 border-t-black animate-spin`} />
+          ) : (
+            <Play className={`${sizeClass} fill-black text-black translate-x-0.5`} />
+          )}
+        </motion.span>
+      </AnimatePresence>
+    );
   };
 
   return (
@@ -1108,7 +1122,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             <div className="min-h-full flex flex-col justify-between gap-2 pb-2">
               {/* Mobile Center Stage */}
               <div className="flex-1 min-h-[136px] flex items-center justify-center py-1 overflow-hidden">
+                <AnimatePresence mode="wait" initial={false}>
                 {activeCenterView === 'artwork' ? (
+                  <motion.div
+                    key="center-artwork"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.85 }}
+                    className="w-full flex items-center justify-center"
+                  >
                   <motion.div
                     layoutId="aura-player-artwork"
                     data-testid="expanded-artwork-container"
@@ -1158,20 +1181,40 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   />
                   <div className="absolute inset-0 vinyl-sheen pointer-events-none z-10" />
                 </motion.div>
+                </motion.div>
               ) : activeCenterView === 'lyrics' ? (
-                <EmbeddedLyricsView track={currentTrack} onSeek={seek} />
+                <motion.div
+                  key="center-lyrics"
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 30, mass: 0.85 }}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  <EmbeddedLyricsView track={currentTrack} onSeek={seek} />
+                </motion.div>
               ) : (
-                <EmbeddedQueueView
-                  currentTrack={currentTrack}
-                  isPlaying={isPlaying}
-                  userQueue={userQueue}
-                  queue={queue}
-                  playTrack={playTrack}
-                  reorderUserQueue={reorderUserQueue}
-                  removeFromUserQueue={removeFromUserQueue}
-                  clearUserQueue={clearUserQueue}
-                />
+                <motion.div
+                  key="center-queue"
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 360, damping: 30, mass: 0.85 }}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  <EmbeddedQueueView
+                    currentTrack={currentTrack}
+                    isPlaying={isPlaying}
+                    userQueue={userQueue}
+                    queue={queue}
+                    playTrack={playTrack}
+                    reorderUserQueue={reorderUserQueue}
+                    removeFromUserQueue={removeFromUserQueue}
+                    clearUserQueue={clearUserQueue}
+                  />
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
 
             {/* Mobile Lower Controls Cluster */}
@@ -1318,24 +1361,33 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
               {/* Mobile Machined Smoked Glass Studio Dock */}
               <div className="flex items-center justify-around w-full p-1 rounded-2xl bg-black/35 border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] shrink-0 select-none">
-                <button
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.92 }}
                   onClick={() => {
                     triggerHaptic('light');
                     setActiveCenterView((prev) => (prev === 'lyrics' ? 'artwork' : 'lyrics'));
                   }}
-                  className={`flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer transition-colors ${
+                  className={`relative flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer transition-colors ${
                     activeCenterView === 'lyrics'
-                      ? 'bg-[#1DB954]/15 text-[#1DB954]'
+                      ? 'text-[#1DB954]'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <Mic2 className="w-4.5 h-4.5" />
-                  <span className="text-[10px] font-semibold">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
-                </button>
+                  {activeCenterView === 'lyrics' && (
+                    <motion.span
+                      layoutId="expanded-mobile-dock"
+                      transition={{ type: 'spring', stiffness: 460, damping: 32, mass: 0.8 }}
+                      className="absolute inset-0 rounded-xl bg-[#1DB954]/15 border border-[#1DB954]/25"
+                    />
+                  )}
+                  <Mic2 className="relative z-10 w-4.5 h-4.5" />
+                  <span className="relative z-10 text-[10px] font-semibold">{isRTL ? 'الكلمات' : 'Lyrics'}</span>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.92 }}
                   onClick={() => {
                     triggerHaptic('light');
                     setEqualizerOpen(true);
@@ -1344,22 +1396,30 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 >
                   <Sliders className="w-4.5 h-4.5" />
                   <span className="text-[10px] font-semibold">{isRTL ? 'المعادل' : 'EQ'}</span>
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-queue-btn"
+                  whileTap={{ scale: 0.92 }}
                   onClick={() => {
                     triggerHaptic('light');
                     setActiveCenterView((prev) => (prev === 'queue' ? 'artwork' : 'queue'));
                   }}
-                  className={`flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer relative transition-colors ${
+                  className={`relative flex-1 flex flex-col items-center justify-center min-h-[42px] gap-0.5 py-1 rounded-xl cursor-pointer transition-colors ${
                     activeCenterView === 'queue'
-                      ? 'bg-[#1DB954]/15 text-[#1DB954]'
+                      ? 'text-[#1DB954]'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <div className="relative">
+                  {activeCenterView === 'queue' && (
+                    <motion.span
+                      layoutId="expanded-mobile-dock"
+                      transition={{ type: 'spring', stiffness: 460, damping: 32, mass: 0.8 }}
+                      className="absolute inset-0 rounded-xl bg-[#1DB954]/15 border border-[#1DB954]/25"
+                    />
+                  )}
+                  <div className="relative z-10">
                     <ListMusic className="w-4.5 h-4.5" />
                     {userQueue.length > 0 && (
                       <span className="absolute -top-1 -right-2 px-1 min-w-[15px] h-3.5 rounded-full bg-[#1DB954] text-black text-[8.5px] font-mono font-bold flex items-center justify-center border border-black shadow">
@@ -1367,8 +1427,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] font-semibold">{isRTL ? 'القائمة' : 'Queue'}</span>
-                </button>
+                  <span className="relative z-10 text-[10px] font-semibold">{isRTL ? 'القائمة' : 'Queue'}</span>
+                </motion.button>
               </div>
             </div>
             </div>

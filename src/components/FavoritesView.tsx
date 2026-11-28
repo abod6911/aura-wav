@@ -159,22 +159,24 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
 
           {/* Two Equal Action Buttons (44px height, rounded-xl) */}
           <div className="grid grid-cols-2 gap-3">
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.95 }}
               onClick={handlePlayAll}
-              className="h-11 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-black/40 active:scale-95 transition-colors cursor-pointer"
+              className="h-11 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-black/40 transition-colors cursor-pointer"
             >
               <Play className="w-4 h-4 fill-black text-black" />
               <span>{isRTL ? 'تشغيل' : 'Play'}</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.95 }}
               onClick={handleShufflePlay}
-              className="h-11 rounded-xl bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-colors cursor-pointer"
+              className="h-11 rounded-xl bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <Shuffle className="w-4 h-4 text-zinc-300" />
               <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       )}
