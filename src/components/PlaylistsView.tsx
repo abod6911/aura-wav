@@ -98,16 +98,24 @@ export const PlaylistsView: React.FC = () => {
 
   if (selectedPlaylist) {
     return (
-      <div className="space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-2">
+      <motion.div
+        key={`playlist-${selectedPlaylist.id}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+        className="space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-clip pt-2"
+      >
         {/* Back Button & Playlist Info */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.88 }}
               onClick={() => setSelectedPlaylistId(null)}
-              className="p-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white transition-colors cursor-pointer aura-tap-btn"
+              className="p-2.5 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] text-white transition-colors cursor-pointer"
             >
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </motion.button>
             <div>
               {isRenaming ? (
                 <form
@@ -405,7 +413,7 @@ export const PlaylistsView: React.FC = () => {
           onClose={() => setActionSheetTrack(null)}
           currentPlaylistId={selectedPlaylist.id}
         />
-      </div>
+      </motion.div>
     );
   }
 

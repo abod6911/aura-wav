@@ -857,14 +857,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 dir="ltr"
               >
                 {/* Shuffle */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-shuffle-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     toggleShuffle();
                   }}
-                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-colors border ${
                     shuffle
                       ? 'bg-[#1DB954]/14 border-[#1DB954]/35 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                       : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.09] hover:border-white/[0.16]'
@@ -874,63 +876,74 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 >
                   <Shuffle className="w-4 h-4" />
                   {shuffle && <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-[#1DB954]" />}
-                </button>
+                </motion.button>
 
                 {/* Previous Track */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-prev-btn"
+                  whileTap={{ scale: 0.86 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     previousTrack();
                   }}
-                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer apple-prev-btn"
+                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer"
                   title={isRTL ? 'السابق' : 'Previous'}
                   aria-label="Previous track"
                 >
                   <SkipBack className="w-5 h-5 fill-white text-white" />
-                </button>
+                </motion.button>
 
                 {/* Master Play / Pause Porcelain Disc (0ms Instant Swap — Never Disappears!) */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-play-pause-btn"
+                  whileTap={{ scale: 0.91 }}
+                  whileHover={{ scale: 1.04 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('medium');
                     togglePlayPause();
                   }}
-                  className={`w-[64px] h-[64px] rounded-full hi-fi-play-button text-black flex items-center justify-center apple-play-btn cursor-pointer select-none shrink-0 ${
+                  className={`w-[64px] h-[64px] rounded-full hi-fi-play-button text-black flex items-center justify-center cursor-pointer select-none shrink-0 ${
                     playbackState === 'buffering' && !isPlaying ? 'ring-4 ring-white/25' : ''
                   }`}
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   {renderPlayPauseIcon('w-6 h-6', 'w-6 h-6')}
-                </button>
+                </motion.button>
 
                 {/* Next Track */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-next-btn"
+                  whileTap={{ scale: 0.86 }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     nextTrack({ forceImmediate: true });
                   }}
-                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer apple-next-btn"
+                  className="w-12 h-12 rounded-full satin-metal-button flex items-center justify-center text-white cursor-pointer"
                   title={isRTL ? 'التالي' : 'Next'}
                   aria-label="Next track"
                 >
                   <SkipForward className="w-5 h-5 fill-white text-white" />
-                </button>
+                </motion.button>
 
                 {/* Repeat */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-repeat-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     cycleRepeat();
                   }}
-                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-[background-color,border-color,color,transform] active:scale-90 border ${
+                  className={`relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-colors border ${
                     repeatMode !== 'off'
                       ? 'bg-[#1DB954]/14 border-[#1DB954]/35 text-[#1DB954] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
                       : 'bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-white hover:bg-white/[0.09] hover:border-white/[0.16]'
@@ -940,7 +953,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 >
                   {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
                   {repeatMode !== 'off' && <span className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-[#1DB954]" />}
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -949,43 +962,59 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               {/* Pane Header with Machined Segmented Switcher */}
               <div className="px-5 py-3.5 border-b border-white/[0.08] bg-black/25 flex items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-1 p-1 rounded-full bg-black/45 border border-white/[0.09]">
-                  <button
+                  <motion.button
                     type="button"
+                    whileTap={{ scale: 0.94 }}
                     onClick={() => {
                       triggerHaptic('light');
                       setDesktopContextTab('lyrics');
                     }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-[background-color,border-color,color] cursor-pointer border ${
+                    className={`relative px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer ${
                       desktopContextTab === 'lyrics'
-                        ? 'bg-white/[0.13] border-white/[0.16] text-white shadow-sm'
-                        : 'border-transparent text-zinc-400 hover:text-white'
+                        ? 'text-white'
+                        : 'text-zinc-400 hover:text-white'
                     }`}
                   >
-                    <Mic2 className={`w-3.5 h-3.5 ${desktopContextTab === 'lyrics' ? 'text-[#1DB954]' : ''}`} />
-                    <span>{isRTL ? 'كلمات الأغنية' : 'Lyrics'}</span>
-                  </button>
+                    {desktopContextTab === 'lyrics' && (
+                      <motion.span
+                        layoutId="expanded-desktop-tab"
+                        transition={{ type: 'spring', stiffness: 460, damping: 32 }}
+                        className="absolute inset-0 rounded-full bg-white/[0.13] border border-white/[0.16] shadow-sm"
+                      />
+                    )}
+                    <Mic2 className={`relative z-10 w-3.5 h-3.5 ${desktopContextTab === 'lyrics' ? 'text-[#1DB954]' : ''}`} />
+                    <span className="relative z-10">{isRTL ? 'كلمات الأغنية' : 'Lyrics'}</span>
+                  </motion.button>
 
-                  <button
+                  <motion.button
                     type="button"
                     data-testid="expanded-queue-btn"
+                    whileTap={{ scale: 0.94 }}
                     onClick={() => {
                       triggerHaptic('light');
                       setDesktopContextTab('queue');
                     }}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-[background-color,border-color,color] cursor-pointer border ${
+                    className={`relative px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer ${
                       desktopContextTab === 'queue'
-                        ? 'bg-white/[0.13] border-white/[0.16] text-white shadow-sm'
-                        : 'border-transparent text-zinc-400 hover:text-white'
+                        ? 'text-white'
+                        : 'text-zinc-400 hover:text-white'
                     }`}
                   >
-                    <ListMusic className={`w-3.5 h-3.5 ${desktopContextTab === 'queue' ? 'text-[#1DB954]' : ''}`} />
-                    <span>{isRTL ? 'قائمة الانتظار' : 'Up Next'}</span>
+                    {desktopContextTab === 'queue' && (
+                      <motion.span
+                        layoutId="expanded-desktop-tab"
+                        transition={{ type: 'spring', stiffness: 460, damping: 32 }}
+                        className="absolute inset-0 rounded-full bg-white/[0.13] border border-white/[0.16] shadow-sm"
+                      />
+                    )}
+                    <ListMusic className={`relative z-10 w-3.5 h-3.5 ${desktopContextTab === 'queue' ? 'text-[#1DB954]' : ''}`} />
+                    <span className="relative z-10">{isRTL ? 'قائمة الانتظار' : 'Up Next'}</span>
                     {userQueue.length > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-[#1DB954] text-black text-[10px] font-mono font-extrabold">
+                      <span className="relative z-10 px-1.5 py-0.2 rounded-full bg-[#1DB954] text-black text-[10px] font-mono font-extrabold">
                         {userQueue.length}
                       </span>
                     )}
-                  </button>
+                  </motion.button>
                 </div>
 
                 {/* Audio Quality / Offline Status Badge */}
@@ -1001,7 +1030,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
               {/* Pane Content */}
               <div className="flex-1 min-h-0 overflow-hidden p-2 lg:p-3">
+                <AnimatePresence mode="wait" initial={false}>
                 {desktopContextTab === 'lyrics' ? (
+                  <motion.div
+                    key="desktop-lyrics"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full h-full"
+                  >
                   <EmbeddedLyricsView
                     track={currentTrack}
                     onSeek={seek}
@@ -1017,7 +1055,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                         : undefined
                     }
                   />
+                  </motion.div>
                 ) : (
+                  <motion.div
+                    key="desktop-queue"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="w-full h-full"
+                  >
                   <EmbeddedQueueView
                     currentTrack={currentTrack}
                     isPlaying={isPlaying}
@@ -1028,7 +1075,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     removeFromUserQueue={removeFromUserQueue}
                     clearUserQueue={clearUserQueue}
                   />
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -1046,15 +1095,17 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             />
 
             <div className="w-full flex items-center justify-between">
-              <button
+              <motion.button
                 type="button"
                 data-testid="minimize-player-btn"
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 30 }}
                 onClick={handleClose}
                 className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full satin-metal-button text-white/95 flex items-center justify-center cursor-pointer"
                 aria-label="Collapse player"
               >
                 <ChevronDown className="w-5 h-5" strokeWidth={2} />
-              </button>
+              </motion.button>
 
               <div className="text-center min-w-0 px-2 flex-1 flex flex-col items-center">
                 {sleepTimerRemaining !== null ? (
@@ -1097,9 +1148,11 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 )}
               </div>
 
-              <button
+              <motion.button
                 type="button"
                 data-testid="more-options-btn"
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: 'spring', stiffness: 520, damping: 30 }}
                 onClick={() => {
                   triggerHaptic('light');
                   setActionSheetOpen(true);
@@ -1108,7 +1161,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 aria-label="More options"
               >
                 <MoreHorizontal className="w-4.5 h-4.5" strokeWidth={2} />
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -1280,14 +1333,16 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 dir="ltr"
                 style={{ touchAction: 'manipulation' }}
               >
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-shuffle-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     toggleShuffle();
                   }}
-                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-[background-color,border-color,color,transform] active:scale-90 ${
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-colors ${
                     shuffle
                       ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954]'
                       : 'border-transparent text-zinc-400 hover:text-white'
@@ -1296,58 +1351,66 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 >
                   <Shuffle className="w-4.5 h-4.5" />
                   {shuffle && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#1DB954]" />}
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-prev-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     previousTrack();
                   }}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer apple-prev-btn transition-[background-color,transform] active:scale-90"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
                   aria-label="Previous track"
                 >
                   <SkipBack className="w-5.5 h-5.5 fill-white text-white" />
-                </button>
+                </motion.button>
 
                 {/* Mobile Master Play / Pause Porcelain Disc (0ms Instant Swap — Never Disappears!) */}
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-play-pause-btn"
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('medium');
                     togglePlayPause();
                   }}
-                  className={`w-[62px] h-[62px] min-w-[62px] min-h-[62px] rounded-full hi-fi-play-button text-black flex items-center justify-center apple-play-btn cursor-pointer select-none shrink-0 ${
+                  className={`w-[62px] h-[62px] min-w-[62px] min-h-[62px] rounded-full hi-fi-play-button text-black flex items-center justify-center cursor-pointer select-none shrink-0 ${
                     playbackState === 'buffering' && !isPlaying ? 'ring-4 ring-white/25' : ''
                   }`}
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   {renderPlayPauseIcon('w-6 h-6', 'w-6 h-6')}
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-next-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     nextTrack({ forceImmediate: true });
                   }}
-                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer apple-next-btn transition-[background-color,transform] active:scale-90"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
                   aria-label="Next track"
                 >
                   <SkipForward className="w-5.5 h-5.5 fill-white text-white" />
-                </button>
+                </motion.button>
 
-                <button
+                <motion.button
                   type="button"
                   data-testid="expanded-repeat-btn"
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 28 }}
                   onClick={() => {
                     triggerHaptic('light');
                     cycleRepeat();
                   }}
-                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-[background-color,border-color,color,transform] active:scale-90 ${
+                  className={`relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-full flex items-center justify-center cursor-pointer border transition-colors ${
                     repeatMode !== 'off'
                       ? 'bg-[#1DB954]/14 border-[#1DB954]/30 text-[#1DB954]'
                       : 'border-transparent text-zinc-400 hover:text-white'
@@ -1356,7 +1419,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 >
                   {repeatMode === 'one' ? <Repeat1 className="w-4.5 h-4.5" /> : <Repeat className="w-4.5 h-4.5" />}
                   {repeatMode !== 'off' && <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-[#1DB954]" />}
-                </button>
+                </motion.button>
               </div>
 
               {/* Mobile Machined Smoked Glass Studio Dock */}

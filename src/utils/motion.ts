@@ -72,17 +72,20 @@ export const DIALOG_VARIANTS: Variants = {
   },
 };
 
-// ── Tab / Page Transitions ──
+// ── Tab / Page Transitions (Silky spatial fade + slight scale settle) ──
 export const TAB_TRANSITION_VARIANTS: Variants = {
-  initial: { opacity: 0, y: 6 },
+  initial: { opacity: 0, y: 8, scale: 0.992 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.16, ease: APPLE_EASE_MICRO },
+    scale: 1,
+    transition: { duration: 0.22, ease: APPLE_EASE_SHEET },
   },
   exit: {
     opacity: 0,
-    transition: { duration: 0.1 },
+    y: -4,
+    scale: 0.995,
+    transition: { duration: 0.12, ease: APPLE_EASE_MICRO },
   },
 };
 
@@ -92,35 +95,66 @@ export const ARTWORK_SCALE_TRANSITION: Transition = {
   ease: APPLE_EASE_ARTWORK,
 };
 
-// ── Staggered Luxury Container & Item Variants (GPU transform + opacity only) ──
+// ── Shared Smooth Springs for Pills, Indicators & Tactile Presses ──
+export const LUXURY_SPRING: Transition = {
+  type: 'spring',
+  stiffness: 440,
+  damping: 31,
+  mass: 0.8,
+};
+
+export const SPRING_GLIDE: Transition = {
+  type: 'spring',
+  stiffness: 480,
+  damping: 34,
+  mass: 0.72,
+};
+
+// ── Staggered Luxury Container & Item Variants (supports both initial/animate and hidden/visible) ──
 export const STAGGER_CONTAINER: Variants = {
+  initial: { opacity: 0 },
   hidden: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.042,
+      delayChildren: 0.015,
+    },
+  },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.045,
-      delayChildren: 0.02,
+      staggerChildren: 0.042,
+      delayChildren: 0.015,
     },
   },
 };
 
 export const STAGGER_ITEM: Variants = {
-  hidden: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 11, scale: 0.985 },
+  hidden: { opacity: 0, y: 11, scale: 0.985 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 360,
+      damping: 28,
+      mass: 0.78,
+    },
+  },
   visible: {
     opacity: 1,
     y: 0,
+    scale: 1,
     transition: {
-      duration: 0.28,
-      ease: APPLE_EASE_MICRO,
+      type: 'spring',
+      stiffness: 360,
+      damping: 28,
+      mass: 0.78,
     },
   },
-};
-
-export const LUXURY_SPRING: Transition = {
-  type: 'spring',
-  stiffness: 420,
-  damping: 30,
-  mass: 0.85,
 };
 
 export const CARD_TAP_ANIMATION = {

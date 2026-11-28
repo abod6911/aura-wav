@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState, useRef, lazy, Suspense } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { TAB_TRANSITION_VARIANTS } from './utils/motion';
 import { usePlayerStore } from './store/usePlayerStore';
 import { AtmosphereBackground } from './components/AtmosphereBackground';
@@ -485,6 +485,7 @@ export function App() {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <div
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -558,7 +559,7 @@ export function App() {
             </div>
           ) : (
             <div className="flex-1 w-full min-w-0">
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={activeTab}
                   variants={TAB_TRANSITION_VARIANTS}
@@ -598,7 +599,9 @@ export function App() {
       {isMobile && (
         <>
           {/* Floating MiniPlayer right above Tab Bar */}
-          {currentTrack && <MiniPlayer onExpand={() => setMobilePlayerOpen(true)} />}
+          <AnimatePresence>
+            {currentTrack && <MiniPlayer key="mobile-mini-player" onExpand={() => setMobilePlayerOpen(true)} />}
+          </AnimatePresence>
           {/* Docked Edge-to-Edge Native iOS Tab Bar touching screen bottom */}
           <MobileNavDock onOpenImport={() => setIsImportModalOpen(true)} />
         </>
@@ -665,6 +668,7 @@ export function App() {
         )}
       </AnimatePresence>
     </div>
+    </MotionConfig>
   );
 }
 

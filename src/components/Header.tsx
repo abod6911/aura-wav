@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
+import { LUXURY_SPRING, DIALOG_VARIANTS } from '../utils/motion';
 import {
   Settings,
   Search,
@@ -108,35 +110,52 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
     >
       {/* ── Mobile Header Bar (High-Definition Native App Top Bar + Fullscreen Control) ── */}
       <div className="flex items-center justify-between sm:hidden w-full min-w-0 py-0.5 gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-[#1DB954]/15 border border-[#1DB954]/35 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <motion.div
+            animate={{ scale: isScrolled ? 0.92 : 1 }}
+            transition={LUXURY_SPRING}
+            className="w-6 h-6 rounded-lg bg-[#1DB954]/15 border border-[#1DB954]/35 flex items-center justify-center shrink-0"
+          >
             <span className="w-2 h-2 rounded-full bg-[#1DB954]" />
-          </div>
-          <h1 className="text-[20px] font-black tracking-tight text-white leading-tight truncate">
-            {getPageTitle()}
-          </h1>
+          </motion.div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.h1
+              key={activeTab}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="text-[20px] font-black tracking-tight text-white leading-tight truncate"
+            >
+              {getPageTitle()}
+            </motion.h1>
+          </AnimatePresence>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
           {/* Mobile Quick Search */}
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.88 }}
+            transition={LUXURY_SPRING}
             onClick={() => {
               triggerHaptic('light');
               setSpotlightOpen(true);
             }}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] border border-white/[0.08] text-zinc-200 flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] border border-white/[0.08] text-zinc-200 flex items-center justify-center cursor-pointer touch-manipulation"
             title={t.quickSearch}
             aria-label="Quick Search"
           >
             <Search className="w-4 h-4" />
-          </button>
+          </motion.button>
 
           {/* Mobile Fullscreen Toggle */}
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.88 }}
+            transition={LUXURY_SPRING}
             onClick={handleFullscreenToggle}
-            className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full border flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation ${
+            className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full border flex items-center justify-center cursor-pointer transition-colors touch-manipulation ${
               isFullscreen
                 ? 'bg-[#1DB954]/15 border-[#1DB954]/40 text-[#1DB954]'
                 : 'bg-white/[0.06] border-white/[0.08] text-zinc-200'
@@ -144,17 +163,30 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
             title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
             aria-label="Fullscreen"
           >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-          </button>
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={isFullscreen ? 'min' : 'max'}
+                initial={{ scale: 0.65, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.65, opacity: 0 }}
+                transition={LUXURY_SPRING}
+                className="flex items-center justify-center"
+              >
+                {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
 
           {/* Profile / Settings Button */}
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.88 }}
+            transition={LUXURY_SPRING}
             onClick={() => {
               triggerHaptic('light');
               setSettingsOpen(true);
             }}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation"
+            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer touch-manipulation"
             title={currentUser ? currentUser.name : t.settings}
             aria-label={t.settings}
           >
@@ -167,7 +199,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
                 )}
               </div>
             </div>
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -247,9 +279,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
             </button>
 
             {/* Clean Spotify-Style Dropdown Menu (Anchored to end-0 so it expands inward in both RTL & LTR) */}
+            <AnimatePresence>
             {isProfileMenuOpen && (
-              <div
-                className="absolute top-11 end-0 w-64 max-w-[calc(100vw-24px)] bg-[#1c1c22]/[0.98] border border-white/[0.12] rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl z-[90] text-xs text-zinc-200 animate-fadeIn"
+              <motion.div
+                variants={DIALOG_VARIANTS}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="absolute top-11 end-0 w-64 max-w-[calc(100vw-24px)] bg-[#1c1c22]/[0.98] border border-white/[0.12] rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl z-[90] text-xs text-zinc-200 origin-top-end"
               >
                 <div className="px-3 py-2.5 border-b border-white/[0.08] mb-1.5 flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-full bg-[#24242b] border border-white/15 flex items-center justify-center text-xs font-bold text-white shrink-0 overflow-hidden">
@@ -326,8 +363,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
                     <span>{isRTL ? 'تسجيل الدخول / إنشاء حساب' : 'Log in'}</span>
                   </button>
                 )}
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

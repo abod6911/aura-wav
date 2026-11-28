@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
+import { LUXURY_SPRING, SPRING_GLIDE } from '../utils/motion';
 import {
   Home,
   Search,
@@ -83,32 +85,52 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
         </div>
 
         {/* Main Tabs */}
-        <button
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.97 }}
+          transition={LUXURY_SPRING}
           onClick={() => navigateTo({ tab: 'home' })}
-          className={`w-full flex items-center gap-4 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+          className={`relative w-full flex items-center gap-4 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
             activeTab === 'home'
-              ? 'text-white font-bold bg-white/[0.06]'
+              ? 'text-white font-bold'
               : 'text-[#B3B3B3] hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <Home className={`w-5 h-5 shrink-0 ${activeTab === 'home' ? 'text-white' : 'text-[#B3B3B3]'}`} />
-          <span>{isRTL ? 'الرئيسية' : 'Home'}</span>
-        </button>
+          {activeTab === 'home' && (
+            <motion.span
+              layoutId="desktop-sidebar-active"
+              transition={SPRING_GLIDE}
+              className="absolute inset-0 rounded-lg bg-white/[0.08] border border-white/[0.08]"
+            />
+          )}
+          <Home className={`relative z-10 w-5 h-5 shrink-0 ${activeTab === 'home' ? 'text-[#1DB954]' : 'text-[#B3B3B3]'}`} />
+          <span className="relative z-10">{isRTL ? 'الرئيسية' : 'Home'}</span>
+        </motion.button>
 
-        <button
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.97 }}
+          transition={LUXURY_SPRING}
           onClick={() => {
             navigateTo({ tab: 'search' });
             setTimeout(() => document.getElementById('library-search-input')?.focus(), 50);
           }}
-          className={`w-full flex items-center gap-4 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+          className={`relative w-full flex items-center gap-4 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
             activeTab === 'search'
-              ? 'text-white font-bold bg-white/[0.06]'
+              ? 'text-white font-bold'
               : 'text-[#B3B3B3] hover:text-white hover:bg-white/[0.04]'
           }`}
         >
-          <Search className={`w-5 h-5 shrink-0 ${activeTab === 'search' ? 'text-white' : 'text-[#B3B3B3]'}`} />
-          <span>{isRTL ? 'البحث' : 'Search'}</span>
-        </button>
+          {activeTab === 'search' && (
+            <motion.span
+              layoutId="desktop-sidebar-active"
+              transition={SPRING_GLIDE}
+              className="absolute inset-0 rounded-lg bg-white/[0.08] border border-white/[0.08]"
+            />
+          )}
+          <Search className={`relative z-10 w-5 h-5 shrink-0 ${activeTab === 'search' ? 'text-[#1DB954]' : 'text-[#B3B3B3]'}`} />
+          <span className="relative z-10">{isRTL ? 'البحث' : 'Search'}</span>
+        </motion.button>
       </div>
 
       {/* 2. Bottom Library Panel */}
@@ -130,46 +152,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
 
         {/* Filter Pills */}
         <div className="px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0 scroll-smooth">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-              filter === 'all'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'الكل' : 'All'}
-          </button>
-          <button
-            onClick={() => setFilter('playlists')}
-            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-              filter === 'playlists'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'قوائم التشغيل' : 'Playlists'}
-          </button>
-          <button
-            onClick={() => setFilter('artists')}
-            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-              filter === 'artists'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'الفنانون' : 'Artists'}
-          </button>
-          <button
-            onClick={() => setFilter('albums')}
-            className={`px-2 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
-              filter === 'albums'
-                ? 'bg-white text-black'
-                : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
-            }`}
-          >
-            {isRTL ? 'الألبومات' : 'Albums'}
-          </button>
+          {[
+            { id: 'all' as const, label: isRTL ? 'الكل' : 'All' },
+            { id: 'playlists' as const, label: isRTL ? 'قوائم التشغيل' : 'Playlists' },
+            { id: 'artists' as const, label: isRTL ? 'الفنانون' : 'Artists' },
+            { id: 'albums' as const, label: isRTL ? 'الألبومات' : 'Albums' },
+          ].map((item) => {
+            const isActive = filter === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                transition={LUXURY_SPRING}
+                onClick={() => setFilter(item.id)}
+                className={`relative px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-colors cursor-pointer shrink-0 ${
+                  isActive
+                    ? 'text-black'
+                    : 'bg-[#242424] text-white hover:bg-[#2a2a2a]'
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="sidebar-filter-pill"
+                    transition={SPRING_GLIDE}
+                    className="absolute inset-0 rounded-full bg-white shadow-sm"
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Scrollable Library Content */}

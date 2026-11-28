@@ -135,7 +135,8 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
         dragDirectionLock
         dragConstraints={{ left: -100, right: 100 }}
         dragElastic={0.35}
-        transition={{ type: 'spring', stiffness: 420, damping: 35, mass: 0.8 }}
+        whileTap={{ scale: 0.985 }}
+        transition={{ type: 'spring', stiffness: 460, damping: 34, mass: 0.78 }}
         onDragEnd={handleDragEnd}
         onClick={handleRowClick}
         className={`relative z-10 w-full h-[54px] min-h-[54px] px-3 flex items-center justify-between gap-2.5 select-none cursor-pointer transition-colors duration-150 ${
