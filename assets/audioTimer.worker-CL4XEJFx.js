@@ -1,0 +1,1 @@
+(function(){let e=null;typeof self<`u`&&typeof self.postMessage==`function`&&(self.onmessage=t=>{let{command:n,action:r,interval:i}=t.data||{},a=n||r,o=i||20;a===`start`?(e!==null&&clearInterval(e),e=self.setInterval(()=>{self.postMessage({type:`tick`,timestamp:performance.now()})},o)):a===`stop`&&e!==null&&(clearInterval(e),e=null)})})();
