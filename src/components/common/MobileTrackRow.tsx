@@ -4,7 +4,7 @@ import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
-import { Play, ListPlus, MoreHorizontal, Cloud, Heart } from 'lucide-react';
+import { Play, ListPlus, MoreHorizontal, Cloud, Heart, Download, CheckCircle2, Loader2 } from 'lucide-react';
 import { formatTime, isArabicText } from '../../utils/formatters';
 import { SmartSaveButton } from './SmartSaveButton';
 
@@ -34,13 +34,17 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
   const addToast = usePlayerStore((state) => state.addToast);
   const isOnline = usePlayerStore((state) => state.isOnline);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadingTrackIds = usePlayerStore((state) => state.downloadingTrackIds);
+  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
   const openArtist = usePlayerStore((state) => state.openArtist);
   const favorites = usePlayerStore((state) => state.favorites);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
 
   const isCur = currentTrack?.id === track.id;
   const isFav = favorites.includes(track.id);
-  const isAvailableOffline = downloadedTrackIds.includes(track.id) || !!track.file || !!track.blob;
+  const isDownloaded = downloadedTrackIds.includes(track.id);
+  const isDownloading = downloadingTrackIds.includes(track.id);
+  const isAvailableOffline = isDownloaded || !!track.file || !!track.blob;
   const isDimmed = !isOnline && !isAvailableOffline;
   const playList = trackList || contextList;
 
@@ -206,13 +210,50 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           </div>
         </div>
 
-        {/* Right: Duration + Smart Save + 3-Dots (Balanced mobile ergonomics) */}
-        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Right: Duration + Offline Quick Save + Smart Save + 3-Dots */}
+        <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           {track.duration > 0 && (
             <span className="text-[11px] font-mono text-zinc-500 tabular-nums select-none pe-0.5">
               {formatTime(track.duration)}
             </span>
           )}
+
+          {/* 1-Tap Offline Save / Status Button */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.85 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerHaptic('light');
+              if (!isAvailableOffline && !isDownloading) {
+                downloadTrackForOffline(track);
+              }
+            }}
+            disabled={isDownloading}
+            className={`w-8 h-8 min-w-[32px] min-h-[32px] rounded-full flex items-center justify-center transition-colors touch-manipulation ${
+              isAvailableOffline
+                ? 'text-emerald-400 cursor-default'
+                : isDownloading
+                ? 'text-[#1DB954] cursor-wait'
+                : 'text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.06] cursor-pointer'
+            }`}
+            title={
+              isAvailableOffline
+                ? (isRTL ? 'محفوظة للاستماع بدون إنترنت' : 'Saved offline')
+                : isDownloading
+                ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                : (isRTL ? 'حفظ للاستماع بدون إنترنت' : 'Save for offline')
+            }
+            aria-label={isAvailableOffline ? 'Saved offline' : 'Save for offline'}
+          >
+            {isDownloading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1DB954]" />
+            ) : isAvailableOffline ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+          </motion.button>
 
           {/* Quick Smart Save (+ / ✓) */}
           <SmartSaveButton track={track} size="sm" />

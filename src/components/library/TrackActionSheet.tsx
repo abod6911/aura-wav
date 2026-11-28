@@ -42,12 +42,14 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
   const { isRTL, dir } = useTranslation();
   const favorites = usePlayerStore((state) => state.favorites);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadingTrackIds = usePlayerStore((state) => state.downloadingTrackIds);
   const playlists = usePlayerStore((state) => state.playlists);
   const playNextInQueue = usePlayerStore((state) => state.playNextInQueue);
   const addToQueue = usePlayerStore((state) => state.addToQueue);
   const setQueueOpen = usePlayerStore((state) => state.setQueueOpen);
   const toggleFavorite = usePlayerStore((state) => state.toggleFavorite);
   const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
+  const downloadAudioFileToDevice = usePlayerStore((state) => state.downloadAudioFileToDevice);
   const setTrackEditOpen = usePlayerStore((state) => state.setTrackEditOpen);
   const addTrackToPlaylist = usePlayerStore((state) => state.addTrackToPlaylist);
   const removeTrackFromPlaylist = usePlayerStore((state) => state.removeTrackFromPlaylist);
@@ -63,6 +65,7 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
 
   const isFav = favorites.includes(track.id);
   const isDownloaded = downloadedTrackIds.includes(track.id);
+  const isDownloading = downloadingTrackIds.includes(track.id);
 
   const handleAction = (action: () => void) => {
     triggerHaptic('light');
@@ -290,17 +293,45 @@ export const TrackActionSheet: React.FC<TrackActionSheetProps> = ({
                   <span className="flex-1 text-start">{isRTL ? 'إضافة إلى قائمة تشغيل' : 'Add to Playlist'}</span>
                 </button>
 
-                {/* 5. Download for Offline */}
+                {/* 5. Download for Offline (In-App Anytime Listening) */}
                 <button
-                  onClick={() => handleAction(() => downloadTrackForOffline(track.id))}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                  onClick={() => handleAction(() => downloadTrackForOffline(track))}
+                  disabled={isDownloading}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer disabled:opacity-60"
                 >
                   <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
                     {isDownloaded ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
                   </div>
-                  <span className="flex-1 text-start">
-                    {isDownloaded ? (isRTL ? 'محفوظة للاستماع دون إنترنت' : 'Saved for Offline') : (isRTL ? 'تنزيل للاستماع دون إنترنت' : 'Download for Offline')}
-                  </span>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">
+                      {isDownloaded
+                        ? (isRTL ? 'محفوظة في مكتبة الأوفلاين ✓' : 'Saved for Offline ✓')
+                        : isDownloading
+                        ? (isRTL ? 'جاري الحفظ للأوفلاين...' : 'Saving offline...')
+                        : (isRTL ? 'حفظ للاستماع بدون إنترنت' : 'Save for Offline Playback')}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-normal">
+                      {isRTL ? 'استمع لها داخل التطبيق وقت ما تشاء بدون نت' : 'Play anytime inside the app without internet'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* 5.5 Save MP3 File Directly to Device Downloads */}
+                <button
+                  onClick={() => handleAction(() => downloadAudioFileToDevice(track))}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 bg-transparent hover:bg-white/[0.06] active:bg-white/[0.1] transition-colors text-white font-bold text-xs sm:text-sm cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 text-start">
+                    <span className="block leading-tight">
+                      {isRTL ? 'تنزيل ملف MP3 على الجهاز' : 'Save MP3 to Device Files'}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-normal">
+                      {isRTL ? 'حفظ نسخة صوتية في مجلد التنزيلات' : 'Export audio file to device storage'}
+                    </span>
+                  </div>
                 </button>
               </div>
 

@@ -59,23 +59,50 @@ async function hasEnoughStorageFor(bytes: number): Promise<boolean> {
   }
 }
 
-/** Gets the audio bytes for a track from memory, its file, a direct URL, or a resolved stream. */
-async function fetchTrackBlob(track: Track): Promise<Blob | null> {
+/** Gets the audio bytes for a track from memory, its file, a direct URL, catalog fallback, or a resolved stream. */
+async function fetchTrackBlob(track: Track, catalogFallback?: Track[]): Promise<Blob | null> {
   if (track.blob) return track.blob;
   if (track.file) return track.file;
 
+  const { normalizeStreamUrl } = await import('../utils/urlUtils');
   const urls: string[] = [];
-  if (track.audioUrl) urls.push(track.audioUrl);
-  if (!track.audioUrl || track.audioUrl.startsWith('/api/stream')) {
+  const pushUrl = (raw?: string | null) => {
+    if (!raw || raw.startsWith('/api/stream')) return;
+    const isLocalHost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.'));
+    if (!isLocalHost && raw.startsWith('/songs/')) return;
+    const norm = normalizeStreamUrl(raw);
+    if (norm && !urls.includes(norm)) urls.push(norm);
+  };
+
+  pushUrl(track.audioUrl);
+
+  // Catalog HuggingFace / cloud URL fallback if track had no direct remote URL
+  if (catalogFallback && catalogFallback.length > 0) {
+    const match =
+      catalogFallback.find((c) => c.id === track.id) ||
+      (track.trackNumber ? catalogFallback.find((c) => c.trackNumber === track.trackNumber) : undefined) ||
+      catalogFallback.find(
+        (c) =>
+          c.title.toLowerCase().trim() === track.title.toLowerCase().trim() &&
+          c.artist.toLowerCase().trim() === (track.artist || '').toLowerCase().trim()
+      );
+    if (match?.audioUrl) pushUrl(match.audioUrl);
+  }
+
+  if (urls.length === 0) {
     try {
       const resolved = await resolvePlayableStream(track);
-      if (resolved && !urls.includes(resolved)) urls.push(resolved);
+      if (resolved) pushUrl(resolved);
     } catch {}
   }
 
   for (const url of urls) {
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { mode: 'cors' });
       if (res.ok) {
         const blob = await res.blob();
         if (blob.size > 0) return blob;
@@ -240,6 +267,7 @@ interface PlayerState {
   isOnline: boolean;
   isAutoCacheEnabled: boolean;
   downloadedTrackIds: string[];
+  downloadingTrackIds: string[];
   downloadAllProgress: { current: number; total: number } | null;
   toasts: ToastItem[];
 
@@ -328,7 +356,8 @@ interface PlayerState {
   setSleepTimer: (setting: SleepTimerSetting) => void;
   addToast: (message: string, icon?: string, type?: 'info' | 'success' | 'warning') => void;
   removeToast: (id: string) => void;
-  downloadTrackForOffline: (trackId: string) => Promise<void>;
+  downloadTrackForOffline: (trackOrId: string | Track) => Promise<void>;
+  downloadAudioFileToDevice: (trackOrId: string | Track) => Promise<void>;
   downloadTracksForOffline: (list: Track[], label?: string) => Promise<void>;
   downloadFavoritesOffline: () => Promise<void>;
   downloadPlaylistOffline: (playlistId: string) => Promise<void>;
@@ -829,6 +858,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
     isAutoCacheEnabled: typeof window !== 'undefined' ? localStorage.getItem('aurawave_autocache') !== 'false' : true,
     downloadedTrackIds: [],
+    downloadingTrackIds: [],
     downloadAllProgress: null,
     toasts: [],
     unavailableTrackIds: [],
@@ -2987,21 +3017,121 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       userSyncService.syncPlaylistUpsert(updatedPl).catch(() => {});
     },
 
-    downloadTrackForOffline: async (trackId: string) => {
-      const { tracks, downloadedTrackIds, addToast } = get();
-      const track = tracks.find((t) => t.id === trackId);
-      if (!track) return;
+    downloadTrackForOffline: async (trackOrId: string | Track) => {
+      const { tracks, catalogTracks, currentTrack, queue, userQueue, downloadedTrackIds, downloadingTrackIds, addToast } = get();
+      const targetId = typeof trackOrId === 'string' ? trackOrId : trackOrId.id;
+      const track =
+        (typeof trackOrId === 'object' && trackOrId) ||
+        tracks.find((t) => t.id === targetId) ||
+        catalogTracks.find((t) => t.id === targetId) ||
+        (currentTrack?.id === targetId ? currentTrack : undefined) ||
+        userQueue.find((t) => t.id === targetId) ||
+        queue.find((t) => t.id === targetId);
+      if (!track) {
+        addToast('تعذر العثور على بيانات المسار للتنزيل', undefined, 'warning');
+        return;
+      }
 
-      if (downloadedTrackIds.includes(trackId)) {
+      if (downloadedTrackIds.includes(track.id)) {
         addToast(`المسار "${track.title}" محفوظ مسبقاً للأوفلاين`, undefined, 'info');
         return;
       }
 
-      await get().downloadTracksForOffline([track], track.title);
+      if (downloadingTrackIds.includes(track.id)) {
+        return;
+      }
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        addToast('لا يوجد اتصال بالإنترنت — لا يمكن التنزيل الآن', undefined, 'warning');
+        return;
+      }
+
+      set({ downloadingTrackIds: [...get().downloadingTrackIds, track.id] });
+      addToast(`جاري حفظ "${track.title}" للاستماع بدون إنترنت...`, undefined, 'info');
+      StorageManager.requestPersistence().catch(() => {});
+
+      try {
+        const blob = await fetchTrackBlob(track, catalogTracks);
+        if (blob) {
+          const coverBlob = await fetchTrackCoverBlob(track);
+          await offlineStorage.saveTrack({
+            id: track.id,
+            audioBlob: blob,
+            coverBlob,
+            mimeType: blob.type || 'audio/mpeg',
+            sizeBytes: blob.size,
+            savedAt: Date.now(),
+            isManualDownload: true,
+            title: track.title,
+            artist: track.artist,
+            duration: track.duration,
+          });
+          await saveAudioFileToStorage(track.id, blob);
+          if (track.trackNumber) {
+            await saveAudioFileToStorage(`track_catalog_${track.trackNumber}`, blob);
+          }
+          const latestSaved = new Set<string>(get().downloadedTrackIds);
+          latestSaved.add(track.id);
+          set({ downloadedTrackIds: Array.from(latestSaved) });
+          get().refreshStorageStats().catch(() => {});
+          addToast(`تم حفظ "${track.title}" — متاح الآن بدون إنترنت`, undefined, 'success');
+        } else {
+          addToast(`تعذر تنزيل "${track.title}" حالياً`, undefined, 'warning');
+        }
+      } catch (err) {
+        console.warn('[Offline] Single track download error:', track.title, err);
+        addToast(`تعذر حفظ "${track.title}" للأوفلاين`, undefined, 'warning');
+      } finally {
+        set({ downloadingTrackIds: get().downloadingTrackIds.filter((id) => id !== track.id) });
+      }
+    },
+
+    downloadAudioFileToDevice: async (trackOrId: string | Track) => {
+      const { tracks, catalogTracks, currentTrack, queue, userQueue, addToast } = get();
+      const targetId = typeof trackOrId === 'string' ? trackOrId : trackOrId.id;
+      const track =
+        (typeof trackOrId === 'object' && trackOrId) ||
+        tracks.find((t) => t.id === targetId) ||
+        catalogTracks.find((t) => t.id === targetId) ||
+        (currentTrack?.id === targetId ? currentTrack : undefined) ||
+        userQueue.find((t) => t.id === targetId) ||
+        queue.find((t) => t.id === targetId);
+      if (!track) return;
+
+      addToast(`جاري تجهيز ملف "${track.title}" للتنزيل على الجهاز...`, undefined, 'info');
+      try {
+        let blob: Blob | null = null;
+        const offlineRec = await offlineStorage.getTrack(track.id);
+        if (offlineRec?.audioBlob) {
+          blob = offlineRec.audioBlob;
+        } else {
+          blob = await fetchTrackBlob(track, catalogTracks);
+        }
+        if (!blob) {
+          addToast(`تعذر تحميل ملف "${track.title}" على الجهاز`, undefined, 'warning');
+          return;
+        }
+        const safeName = `${track.artist ? track.artist + ' - ' : ''}${track.title}`
+          .replace(/[\\/:*?"<>|]/g, '')
+          .trim() || 'AuraWave_Track';
+        const ext = blob.type.includes('mp4') || blob.type.includes('m4a') ? 'm4a' : 'mp3';
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `${safeName}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+        addToast(`تم بدء حفظ "${track.title}" في ملفات الجهاز`, undefined, 'success');
+      } catch (err) {
+        console.warn('[Device Export] Error:', err);
+        addToast(`تعذر حفظ الملف على الجهاز`, undefined, 'warning');
+      }
     },
 
     downloadTracksForOffline: async (list: Track[], label?: string) => {
-      const { downloadedTrackIds, addToast, downloadAllProgress } = get();
+      const { downloadedTrackIds, catalogTracks, addToast, downloadAllProgress } = get();
       if (downloadAllProgress) {
         addToast('هناك عملية تنزيل جارية بالفعل', undefined, 'info');
         return;
@@ -3054,8 +3184,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             const track = queue.shift();
             if (!track) break;
 
+            set({ downloadingTrackIds: Array.from(new Set([...get().downloadingTrackIds, track.id])) });
+
             try {
-              const blob = await fetchTrackBlob(track);
+              const blob = await fetchTrackBlob(track, catalogTracks);
               if (blob) {
                 const coverBlob = await fetchTrackCoverBlob(track);
                 await offlineStorage.saveTrack({
@@ -3082,12 +3214,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             } catch (err) {
               failedCount++;
               console.warn('[Offline] Failed to save track:', track.title, err);
+            } finally {
+              set({
+                downloadingTrackIds: get().downloadingTrackIds.filter((id) => id !== track.id),
+                downloadAllProgress: { current: savedCount + failedCount, total: needed.length },
+                downloadedTrackIds: Array.from(saved),
+              });
             }
-
-            set({
-              downloadAllProgress: { current: savedCount + failedCount, total: needed.length },
-              downloadedTrackIds: Array.from(saved),
-            });
           }
         };
 
@@ -3126,9 +3259,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     downloadFavoritesOffline: async () => {
-      const { tracks, favorites, addToast } = get();
+      const { tracks, catalogTracks, favorites, addToast } = get();
+      const pool = tracks.length > 0 ? tracks : catalogTracks;
       const favSet = new Set(favorites);
-      const list = tracks.filter((t) => favSet.has(t.id));
+      const list = pool.filter((t) => favSet.has(t.id));
       if (list.length === 0) {
         addToast('لا توجد أغاني في المفضلة للتنزيل', undefined, 'info');
         return;
@@ -3137,11 +3271,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     downloadPlaylistOffline: async (playlistId: string) => {
-      const { tracks, playlists, addToast } = get();
+      const { tracks, catalogTracks, playlists, addToast } = get();
       const pl = playlists.find((p) => p.id === playlistId);
       if (!pl) return;
+      const pool = tracks.length > 0 ? tracks : catalogTracks;
       const idSet = new Set(pl.trackIds);
-      const list = tracks.filter((t) => idSet.has(t.id));
+      const list = pool.filter((t) => idSet.has(t.id));
       if (list.length === 0) {
         addToast('قائمة التشغيل فارغة', undefined, 'info');
         return;
@@ -3150,9 +3285,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     cacheAllAvailableTracksOffline: async () => {
-      const { tracks } = get();
-      if (tracks.length === 0) return;
-      await get().downloadTracksForOffline(tracks, 'المكتبة كاملة');
+      const { tracks, catalogTracks } = get();
+      const pool = tracks.length > 0 ? tracks : catalogTracks;
+      if (pool.length === 0) return;
+      await get().downloadTracksForOffline(pool, 'المكتبة كاملة');
     },
 
     setAutoCacheEnabled: (enabled: boolean) => {

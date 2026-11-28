@@ -37,6 +37,7 @@ import {
   Trash2,
   Users,
   Disc3,
+  Loader2,
 } from 'lucide-react';
 import { getAllArtists, getAllAlbums } from '../../utils/catalogSelectors';
 import { formatTime } from '../player/TimelineSlider';
@@ -63,6 +64,12 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const playTrack = usePlayerStore((state) => state.playTrack);
   const savedFolderName = usePlayerStore((state) => state.savedFolderName);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadingTrackIds = usePlayerStore((state) => state.downloadingTrackIds);
+  const downloadAllProgress = usePlayerStore((state) => state.downloadAllProgress);
+  const storageStats = usePlayerStore((state) => state.storageStats);
+  const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
+  const downloadTracksForOffline = usePlayerStore((state) => state.downloadTracksForOffline);
+  const downloadFavoritesOffline = usePlayerStore((state) => state.downloadFavoritesOffline);
   const setCloudUploaderOpen = usePlayerStore((state) => state.setCloudUploaderOpen);
   const playlists = usePlayerStore((state) => state.playlists);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);
@@ -160,6 +167,26 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
     return list;
   }, [tracks, searchQuery, activeFilter, downloadedTrackIds]);
+
+  // Songs NOT yet downloaded on device (ready to save for offline anytime listening)
+  const unsavedTracks = useMemo(() => {
+    if (activeFilter !== 'offline') return [];
+    let list = tracks.filter((t) => !(t.blob || t.file || downloadedTrackIds.includes(t.id)));
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.artist.toLowerCase().includes(q) ||
+          (t.album || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [tracks, activeFilter, downloadedTrackIds, searchQuery]);
+
+  const savedOfflineCount = useMemo(() => {
+    return tracks.filter((t) => !!(t.blob || t.file || downloadedTrackIds.includes(t.id))).length;
+  }, [tracks, downloadedTrackIds]);
 
   // 120fps Viewport Virtualization
   const ROW_HEIGHT = 72;
@@ -299,24 +326,33 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             id: 'playlists' as const,
             label: isRTL ? 'القوائم' : 'Playlists',
             active: mobileSubTab === 'playlists',
-            onSelect: () => setMobileSubTab('playlists'),
+            onSelect: () => {
+              setMobileSubTab('playlists');
+              if (activeFilter === 'offline') setActiveFilter('all');
+            },
           },
           {
             id: 'artists' as const,
             label: isRTL ? 'الفنانون' : 'Artists',
             active: mobileSubTab === 'artists',
-            onSelect: () => setMobileSubTab('artists'),
+            onSelect: () => {
+              setMobileSubTab('artists');
+              if (activeFilter === 'offline') setActiveFilter('all');
+            },
           },
           {
             id: 'albums' as const,
             label: isRTL ? 'الألبومات' : 'Albums',
             active: mobileSubTab === 'albums',
-            onSelect: () => setMobileSubTab('albums'),
+            onSelect: () => {
+              setMobileSubTab('albums');
+              if (activeFilter === 'offline') setActiveFilter('all');
+            },
           },
           {
             id: 'downloaded' as const,
             label: isRTL ? 'المحمّلة' : 'Downloaded',
-            active: mobileSubTab === 'downloaded' || activeFilter === 'offline',
+            active: mobileSubTab === 'downloaded',
             onSelect: () => {
               setMobileSubTab('downloaded');
               setActiveFilter('offline');
@@ -654,6 +690,23 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = activeFilter === 'offline' ? 'all' : 'offline';
+                  setActiveFilter(next);
+                  setMobileSubTab(next === 'offline' ? 'downloaded' : 'tracks');
+                }}
+                className={`hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-bold items-center gap-1.5 border transition-colors cursor-pointer shrink-0 ${
+                  activeFilter === 'offline'
+                    ? 'bg-[#1DB954] text-black border-[#1DB954]'
+                    : 'bg-white/[0.05] hover:bg-white/[0.1] text-zinc-200 border-white/[0.08]'
+                }`}
+                title={isRTL ? 'الأغاني المحفوظة بدون إنترنت' : 'Offline saved songs'}
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{isRTL ? `المحمّلة (${savedOfflineCount})` : `Offline (${savedOfflineCount})`}</span>
+              </button>
               <span className="text-xs font-mono text-zinc-400 tabular-nums hidden sm:inline">
                 {filtered.length} {isRTL ? 'مسار' : 'tracks'}
               </span>
@@ -669,6 +722,67 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
               )}
             </div>
           </div>
+
+          {/* Dedicated Offline Library Summary & Quick-Save Card */}
+          {activeFilter === 'offline' && (
+            <div className="rounded-2xl bg-gradient-to-br from-[#1DB954]/12 via-[#15151B] to-[#121216] border border-[#1DB954]/25 p-3.5 sm:p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="text-start">
+                  <div className="flex items-center gap-2">
+                    <Download className="w-4 h-4 text-[#1DB954]" />
+                    <h3 className="text-sm sm:text-base font-black text-white">
+                      {isRTL ? 'مكتبتك بدون إنترنت' : 'Offline Library'}
+                    </h3>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-zinc-300 mt-0.5 tabular-nums">
+                    {isRTL
+                      ? `${savedOfflineCount} أغنية محفوظة من أصل ${tracks.length}${storageStats?.totalSizeBytes ? ` • ${storageStats.formattedSize}` : ''}`
+                      : `${savedOfflineCount} of ${tracks.length} tracks saved offline${storageStats?.totalSizeBytes ? ` • ${storageStats.formattedSize}` : ''}`}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {unsavedTracks.length > 0 && (
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.94 }}
+                      disabled={!!downloadAllProgress}
+                      onClick={() => downloadTracksForOffline(unsavedTracks.slice(0, 25), isRTL ? 'دفعة سريعة 25 أغنية' : 'Quick Batch 25')}
+                      className="px-3 py-1.5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-[11.5px] flex items-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{isRTL ? `حفظ ${Math.min(25, unsavedTracks.length)} أغنية جديدة` : `Save ${Math.min(25, unsavedTracks.length)} Songs`}</span>
+                    </motion.button>
+                  )}
+
+                  {favorites.length > 0 && (
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.94 }}
+                      disabled={!!downloadAllProgress}
+                      onClick={() => downloadFavoritesOffline()}
+                      className="px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white font-semibold text-[11.5px] flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Heart className="w-3.5 h-3.5 text-[#1DB954]" />
+                      <span>{isRTL ? 'حفظ المفضلة' : 'Save Favorites'}</span>
+                    </motion.button>
+                  )}
+
+                  {filtered.length > 0 && (
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.94 }}
+                      onClick={handleShufflePlay}
+                      className="px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white font-semibold text-[11.5px] flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Shuffle className="w-3.5 h-3.5 text-zinc-200" />
+                      <span>{isRTL ? 'تشغيل المحفوظة' : 'Shuffle Saved'}</span>
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
       {/* 3. Balanced Track Table Inside Matte Obsidian Container (Zero 64px blur GPU drain) */}
       <div ref={containerRef} className="md:bg-[#121216]/90 md:rounded-[28px] p-0 md:p-5 md:shadow-[0_24px_64px_rgba(0,0,0,0.65)] md:border md:border-white/[0.08] bg-transparent border-0 rounded-none shadow-none">
@@ -705,14 +819,46 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 )}
               </>
             ) : (
-              <div className="text-center py-16 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
-                <Filter className="w-10 h-10 mx-auto text-zinc-600" />
-                <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
-                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                  {searchQuery
+              <div className="text-center py-10 space-y-2.5 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2 px-4">
+                <Download className="w-8 h-8 mx-auto text-zinc-500" />
+                <h4 className="text-sm font-bold text-white">
+                  {activeFilter === 'offline'
+                    ? (isRTL ? 'لم تحفظ أي أغنية بعد في وضع الأوفلاين' : 'No offline tracks saved yet')
+                    : 'لم يتم العثور على أي نتائج'}
+                </h4>
+                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                  {activeFilter === 'offline'
+                    ? (isRTL ? 'اضغط أيقونة التنزيل بجانب أي أغنية بالأسفل لحفظها والاستماع لها وقت ما تريد بدون إنترنت.' : 'Tap download on any song below to save it for offline playback.')
+                    : searchQuery
                     ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
                     : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
                 </p>
+              </div>
+            )}
+
+            {/* Quick-Save Unsaved Songs Shelf inside Downloaded tab */}
+            {activeFilter === 'offline' && unsavedTracks.length > 0 && (
+              <div className="pt-4 space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold text-zinc-300">
+                    {isRTL ? `أغانٍ غير محمّلة بعد (${unsavedTracks.length})` : `Not Yet Downloaded (${unsavedTracks.length})`}
+                  </span>
+                  <span className="text-[10.5px] text-emerald-400 font-medium">
+                    {isRTL ? 'اضغط ⬇ للحفظ الفوري' : 'Tap ⬇ to save'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {unsavedTracks.slice(0, 35).map((track, idx) => (
+                    <MobileTrackRow
+                      key={`unsaved-${track.id}`}
+                      track={track}
+                      index={idx}
+                      showIndex={false}
+                      contextList={unsavedTracks}
+                      onOpenActionSheet={setActionSheetTrack}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -727,20 +873,49 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                     key={track.id}
                     track={track}
                     index={startIndex + idx}
+                    contextList={filtered}
                     onContextMenu={handleContextMenu}
                   />
                 ))}
                 {bottomSpacer > 0 && <div style={{ height: `${bottomSpacer}px` }} aria-hidden="true" />}
               </div>
             ) : (
-              <div className="text-center py-20 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2">
-                <Filter className="w-10 h-10 mx-auto text-zinc-600" />
-                <h4 className="text-base font-bold text-white">لم يتم العثور على أي نتائج</h4>
-                <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                  {searchQuery
+              <div className="text-center py-14 space-y-3 bg-white/[0.01] border border-dashed border-white/[0.06] rounded-2xl mt-2 px-4">
+                <Download className="w-10 h-10 mx-auto text-zinc-600" />
+                <h4 className="text-base font-bold text-white">
+                  {activeFilter === 'offline'
+                    ? (isRTL ? 'لا توجد أغانٍ محفوظة بدون إنترنت بعد' : 'No offline tracks saved yet')
+                    : 'لم يتم العثور على أي نتائج'}
+                </h4>
+                <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                  {activeFilter === 'offline'
+                    ? (isRTL ? 'اضغط زر التنزيل بجانب أي أغنية بالأسفل لحفظها للاستماع في أي وقت.' : 'Click download on any track below to save it for anytime offline playback.')
+                    : searchQuery
                     ? `لا توجد مسارات مطابقة لبحثك عن "${searchQuery}".`
                     : 'لا توجد مسارات متوفرة في هذا التصنيف.'}
                 </p>
+              </div>
+            )}
+
+            {/* Desktop Quick-Save Unsaved Songs Shelf */}
+            {activeFilter === 'offline' && unsavedTracks.length > 0 && (
+              <div className="pt-5 mt-4 border-t border-white/[0.08] space-y-2">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-sm font-bold text-white">
+                    {isRTL ? `أغانٍ غير محمّلة — احفظها للاستماع وقت ما تشاء (${unsavedTracks.length})` : `Unsaved Songs — Save for Offline (${unsavedTracks.length})`}
+                  </span>
+                </div>
+                <div className="divide-y divide-white/[0.02]">
+                  {unsavedTracks.slice(0, 35).map((track, idx) => (
+                    <TrackTableRow
+                      key={`desk-unsaved-${track.id}`}
+                      track={track}
+                      index={idx}
+                      contextList={unsavedTracks}
+                      onContextMenu={handleContextMenu}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -911,16 +1086,18 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 interface TrackTableRowProps {
   track: Track;
   index: number;
+  contextList?: Track[];
   onContextMenu?: (track: Track, clientX?: number, clientY?: number) => void;
 }
 
-const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, onContextMenu }) => {
+const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, contextList, onContextMenu }) => {
   const { t, isRTL } = useTranslation();
   const isCurrent = usePlayerStore((state) => state.currentTrack?.id === track.id);
   const isPlaying = usePlayerStore((state) => state.isPlaying && state.currentTrack?.id === track.id);
   const isFav = usePlayerStore((state) => state.favorites.includes(track.id));
   const isNextUp = usePlayerStore((state) => state.nextUpTrackId === track.id);
   const isDownloaded = usePlayerStore((state) => state.downloadedTrackIds.includes(track.id));
+  const isDownloading = usePlayerStore((state) => state.downloadingTrackIds.includes(track.id));
   const unavailableTrackIds = usePlayerStore((state) => state.unavailableTrackIds);
   const isUnavailable = unavailableTrackIds.includes(track.id) || !!track.unavailable;
 
@@ -940,7 +1117,7 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         store.togglePlayPause();
       }
     } else {
-      store.playTrack(track, store.filteredTracks);
+      store.playTrack(track, contextList && contextList.length > 0 ? contextList : store.filteredTracks);
     }
   };
 
@@ -1098,8 +1275,39 @@ const TrackTableRow: React.FC<TrackTableRowProps> = React.memo(({ track, index, 
         </span>
       </div>
 
-      {/* 4. Action Cluster: Play Next (44x44px) + Heart (44x44px) + More Menu */}
-      <div className="flex items-center justify-end gap-0.5 sm:gap-1.5 flex-shrink-0" style={{ touchAction: 'manipulation' }}>
+      {/* 4. Action Cluster: Offline Save + Play Next + Heart + More Menu */}
+      <div className="flex items-center justify-end gap-0.5 sm:gap-1 flex-shrink-0" style={{ touchAction: 'manipulation' }}>
+        {/* 1-Tap Offline Save Button */}
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.86 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerHaptic('light');
+            if (!isDownloaded && !isDownloading) {
+              usePlayerStore.getState().downloadTrackForOffline(track);
+            }
+          }}
+          disabled={isDownloading}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+            isDownloaded
+              ? 'text-emerald-400 cursor-default'
+              : isDownloading
+              ? 'text-[#1DB954] cursor-wait'
+              : 'text-zinc-400 hover:text-emerald-400 hover:bg-white/[0.08] cursor-pointer'
+          }`}
+          title={isDownloaded ? (isRTL ? 'محفوظة بدون إنترنت' : 'Saved offline') : (isRTL ? 'حفظ للاستماع بدون إنترنت' : 'Save for offline')}
+          aria-label={isDownloaded ? 'Saved offline' : 'Save for offline'}
+        >
+          {isDownloading ? (
+            <Loader2 className="w-4 h-4 animate-spin text-[#1DB954]" />
+          ) : isDownloaded ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+        </motion.button>
+
         {/* Play Next / Add to Queue 44x44px Button */}
         <motion.button
           whileTap={{ scale: 0.86 }}

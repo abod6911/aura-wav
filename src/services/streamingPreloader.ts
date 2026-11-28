@@ -1,6 +1,7 @@
 import { Track } from '../types';
 import { djAudioEngine } from '../lib/audioEngine';
 import { resolveTrackAudioSource } from '../store/usePlayerStore';
+import { normalizeStreamUrl } from '../utils/urlUtils';
 
 class StreamingPreloader {
   private static instance: StreamingPreloader | null = null;
@@ -76,11 +77,9 @@ class StreamingPreloader {
       // 2. Warm up HTTP stream cache on background audio element if URL exists
       if (this.preloaderAudio && resolved.audioUrl) {
         let safeUrl = resolved.audioUrl;
-        try {
-          if (safeUrl.startsWith('http') || safeUrl.startsWith('/')) {
-            safeUrl = encodeURI(decodeURI(safeUrl));
-          }
-        } catch {}
+        if (safeUrl.startsWith('http') || safeUrl.startsWith('/')) {
+          safeUrl = normalizeStreamUrl(safeUrl);
+        }
         this.preloaderAudio.src = safeUrl;
         this.preloaderAudio.load();
       }

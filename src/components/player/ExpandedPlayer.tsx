@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   ArrowDownToLine,
   Disc3,
+  Loader2,
 } from 'lucide-react';
 
 interface ExpandedPlayerProps {
@@ -542,6 +543,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const toggleShuffle = usePlayerStore((state) => state.toggleShuffle);
   const cycleRepeat = usePlayerStore((state) => state.cycleRepeat);
   const downloadedTrackIds = usePlayerStore((state) => state.downloadedTrackIds);
+  const downloadingTrackIds = usePlayerStore((state) => state.downloadingTrackIds);
   const downloadTrackForOffline = usePlayerStore((state) => state.downloadTrackForOffline);
   const reorderUserQueue = usePlayerStore((state) => state.reorderUserQueue);
   const removeFromUserQueue = usePlayerStore((state) => state.removeFromUserQueue);
@@ -578,6 +580,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const isDownloaded = downloadedTrackIds.includes(currentTrack.id);
+  const isDownloading = downloadingTrackIds.includes(currentTrack.id);
   const artworkSrc = currentTrack.artworkUrl || currentTrack.coverUrl || './logo.svg';
 
   const handleClose = () => {
@@ -625,7 +628,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       initial={isDesktop ? { opacity: 0, scale: 0.985 } : { y: '100%' }}
       animate={isDesktop ? { opacity: 1, scale: 1 } : { y: 0 }}
       exit={isDesktop ? { opacity: 0, scale: 0.985 } : { y: '100%' }}
-      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+      transition={{ type: 'spring', stiffness: 430, damping: 36, mass: 0.85 }}
       drag={!isDesktop && activeCenterView === 'artwork' && isAtTop ? 'y' : false}
       dragConstraints={{ top: 0, bottom: 0 }}
       dragElastic={{ top: 0.1, bottom: 0.7 }}
@@ -644,7 +647,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           src={artworkSrc}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.22] blur-[90px] saturate-125 scale-125 transform-gpu transition-opacity duration-700"
+          className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-[0.22] blur-[90px] saturate-125 scale-125 transform-gpu transition-opacity duration-500"
         />
         <div
           className="absolute inset-0 transition-colors duration-500"
@@ -736,28 +739,39 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </span>
               </button>
 
-              <button
+              <motion.button
                 type="button"
                 data-testid="expanded-download-btn"
+                whileTap={{ scale: 0.92 }}
                 onClick={() => {
                   triggerHaptic('light');
-                  downloadTrackForOffline(currentTrack.id);
+                  downloadTrackForOffline(currentTrack);
                 }}
-                disabled={isDownloaded}
+                disabled={isDownloaded || isDownloading}
                 className={`h-8 px-3 rounded-full flex items-center gap-1.5 text-xs font-semibold transition-colors ${
                   isDownloaded
                     ? 'text-[#1DB954] bg-[#1DB954]/12 cursor-default'
+                    : isDownloading
+                    ? 'text-[#1DB954] bg-white/[0.06] cursor-wait'
                     : 'text-zinc-300 hover:text-white hover:bg-white/[0.09] cursor-pointer'
                 }`}
                 aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
               >
-                {isDownloaded ? (
+                {isDownloading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1DB954]" />
+                ) : isDownloaded ? (
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#1DB954]" />
                 ) : (
                   <ArrowDownToLine className="w-3.5 h-3.5" />
                 )}
-                <span>{isDownloaded ? (isRTL ? 'محفوظة' : 'Saved') : (isRTL ? 'حفظ' : 'Offline')}</span>
-              </button>
+                <span>
+                  {isDownloading
+                    ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                    : isDownloaded
+                    ? (isRTL ? 'محفوظة' : 'Saved')
+                    : (isRTL ? 'حفظ' : 'Offline')}
+                </span>
+              </motion.button>
 
               <button
                 type="button"
@@ -1186,7 +1200,6 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     className="w-full flex items-center justify-center"
                   >
                   <motion.div
-                    layoutId="aura-player-artwork"
                     data-testid="expanded-artwork-container"
                     drag="x"
                     dragConstraints={{ left: 0, right: 0 }}
@@ -1200,8 +1213,8 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                         previousTrack();
                       }
                     }}
-                    animate={{ scale: isPlaying ? 1 : 0.9 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.85 }}
+                    animate={{ scale: isPlaying ? 1 : 0.92 }}
+                    transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.8 }}
                     style={{
                       boxShadow: isPlaying
                         ? '0 22px 54px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.22)'
@@ -1214,9 +1227,9 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     key={currentTrack.id}
                     src={artworkSrc}
                     alt={currentTrack.title}
-                    initial={{ opacity: 0.35, scale: 0.98 }}
+                    initial={{ opacity: 0.72, scale: 0.97 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
                     className="w-full h-full object-cover select-none pointer-events-none"
                     draggable={false}
                     onError={(e) => {
@@ -1295,25 +1308,32 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button
+                  <motion.button
                     type="button"
                     data-testid="expanded-download-btn"
+                    whileTap={{ scale: 0.88 }}
                     onClick={() => {
                       triggerHaptic('light');
-                      downloadTrackForOffline(currentTrack.id);
+                      downloadTrackForOffline(currentTrack);
                     }}
-                    disabled={isDownloaded}
-                    className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full satin-metal-button cursor-pointer shrink-0 ${
-                      isDownloaded ? 'text-[#1DB954]' : 'text-zinc-300'
+                    disabled={isDownloaded || isDownloading}
+                    className={`w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full satin-metal-button shrink-0 ${
+                      isDownloaded
+                        ? 'text-[#1DB954] cursor-default'
+                        : isDownloading
+                        ? 'text-[#1DB954] cursor-wait'
+                        : 'text-zinc-300 cursor-pointer'
                     }`}
                     aria-label={isDownloaded ? 'محفوظة بدون إنترنت' : 'تنزيل بدون إنترنت'}
                   >
-                    {isDownloaded ? (
+                    {isDownloading ? (
+                      <Loader2 className="w-4.5 h-4.5 animate-spin text-[#1DB954]" />
+                    ) : isDownloaded ? (
                       <CheckCircle2 className="w-4.5 h-4.5 text-[#1DB954]" />
                     ) : (
                       <ArrowDownToLine className="w-4.5 h-4.5" />
                     )}
-                  </button>
+                  </motion.button>
 
                   <SmartSaveButton track={currentTrack} size="md" className="hover:bg-white/[0.08]" />
                 </div>

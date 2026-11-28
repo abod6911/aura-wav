@@ -246,61 +246,52 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       dir={dir}
       onClick={handleExpand}
     >
-      {/* 1. Artwork (42x42 rounded-lg) */}
-      <motion.div
-        layoutId="aura-player-artwork"
-        className="relative w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-lg overflow-hidden shrink-0 bg-black/60 border border-white/10 shadow-md aspect-square"
-      >
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.img
-            key={currentTrack.id}
-            src={getOptimizedCoverUrl(currentTrack.coverUrl || currentTrack.artworkUrl, 'thumb')}
-            alt={currentTrack.title}
-            initial={{ opacity: 0.35, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full h-full object-cover shrink-0 select-none pointer-events-none"
-            onError={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              getOfflineArtworkUrl(currentTrack.id).then((blobUrl) => {
-                if (blobUrl && img.src !== blobUrl) {
-                  img.src = blobUrl;
-                } else {
-                  img.src = './logo.svg';
-                }
-              }).catch(() => {
+      {/* 1. Artwork (42x42 rounded-lg — 0ms crisp cross-dissolve on track change) */}
+      <div className="relative w-[42px] h-[42px] min-w-[42px] min-h-[42px] rounded-lg overflow-hidden shrink-0 bg-black/60 border border-white/10 shadow-md aspect-square">
+        <motion.img
+          key={currentTrack.id}
+          src={getOptimizedCoverUrl(currentTrack.coverUrl || currentTrack.artworkUrl, 'thumb')}
+          alt={currentTrack.title}
+          initial={{ opacity: 0.72, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full h-full object-cover shrink-0 select-none pointer-events-none"
+          onError={(e) => {
+            const img = e.currentTarget as HTMLImageElement;
+            getOfflineArtworkUrl(currentTrack.id).then((blobUrl) => {
+              if (blobUrl && img.src !== blobUrl) {
+                img.src = blobUrl;
+              } else {
                 img.src = './logo.svg';
-              });
-            }}
-          />
-        </AnimatePresence>
-      </motion.div>
+              }
+            }).catch(() => {
+              img.src = './logo.svg';
+            });
+          }}
+        />
+      </div>
 
-      {/* 2. Track Title & Artist (Clean BiDi Truncation at end) */}
+      {/* 2. Track Title & Artist (0ms instant update with silky slide settle — no waiting blank gap!) */}
       <div className="flex-1 min-w-0 overflow-hidden">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentTrack.id}
-            initial={{ opacity: 0.4, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+        <motion.div
+          key={currentTrack.id}
+          initial={{ opacity: 0.75, x: isRTL ? -6 : 6 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <h4
+            dir="auto"
+            className="text-[13.5px] font-bold text-white truncate block leading-tight text-start"
           >
-            <h4
-              dir="auto"
-              className="text-[13.5px] font-bold text-white truncate block leading-tight text-start"
-            >
-              {currentTrack.title}
-            </h4>
-            <p
-              dir="auto"
-              className="text-[11px] text-[#B3B3B3] truncate block mt-0.5 font-normal leading-tight text-start"
-            >
-              {currentTrack.artist}
-            </p>
-          </motion.div>
-        </AnimatePresence>
+            {currentTrack.title}
+          </h4>
+          <p
+            dir="auto"
+            className="text-[11px] text-[#B3B3B3] truncate block mt-0.5 font-normal leading-tight text-start"
+          >
+            {currentTrack.artist}
+          </p>
+        </motion.div>
       </div>
 
       {/* 3. Sleek Controls: Play/Pause (40px touch area) + Next Track (40px touch area) */}

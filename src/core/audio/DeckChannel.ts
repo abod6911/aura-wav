@@ -1,6 +1,7 @@
 import { Track } from '../../types';
 import { DeckChannelName } from './types';
 import { isDirectNativeAudioMode } from './deviceAudioPolicy';
+import { normalizeStreamUrl } from '../../utils/urlUtils';
 
 /**
  * DeckChannel: Encapsulates AudioNode graphs and playback mechanisms
@@ -218,14 +219,10 @@ export class DeckChannel {
     (this.audio as any).webkitPreservesPitch = true;
     this.audio.volume = 1.0;
 
-    // Ensure URL is safely encoded for iOS Safari & cloud streaming (spaces and Arabic chars)
+    // Normalize URL cleanly without double-encoding existing %XX escapes (%2C, %26, etc.)
     let safeUrl = url;
-    try {
-      if (url.startsWith('http') || url.startsWith('/')) {
-        safeUrl = encodeURI(decodeURI(url));
-      }
-    } catch {
-      safeUrl = url;
+    if (url.startsWith('http') || url.startsWith('/')) {
+      safeUrl = normalizeStreamUrl(url);
     }
     this.audio.src = safeUrl;
     this.audio.load();

@@ -250,12 +250,12 @@ export async function resolvePlayableStreamInfo(track: Track): Promise<ResolvedS
     window.location.hostname.startsWith('192.168.')
   );
 
-  // 2. Local /songs/ path ONLY on localhost (production Vercel does not host static songs)
+  // 2. Local /songs/ path ONLY on localhost (production hosts do not host static songs)
   if (isLocalHost && track.audioUrl && track.audioUrl.startsWith('/songs/')) {
     try {
-      const decoded = decodeURIComponent(track.audioUrl);
+      const fileName = decodeURIComponent(track.audioUrl.slice('/songs/'.length));
       const info: ResolvedStreamInfo = {
-        url: encodeURI(decoded),
+        url: `/songs/${encodeURIComponent(fileName)}`,
         duration: track.duration,
         source: 'local-server',
         isPreview: false,

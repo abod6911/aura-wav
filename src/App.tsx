@@ -126,37 +126,45 @@ function DirectoryPermissionBanner() {
 function DownloadProgressPill() {
   const progress = usePlayerStore((state) => state.downloadAllProgress);
   const cancel = usePlayerStore((state) => state.cancelOfflineDownload);
-  if (!progress) return null;
 
-  const pct = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+  const pct = progress && progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="fixed top-3 inset-x-0 mx-auto z-[110] w-[min(92vw,400px)] rounded-2xl bg-[#18181C]/95 border border-white/[0.08] backdrop-blur-2xl shadow-2xl px-4 py-3 flex items-center gap-3"
-    >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between text-xs font-semibold text-white mb-1.5">
-          <span>جاري التنزيل للاستماع دون اتصال</span>
-          <span className="tabular-nums text-zinc-400 text-[11px]">
-            {progress.current}/{progress.total}
-          </span>
-        </div>
-        <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-[#1DB954] transition-[width] duration-300"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-      <button
-        type="button"
-        onClick={cancel}
-        className="shrink-0 text-xs font-medium text-zinc-400 hover:text-white px-2 py-1 rounded-md bg-white/[0.05] hover:bg-white/[0.1] transition-colors cursor-pointer"
-      >
-        إلغاء
-      </button>
-    </div>
+    <AnimatePresence>
+      {progress && (
+        <motion.div
+          role="status"
+          aria-live="polite"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -16, scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+          className="fixed top-[calc(env(safe-area-inset-top,0px)+12px)] inset-x-0 mx-auto z-[110] w-[min(92vw,400px)] rounded-2xl bg-[#18181C]/95 border border-white/[0.08] backdrop-blur-2xl shadow-2xl px-4 py-3 flex items-center gap-3"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between text-xs font-semibold text-white mb-1.5">
+              <span>جاري التنزيل للاستماع دون اتصال</span>
+              <span className="tabular-nums text-zinc-400 text-[11px]">
+                {progress.current}/{progress.total}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#1DB954] transition-[width] duration-300"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            onClick={cancel}
+            className="shrink-0 text-xs font-medium text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] transition-colors cursor-pointer"
+          >
+            إلغاء
+          </motion.button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
