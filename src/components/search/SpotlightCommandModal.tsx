@@ -330,7 +330,7 @@ export const SpotlightCommandModal: React.FC = () => {
                       >
                         <div className="relative w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 border border-white/10">
                           <img
-                            src={track.coverUrl || track.artworkUrl || '/logo.svg'}
+                            src={track.coverUrl || track.artworkUrl || './logo.svg'}
                             alt={track.title}
                             className="w-full h-full object-cover"
                           />

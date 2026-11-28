@@ -285,11 +285,11 @@ const SyncedLyricsModal: React.FC = () => {
         <div className="flex items-center justify-between pt-1" dir="ltr">
           <div className="flex items-center gap-3 min-w-0 flex-1 mr-4">
             <img
-              src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+              src={currentTrack.artworkUrl || currentTrack.coverUrl || './logo.svg'}
               alt={currentTrack.title}
               className="w-10 h-10 rounded-xl object-cover shrink-0"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/logo.svg';
+                (e.target as HTMLImageElement).src = './logo.svg';
               }}
             />
             <div className="min-w-0">

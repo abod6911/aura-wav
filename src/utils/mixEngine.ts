@@ -106,7 +106,7 @@ export function extractCollageCovers(tracks: Track[]): string[] {
   for (let i = 0; i < tracks.length; i++) {
     const t = tracks[i];
     const url = t.artworkUrl || t.coverUrl;
-    if (url && !seen.has(url) && url !== '/logo.svg') {
+    if (url && !seen.has(url) && url !== './logo.svg') {
       seen.add(url);
       covers.push(url);
       if (covers.length === 4) break;
@@ -115,7 +115,7 @@ export function extractCollageCovers(tracks: Track[]): string[] {
 
   // Fallbacks if fewer than 4 unique covers
   while (covers.length < 4) {
-    covers.push(covers[0] || '/logo.svg');
+    covers.push(covers[0] || './logo.svg');
   }
   return covers;
 }

@@ -180,7 +180,7 @@ export async function processAudioFiles(
             const catalogCover = resolveCatalogCover(meta.title, meta.artist, file.name, meta.trackNumber);
             if (!artworkBlob && catalogCover) {
               artworkUrl = catalogCover;
-            } else if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === '/logo.svg')) {
+            } else if (!artworkBlob && (!artworkUrl || artworkUrl.startsWith('data:image/svg') || artworkUrl === './logo.svg')) {
               artworkBlob = (await fetchOnlineArtwork(meta.title, meta.artist)) || undefined;
               if (artworkBlob) {
                 artworkUrl = registerObjectUrl(URL.createObjectURL(artworkBlob));
@@ -206,7 +206,7 @@ export async function processAudioFiles(
             trackNumber,
             year: meta.year,
             genre: meta.genre,
-            artworkUrl: artworkUrl || '/logo.svg',
+            artworkUrl: artworkUrl || './logo.svg',
             dominantColor: palette.primary,
             secondaryColor: palette.secondary,
             lyrics: lyricsText,

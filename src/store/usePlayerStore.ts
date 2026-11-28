@@ -1111,7 +1111,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
             // If still SVG fallback or missing, use catalog or fallback
             if (!artworkUrl || artworkUrl.startsWith('data:image/svg')) {
-              artworkUrl = catalogCover || '/logo.svg';
+              artworkUrl = catalogCover || './logo.svg';
             }
 
             const updatedTrack = { ...track, artworkUrl };
@@ -1341,7 +1341,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
             duration: newT.duration > 0 ? newT.duration : baseList[targetIdx].duration,
             lyrics: newT.lyrics || baseList[targetIdx].lyrics,
             syncedLyrics: newT.syncedLyrics || baseList[targetIdx].syncedLyrics,
-            artworkUrl: (newT.artworkUrl && !newT.artworkUrl.startsWith('data:image/svg') && newT.artworkUrl !== '/logo.svg')
+            artworkUrl: (newT.artworkUrl && !newT.artworkUrl.startsWith('data:image/svg') && newT.artworkUrl !== './logo.svg')
               ? newT.artworkUrl
               : (catItem ? catItem.coverUrl : (newT.artworkUrl || baseList[targetIdx].artworkUrl)),
             fileName: newT.fileName || baseList[targetIdx].fileName,

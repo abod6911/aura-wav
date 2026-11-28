@@ -144,7 +144,7 @@ export const TrackEditModal: React.FC = () => {
               <div className="flex flex-col items-center gap-3">
                 <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-xl overflow-hidden bg-black/50 border border-white/[0.08] shadow-md group shrink-0">
                   <img
-                    src={artworkPreview || '/logo.svg'}
+                    src={artworkPreview || './logo.svg'}
                     alt="Cover Preview"
                     className="w-full h-full object-cover"
                   />

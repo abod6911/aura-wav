@@ -260,7 +260,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
   // 4 covers mosaic for hero banner
   const heroCovers = useMemo(() => {
-    return tracks.slice(0, 4).map((t) => t.artworkUrl || '/logo.svg');
+    return tracks.slice(0, 4).map((t) => t.artworkUrl || './logo.svg');
   }, [tracks]);
 
   // Featured tracks for Apple Music / Spotify style editorial shelf
@@ -397,7 +397,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                       alt={`Cover ${i + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/logo.svg';
+                        (e.target as HTMLImageElement).src = './logo.svg';
                       }}
                     />
                   ))}
@@ -471,7 +471,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                     alt={`Cover ${i + 1}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/logo.svg';
+                      (e.target as HTMLImageElement).src = './logo.svg';
                     }}
                   />
                 ))}

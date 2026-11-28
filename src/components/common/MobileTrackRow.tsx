@@ -153,7 +153,7 @@ const MobileTrackRowInner: React.FC<MobileTrackRowProps> = ({
           {/* 40px x 40px rounded-lg Artwork */}
           <div className="relative w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg overflow-hidden bg-[#181818] shrink-0 aspect-square shadow-sm border border-white/10">
             <img
-              src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+              src={track.artworkUrl || track.coverUrl || './logo.svg'}
               alt={track.title}
               loading="lazy"
               decoding="async"

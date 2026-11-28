@@ -421,12 +421,12 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="relative w-11 h-11 min-w-[44px] min-h-[44px] max-w-[44px] max-h-[44px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0 shrink-0 aspect-square">
                       <img
-                        src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                        src={track.artworkUrl || track.coverUrl || './logo.svg'}
                         alt={track.title}
                         className="w-full h-full object-cover shrink-0 aspect-square group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/logo.svg';
+                          (e.target as HTMLImageElement).src = './logo.svg';
                         }}
                       />
                     </div>

@@ -330,7 +330,7 @@ export const GenreView: React.FC = () => {
                     <div className="flex items-center gap-3 min-w-0 pe-4">
                       <div className="w-10 h-10 rounded overflow-hidden bg-[#181818] shrink-0 border border-white/5">
                         <img
-                          src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                          src={track.artworkUrl || track.coverUrl || './logo.svg'}
                           alt={track.title}
                           className="w-full h-full object-cover"
                           loading="lazy"

@@ -43,6 +43,17 @@ export async function fetchCatalogTracks(): Promise<Track[]> {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: Track[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
+        const base = import.meta.env.BASE_URL || './';
+        const fixUrl = (u?: string) => {
+          if (!u) return `${base}logo.svg`;
+          if (u.startsWith('./')) return `${base}${u.slice(2)}`;
+          if (u.startsWith('/') && !u.startsWith('//')) return `${base}${u.slice(1)}`;
+          return u;
+        };
+        for (let i = 0; i < data.length; i++) {
+          data[i].artworkUrl = fixUrl(data[i].artworkUrl || data[i].coverUrl);
+          data[i].coverUrl = fixUrl(data[i].coverUrl || data[i].artworkUrl);
+        }
         cachedLibraryTracks = data;
         TRACKS_CATALOG.length = 0;
         for (let i = 0; i < data.length; i++) {
@@ -59,7 +70,7 @@ export async function fetchCatalogTracks(): Promise<Track[]> {
             category: t.category,
             duration: `${mins}:${secs}`,
             durationSecs: durSecs,
-            coverUrl: t.artworkUrl || t.coverUrl || '/logo.svg',
+            coverUrl: t.artworkUrl || t.coverUrl || './logo.svg',
             fileName: t.fileName || `${t.title}.mp3`,
             audioUrl: t.audioUrl || '',
           });

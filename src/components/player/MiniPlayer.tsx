@@ -268,10 +268,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
                 if (blobUrl && img.src !== blobUrl) {
                   img.src = blobUrl;
                 } else {
-                  img.src = '/logo.svg';
+                  img.src = './logo.svg';
                 }
               }).catch(() => {
-                img.src = '/logo.svg';
+                img.src = './logo.svg';
               });
             }}
           />

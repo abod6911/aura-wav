@@ -271,7 +271,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
         <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.07] border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
           <div className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl overflow-hidden bg-black/60 shrink-0 border border-white/15 relative">
             <img
-              src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+              src={currentTrack.artworkUrl || currentTrack.coverUrl || './logo.svg'}
               alt={currentTrack.title}
               className="w-full h-full object-cover"
             />
@@ -320,7 +320,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
                   className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg overflow-hidden bg-black/60 shrink-0 border border-white/10 cursor-pointer"
                 >
                   <img
-                    src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                    src={track.artworkUrl || track.coverUrl || './logo.svg'}
                     alt={track.title}
                     className="w-full h-full object-cover"
                   />
@@ -402,7 +402,7 @@ const EmbeddedQueueView: React.FC<EmbeddedQueueViewProps> = memo(({
               >
                 <div className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg overflow-hidden bg-black/60 shrink-0 border border-white/10">
                   <img
-                    src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                    src={track.artworkUrl || track.coverUrl || './logo.svg'}
                     alt={track.title}
                     className="w-full h-full object-cover"
                   />
@@ -578,7 +578,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const isDownloaded = downloadedTrackIds.includes(currentTrack.id);
-  const artworkSrc = currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg';
+  const artworkSrc = currentTrack.artworkUrl || currentTrack.coverUrl || './logo.svg';
 
   const handleClose = () => {
     triggerHaptic('light');
@@ -787,10 +787,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       if (blobUrl && img.src !== blobUrl) {
                         img.src = blobUrl;
                       } else {
-                        img.src = '/logo.svg';
+                        img.src = './logo.svg';
                       }
                     }).catch(() => {
-                      img.src = '/logo.svg';
+                      img.src = './logo.svg';
                     });
                   }}
                 />
@@ -1149,10 +1149,10 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                         if (blobUrl && img.src !== blobUrl) {
                           img.src = blobUrl;
                         } else {
-                          img.src = '/logo.svg';
+                          img.src = './logo.svg';
                         }
                       }).catch(() => {
-                        img.src = '/logo.svg';
+                        img.src = './logo.svg';
                       });
                     }}
                   />

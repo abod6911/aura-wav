@@ -90,7 +90,7 @@ export const HandoffBanner: React.FC = () => {
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="relative w-10 h-10 min-w-[40px] rounded-xl overflow-hidden bg-black/60 border border-white/10 shrink-0">
               <img
-                src={remoteState.track.artworkUrl || remoteState.track.coverUrl || '/logo.svg'}
+                src={remoteState.track.artworkUrl || remoteState.track.coverUrl || './logo.svg'}
                 alt={remoteState.track.title}
                 className="w-full h-full object-cover"
               />

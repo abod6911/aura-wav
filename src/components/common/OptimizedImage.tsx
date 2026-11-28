@@ -19,7 +19,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = React.memo(({
   priority = false,
   containerClassName = '',
   className = '',
-  fallbackSrc = '/logo.svg',
+  fallbackSrc = './logo.svg',
   showIconPlaceholder = true,
   ...rest
 }) => {

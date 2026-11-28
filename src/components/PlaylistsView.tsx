@@ -279,7 +279,7 @@ export const PlaylistsView: React.FC = () => {
                     </div>
 
                     <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-black/60 border border-white/10 shadow-sm flex-shrink-0">
-                      <img src={track.artworkUrl || '/logo.svg'} alt={track.title} className="w-full h-full object-cover" />
+                      <img src={track.artworkUrl || './logo.svg'} alt={track.title} className="w-full h-full object-cover" />
                     </div>
 
                     <div className="min-w-0 pe-2">

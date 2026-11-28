@@ -279,7 +279,7 @@ export const SyncPartyModal: React.FC = () => {
               {currentTrack && (
                 <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center gap-3">
                   <img
-                    src={currentTrack.artworkUrl || '/logo.svg'}
+                    src={currentTrack.artworkUrl || './logo.svg'}
                     alt={currentTrack.title}
                     className="w-11 h-11 rounded-xl object-cover border border-white/10 flex-shrink-0"
                   />

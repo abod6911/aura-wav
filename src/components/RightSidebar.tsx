@@ -99,7 +99,7 @@ export const RightSidebar: React.FC = () => {
               <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.05] border border-white/[0.1] shadow-lg">
                 <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-white/15">
                   <img
-                    src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
+                    src={currentTrack.coverUrl || currentTrack.artworkUrl || './logo.svg'}
                     alt={currentTrack.title}
                     className="w-full h-full object-cover"
                   />
@@ -170,7 +170,7 @@ export const RightSidebar: React.FC = () => {
                       </span>
 
                       <img
-                        src={track.coverUrl || track.artworkUrl || '/logo.svg'}
+                        src={track.coverUrl || track.artworkUrl || './logo.svg'}
                         alt={track.title}
                         className="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-white/10"
                       />
@@ -268,7 +268,7 @@ export const RightSidebar: React.FC = () => {
                       <Play className="w-3.5 h-3.5 text-white hidden group-hover:block fill-current" />
 
                       <img
-                        src={track.coverUrl || track.artworkUrl || '/logo.svg'}
+                        src={track.coverUrl || track.artworkUrl || './logo.svg'}
                         alt={track.title}
                         className="w-8 h-8 rounded-lg object-cover flex-shrink-0 border border-white/10"
                       />
@@ -322,7 +322,7 @@ export const RightSidebar: React.FC = () => {
                 className="relative aspect-square w-full rounded-2xl overflow-hidden bg-black/40 group border border-white/15 transition-shadow duration-500"
               >
                 <img
-                  src={currentTrack.coverUrl || currentTrack.artworkUrl || '/logo.svg'}
+                  src={currentTrack.coverUrl || currentTrack.artworkUrl || './logo.svg'}
                   alt={currentTrack.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -385,7 +385,7 @@ export const RightSidebar: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden bg-[#242424] shrink-0 ring-1 ring-white/10">
                     <img
-                      src={artistProfile?.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                      src={artistProfile?.artworkUrl || currentTrack.coverUrl || './logo.svg'}
                       alt={currentTrack.artist}
                       className="w-full h-full object-cover aspect-square"
                       loading="lazy"

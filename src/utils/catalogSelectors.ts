@@ -122,7 +122,7 @@ function ensureCache(tracks: Track[]) {
     }
 
     const firstArt = record.tracks.find((t) => t.coverUrl || t.artworkUrl);
-    const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || '/logo.svg';
+    const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || './logo.svg';
 
     artists.push({
       name: record.name,
@@ -167,7 +167,7 @@ function ensureCache(tracks: Track[]) {
   const albums: AlbumSummary[] = [];
   for (const record of albumMap.values()) {
     const firstArt = record.tracks.find((t) => t.coverUrl || t.artworkUrl);
-    const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || '/logo.svg';
+    const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || './logo.svg';
     const totalDuration = record.tracks.reduce((acc, trk) => acc + (trk.duration || 0), 0);
 
     // Pick most representative artist for the album
@@ -220,7 +220,7 @@ export function getArtistProfile(tracks: Track[], artistName: string): ArtistPro
 
   const totalDuration = artistTracks.reduce((acc, t) => acc + (t.duration || 0), 0);
   const firstArt = artistTracks.find((t) => t.coverUrl || t.artworkUrl);
-  const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || '/logo.svg';
+  const artworkUrl = firstArt?.coverUrl || firstArt?.artworkUrl || './logo.svg';
   const topGenre = found?.topGenre || artistTracks[0]?.genre || 'Pop';
 
   // Find albums containing this artist's tracks
@@ -285,7 +285,7 @@ export function getAlbumDetails(tracks: Track[], albumName: string, artistHint?:
   return {
     name: found?.name || albumName.trim(),
     artist: found?.artist || albumTracks[0]?.artist || 'Unknown Artist',
-    artworkUrl: firstArt?.coverUrl || firstArt?.artworkUrl || '/logo.svg',
+    artworkUrl: firstArt?.coverUrl || firstArt?.artworkUrl || './logo.svg',
     trackCount: albumTracks.length,
     totalDuration,
     genre: found?.genre || albumTracks[0]?.genre || 'Music',

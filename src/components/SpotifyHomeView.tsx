@@ -370,7 +370,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 }`}
               >
                 <img
-                  src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
+                  src={trk.artworkUrl || trk.coverUrl || './logo.svg'}
                   alt={trk.title}
                   loading="lazy"
                   decoding="async"
@@ -436,7 +436,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
             <div className="flex items-center gap-5 min-w-0 flex-1 z-10">
               <div className="relative shrink-0">
                 <img
-                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || '/cover.jpg'}
+                  src={spotlightTrack.artworkUrl || spotlightTrack.coverUrl || './logo.svg'}
                   alt={spotlightTrack.title}
                   loading="eager"
                   className="w-28 h-28 lg:w-32 lg:h-32 rounded-xl object-cover shadow-2xl ring-1 ring-white/10 bg-black/50"
@@ -516,7 +516,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     className="group flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors cursor-pointer"
                   >
                     <img
-                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
+                      src={trk.artworkUrl || trk.coverUrl || './logo.svg'}
                       alt={trk.title}
                       className="w-10 h-10 rounded-lg object-cover shrink-0 bg-black/40"
                     />
@@ -654,7 +654,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 >
                   <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/5 mb-2">
                     <img
-                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
+                      src={trk.artworkUrl || trk.coverUrl || './logo.svg'}
                       alt={trk.title}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -732,7 +732,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               >
                 <div className="relative w-full aspect-square rounded-full overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/10 mb-2">
                   <img
-                    src={artist.artworkUrl || '/cover.jpg'}
+                    src={artist.artworkUrl || './logo.svg'}
                     alt={artist.name}
                     loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -784,7 +784,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 >
                   <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-[#242424] shadow-md ring-1 ring-white/5 mb-2">
                     <img
-                      src={trk.artworkUrl || trk.coverUrl || '/cover.jpg'}
+                      src={trk.artworkUrl || trk.coverUrl || './logo.svg'}
                       alt={trk.title}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

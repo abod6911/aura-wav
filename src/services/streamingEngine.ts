@@ -108,7 +108,7 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
         for (const item of data.results) {
           const highResArtwork = item.artworkUrl100
             ? item.artworkUrl100.replace('100x100bb', '600x600bb')
-            : '/logo.svg';
+            : './logo.svg';
 
           const trackTitle = item.trackName || 'أغنية غير معروفة';
           const trackArtist = item.artistName || 'فنان غير معروف';
@@ -147,7 +147,7 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
             artistMap.set(trackArtist, {
               id: `artist-${item.artistId || trackArtist}`,
               name: trackArtist,
-              avatarUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : '/logo.svg',
+              avatarUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '300x300bb') : './logo.svg',
             });
           }
 
@@ -156,7 +156,7 @@ export async function searchWorldwideMusic(query: string): Promise<SearchResults
               id: `album-${item.collectionId || trackAlbum}`,
               title: trackAlbum,
               artist: trackArtist,
-              coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '400x400bb') : '/logo.svg',
+              coverUrl: item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '400x400bb') : './logo.svg',
               year: item.releaseDate ? new Date(item.releaseDate).getFullYear().toString() : undefined,
             });
           }

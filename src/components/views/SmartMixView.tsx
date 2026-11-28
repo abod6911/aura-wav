@@ -339,7 +339,7 @@ export const SmartMixView: React.FC = () => {
                   <div className="flex items-center gap-3 min-w-0 pr-4">
                     <div className="w-10 h-10 rounded bg-[#181818] overflow-hidden shrink-0 ring-1 ring-white/5">
                       <img
-                        src={track.artworkUrl || '/cover.jpg'}
+                        src={track.artworkUrl || './logo.svg'}
                         alt=""
                         className="w-full h-full object-cover"
                         loading="lazy"

@@ -124,7 +124,7 @@ export const QueueDrawer: React.FC = () => {
                 <div className="p-3 rounded-2xl apple-glass-card border border-[#1DB954]/30 bg-[#1DB954]/[0.06] flex items-center gap-3 shadow-md">
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-black/60 shadow">
                     <img
-                      src={currentTrack.artworkUrl || currentTrack.coverUrl || '/logo.svg'}
+                      src={currentTrack.artworkUrl || currentTrack.coverUrl || './logo.svg'}
                       alt={currentTrack.title}
                       className="w-full h-full object-cover"
                     />
@@ -195,7 +195,7 @@ export const QueueDrawer: React.FC = () => {
                       </span>
 
                       <img
-                        src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                        src={track.artworkUrl || track.coverUrl || './logo.svg'}
                         alt={track.title}
                         className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-black/60 shadow"
                       />
@@ -269,7 +269,7 @@ export const QueueDrawer: React.FC = () => {
                       }}
                     >
                       <img
-                        src={track.artworkUrl || track.coverUrl || '/logo.svg'}
+                        src={track.artworkUrl || track.coverUrl || './logo.svg'}
                         alt={track.title}
                         className="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-black/60 shadow"
                       />

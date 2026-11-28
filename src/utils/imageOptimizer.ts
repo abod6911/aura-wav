@@ -6,13 +6,22 @@
 
 export type CoverSize = 'thumb' | 'card' | 'large';
 
-export function getOptimizedCoverUrl(url?: string | null, size: CoverSize = 'card'): string {
-  if (!url || typeof url !== 'string') {
-    return '/logo.svg';
-  }
+const BASE = (import.meta as any).env?.BASE_URL || './';
 
+export function resolveAssetUrl(url?: string | null): string {
+  if (!url || typeof url !== 'string') return `${BASE}logo.svg`;
   const cleanUrl = url.trim();
-  if (!cleanUrl) return '/logo.svg';
+  if (!cleanUrl) return `${BASE}logo.svg`;
+  if (cleanUrl === './logo.svg' || cleanUrl === './cover.jpg') return `${BASE}logo.svg`;
+  if (cleanUrl.startsWith('/') && !cleanUrl.startsWith('//')) {
+    if (BASE !== '/' && cleanUrl.startsWith(BASE)) return cleanUrl;
+    return `${BASE}${cleanUrl.slice(1)}`;
+  }
+  return cleanUrl;
+}
+
+export function getOptimizedCoverUrl(url?: string | null, size: CoverSize = 'card'): string {
+  const cleanUrl = resolveAssetUrl(url);
 
   // Apple Music / iTunes CDN dynamic resizing
   if (cleanUrl.includes('mzstatic.com')) {
