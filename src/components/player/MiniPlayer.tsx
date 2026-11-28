@@ -237,13 +237,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       onTouchEnd={handleTouchEnd}
       data-testid="mini-player"
       style={{
-        bottom: 'calc(var(--nav-height, 54px) + env(safe-area-inset-bottom, 0px) + 8px)',
+        bottom: 'calc(var(--nav-height, 56px) + env(safe-area-inset-bottom, 0px) + 8px)',
         transform: `translate3d(${dragX}px, 0, 0)`,
         transition: dragX === 0 ? 'transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), background-color 0.5s ease' : 'none',
         backgroundColor: theme.miniPlayerBg,
         touchAction: 'pan-y',
       }}
-      className="fixed left-2.5 right-2.5 z-40 h-[58px] rounded-xl px-2.5 flex items-center gap-2.5 backdrop-blur-2xl border border-white/[0.08] shadow-2xl overflow-visible select-none cursor-pointer pointer-events-auto"
+      className="fixed left-2.5 right-2.5 z-40 h-[60px] rounded-2xl px-2.5 flex items-center gap-2.5 backdrop-blur-md border border-white/[0.1] shadow-[0_12px_32px_rgba(0,0,0,0.7)] specular-highlight overflow-visible select-none cursor-pointer pointer-events-auto"
       dir={dir}
       onClick={handleExpand}
     >
@@ -281,18 +281,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onExpand }) => {
       {/* 2. Track Title & Artist (Clean BiDi Truncation at end) */}
       <div className="flex-1 min-w-0">
         <h4
-          dir={isArabicText(currentTrack.title) ? 'rtl' : 'ltr'}
-          className={`text-[13px] font-bold text-white truncate block leading-tight ${
-            isRTL ? 'text-right' : 'text-left'
-          }`}
+          dir="auto"
+          className="text-[13.5px] font-bold text-white truncate block leading-tight text-start"
         >
           {currentTrack.title}
         </h4>
         <p
-          dir={isArabicText(currentTrack.artist) ? 'rtl' : 'ltr'}
-          className={`text-[11px] text-[#B3B3B3] truncate block mt-0.5 font-normal leading-tight ${
-            isRTL ? 'text-right' : 'text-left'
-          }`}
+          dir="auto"
+          className="text-[11px] text-[#B3B3B3] truncate block mt-0.5 font-normal leading-tight text-start"
         >
           {currentTrack.artist}
         </p>

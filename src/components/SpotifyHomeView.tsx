@@ -280,9 +280,9 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     triggerHaptic('light');
                     setActiveTab('favorites');
                   }}
-                  className="group relative flex items-center h-13 sm:h-16 rounded-lg bg-[#181818] hover:bg-[#282828] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm"
+                  className="group relative flex items-center h-14 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md"
                 >
-                  <div className="w-13 h-13 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] shrink-0 shadow-md">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] shrink-0 shadow-md">
                     <Heart className="w-5 h-5 text-white fill-white" />
                   </div>
                   <div className="min-w-0 flex-1 px-3 text-start">
@@ -305,11 +305,11 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     triggerHaptic('light');
                     openSmartMix(card.mixId);
                   }}
-                  className={`group relative flex items-center h-13 sm:h-16 rounded-lg bg-[#181818] hover:bg-[#282828] border border-white/[0.04] transition-colors cursor-pointer overflow-hidden shadow-sm ${
+                  className={`group relative flex items-center h-14 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md ${
                     idx >= 6 ? 'hidden xl:flex' : 'flex'
                   }`}
                 >
-                  <div className="w-13 h-13 sm:w-16 sm:h-16 grid grid-cols-2 grid-rows-2 bg-[#242424] shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 grid grid-cols-2 grid-rows-2 bg-[#242424] shrink-0 overflow-hidden">
                     {card.covers.map((cUrl, cIdx) => (
                       <img key={cIdx} src={cUrl} alt="" className="w-full h-full object-cover" />
                     ))}
@@ -361,12 +361,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               <div
                 key={`quick-trk-${trk.id}`}
                 onClick={() => handleTrackClick(trk, sourcePool)}
-                className={`group relative flex items-center h-13 sm:h-16 rounded-lg border transition-colors cursor-pointer overflow-hidden shadow-sm ${
+                className={`group relative flex items-center h-14 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-md ${
                   idx >= 6 ? 'hidden xl:flex' : 'flex'
                 } ${
                   isCur
-                    ? 'bg-[#282828] border-[#1DB954]/40'
-                    : 'bg-[#181818] hover:bg-[#282828] border-white/[0.04]'
+                    ? 'bg-[#22222A] border-[#1DB954]/50'
+                    : 'bg-[#16161B]/95 hover:bg-[#24242C] border-white/[0.06]'
                 }`}
               >
                 <img
@@ -374,24 +374,24 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   alt={trk.title}
                   loading="lazy"
                   decoding="async"
-                  className="w-13 h-13 sm:w-16 sm:h-16 object-cover shrink-0 bg-black/40"
+                  className="w-14 h-14 sm:w-16 sm:h-16 object-cover shrink-0 bg-black/40"
                 />
                 <div className="min-w-0 flex-1 px-2.5 sm:px-3 text-start">
                   <span
-                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
-                    className={`text-xs sm:text-sm font-bold truncate block leading-tight ${
+                    dir="auto"
+                    className={`text-xs sm:text-sm font-bold truncate block leading-tight text-start ${
                       isCur ? 'text-[#1DB954]' : 'text-white'
                     }`}
                   >
                     {trk.title}
                   </span>
                   <span
-                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    dir="auto"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (trk.artist) openArtist(trk.artist);
                     }}
-                    className="text-[10px] sm:text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-medium leading-tight transition-colors"
+                    className="text-[10.5px] sm:text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-medium leading-tight text-start transition-colors"
                   >
                     {trk.artist}
                   </span>
@@ -612,18 +612,18 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                 </div>
 
                 {/* Badge & Title & Subtitle */}
-                <span className="text-[10px] font-bold text-emerald-400 mt-2 uppercase tracking-wider truncate">
+                <span className="text-[10px] font-bold text-emerald-400 mt-2.5 uppercase tracking-wider truncate block text-start">
                   {mix.badge}
                 </span>
                 <h4
-                  dir={isArabicText(mix.title) ? 'rtl' : 'ltr'}
-                  className="text-xs sm:text-sm font-bold text-white truncate leading-snug mt-0.5"
+                  dir="auto"
+                  className="text-xs sm:text-sm font-bold text-white truncate leading-snug mt-0.5 text-start"
                 >
                   {mix.title}
                 </h4>
                 <p
-                  dir={isArabicText(mix.subtitle) ? 'rtl' : 'ltr'}
-                  className="text-[11px] text-[#B3B3B3] truncate mt-0.5 leading-tight"
+                  dir="auto"
+                  className="text-[11px] text-[#B3B3B3] truncate mt-0.5 leading-tight text-start"
                 >
                   {mix.subtitle}
                 </p>
@@ -679,20 +679,20 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   </div>
 
                   <h4
-                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
-                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug ${
+                    dir="auto"
+                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug text-start ${
                       isCur ? 'text-[#1DB954]' : 'text-white'
                     }`}
                   >
                     {trk.title}
                   </h4>
                   <span
-                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    dir="auto"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (trk.artist) openArtist(trk.artist);
                     }}
-                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal transition-colors"
+                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal text-start transition-colors"
                   >
                     {trk.artist}
                   </span>
@@ -809,20 +809,20 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   </div>
 
                   <h4
-                    dir={isArabicText(trk.title) ? 'rtl' : 'ltr'}
-                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug ${
+                    dir="auto"
+                    className={`text-xs sm:text-sm font-semibold truncate block leading-snug text-start ${
                       isCur ? 'text-[#1DB954]' : 'text-white'
                     }`}
                   >
                     {trk.title}
                   </h4>
                   <span
-                    dir={isArabicText(trk.artist) ? 'rtl' : 'ltr'}
+                    dir="auto"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (trk.artist) openArtist(trk.artist);
                     }}
-                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal transition-colors"
+                    className="text-[11px] text-[#B3B3B3] hover:text-white hover:underline cursor-pointer truncate block mt-0.5 font-normal text-start transition-colors"
                   >
                     {trk.artist}
                   </span>

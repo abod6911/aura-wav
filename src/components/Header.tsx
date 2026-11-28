@@ -106,22 +106,59 @@ export const Header: React.FC<HeaderProps> = ({ onOpenImport: _onOpenImport, isS
       }`}
       dir={dir}
     >
-      {/* ── Mobile Header Bar (Spotify Native iOS Clean Style — No Fullscreen clutter) ── */}
-      <div className="flex items-center justify-between sm:hidden w-full min-w-0 py-0.5">
-        <h1 className="text-[22px] font-black tracking-tight text-white leading-tight">
-          {getPageTitle()}
-        </h1>
+      {/* ── Mobile Header Bar (High-Definition Native App Top Bar + Fullscreen Control) ── */}
+      <div className="flex items-center justify-between sm:hidden w-full min-w-0 py-0.5 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-6 h-6 rounded-lg bg-[#1DB954]/15 border border-[#1DB954]/35 flex items-center justify-center shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#1DB954]" />
+          </div>
+          <h1 className="text-[20px] font-black tracking-tight text-white leading-tight truncate">
+            {getPageTitle()}
+          </h1>
+        </div>
 
-        <div className="flex items-center gap-1.5 -me-1">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Mobile Quick Search */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setSpotlightOpen(true);
+            }}
+            className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-white/[0.06] border border-white/[0.08] text-zinc-200 flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation"
+            title={t.quickSearch}
+            aria-label="Quick Search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* Mobile Fullscreen Toggle */}
+          <button
+            type="button"
+            onClick={handleFullscreenToggle}
+            className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full border flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation ${
+              isFullscreen
+                ? 'bg-[#1DB954]/15 border-[#1DB954]/40 text-[#1DB954]'
+                : 'bg-white/[0.06] border-white/[0.08] text-zinc-200'
+            }`}
+            title={isFullscreen ? 'الخروج من ملء الشاشة' : 'ملء الشاشة'}
+            aria-label="Fullscreen"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+
           {/* Profile / Settings Button */}
           <button
             type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform touch-manipulation"
+            onClick={() => {
+              triggerHaptic('light');
+              setSettingsOpen(true);
+            }}
+            className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer active:scale-90 transition-transform touch-manipulation"
             title={currentUser ? currentUser.name : t.settings}
             aria-label={t.settings}
           >
-            <div className="w-8 h-8 rounded-full bg-[#181818] border border-white/[0.08] p-0.5 shadow-sm flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-[#181818] border border-white/[0.12] p-0.5 shadow-sm flex items-center justify-center">
               <div className="w-full h-full bg-[#121212] rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
                 {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover shrink-0 aspect-square" />

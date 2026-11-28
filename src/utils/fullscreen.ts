@@ -94,7 +94,7 @@ export async function toggleNativeFullscreen(): Promise<{
   const elem = document.documentElement as any;
   try {
     if (elem.requestFullscreen) {
-      await elem.requestFullscreen();
+      await elem.requestFullscreen({ navigationUI: 'hide' });
     } else if (elem.webkitRequestFullscreen) {
       await elem.webkitRequestFullscreen();
     } else if (elem.mozRequestFullScreen) {

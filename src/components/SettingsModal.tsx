@@ -885,7 +885,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     await caches.delete(key);
                   }
                 }
-                window.location.href = window.location.origin + '/?t=' + Date.now();
+                window.location.href = window.location.pathname + '?t=' + Date.now();
               }}
               className="w-full py-3 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] text-zinc-300 font-semibold text-sm flex items-center justify-center gap-2.5 transition-[color,background-color,border-color,transform] active:scale-[0.98] cursor-pointer"
             >

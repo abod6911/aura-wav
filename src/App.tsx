@@ -474,7 +474,7 @@ export function App() {
       dir={dir}
       className={
         isMobile
-          ? 'relative w-full h-full flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
+          ? 'relative w-full h-[100dvh] max-h-[100dvh] flex flex-col bg-[#09090B] text-white overflow-hidden select-none'
           : 'relative w-full h-full flex flex-row bg-[#09090B] text-[#f4f4f7] overflow-hidden font-sans selection:bg-[#1DB954]/30'
       }
     >

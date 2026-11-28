@@ -33,14 +33,14 @@
   --apple-spring-press: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Unified Mobile Bottom Dock & Viewport Geometry Variables */
-  --nav-height: 54px;
-  --miniplayer-height: 58px;
-  --miniplayer-gap: 6px;
+  --nav-height: 56px;
+  --miniplayer-height: 60px;
+  --miniplayer-gap: 8px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
-  --scroll-bottom-clearance: calc(54px + 58px + 14px + env(safe-area-inset-bottom, 0px) + 18px);
-  --scroll-bottom-no-player: calc(54px + env(safe-area-inset-bottom, 0px) + 18px);
-  --bottom-nav-height: 54px;
+  --scroll-bottom-clearance: calc(56px + 60px + 20px + env(safe-area-inset-bottom, 0px));
+  --scroll-bottom-no-player: calc(56px + 18px + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-height: 56px;
 }
 
 /* Tactile Ultra-Subtle Surface Accent (avoid expensive feTurbulence SVG filter rasterization) */
@@ -88,7 +88,7 @@
 html {
   width: 100%;
   height: 100%;
-  height: -webkit-fill-available;
+  height: 100dvh;
   overflow: hidden;
   margin: 0;
   padding: 0;
@@ -100,9 +100,7 @@ html {
 body {
   width: 100%;
   height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
+  height: 100dvh;
   overflow: hidden;
   margin: 0;
   padding: 0;

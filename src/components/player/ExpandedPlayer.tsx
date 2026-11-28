@@ -1023,7 +1023,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         /* ===================================================================== */
         /* MOBILE NATIVE SHEET LAYOUT (< 768px)                                  */
         /* ===================================================================== */
-        <div className="w-full h-full flex flex-col justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+6px)] pb-[calc(env(safe-area-inset-bottom,0px)+8px)] overflow-hidden">
+        <div className="w-full h-[100dvh] max-h-[100dvh] flex flex-col justify-between px-4 pt-[calc(env(safe-area-inset-top,0px)+8px)] pb-[calc(env(safe-area-inset-bottom,0px)+10px)] overflow-hidden">
           {/* Top Drag Handle & Header */}
           <div className="w-full flex flex-col items-center shrink-0">
             <div
@@ -1107,7 +1107,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             {/* First Viewport: Artwork + Controls Fit 100% Cleanly on Any Phone */}
             <div className="min-h-full flex flex-col justify-between gap-2 pb-2">
               {/* Mobile Center Stage */}
-              <div className="flex-1 min-h-[150px] flex items-center justify-center py-1 overflow-hidden">
+              <div className="flex-1 min-h-[136px] flex items-center justify-center py-1 overflow-hidden">
                 {activeCenterView === 'artwork' ? (
                   <motion.div
                     layoutId="aura-player-artwork"
@@ -1132,7 +1132,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                         : '0 10px 24px rgba(0, 0, 0, 0.45)',
                       touchAction: 'pan-y',
                     }}
-                    className="relative w-[min(68vw,30dvh,276px)] h-[min(68vw,30dvh,276px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
+                    className="relative w-[min(64vw,29dvh,276px)] h-[min(64vw,29dvh,276px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
                   >
                   <motion.img
                     key={currentTrack.id}

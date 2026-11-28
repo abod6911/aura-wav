@@ -29,7 +29,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenImport }) => {
   const { isRTL, dir } = useTranslation();
   const activeTab = usePlayerStore((state) => state.activeTab);
   const navigateTo = usePlayerStore((state) => state.navigateTo);
-  const tracks = usePlayerStore((state) => state.tracks);
+  const rawTracks = usePlayerStore((state) => state.tracks);
+  const catalogTracks = usePlayerStore((state) => state.catalogTracks);
+  const tracks = useMemo(() => (rawTracks.length > 0 ? rawTracks : catalogTracks), [rawTracks, catalogTracks]);
   const favorites = usePlayerStore((state) => state.favorites);
   const playlists = usePlayerStore((state) => state.playlists);
   const createPlaylist = usePlayerStore((state) => state.createPlaylist);

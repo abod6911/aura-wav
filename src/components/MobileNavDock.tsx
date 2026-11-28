@@ -49,7 +49,7 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
-      className="fixed bottom-0 inset-x-0 w-full bg-[#101014]/[0.96] backdrop-blur-md border-t border-white/[0.08] px-2 flex items-center justify-around select-none pointer-events-auto shrink-0 z-40 h-[calc(54px+env(safe-area-inset-bottom,0px))] after:content-[''] after:absolute after:inset-x-0 after:top-full after:h-12 after:bg-[#101014] after:pointer-events-none"
+      className="fixed bottom-0 inset-x-0 w-full bg-[#0C0C10]/[0.96] backdrop-blur-md border-t border-white/[0.08] px-2 flex items-start justify-around select-none pointer-events-auto shrink-0 z-40 min-h-[calc(56px+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_32px_rgba(0,0,0,0.65)]"
       dir={dir}
     >
       {tabs.map((tab) => {
@@ -63,10 +63,13 @@ export const MobileNavDock: React.FC<MobileNavDockProps> = () => {
               e.stopPropagation();
               handleTabClick(tab.id);
             }}
-            className="relative flex flex-col items-center justify-center gap-1 py-1.5 px-1 transition-colors flex-1 cursor-pointer h-[54px] touch-manipulation select-none pointer-events-auto active:scale-95"
+            className="relative flex flex-col items-center justify-center gap-1 py-1.5 px-1 transition-colors flex-1 cursor-pointer h-[56px] touch-manipulation select-none pointer-events-auto active:scale-95"
             aria-selected={isActive}
             role="tab"
           >
+            {isActive && (
+              <span className="absolute top-0 w-6 h-[2.5px] rounded-b-full bg-[#1DB954] shadow-[0_0_8px_rgba(29,185,84,0.8)]" />
+            )}
             <div className="relative">
               <Icon
                 className={`w-[21px] h-[21px] transition-colors duration-150 ${

@@ -54,7 +54,9 @@ export type RangeOption = 'all' | '1-100' | '101-250' | '251-500' | '501-1000' |
 
 export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   const { t, isRTL, dir } = useTranslation();
-  const tracks = usePlayerStore((state) => state.tracks);
+  const rawTracks = usePlayerStore((state) => state.tracks);
+  const catalogTracks = usePlayerStore((state) => state.catalogTracks);
+  const tracks = useMemo(() => (rawTracks.length > 0 ? rawTracks : catalogTracks), [rawTracks, catalogTracks]);
   const searchQuery = usePlayerStore((state) => state.searchQuery);
   const setSearchQuery = usePlayerStore((state) => state.setSearchQuery);
   const favorites = usePlayerStore((state) => state.favorites);
@@ -275,10 +277,10 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
   return (
     <div className="space-y-2.5 sm:space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
       {/* Mobile Library Hub: Spotify Filter Pills */}
-      <div className="sm:hidden flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 pe-2">
         <button
           onClick={handleCreatePlaylist}
-          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#282828] text-white flex items-center justify-center shrink-0 cursor-pointer"
+          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#282828] border border-white/[0.06] text-white flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-transform"
           title={isRTL ? 'إنشاء قائمة تشغيل' : 'Create playlist'}
         >
           <Plus className="w-4 h-4" />
@@ -288,32 +290,32 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             setMobileSubTab('tracks');
             if (activeFilter === 'offline') setActiveFilter('all');
           }}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-            mobileSubTab === 'tracks' && activeFilter !== 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+            mobileSubTab === 'tracks' && activeFilter !== 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
           {isRTL ? 'الأغاني' : 'Tracks'}
         </button>
         <button
           onClick={() => setMobileSubTab('playlists')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-            mobileSubTab === 'playlists' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+            mobileSubTab === 'playlists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
           {isRTL ? 'قوائم التشغيل' : 'Playlists'}
         </button>
         <button
           onClick={() => setMobileSubTab('artists')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-            mobileSubTab === 'artists' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+            mobileSubTab === 'artists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
           {isRTL ? 'الفنانون' : 'Artists'}
         </button>
         <button
           onClick={() => setMobileSubTab('albums')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-            mobileSubTab === 'albums' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+            mobileSubTab === 'albums' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
           {isRTL ? 'الألبومات' : 'Albums'}
@@ -323,8 +325,8 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             setMobileSubTab('downloaded');
             setActiveFilter('offline');
           }}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-            mobileSubTab === 'downloaded' || activeFilter === 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white'
+          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+            mobileSubTab === 'downloaded' || activeFilter === 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
           {isRTL ? 'المحمّلة' : 'Downloaded'}

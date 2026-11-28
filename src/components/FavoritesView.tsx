@@ -140,44 +140,44 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({ onOpenImport, onEx
   return (
     <div className="w-full max-w-7xl mx-auto py-1 sm:py-2 pb-4 md:pb-16 space-y-2.5 sm:space-y-4 select-none overflow-x-hidden" dir={dir}>
       {/* 1. Mobile Clean Header & Actions (Apple Music 44px Dual Button Layout) */}
-      <div className="sm:hidden space-y-3 pt-1 pb-2">
-        <div className="flex items-center justify-between px-0.5">
-          <span className="text-xs text-zinc-400 font-medium tabular-nums">
-            {favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'} • {formattedTotalDuration}
-          </span>
-          <button
-            type="button"
-            onClick={() => downloadFavoritesOffline()}
-            disabled={favoriteTracks.length === 0 || !!downloadAllProgress || allFavoritesSaved}
-            className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 cursor-pointer py-1 px-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06]"
-          >
-            {allFavoritesSaved ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
-            <span className="text-[11px] font-medium">{allFavoritesSaved ? (isRTL ? 'محفوظة' : 'Saved') : (isRTL ? 'تحميل' : 'Download')}</span>
-          </button>
-        </div>
+      {favoriteTracks.length > 0 && (
+        <div className="sm:hidden space-y-3 pt-1 pb-2">
+          <div className="flex items-center justify-between px-0.5">
+            <span className="text-xs text-zinc-400 font-medium tabular-nums">
+              {favoriteTracks.length} {isRTL ? 'أغنية' : 'tracks'} • {formattedTotalDuration}
+            </span>
+            <button
+              type="button"
+              onClick={() => downloadFavoritesOffline()}
+              disabled={!!downloadAllProgress || allFavoritesSaved}
+              className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 cursor-pointer py-1 px-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06]"
+            >
+              {allFavoritesSaved ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+              <span className="text-[11px] font-medium">{allFavoritesSaved ? (isRTL ? 'محفوظة' : 'Saved') : (isRTL ? 'تحميل' : 'Download')}</span>
+            </button>
+          </div>
 
-        {/* Two Equal Action Buttons (44px height, rounded-xl) */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handlePlayAll}
-            disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-black/40 active:scale-95 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Play className="w-4 h-4 fill-black text-black" />
-            <span>{isRTL ? 'تشغيل' : 'Play'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleShufflePlay}
-            disabled={favoriteTracks.length === 0}
-            className="h-11 rounded-xl bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Shuffle className="w-4 h-4 text-zinc-300" />
-            <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
-          </button>
+          {/* Two Equal Action Buttons (44px height, rounded-xl) */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handlePlayAll}
+              className="h-11 rounded-xl bg-[#1DB954] hover:bg-[#1ED760] text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-black/40 active:scale-95 transition-colors cursor-pointer"
+            >
+              <Play className="w-4 h-4 fill-black text-black" />
+              <span>{isRTL ? 'تشغيل' : 'Play'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleShufflePlay}
+              className="h-11 rounded-xl bg-[#242424] hover:bg-[#2e2e2e] border border-white/[0.08] text-white font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-colors cursor-pointer"
+            >
+              <Shuffle className="w-4 h-4 text-zinc-300" />
+              <span>{isRTL ? 'عشوائي' : 'Shuffle'}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desktop Grand Hero Banner (sm:block hidden) */}
       <div className="hidden sm:block relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#2C1E5E]/50 via-[#181818] to-[#121212] border border-white/[0.06] p-6 sm:p-8 shadow-2xl shadow-black/50 transform-gpu">

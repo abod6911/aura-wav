@@ -21,7 +21,7 @@ const GENRE_DEFS: GenreDef[] = [
   { arName: 'هيب هوب وراب', enName: 'Hip-Hop & Rap', query: 'Rap', gradient: 'from-[#ba5d07] to-[#803d00]' },
   { arName: 'موسيقى هادئة', enName: 'Chill & Relax', query: 'Chill', gradient: 'from-[#1e3264] to-[#111c38]' },
   { arName: 'روك وبديل', enName: 'Rock & Alternative', query: 'Rock', gradient: 'from-[#603080] to-[#381850]' },
-  { arName: 'إلكترونيك وEDM', enName: 'EDM & Dance', query: 'EDM', gradient: 'from-[#006450] to-[#003d31]' },
+  { arName: 'إلكترونيك و EDM', enName: 'EDM & Dance', query: 'EDM', gradient: 'from-[#006450] to-[#003d31]' },
   { arName: 'طرب وجلسات', enName: 'Classic Tarab', query: 'طرب', gradient: 'from-[#af2896] to-[#6d135c]' },
   { arName: 'موسيقى عالمية', enName: 'World Music', query: 'Hits', gradient: 'from-[#503750] to-[#2c1d2c]' },
 ];
@@ -41,7 +41,9 @@ export const InfiniteSearchView: React.FC = () => {
   const [visibleSongCount, setVisibleSongCount] = useState(50);
   const [, startTransition] = useTransition();
 
-  const tracks = usePlayerStore((state) => state.tracks);
+  const rawTracks = usePlayerStore((state) => state.tracks);
+  const catalogTracks = usePlayerStore((state) => state.catalogTracks);
+  const tracks = useMemo(() => (rawTracks.length > 0 ? rawTracks : catalogTracks), [rawTracks, catalogTracks]);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const playbackState = usePlayerStore((state) => state.playbackState);
