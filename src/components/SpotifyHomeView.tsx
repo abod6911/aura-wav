@@ -280,14 +280,15 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     triggerHaptic('light');
                     setActiveTab('favorites');
                   }}
-                  className="group relative flex items-center h-14 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md"
+                  className="group relative flex items-center h-12 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md"
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] shrink-0 shadow-md">
-                    <Heart className="w-5 h-5 text-white fill-white" />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center bg-gradient-to-br from-[#450AF5] via-[#5E3AE8] to-[#8E8EE5] shrink-0 shadow-md">
+                    <Heart className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white fill-white" />
                   </div>
-                  <div className="min-w-0 flex-1 px-3 text-start">
-                    <span className="text-xs sm:text-sm font-bold text-white truncate block leading-tight">
-                      {t.likedSongsCard}
+                  <div className="min-w-0 flex-1 px-2 sm:px-3 text-start">
+                    <span className="text-[11.5px] sm:text-sm font-bold text-white truncate block leading-tight">
+                      <span className="sm:hidden">{isRTL ? 'المفضلة' : 'Liked'}</span>
+                      <span className="hidden sm:inline">{t.likedSongsCard}</span>
                     </span>
                     <span className="text-[10px] sm:text-[11px] text-[#B3B3B3] block tabular-nums mt-0.5 font-medium">
                       {favorites.length} {t.songs}
@@ -305,21 +306,21 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                     triggerHaptic('light');
                     openSmartMix(card.mixId);
                   }}
-                  className={`group relative flex items-center h-14 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md ${
+                  className={`group relative flex items-center h-12 sm:h-16 rounded-xl bg-[#16161B]/95 hover:bg-[#24242C] border border-white/[0.06] transition-colors cursor-pointer overflow-hidden shadow-md ${
                     idx >= 6 ? 'hidden xl:flex' : 'flex'
                   }`}
                 >
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 grid grid-cols-2 grid-rows-2 bg-[#242424] shrink-0 overflow-hidden">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 grid grid-cols-2 grid-rows-2 bg-[#242424] shrink-0 overflow-hidden">
                     {card.covers.map((cUrl, cIdx) => (
                       <img key={cIdx} src={cUrl} alt="" className="w-full h-full object-cover" />
                     ))}
                   </div>
-                  <div className="min-w-0 flex-1 px-3 text-start">
-                    <span className="text-xs sm:text-sm font-bold text-white truncate block leading-tight">
+                  <div className="min-w-0 flex-1 px-2 sm:px-3 text-start">
+                    <span className="text-[11.5px] sm:text-sm font-bold text-white truncate block leading-tight">
                       {card.title}
                     </span>
                     <span className="text-[10px] sm:text-[11px] text-emerald-400 block truncate mt-0.5 font-medium">
-                      ميكس مخصص لك
+                      {isRTL ? 'ميكس خاص' : 'Made for you'}
                     </span>
                   </div>
                 </div>
@@ -361,7 +362,7 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
               <div
                 key={`quick-trk-${trk.id}`}
                 onClick={() => handleTrackClick(trk, sourcePool)}
-                className={`group relative flex items-center h-14 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-md ${
+                className={`group relative flex items-center h-12 sm:h-16 rounded-xl border transition-colors cursor-pointer overflow-hidden shadow-md ${
                   idx >= 6 ? 'hidden xl:flex' : 'flex'
                 } ${
                   isCur
@@ -374,12 +375,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   alt={trk.title}
                   loading="lazy"
                   decoding="async"
-                  className="w-14 h-14 sm:w-16 sm:h-16 object-cover shrink-0 bg-black/40"
+                  className="w-12 h-12 sm:w-16 sm:h-16 object-cover shrink-0 bg-black/40"
                 />
-                <div className="min-w-0 flex-1 px-2.5 sm:px-3 text-start">
+                <div className="min-w-0 flex-1 px-2 sm:px-3 text-start">
                   <span
                     dir="auto"
-                    className={`text-xs sm:text-sm font-bold truncate block leading-tight text-start ${
+                    className={`text-[11.5px] sm:text-sm font-bold truncate block leading-tight text-start ${
                       isCur ? 'text-[#1DB954]' : 'text-white'
                     }`}
                   >

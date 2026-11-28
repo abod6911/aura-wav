@@ -25,24 +25,29 @@
     <!-- Instant Client Cache Invalidation: purges stale SW caches on version bump -->
     <script>
       (function() {
-        var APP_VERSION = 'v32.0';
+        var APP_VERSION = 'v33.0';
         var stored = localStorage.getItem('aura_sw_ver');
         if (stored !== APP_VERSION) {
+          var tasks = [];
           if ('caches' in window) {
-            caches.keys().then(function(keys) {
-              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
-            });
+            tasks.push(
+              caches.keys().then(function(keys) {
+                return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+              }).catch(function() {})
+            );
           }
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var i = 0; i < regs.length; i++) {
-                regs[i].unregister();
-              }
-            });
+            tasks.push(
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                return Promise.all(regs.map(function(r) { return r.unregister(); }));
+              }).catch(function() {})
+            );
           }
           localStorage.setItem('aura_sw_ver', APP_VERSION);
           if (stored) {
-            window.location.reload();
+            Promise.all(tasks).finally(function() {
+              window.location.reload();
+            });
           }
         }
       })();

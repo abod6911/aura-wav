@@ -117,7 +117,7 @@ const MiniPlayerProgressBar: React.FC = () => {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => setIsDragging(false)}
-      className="absolute -bottom-1 inset-x-0 h-5 flex items-end cursor-pointer touch-none z-30 select-none"
+      className="absolute bottom-0 inset-x-3 h-4 flex items-end cursor-pointer touch-none z-30 select-none"
     >
       {/* Live Scrubbing Time Bubble */}
       {isDragging && (
@@ -131,7 +131,7 @@ const MiniPlayerProgressBar: React.FC = () => {
       )}
 
       {/* Track Groove */}
-      <div className="w-full h-[3px] bg-white/[0.12] relative mb-1">
+      <div className="w-full h-[2.5px] bg-white/[0.12] rounded-full relative mb-[2px]">
         <div
           ref={barRef}
           className="h-full relative bg-[#1DB954] rounded-full"
@@ -145,8 +145,8 @@ const MiniPlayerProgressBar: React.FC = () => {
         {/* Always-Visible Progress Dot */}
         <div
           ref={thumbRef}
-          className={`absolute top-1/2 -translate-y-1/2 -ml-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(29,185,84,0.9)] ring-2 ring-[#1DB954] pointer-events-none transition-transform duration-100 ${
-            isDragging ? 'w-3.5 h-3.5 -ml-[7px] scale-110' : 'w-2.5 h-2.5'
+          className={`absolute top-1/2 -translate-y-1/2 -ml-1 rounded-full bg-white shadow-[0_0_6px_rgba(29,185,84,0.9)] ring-1 ring-[#1DB954] pointer-events-none transition-transform duration-100 ${
+            isDragging ? 'w-3 h-3 -ml-1.5 scale-110' : 'w-2 h-2'
           }`}
           style={{ left: `${startPct}%` }}
         />

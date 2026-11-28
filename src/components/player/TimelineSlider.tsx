@@ -292,56 +292,58 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = memo(({
       className={`w-full flex flex-col select-none touch-none py-1.5 ${className}`} 
       dir="ltr"
     >
-      {/* Visual & Hit Area Container (Enlarged 44px touch ergonomics) */}
-      <div
-        ref={trackRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={() => setIsDragging(false)}
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-        className="relative h-11 flex items-center cursor-pointer group py-2"
-        role="slider"
-        aria-valuemin={0}
-        aria-valuemax={duration}
-        aria-valuenow={isDragging ? scrubSeconds : initialTime}
-        aria-label="شريط تقدم الأغنية"
-      >
-        {/* Track Groove Background */}
-        <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
-          {/* Buffer Bar (Pre-loaded audio) */}
+      {/* Visual & Hit Area Container (Enlarged 44px touch ergonomics, padded 8px so thumb never clips at 0%/100%) */}
+      <div className="px-2">
+        <div
+          ref={trackRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={() => setIsDragging(false)}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
+          className="relative h-11 flex items-center cursor-pointer group py-2"
+          role="slider"
+          aria-valuemin={0}
+          aria-valuemax={duration}
+          aria-valuenow={isDragging ? scrubSeconds : initialTime}
+          aria-label="شريط تقدم الأغنية"
+        >
+          {/* Track Groove Background */}
+          <div className="w-full h-1.5 group-hover:h-2 transition-[height] duration-150 rounded-full bg-white/20 overflow-hidden relative">
+            {/* Buffer Bar (Pre-loaded audio) */}
+            <div
+              className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
+              style={{ width: `${bufferPercent}%` }}
+            />
+            {/* Active Playback Progress Fill */}
+            <div
+              ref={fillBarRef}
+              className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 bg-[#1DB954] transition-colors duration-150"
+              style={{ width: `${initialPercent}%` }}
+            />
+          </div>
+
+          {/* Floating Time Preview Bubble */}
+          {(isDragging || isHovering) && duration > 0 && (
+            <div
+              ref={previewBubbleRef}
+              className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#282828] border border-white/10 text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-30 flex items-center gap-1"
+              style={{ left: `${isDragging ? (scrubSeconds / safeDuration) * 100 : 0}%` }}
+            >
+              <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
+            </div>
+          )}
+
+          {/* Always-Visible Progress Dot Thumb (Visible on touch & desktop for immediate scrubbing) */}
           <div
-            className="absolute left-0 top-0 h-full bg-white/30 rounded-full pointer-events-none transition-[width] duration-300"
-            style={{ width: `${bufferPercent}%` }}
-          />
-          {/* Active Playback Progress Fill */}
-          <div
-            ref={fillBarRef}
-            className="absolute left-0 top-0 h-full rounded-full pointer-events-none z-10 bg-[#1DB954] transition-colors duration-150"
-            style={{ width: `${initialPercent}%` }}
+            ref={thumbRef}
+            className={`absolute -ml-2 w-4 h-4 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)] ring-2 ring-[#1DB954]/80 pointer-events-none z-20 transition-transform duration-150 ${
+              isDragging || isHovering ? 'scale-125' : 'scale-100'
+            }`}
+            style={{ left: `${initialPercent}%` }}
           />
         </div>
-
-        {/* Floating Time Preview Bubble */}
-        {(isDragging || isHovering) && duration > 0 && (
-          <div
-            ref={previewBubbleRef}
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#282828] border border-white/10 text-[11px] font-mono font-bold text-white shadow-lg pointer-events-none z-30 flex items-center gap-1"
-            style={{ left: `${isDragging ? (scrubSeconds / safeDuration) * 100 : 0}%` }}
-          >
-            <span ref={previewTextRef}>{formatDuration(isDragging ? scrubSeconds : 0)}</span>
-          </div>
-        )}
-
-        {/* Always-Visible Progress Dot Thumb (Visible on touch & desktop for immediate scrubbing) */}
-        <div
-          ref={thumbRef}
-          className={`absolute -ml-2 w-4 h-4 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.65)] ring-2 ring-[#1DB954]/80 pointer-events-none z-20 transition-transform duration-150 ${
-            isDragging || isHovering ? 'scale-125' : 'scale-100'
-          }`}
-          style={{ left: `${initialPercent}%` }}
-        />
       </div>
 
       {/* Timestamp Indicators */}

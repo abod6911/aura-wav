@@ -276,21 +276,21 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
 
   return (
     <div className="space-y-2.5 sm:space-y-4 pb-4 md:pb-16 w-full select-none overflow-x-hidden pt-1 sm:pt-2">
-      {/* Mobile Library Hub: Spotify Filter Pills */}
-      <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 pe-2">
+      {/* Mobile Library Hub: Spotify Filter Pills (Wrapped cleanly so nothing clips on 375px) */}
+      <div className="sm:hidden flex flex-wrap items-center gap-1.5 py-1">
         <button
           onClick={handleCreatePlaylist}
-          className="w-8 h-8 rounded-full bg-[#242424] hover:bg-[#282828] border border-white/[0.06] text-white flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-transform"
+          className="w-7 h-7 rounded-full bg-[#242424] hover:bg-[#282828] border border-white/[0.06] text-white flex items-center justify-center shrink-0 cursor-pointer active:scale-95 transition-transform"
           title={isRTL ? 'إنشاء قائمة تشغيل' : 'Create playlist'}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => {
             setMobileSubTab('tracks');
             if (activeFilter === 'offline') setActiveFilter('all');
           }}
-          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
             mobileSubTab === 'tracks' && activeFilter !== 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
@@ -298,15 +298,15 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </button>
         <button
           onClick={() => setMobileSubTab('playlists')}
-          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
             mobileSubTab === 'playlists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
-          {isRTL ? 'قوائم التشغيل' : 'Playlists'}
+          {isRTL ? 'القوائم' : 'Playlists'}
         </button>
         <button
           onClick={() => setMobileSubTab('artists')}
-          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
             mobileSubTab === 'artists' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
@@ -314,7 +314,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
         </button>
         <button
           onClick={() => setMobileSubTab('albums')}
-          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
             mobileSubTab === 'albums' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
@@ -325,7 +325,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
             setMobileSubTab('downloaded');
             setActiveFilter('offline');
           }}
-          className={`px-3 py-1.5 rounded-full text-[11.5px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
+          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap cursor-pointer shrink-0 transition-colors ${
             mobileSubTab === 'downloaded' || activeFilter === 'offline' ? 'bg-white text-black' : 'bg-[#242424] text-white border border-white/[0.05]'
           }`}
         >
@@ -405,13 +405,13 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                   ))}
                 </div>
                 <div className="min-w-0 flex-1 text-start">
-                  <h1 className="text-[14px] font-black text-white truncate leading-tight">
-                    {isRTL ? 'مكتبتي الموسيقية' : 'My Library'}
+                  <h1 className="text-[13px] font-black text-white truncate leading-tight">
+                    {isRTL ? 'مكتبتي' : 'Library'}
                   </h1>
-                  <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5">
+                  <p className="text-[10.5px] text-zinc-400 font-medium truncate mt-0.5 tabular-nums">
                     <span>{tracks.length} {isRTL ? 'مسار' : 'tracks'}</span>
                     <span className="mx-1">•</span>
-                    <span>{formattedTotalTime}</span>
+                    <span>{Math.floor(totalSeconds / 3600)} {isRTL ? 'ساعة' : 'hrs'}</span>
                   </p>
                 </div>
               </div>
@@ -421,7 +421,7 @@ export const TrackList: React.FC<TrackListProps> = ({ onOpenImport }) => {
                 <button
                   type="button"
                   onClick={handlePlayAll}
-                  className="h-8 px-3 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-xs flex items-center gap-1 shadow-md shadow-black/40 active:scale-95 transition-transform cursor-pointer"
+                  className="h-8 px-2.5 rounded-full bg-[#1DB954] hover:bg-[#1ED760] text-black font-extrabold text-[11.5px] flex items-center gap-1 shadow-md shadow-black/40 active:scale-95 transition-transform cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5 fill-black text-black" />
                   <span>{isRTL ? 'تشغيل' : 'Play'}</span>

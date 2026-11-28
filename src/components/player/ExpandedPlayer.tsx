@@ -1132,7 +1132,7 @@ const ExpandedPlayerSheet: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                         : '0 10px 24px rgba(0, 0, 0, 0.45)',
                       touchAction: 'pan-y',
                     }}
-                    className="relative w-[min(64vw,29dvh,276px)] h-[min(64vw,29dvh,276px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
+                    className="relative w-[min(74vw,34dvh,310px)] h-[min(74vw,34dvh,310px)] max-h-full aspect-square rounded-[24px] overflow-hidden border border-white/[0.15] select-none shrink-0 cursor-grab active:cursor-grabbing"
                   >
                   <motion.img
                     key={currentTrack.id}
