@@ -7,6 +7,7 @@ import { Play, Pause, Heart, Sparkles, User, Disc3, Clock, ChevronRight } from '
 import { Track } from '../types';
 import { triggerHaptic } from '../utils/haptics';
 import { MobileTrackRow } from './common/MobileTrackRow';
+import { PlayingEqualizer } from './common/PlayingEqualizer';
 import { TrackActionSheet } from './library/TrackActionSheet';
 import { isArabicText } from '../utils/formatters';
 import {
@@ -429,7 +430,12 @@ export const SpotifyHomeView: React.FC<SpotifyHomeViewProps> = () => {
                   </span>
                 </div>
 
-                {/* Hover Play Button (Desktop) */}
+                {/* Active Equalizer or Hover Play Button (Desktop) */}
+                {isCur && (
+                  <div className="flex md:group-hover:hidden items-center justify-center shrink-0 me-2.5">
+                    <PlayingEqualizer isPlaying={isPlaying} size="xs" />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={(e) => {

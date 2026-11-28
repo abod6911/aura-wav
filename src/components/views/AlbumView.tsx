@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Pause, Shuffle, ChevronRight, ChevronLeft, Disc3, Heart, MoreHorizontal, ArrowLeft, ArrowRight, Download, CheckCircle2, Clock } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -8,6 +9,7 @@ import { useTrackTheme } from '../../utils/colorExtractor';
 import { MobileTrackRow } from '../common/MobileTrackRow';
 import { TrackActionSheet } from '../library/TrackActionSheet';
 import { Track } from '../../types';
+import { LUXURY_SPRING, VIEW_HERO_VARIANTS } from '../../utils/motion';
 
 export const AlbumView: React.FC = () => {
   const { isRTL } = useTranslation();
@@ -131,7 +133,12 @@ export const AlbumView: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 md:gap-8 max-w-6xl">
           {/* Square Album Cover */}
-          <div className="relative shrink-0">
+          <motion.div
+            variants={VIEW_HERO_VARIANTS}
+            initial="initial"
+            animate="animate"
+            className="relative shrink-0"
+          >
             <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-md overflow-hidden shadow-2xl bg-[#181818] ring-1 ring-white/10">
               <img
                 src={details.artworkUrl}
@@ -140,10 +147,15 @@ export const AlbumView: React.FC = () => {
                 loading="eager"
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Album Info */}
-          <div className="flex-1 text-center sm:text-start min-w-0">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+            className="flex-1 text-center sm:text-start min-w-0"
+          >
             <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-2">
               ألبوم
             </span>
@@ -183,17 +195,20 @@ export const AlbumView: React.FC = () => {
                 </>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Action Row */}
       <div className="flex items-center gap-4 px-4 sm:px-6 md:px-8 py-5">
         {/* Play Button */}
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.92 }}
+          transition={LUXURY_SPRING}
           onClick={handlePlayAlbum}
-          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-transform flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
+          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] transition-colors flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
           title={isCurrentAlbumPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
           aria-label={isCurrentAlbumPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
         >
@@ -202,7 +217,7 @@ export const AlbumView: React.FC = () => {
           ) : (
             <Play className="w-6 h-6 fill-black text-black translate-x-0.5" />
           )}
-        </button>
+        </motion.button>
 
         {/* Shuffle Button */}
         <button

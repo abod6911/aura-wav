@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Pause, Shuffle, ChevronRight, ChevronLeft, Disc3, Music2, Users, Heart, MoreHorizontal, ArrowLeft, ArrowRight } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -8,6 +9,7 @@ import { useTrackTheme } from '../../utils/colorExtractor';
 import { MobileTrackRow } from '../common/MobileTrackRow';
 import { TrackActionSheet } from '../library/TrackActionSheet';
 import { Track } from '../../types';
+import { LUXURY_SPRING, VIEW_HERO_VARIANTS } from '../../utils/motion';
 
 export const ArtistView: React.FC = () => {
   const { isRTL } = useTranslation();
@@ -114,7 +116,12 @@ export const ArtistView: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 md:gap-8 max-w-6xl">
           {/* Artist Circular Avatar */}
-          <div className="relative shrink-0">
+          <motion.div
+            variants={VIEW_HERO_VARIANTS}
+            initial="initial"
+            animate="animate"
+            className="relative shrink-0"
+          >
             <div className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full overflow-hidden shadow-2xl ring-2 ring-white/10 bg-[#181818]">
               <img
                 src={profile.artworkUrl}
@@ -123,10 +130,15 @@ export const ArtistView: React.FC = () => {
                 loading="eager"
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Details */}
-          <div className="flex-1 text-center sm:text-start min-w-0">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+            className="flex-1 text-center sm:text-start min-w-0"
+          >
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white text-[11px] font-medium mb-3 backdrop-blur-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
               <span>فنان في مكتبتك</span>
@@ -154,16 +166,19 @@ export const ArtistView: React.FC = () => {
                 </>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Action Row */}
       <div className="flex items-center gap-4 px-4 sm:px-6 md:px-8 py-5">
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.92 }}
+          transition={LUXURY_SPRING}
           onClick={handlePlayArtist}
-          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-transform flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
+          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] transition-colors flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
           title={isCurrentArtistPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
           aria-label={isCurrentArtistPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
         >
@@ -172,17 +187,20 @@ export const ArtistView: React.FC = () => {
           ) : (
             <Play className="w-6 h-6 fill-black text-black translate-x-0.5" />
           )}
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.9 }}
+          transition={LUXURY_SPRING}
           onClick={handleShuffleArtist}
-          className="p-3 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 active:scale-95 transition-colors cursor-pointer"
+          className="p-3 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           title="تشغيل عشوائي"
           aria-label="تشغيل عشوائي"
         >
           <Shuffle className="w-6 h-6" />
-        </button>
+        </motion.button>
       </div>
 
       <div className="px-4 sm:px-6 md:px-8 space-y-10 max-w-6xl">

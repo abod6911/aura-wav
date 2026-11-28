@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Play,
   Pause,
@@ -23,6 +24,7 @@ import { formatTime, isArabicText } from '../../utils/formatters';
 import { MobileTrackRow } from '../common/MobileTrackRow';
 import { TrackActionSheet } from '../library/TrackActionSheet';
 import { Track } from '../../types';
+import { VIEW_HERO_VARIANTS } from '../../utils/motion';
 
 export const SmartMixView: React.FC = () => {
   const { isRTL } = useTranslation();
@@ -155,7 +157,12 @@ export const SmartMixView: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 md:gap-8 max-w-6xl">
           {/* 2x2 Collage Cover */}
-          <div className="relative shrink-0">
+          <motion.div
+            variants={VIEW_HERO_VARIANTS}
+            initial="initial"
+            animate="animate"
+            className="relative shrink-0"
+          >
             <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-2xl bg-[#181818] ring-1 ring-white/10 grid grid-cols-2 grid-rows-2">
               {mix.collageCovers.map((coverUrl, idx) => (
                 <div key={idx} className="relative w-full h-full overflow-hidden bg-[#242424]">
@@ -168,10 +175,15 @@ export const SmartMixView: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Mix Info */}
-          <div className="flex-1 text-center sm:text-start min-w-0">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+            className="flex-1 text-center sm:text-start min-w-0"
+          >
             <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-400/90 mb-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               {mix.badge}
             </span>
@@ -206,7 +218,7 @@ export const SmartMixView: React.FC = () => {
                 </>
               )}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 

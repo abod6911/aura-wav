@@ -1,9 +1,12 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore, MAX_USER_QUEUE } from '../store/usePlayerStore';
 import { useTranslation } from '../i18n/useTranslation';
 import { X, Trash2, Heart, Radio, Disc, ArrowUp, ArrowDown, User, ArrowRight, ArrowLeft, ListMusic, Play } from 'lucide-react';
 import { getArtistProfile } from '../utils/catalogSelectors';
 import { SmartSaveButton } from './common/SmartSaveButton';
+import { PlayingEqualizer } from './common/PlayingEqualizer';
+import { LUXURY_SPRING, SPRING_GLIDE, TAB_TRANSITION_VARIANTS } from '../utils/motion';
 
 export const RightSidebar: React.FC = () => {
   const { t, isRTL, dir } = useTranslation();
@@ -52,44 +55,72 @@ export const RightSidebar: React.FC = () => {
       dir={dir}
       className="hidden xl:flex w-80 flex-col bg-[#121212] border-r rtl:border-r ltr:border-l border-white/[0.06] p-4 z-30 select-none h-[100dvh] pb-24 overflow-hidden shrink-0"
     >
-      {/* Header with Clean Segmented Tabs */}
+      {/* Header with Clean Segmented Tabs (Spring Pill Morph) */}
       <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.06] flex-shrink-0">
         <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.05] border border-white/[0.06] text-xs">
           <button
+            type="button"
             onClick={() => setActiveRightSidebarTab('queue')}
-            className={`font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            className={`relative font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeRightSidebarTab === 'queue'
-                ? 'bg-white text-black shadow-sm'
+                ? 'text-black'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {isRTL ? 'قائمة الانتظار' : 'Up Next'}
+            {activeRightSidebarTab === 'queue' && (
+              <motion.span
+                layoutId="right-sidebar-tab-pill"
+                transition={SPRING_GLIDE}
+                className="absolute inset-0 rounded-lg bg-white shadow-sm"
+              />
+            )}
+            <span className="relative z-10">{isRTL ? 'قائمة الانتظار' : 'Up Next'}</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveRightSidebarTab('now_playing')}
-            className={`font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            className={`relative font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               activeRightSidebarTab === 'now_playing'
-                ? 'bg-white text-black shadow-sm'
+                ? 'text-black'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {isRTL ? 'يعمل الآن' : 'Now Playing'}
+            {activeRightSidebarTab === 'now_playing' && (
+              <motion.span
+                layoutId="right-sidebar-tab-pill"
+                transition={SPRING_GLIDE}
+                className="absolute inset-0 rounded-lg bg-white shadow-sm"
+              />
+            )}
+            <span className="relative z-10">{isRTL ? 'يعمل الآن' : 'Now Playing'}</span>
           </button>
         </div>
 
-        <button
+        <motion.button
+          type="button"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.9 }}
+          transition={LUXURY_SPRING}
           onClick={() => setRightSidebarOpen(false)}
           className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors cursor-pointer"
           title={isRTL ? 'إغلاق اللوحة الجانبية' : 'Close panel'}
           aria-label="Close Sidebar"
         >
           <X className="w-4 h-4" />
-        </button>
+        </motion.button>
       </div>
 
       {/* TAB 1: QUEUE */}
+      <AnimatePresence mode="wait" initial={false}>
       {activeRightSidebarTab === 'queue' && (
-        <div className="flex-1 flex flex-col min-h-0 pt-3.5">
+        <motion.div
+          key="right-tab-queue"
+          variants={TAB_TRANSITION_VARIANTS}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="flex-1 flex flex-col min-h-0 pt-3.5"
+        >
           {/* Now Playing Mini Glass Card */}
           {currentTrack && (
             <div className="mb-4 flex-shrink-0">
@@ -104,8 +135,8 @@ export const RightSidebar: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                   {isPlaying && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#1DB954] animate-ping" />
+                    <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+                      <PlayingEqualizer isPlaying={isPlaying} size="sm" />
                     </div>
                   )}
                 </div>
@@ -308,12 +339,19 @@ export const RightSidebar: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB 2: NOW PLAYING DETAILS */}
       {activeRightSidebarTab === 'now_playing' && (
-        <div className="flex-1 overflow-y-auto pt-3.5 pe-1 no-scrollbar space-y-4">
+        <motion.div
+          key="right-tab-now-playing"
+          variants={TAB_TRANSITION_VARIANTS}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="flex-1 overflow-y-auto pt-3.5 pe-1 no-scrollbar space-y-4"
+        >
           {currentTrack ? (
             <>
               {/* High-res Artwork with Dynamic Ambient Shadow */}
@@ -422,8 +460,9 @@ export const RightSidebar: React.FC = () => {
               <p className="text-xs font-medium">{isRTL ? 'لا توجد أغنية تعمل حالياً' : 'No track playing'}</p>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </aside>
   );
 };

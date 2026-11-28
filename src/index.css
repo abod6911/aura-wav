@@ -915,4 +915,77 @@ button:not(:disabled):active, [role="button"]:active, .interactive-press:active 
   -webkit-tap-highlight-color: transparent;
 }
 
+/* =========================================================================
+   WORLD-CLASS AUDIO EQUALIZER & SHIMMER KEYFRAMES (GPU ONLY)
+   ========================================================================= */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes eqBarBounce1 {
+  0%, 100% { transform: scaleY(0.28); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes eqBarBounce2 {
+  0%, 100% { transform: scaleY(0.85); }
+  45% { transform: scaleY(0.24); }
+  75% { transform: scaleY(0.95); }
+}
+
+@keyframes eqBarBounce3 {
+  0%, 100% { transform: scaleY(0.45); }
+  35% { transform: scaleY(0.98); }
+  70% { transform: scaleY(0.22); }
+}
+
+@keyframes eqBarBounce4 {
+  0%, 100% { transform: scaleY(0.65); }
+  50% { transform: scaleY(0.3); }
+  80% { transform: scaleY(0.92); }
+}
+
+.eq-bar-1 {
+  transform-origin: bottom;
+  animation: eqBarBounce1 0.78s ease-in-out infinite;
+}
+.eq-bar-2 {
+  transform-origin: bottom;
+  animation: eqBarBounce2 0.66s ease-in-out infinite;
+}
+.eq-bar-3 {
+  transform-origin: bottom;
+  animation: eqBarBounce3 0.84s ease-in-out infinite;
+}
+.eq-bar-4 {
+  transform-origin: bottom;
+  animation: eqBarBounce4 0.72s ease-in-out infinite;
+}
+
+.eq-paused {
+  animation-play-state: paused !important;
+  transform: scaleY(0.3) !important;
+  transition: transform 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .eq-bar-1,
+  .eq-bar-2,
+  .eq-bar-3,
+  .eq-bar-4,
+  .animate-aurora-slow,
+  .animate-aurora-reverse,
+  .animate-aurora-float,
+  .animate-spin-slow,
+  .dj-pad-neon {
+    animation: none !important;
+  }
+}
+
 

@@ -506,17 +506,30 @@ export function App() {
       }
     >
       {/* Drag & Drop Visual Overlay */}
-      {isDragging && (
-        <div className="fixed inset-0 z-[100] bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#1DB954]/50 flex flex-col items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="p-6 rounded-[28px] bg-[#1DB954]/15 text-[#1DB954] mb-4 border border-[#1DB954]/30 shadow-2xl shadow-black/50">
-            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">أفلت مجلد الأغاني أو الملفات هنا</h2>
-          <p className="text-sm text-zinc-400 font-medium">سيتم استيراد كافة المسارات وقراءة الأغلفة فوراً</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-[100] bg-[#09090B]/95 backdrop-blur-2xl border-4 border-dashed border-[#1DB954]/50 flex flex-col items-center justify-center p-6 select-none"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              className="p-6 rounded-[28px] bg-[#1DB954]/15 text-[#1DB954] mb-4 border border-[#1DB954]/30 shadow-2xl shadow-black/50"
+            >
+              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </motion.div>
+            <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">أفلت مجلد الأغاني أو الملفات هنا</h2>
+            <p className="text-sm text-zinc-400 font-medium">سيتم استيراد كافة المسارات وقراءة الأغلفة فوراً</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 1. Dynamic Album Art Ambient Mesh (CSS-only on mobile, WebGL on desktop) */}
       <AtmosphereBackground />

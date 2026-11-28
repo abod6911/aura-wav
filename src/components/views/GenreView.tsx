@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Play, Pause, Shuffle, ChevronRight, ChevronLeft, Layers, Heart, MoreHorizontal, ArrowLeft, ArrowRight, Users, Disc3, Clock } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -7,6 +8,7 @@ import { formatTime, isArabicText } from '../../utils/formatters';
 import { MobileTrackRow } from '../common/MobileTrackRow';
 import { TrackActionSheet } from '../library/TrackActionSheet';
 import { Track } from '../../types';
+import { LUXURY_SPRING, VIEW_HERO_VARIANTS } from '../../utils/motion';
 
 // Map popular genres to rich Spotify matte header gradients
 function getGenreGradient(genre: string): string {
@@ -135,7 +137,12 @@ export const GenreView: React.FC = () => {
           <div className="w-8" />
         </div>
 
-        <div className="max-w-6xl">
+        <motion.div
+          variants={VIEW_HERO_VARIANTS}
+          initial="initial"
+          animate="animate"
+          className="max-w-6xl"
+        >
           <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-zinc-300 mb-2 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-sm">
             تصنيف موسيقي
           </span>
@@ -154,15 +161,18 @@ export const GenreView: React.FC = () => {
             <span className="text-zinc-500">•</span>
             <span>{formatTime(details.totalDuration)}</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Action Row */}
       <div className="flex items-center gap-4 px-4 sm:px-6 md:px-8 py-5">
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.92 }}
+          transition={LUXURY_SPRING}
           onClick={handlePlayGenre}
-          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] active:scale-95 transition-transform flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
+          className="w-13 h-13 rounded-full bg-[#1DB954] hover:bg-[#1ed760] transition-colors flex items-center justify-center text-black shadow-lg shadow-black/40 cursor-pointer"
           title={isCurrentGenrePlaying ? 'إيقاف مؤقت' : 'تشغيل'}
           aria-label={isCurrentGenrePlaying ? 'إيقاف مؤقت' : 'تشغيل'}
         >
@@ -171,17 +181,20 @@ export const GenreView: React.FC = () => {
           ) : (
             <Play className="w-6 h-6 fill-black text-black translate-x-0.5" />
           )}
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           type="button"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.9 }}
+          transition={LUXURY_SPRING}
           onClick={handleShuffleGenre}
-          className="p-3 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 active:scale-95 transition-colors cursor-pointer"
+          className="p-3 rounded-full text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           title="تشغيل عشوائي"
           aria-label="تشغيل عشوائي"
         >
           <Shuffle className="w-6 h-6" />
-        </button>
+        </motion.button>
       </div>
 
       <div className="px-4 sm:px-6 md:px-8 space-y-10 max-w-6xl">

@@ -161,3 +161,45 @@ export const CARD_TAP_ANIMATION = {
   whileHover: { y: -2, transition: { duration: 0.18, ease: APPLE_EASE_MICRO } },
   whileTap: { scale: 0.965, transition: { duration: 0.1 } },
 };
+
+// ── Play/Pause & Icon Morph Spring ──
+export const PLAY_ICON_SPRING: Transition = {
+  type: 'spring',
+  stiffness: 560,
+  damping: 30,
+  mass: 0.6,
+};
+
+// ── Editorial Hero Artwork / Header Entrance ──
+export const VIEW_HERO_VARIANTS: Variants = {
+  initial: { opacity: 0, scale: 0.94, y: 10 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.36, ease: APPLE_EASE_ARTWORK },
+  },
+};
+
+// ── Artwork Crossfade on Track Switch ──
+export const ARTWORK_CROSSFADE_TRANSITION: Transition = {
+  duration: 0.22,
+  ease: APPLE_EASE_ARTWORK,
+};
+
+// ── Pop-In Badge / Toast / Floating Pill ──
+export const POP_IN_VARIANTS: Variants = {
+  hidden: { opacity: 0, scale: 0.9, y: -8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 460, damping: 30 },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.92,
+    y: -6,
+    transition: { duration: 0.15, ease: APPLE_EASE_MICRO },
+  },
+};

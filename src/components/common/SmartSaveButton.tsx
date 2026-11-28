@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PlusCircle, CheckCircle2 } from 'lucide-react';
 import { Track } from '../../types';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useTranslation } from '../../i18n/useTranslation';
 import { triggerHaptic } from '../../utils/haptics';
 import { QuickPlaylistPicker } from '../library/QuickPlaylistPicker';
+import { PLAY_ICON_SPRING } from '../../utils/motion';
 
 interface SmartSaveButtonProps {
   track: Track | null;
@@ -75,11 +77,14 @@ export const SmartSaveButton: React.FC<SmartSaveButtonProps> = ({
 
   return (
     <>
-      <button
+      <motion.button
         type="button"
         data-testid="smart-save-btn"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.82 }}
+        transition={PLAY_ICON_SPRING}
         onClick={handleClick}
-        className={`flex items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer ${
+        className={`flex items-center justify-center rounded-full cursor-pointer ${
           buttonSizes[size]
         } ${className}`}
         title={
@@ -89,16 +94,36 @@ export const SmartSaveButton: React.FC<SmartSaveButtonProps> = ({
         }
         aria-label={isSaved ? 'Saved' : 'Save'}
       >
-        {isSaved ? (
-          <CheckCircle2
-            className={`${iconSizes[size]} text-[#1DB954] fill-[#1DB954] transition-colors`}
-          />
-        ) : (
-          <PlusCircle
-            className={`${iconSizes[size]} text-zinc-400 hover:text-white transition-colors`}
-          />
-        )}
-      </button>
+        <AnimatePresence mode="popLayout" initial={false}>
+          {isSaved ? (
+            <motion.span
+              key="saved"
+              initial={{ scale: 0.5, opacity: 0, rotate: -18 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={PLAY_ICON_SPRING}
+              className="flex items-center justify-center"
+            >
+              <CheckCircle2
+                className={`${iconSizes[size]} text-[#1DB954] fill-[#1DB954] drop-shadow-[0_0_6px_rgba(29,185,84,0.45)]`}
+              />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="unsaved"
+              initial={{ scale: 0.75, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.75, opacity: 0 }}
+              transition={PLAY_ICON_SPRING}
+              className="flex items-center justify-center"
+            >
+              <PlusCircle
+                className={`${iconSizes[size]} text-zinc-400 hover:text-white transition-colors`}
+              />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
 
       {/* Quick Playlist Picker Sheet / Modal */}
       {isPickerOpen && (
